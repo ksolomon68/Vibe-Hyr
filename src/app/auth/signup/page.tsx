@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Crown, Check } from 'lucide-react'
@@ -13,7 +13,7 @@ const PLAN_INFO = {
   elite:     { label: 'Reality Master', price: '$67/mo', desc: 'Complete system, live Q&As.' },
 }
 
-export default function SignupPage() {
+function SignupForm() {
   const [name,     setName]     = useState('')
   const [email,    setEmail]    = useState('')
   const [password, setPassword] = useState('')
@@ -161,5 +161,13 @@ export default function SignupPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense>
+      <SignupForm />
+    </Suspense>
   )
 }
