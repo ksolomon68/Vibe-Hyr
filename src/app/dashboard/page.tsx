@@ -140,7 +140,7 @@ export default async function DashboardPage() {
                 <h2 className="font-display text-2xl tracking-widest text-white mb-5">YOUR COURSES</h2>
                 <div className="flex flex-col gap-3">
                   {COURSES.map((course) => {
-                    const tierRank   = { free: 0, architect: 1, elite: 2 }
+                    const tierRank: Record<string, number> = { free: 0, architect: 1, elite: 2 }
                     const hasAccess  = tierRank[tier] >= tierRank[course.tier]
                     return (
                       <div
