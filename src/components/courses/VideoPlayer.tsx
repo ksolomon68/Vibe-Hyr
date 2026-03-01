@@ -5,10 +5,13 @@ import { Play, Volume2, VolumeX } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface VideoPlayerProps {
-  videoUrl:      string | null
-  title:         string
-  thumbnailUrl?: string | null
-  onComplete?:   () => void
+  videoUrl:        string | null
+  title:           string
+  thumbnailUrl?:   string | null
+  onComplete?:     () => void
+  lessonId?:       string
+  duration?:       number
+  initialProgress?: number
 }
 
 export function VideoPlayer({ videoUrl, title, thumbnailUrl, onComplete }: VideoPlayerProps) {
