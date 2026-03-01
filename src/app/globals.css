@@ -1,0 +1,140 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:ital,wght@0,400;0,600;0,700;0,900;1,400;1,600&family=IBM+Plex+Mono:wght@400;500;700&display=swap');
+
+:root {
+  --orange:   #FF7B00;
+  --orange-l: #FF9A33;
+  --orange-d: #CC6200;
+  --black:    #0A0A0A;
+  --black-2:  #111111;
+  --black-3:  #1A1A1A;
+  --black-4:  #222222;
+  --white:    #FFFFFF;
+  --grey:     #888888;
+  --grey-d:   #444444;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background: var(--black);
+  color: var(--white);
+  font-family: var(--font-barlow, 'Barlow', sans-serif);
+}
+
+/* ── GRAIN TEXTURE ── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size: 180px;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.4;
+  mix-blend-mode: overlay;
+}
+
+/* ── TYPOGRAPHY UTILITIES ── */
+@layer components {
+  .font-display { font-family: 'Bebas Neue', sans-serif; }
+  .font-body    { font-family: 'Barlow', sans-serif; }
+  .font-mono    { font-family: 'IBM Plex Mono', monospace; }
+
+  .text-orange { color: var(--orange); }
+  .text-outline {
+    -webkit-text-stroke: 2px var(--white);
+    color: transparent;
+  }
+  .text-outline-orange {
+    -webkit-text-stroke: 2px var(--orange);
+    color: transparent;
+  }
+
+  /* ── LABEL ── */
+  .label {
+    @apply font-mono text-[0.6rem] tracking-[0.35em] uppercase text-[var(--orange)]
+           flex items-center gap-2;
+  }
+  .label::before { content: '■'; font-size: 0.45rem; }
+
+  /* ── ORANGE RULE ── */
+  .orange-rule {
+    @apply flex items-center gap-4 my-12;
+  }
+  .orange-rule::before,
+  .orange-rule::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 123, 0, 0.25);
+  }
+
+  /* ── BUTTONS ── */
+  .btn-orange {
+    @apply font-mono text-[0.65rem] tracking-[0.2em] uppercase font-bold
+           px-9 py-4 bg-[var(--orange)] text-black border-2 border-[var(--orange)]
+           inline-block transition-all duration-200 cursor-pointer;
+  }
+  .btn-orange:hover {
+    @apply bg-transparent text-[var(--orange)];
+  }
+  .btn-outline {
+    @apply font-mono text-[0.65rem] tracking-[0.2em] uppercase font-bold
+           px-9 py-4 bg-transparent text-white border-2 border-[var(--grey-d)]
+           inline-block transition-all duration-200 cursor-pointer;
+  }
+  .btn-outline:hover {
+    @apply border-white;
+  }
+  .btn-outline-orange {
+    @apply font-mono text-[0.65rem] tracking-[0.2em] uppercase font-bold
+           px-9 py-4 bg-transparent text-[var(--orange)] border-2 border-[var(--orange)]
+           inline-block transition-all duration-200 cursor-pointer;
+  }
+  .btn-outline-orange:hover {
+    @apply bg-[var(--orange)] text-black;
+  }
+
+  /* ── CARDS ── */
+  .card-dark {
+    @apply bg-[var(--black-2)] border border-white/[0.08] transition-all duration-200;
+  }
+  .card-dark:hover { @apply bg-[var(--black-3)] border-[var(--orange)]/30; }
+
+  /* ── ORANGE BORDER GRID ── */
+  .orange-grid {
+    @apply bg-[var(--orange)] border-2 border-[var(--orange)];
+    display: grid;
+    gap: 2px;
+  }
+  .orange-grid > * { @apply bg-[var(--black-2)]; }
+
+  /* ── INPUT ── */
+  .input-dark {
+    @apply w-full bg-[var(--black-3)] border border-[var(--grey-d)] text-white
+           font-body text-base px-4 py-3 outline-none
+           transition-colors duration-200 placeholder:text-white/20;
+  }
+  .input-dark:focus { @apply border-[var(--orange)]; }
+
+  textarea.input-dark { resize: vertical; min-height: 100px; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar        { width: 4px; }
+  ::-webkit-scrollbar-track  { background: var(--black-2); }
+  ::-webkit-scrollbar-thumb  { background: var(--orange); }
+
+  /* ── TIER BADGES ── */
+  .badge-free    { @apply font-mono text-[0.55rem] tracking-[0.25em] uppercase px-3 py-1 border border-green-400 text-green-400; }
+  .badge-architect { @apply font-mono text-[0.55rem] tracking-[0.25em] uppercase px-3 py-1 border border-[var(--orange)] text-[var(--orange)]; }
+  .badge-elite   { @apply font-mono text-[0.55rem] tracking-[0.25em] uppercase px-3 py-1 border border-white text-white; }
+}
