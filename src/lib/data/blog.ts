@@ -618,4 +618,4 @@ export function getBlogPost(slug: string): BlogPost | undefined {
   return BLOG_POSTS.find(p => p.slug === slug)
 }
 
-export const BLOG_CATEGORIES = [...new Set(BLOG_POSTS.map(p => p.category))]
+export const BLOG_CATEGORIES = Array.from(new Set(BLOG_POSTS.map(p => p.category)))
