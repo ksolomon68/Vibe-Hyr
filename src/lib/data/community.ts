@@ -37,6 +37,16 @@ const ADMIN: CommunityAuthor = {
   role: 'admin',
 }
 
+// ── Community members ────────────────────────────────────────────────────────
+const M1: CommunityAuthor = { id: 'm-1', full_name: 'Tamara Reeves',  avatar_url: null, membership_tier: 'architect' }
+const M2: CommunityAuthor = { id: 'm-2', full_name: 'Jordan Ellis',   avatar_url: null, membership_tier: 'elite'     }
+const M3: CommunityAuthor = { id: 'm-3', full_name: 'Simone Carter',  avatar_url: null, membership_tier: 'free'      }
+const M4: CommunityAuthor = { id: 'm-4', full_name: 'Marcus Webb',    avatar_url: null, membership_tier: 'architect' }
+const M5: CommunityAuthor = { id: 'm-5', full_name: 'Aaliyah Frost',  avatar_url: null, membership_tier: 'elite'     }
+const M6: CommunityAuthor = { id: 'm-6', full_name: 'Devon Nash',     avatar_url: null, membership_tier: 'architect' }
+const M7: CommunityAuthor = { id: 'm-7', full_name: 'Priya Okafor',   avatar_url: null, membership_tier: 'free'      }
+const M8: CommunityAuthor = { id: 'm-8', full_name: 'Isaiah Montoya', avatar_url: null, membership_tier: 'architect' }
+
 export const COMMUNITY_THREADS: CommunityThread[] = [
   // ── PINNED ──────────────────────────────────────────────────────────────────
   {
@@ -66,7 +76,7 @@ export const COMMUNITY_THREADS: CommunityThread[] = [
     category: 'sats_wins',
     title: 'My SP called after 3 weeks of revision — here\'s exactly what I did',
     content: `Three weeks ago I committed to one thing: I stopped reacting to the 3D and started living in the end.\n\nEvery night during SATS, I felt the conversation we'd already had. Not the one I wanted — the one that had already happened in my imagination. I felt the ease of it, the normality. No desperation. No checking my phone.\n\nDay 18: a text. Day 21: a call.\n\nThe call wasn't dramatic. It was *normal*. And that's exactly what I had practiced feeling in the void.\n\n**What actually worked:**\n- Staying in the end state, not scripting a specific path\n- Removing the "when will it happen" energy entirely\n- Using the Revision Journal to rewrite three negative interactions\n- One SATS session per night, 20 minutes, right before sleep\n\nIf you're in the waiting, stop waiting. Start living from the result.`,
-    author: ADMIN,
+    author: M1,
     reply_count: 28,
     upvotes: 89,
     is_pinned: false,
@@ -86,7 +96,7 @@ export const COMMUNITY_THREADS: CommunityThread[] = [
     category: 'sats_wins',
     title: 'Got the promotion using the Identity Audit — from doubter to Director',
     content: `I want to be honest about where I started: I was a mess of contradictions.\n\nI wanted a promotion but I believed I wasn't ready. I wanted to earn more but felt guilty about it. The Identity Audit from Course 2 exposed every one of those contradictions in a way I couldn't ignore.\n\nSo I did the work. Every conflicting belief I found, I revised. Not suppressed — *revised*. I went back in my mind and rewrote the experiences that taught me I wasn't leadership material.\n\nFour months later: Director of Operations. $40K raise. Same company, different identity.\n\nThe 3D always catches up to the imaginal. Always.`,
-    author: ADMIN,
+    author: M2,
     reply_count: 19,
     upvotes: 73,
     is_pinned: false,
@@ -108,7 +118,7 @@ export const COMMUNITY_THREADS: CommunityThread[] = [
     category: 'questions',
     title: 'How do you handle intrusive thoughts during the void state?',
     content: `I\'ve been practicing SATS for three weeks. I can get to the hypnagogic state but the moment I try to hold my scene, random thoughts come in — work stress, random memories, sometimes just nonsense.\n\nDo I engage with them? Dismiss them? Start over? I feel like I'm fighting my own mind and losing.\n\nAnybody who has moved past this — what clicked for you?`,
-    author: ADMIN,
+    author: M3,
     reply_count: 22,
     upvotes: 44,
     is_pinned: false,
@@ -128,7 +138,7 @@ export const COMMUNITY_THREADS: CommunityThread[] = [
     category: 'questions',
     title: 'SATS: sitting position vs lying down — does it actually matter?',
     content: `Neville Goddard always said to lie down, arms uncrossed, eyes closed. But I fall asleep nearly every time.\n\nI\'ve tried sitting upright and I stay conscious but I can\'t get as deep. Is one better than the other, or is it just what works for your body?\n\nAlso curious if anyone has tried it at other times of day instead of right before sleep.`,
-    author: ADMIN,
+    author: M4,
     reply_count: 16,
     upvotes: 38,
     is_pinned: false,
@@ -148,7 +158,7 @@ export const COMMUNITY_THREADS: CommunityThread[] = [
     category: 'questions',
     title: 'Best way to use the Revision Journal for past events vs future desires?',
     content: `I understand revision for past negative events — I rewrite what happened to what I wish had happened and feel the new version.\n\nBut I\'m confused about future desires. Do I write as if it\'s already happened? Like "I got the contract" or "I am in a loving relationship"?\n\nAnd do you revise every day or just when something feels "stuck"?`,
-    author: ADMIN,
+    author: M5,
     reply_count: 14,
     upvotes: 31,
     is_pinned: false,
@@ -170,7 +180,7 @@ export const COMMUNITY_THREADS: CommunityThread[] = [
     category: 'bridge_of_incidents',
     title: 'Course 1, Week 1 — Share Your RAS Realization',
     content: `After completing Lesson 1 (The 11 Million Bit Problem), I want to hear what hit different for you.\n\nFor me it was understanding that my brain has been filtering for evidence of my *existing beliefs* my entire life. Every day I've been collecting proof that I'm "not good enough" or "money is hard" — not because it\'s true, but because those were the filters my subconscious loaded.\n\nChanging the assumption changes what the RAS lets through. That\'s the whole game.\n\nWhat was your aha moment? Drop it below — the more specific, the better. Your realization might be exactly what someone else needs to hear.`,
-    author: ADMIN,
+    author: M6,
     reply_count: 31,
     upvotes: 56,
     is_pinned: false,
@@ -192,7 +202,7 @@ export const COMMUNITY_THREADS: CommunityThread[] = [
     category: 'accountability',
     title: '30-Day Revision Challenge — Join me starting March 15',
     content: `I\'m committing to 30 consecutive days of the full Vibe Hyr daily practice:\n\n☑ Morning: Identity statement (5 min)\n☑ Evening: Revision Journal entry\n☑ Night: SATS session (20 min minimum)\n☑ Weekly: Identity Audit check-in\n\nI\'ll post updates weekly. Drop a comment if you want to join and I\'ll check in on you.\n\nRules:\n1. No skipping — if you miss a day, restart the count\n2. Log your dominant emotional state each day\n3. Document any "bridge of incidents" — synchronicities, unexpected doors opening\n\nWho\'s in?`,
-    author: ADMIN,
+    author: M7,
     reply_count: 38,
     upvotes: 67,
     is_pinned: false,
@@ -214,7 +224,7 @@ export const COMMUNITY_THREADS: CommunityThread[] = [
     category: 'general',
     title: 'Combining SATS with scripting — my honest review after 60 days',
     content: `I know some people say to pick one technique and stick to it. I\'ve been combining SATS and scripting for 60 days and I want to share what I actually found.\n\n**What combining does:** Scripting in the morning creates a written anchor — a concrete statement of what\'s true in the imaginal. SATS at night lets me *feel* it at the threshold of sleep, which is when the subconscious is most impressionable.\n\nThink of it like this: scripting writes the program. SATS runs it.\n\n**The risk:** If scripting becomes mechanical (just writing words without feeling), it can actually create resistance because you\'re reinforcing the *act of wanting* rather than the *state of having*.\n\n**My results:** Significant movement on three things I\'d been working on for months. I\'m not attributing it all to technique combination — consistency matters more than method. But the synergy is real.`,
-    author: ADMIN,
+    author: M8,
     reply_count: 11,
     upvotes: 42,
     is_pinned: false,

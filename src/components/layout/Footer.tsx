@@ -1,5 +1,10 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Crown, Facebook, Youtube, Instagram } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 const SOCIAL = [
   { label: 'Facebook',  href: 'https://www.facebook.com/vibehyr',                          Icon: Facebook  },
@@ -7,30 +12,40 @@ const SOCIAL = [
   { label: 'Instagram', href: 'https://www.instagram.com/vibe_hyr/',                       Icon: Instagram },
 ]
 
-const LINKS = {
-  Platform: [
-    { label: 'Courses',   href: '/courses'   },
-    { label: 'Journal',   href: '/journal'   },
-    { label: 'Quizzes',   href: '/quizzes'   },
-    { label: 'Community', href: '/community' },
-  ],
-  Learn: [
-    { label: 'Blog',             href: '/blog'    },
-    { label: 'Free SATS Guide',  href: '/blog/sats-guide' },
-    { label: 'Pricing',          href: '/#pricing' },
-  ],
-  Account: [
-    { label: 'Sign Up',  href: '/auth/signup' },
-    { label: 'Log In',   href: '/auth/login'  },
-    { label: 'Dashboard', href: '/dashboard'  },
-  ],
-}
+const PLATFORM_LINKS = [
+  { label: 'Courses',   href: '/courses'   },
+  { label: 'Journal',   href: '/journal'   },
+  { label: 'Community', href: '/community' },
+]
+
+const LEARN_LINKS = [
+  { label: 'Blog',            href: '/blog'          },
+  { label: 'Free SATS Guide', href: '/blog/sats-guide' },
+  { label: 'Pricing',         href: '/#pricing'      },
+]
 
 export function Footer() {
+  const [loggedIn, setLoggedIn] = useState(false)
+  const router = useRouter()
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => setLoggedIn(!!user))
+  }, [])
+
+  async function handleLogout() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    setLoggedIn(false)
+    router.push('/')
+    router.refresh()
+  }
+
   return (
     <footer className="border-t-2 border-orange-DEFAULT bg-black-2">
       <div className="max-w-7xl mx-auto px-6 md:px-14 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2 mb-4">
@@ -64,26 +79,76 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Links */}
-          {Object.entries(LINKS).map(([heading, links]) => (
-            <div key={heading}>
-              <h4 className="font-mono text-[0.6rem] tracking-[0.3em] uppercase text-orange-DEFAULT mb-5">
-                {heading}
-              </h4>
-              <ul className="flex flex-col gap-3">
-                {links.map((link) => (
-                  <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      className="font-body text-sm text-grey-DEFAULT hover:text-orange-DEFAULT transition-colors"
-                    >
-                      {link.label}
+          {/* Platform */}
+          <div>
+            <h4 className="font-mono text-[0.6rem] tracking-[0.3em] uppercase text-orange-DEFAULT mb-5">Platform</h4>
+            <ul className="flex flex-col gap-3">
+              {PLATFORM_LINKS.map(link => (
+                <li key={link.href}>
+                  <Link href={link.href} className="font-body text-sm text-grey-DEFAULT hover:text-orange-DEFAULT transition-colors">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Learn */}
+          <div>
+            <h4 className="font-mono text-[0.6rem] tracking-[0.3em] uppercase text-orange-DEFAULT mb-5">Learn</h4>
+            <ul className="flex flex-col gap-3">
+              {LEARN_LINKS.map(link => (
+                <li key={link.href}>
+                  <Link href={link.href} className="font-body text-sm text-grey-DEFAULT hover:text-orange-DEFAULT transition-colors">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Account — auth-aware */}
+          <div>
+            <h4 className="font-mono text-[0.6rem] tracking-[0.3em] uppercase text-orange-DEFAULT mb-5">Account</h4>
+            <ul className="flex flex-col gap-3">
+              {loggedIn ? (
+                <>
+                  <li>
+                    <Link href="/dashboard" className="font-body text-sm text-grey-DEFAULT hover:text-orange-DEFAULT transition-colors">
+                      Dashboard
                     </Link>
                   </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+                  <li>
+                    <button
+                      onClick={handleLogout}
+                      className="font-body text-sm text-grey-DEFAULT hover:text-orange-DEFAULT transition-colors"
+                    >
+                      Log Out
+                    </button>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li>
+                    <Link href="/auth/signup" className="font-body text-sm text-grey-DEFAULT hover:text-orange-DEFAULT transition-colors">
+                      Sign Up
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/auth/login" className="font-body text-sm text-grey-DEFAULT hover:text-orange-DEFAULT transition-colors">
+                      Log In
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/dashboard" className="font-body text-sm text-grey-DEFAULT hover:text-orange-DEFAULT transition-colors">
+                      Dashboard
+                    </Link>
+                  </li>
+                </>
+              )}
+            </ul>
+          </div>
+
         </div>
 
         <div className="pt-8 border-t border-white/8 flex flex-col md:flex-row items-center justify-between gap-4">
