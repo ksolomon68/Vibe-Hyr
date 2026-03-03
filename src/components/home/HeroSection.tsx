@@ -15,7 +15,7 @@ const STATS = [
 
 function useLightRays(ref: React.RefObject<HTMLCanvasElement>) {
   useEffect(() => {
-    const canvas = ref.current
+    const canvas = ref.current as HTMLCanvasElement
     if (!canvas) return
     const ctx = canvas.getContext('2d')!
     let raf = 0
