@@ -612,6 +612,186 @@ The Assumption Lab in Vibe Hyr is designed specifically to accelerate this proce
 Your beliefs built the reality you're living. New beliefs will build a new one.
     `.trim(),
   },
+
+  {
+    slug: 'sats-guide',
+    title: 'Free SATS Guide: State Akin to Sleep — The Complete Beginner\'s Manual',
+    excerpt: 'State Akin to Sleep is a technique popularized by Neville Goddard to bridge the gap between the conscious and subconscious mind. This free guide walks you through every step of the practice — from entering the hypnagogic state to impressing your desire with sensory vividness.',
+    category: 'Guides',
+    readTime: 15,
+    publishedAt: '2025-03-25',
+    content: `
+## What Is State Akin to Sleep (SATS)?
+
+State Akin to Sleep — SATS — is a technique popularized by Neville Goddard to bridge the gap between the conscious and subconscious mind. By entering a hypnagogic state of deep relaxation, individuals can impress their desires upon their inner self to manifest specific realities.
+
+The hypnagogic state is the threshold between wakefulness and sleep. In this window, your brainwaves slow from Beta (active, analytical) to Theta (4–8 Hz), the critical factor — the analytical, doubting part of your mind — falls dormant, and the subconscious becomes fully open to new instruction.
+
+This is not meditation. It is not visualization in the traditional sense. It is a precise, nightly practice of planting a seed directly into the subconscious — without the interference of the conscious mind's objections.
+
+Neville Goddard taught this for decades. Modern neuroscience has confirmed the mechanism: the Theta state corresponds with heightened neuroplasticity, accelerated learning, and reduced resistance to new belief formation.
+
+## Why SATS Works
+
+Your subconscious mind governs approximately 95% of your behavior, reactions, and the habitual lens through which you interpret reality. It does not reason or analyze. It simply accepts what is repeatedly impressed upon it — especially when those impressions are accompanied by strong feeling.
+
+The problem is that during waking hours, the conscious mind acts as a gatekeeper. Every new belief you try to install gets interrogated: *Is this true? Do I really deserve this? Has this happened before?* The critical factor intercepts and rejects what doesn't match your existing programming.
+
+SATS bypasses this completely. In the hypnagogic state, the gatekeeper is asleep. The impressions you make in SATS go directly into the subconscious — where they take root without resistance.
+
+## The Three Elements of Effective SATS
+
+### 1. A Clear Objective
+
+Before anything else, you must define precisely what you want to manifest. Not a vague desire, but a specific outcome.
+
+- **Vague:** "I want more money"
+- **Specific:** "I have a thriving business generating consistent monthly income"
+
+- **Vague:** "I want a relationship"
+- **Specific:** "I am in a loving, secure relationship with someone who values and cherishes me"
+
+The specificity trains the subconscious to look for exactly the right bridge of incidents. Vague instructions produce vague results.
+
+### 2. A Brief Imaginary Scene That Implies the Goal Is Achieved
+
+This is the heart of SATS. You construct a brief scene — a single moment in time — that implies your desire has already been fulfilled.
+
+**The key word is "implies."** You are not watching yourself receive the desire. You are living inside a moment that could only exist if the desire were already real.
+
+Examples of implied scenes:
+- Hearing a trusted friend say: *"I knew you'd get it — congratulations."*
+- Looking down at your phone and seeing a message confirming the deal, the relationship, the healing.
+- Feeling the weight of keys in your hand as you unlock a new home or car.
+- Sitting quietly in the feeling of relief and satisfaction — the feeling that comes *after* the desire arrives.
+
+**What the scene should NOT be:**
+- A movie of the process of getting there
+- A scene where you are wishing, hoping, or asking
+- A long narrative with many moving parts
+
+Keep it short — 10 to 30 seconds when looped. The simpler the scene, the more effectively it loops in the hypnagogic state.
+
+### 3. Sensory Vividness Repeated Until It Feels Real
+
+Once you have your scene, you enter SATS and repeat it — gently, naturally, without force — until it carries the feeling of reality.
+
+**Sensory vividness** means activating as many senses as possible within the scene:
+- What do you *see* (from the inside, not watching yourself)?
+- What do you *hear* — words, sounds, ambient noise?
+- What do you *feel* physically — textures, temperatures, the felt sense of your body?
+- Most importantly: what is the *emotional tone*? The quiet satisfaction. The relief. The joy. The settledness of having arrived.
+
+It is the **feeling** that the subconscious registers as real. Imagery is simply the delivery mechanism. If you cannot visualize clearly, lean entirely into the emotional tone of the scene. That alone is sufficient.
+
+## Step-by-Step SATS Practice
+
+### Before You Begin (10 minutes before bed)
+
+**Choose and rehearse your scene.** Sit quietly and mentally step into your chosen scene while still fully awake. Practice until you can hold it for 15–30 seconds with some emotional resonance. This rehearsal means you don't have to construct it from scratch when you're drowsy.
+
+### Step 1: Enter the Relaxation Phase (3–5 minutes)
+
+Lie down in your sleep position. Close your eyes.
+
+Consciously relax your body from the feet upward:
+- Feet and calves — release all tension
+- Thighs and hips — let them sink into the bed
+- Stomach and chest — soften with each exhale
+- Shoulders, arms, hands — let them become heavy
+- Neck and face — unclench the jaw, release the eyes
+
+You are not trying to stay awake. You are cooperating with the body's natural relaxation while keeping a thread of awareness.
+
+### Step 2: Recognize the Hypnagogic State (Watch for the Signs)
+
+You will know you are entering the hypnagogic state when:
+
+- Thoughts become less controlled and more dreamlike
+- Brief, spontaneous images appear (hypnagogic imagery)
+- Your body feels heavy, distant, or numb
+- Time begins to feel elastic
+- The boundary between thinking and experiencing softens
+
+This is your signal to gently introduce the scene.
+
+### Step 3: Enter the Scene (First Person, Present Tense)
+
+Do not watch yourself in the scene from the outside. Step inside it as if it is happening right now.
+
+Feel yourself there. Hear the words if there are any. Let the emotional tone fill your body — the satisfaction, the peace, the quiet knowing that this is real.
+
+Do not analyze. Do not question whether it is working. Simply be in the scene.
+
+### Step 4: Loop Gently
+
+Replay the scene as it ends. Not mechanically — naturally, the way a favorite song replays in your mind without effort.
+
+Each loop, lean more into the feeling than the imagery. If your mind wanders (and it will), notice it without frustration and return to the scene. Wandering is not failure — it is the nature of the hypnagogic state.
+
+### Step 5: Fall Asleep in the Scene
+
+The ideal outcome: the last thing your conscious mind holds is the scene, and you drift into sleep from within it.
+
+If you fall asleep before completing the loop, that is fine. The impression has been made.
+
+## Common Mistakes and How to Fix Them
+
+**Mistake: Making the scene too long.**
+A scene longer than 30 seconds is hard to loop. Cut it to a single decisive moment.
+
+**Mistake: Watching yourself from outside.**
+You are inside the experience, not observing it. If you notice you're watching yourself, step into the scene from the first person.
+
+**Mistake: Trying too hard.**
+Effort creates tension. Tension keeps you in Beta and prevents the Theta state. The goal is ease. Let the scene arise naturally, like a familiar memory.
+
+**Mistake: Quitting after a few days with no results.**
+Current 3D reality is an echo of past thoughts — typically 60 to 90 days behind your internal shifts. A few days of SATS is a seed. Give it time to grow.
+
+**Mistake: Changing the scene constantly.**
+Choose one scene and commit to it for at least 30 days. Consistency builds subconscious consensus. Switching scenes is like planting seeds in the same spot, digging them up, and replanting different ones.
+
+**Mistake: Doing SATS from a place of desperation.**
+The feeling you bring to SATS is what gets impressed. Desperation impresses lack. Ease and satisfaction impress fulfillment. If you feel desperate, spend a few minutes in gratitude for something already present before entering the scene.
+
+## How Long Before You See Results?
+
+This varies. Some practitioners report changes within days — synchronicities, unexpected opportunities, shifts in how others treat them. Others report the bridge forming over weeks or months.
+
+The variables:
+- **Depth of the old program.** A belief held for 40 years takes more repetition to dissolve than one held for 4.
+- **Consistency of practice.** Nightly practice is far more effective than occasional sessions.
+- **Feeling quality.** A session with genuine emotional resonance outweighs ten sessions done mechanically.
+- **Persistence through the delay.** The echo delay means results arrive after a gap. Those who persist through the gap see the bridge.
+
+The consistent finding among long-term practitioners: results are not random. They correlate directly with the quality and consistency of the internal state maintained.
+
+## Your Nightly SATS Checklist
+
+Use this before each practice:
+
+- [ ] I have chosen a specific desire to impress tonight
+- [ ] I have a brief, specific scene that implies the desire is fulfilled
+- [ ] I have rehearsed the scene while awake
+- [ ] My body is fully relaxed before I introduce the scene
+- [ ] I am in the scene from the first person (not watching myself)
+- [ ] I am looping the scene with feeling, not force
+- [ ] I am falling asleep from within the scene
+
+## A Note on Persistence
+
+The most important single factor in SATS is showing up each night — especially on the nights when nothing has changed externally, when doubt is loudest, when the 3D reality seems to contradict everything you're doing.
+
+Those are the nights that matter most. The subconscious is recording your persistence as a belief: *"This person is serious. This is real to them."* And it adjusts accordingly.
+
+You are not pretending. You are not lying to yourself. You are choosing — deliberately and consistently — which state of consciousness you will inhabit. And consciousness creates reality.
+
+This is the complete practice. Everything else is detail.
+
+Start tonight.
+    `.trim(),
+  },
 ]
 
 export function getBlogPost(slug: string): BlogPost | undefined {

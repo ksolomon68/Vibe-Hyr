@@ -75,7 +75,7 @@ export function PricingSection() {
           <span className="text-orange-DEFAULT">LEVEL OF MASTERY</span>
         </h2>
         <p className="font-body italic text-grey-DEFAULT max-w-xl mb-12">
-          Free content draws them in. Paid tiers take them deeper. Every tier serves a distinct stage of the journey.
+          Start free and explore. Go deeper when you're ready. Every tier is designed for exactly where you are on the path.
         </p>
 
         <div className="orange-rule">♛</div>

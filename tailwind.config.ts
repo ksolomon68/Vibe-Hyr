@@ -27,7 +27,7 @@ const config: Config = {
         // Greys
         grey: {
           DEFAULT: '#888888',
-          dark:    '#444444',
+          dark:    '#777777',
           light:   '#BBBBBB',
         },
       },

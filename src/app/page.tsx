@@ -26,13 +26,13 @@ export default function HomePage() {
         {/* Four Pillars */}
         <section className="py-24 px-6 md:px-14">
           <div className="max-w-7xl mx-auto">
-            <div className="label mb-4">What We're Building</div>
+            <div className="label mb-4">How It Works</div>
             <h2 className="font-display text-[clamp(3rem,6vw,5rem)] leading-[0.95] tracking-[0.02em] mb-4">
               FOUR PILLARS OF<br />
               <span className="text-orange-DEFAULT">THE PLATFORM</span>
             </h2>
             <p className="font-body italic text-grey-DEFAULT max-w-xl mb-12">
-              Every feature serves one goal: moving subscribers from passive learners to active reality architects.
+              Every feature serves one purpose: turning understanding into lived experience and lived experience into a new reality.
             </p>
 
             <div className="orange-rule">♛</div>
@@ -42,7 +42,7 @@ export default function HomePage() {
             >
               {PILLARS.map(({ icon: Icon, title, desc }, i) => (
                 <div key={title} className="bg-black-2 p-9 hover:bg-black-3 transition-colors relative overflow-hidden group">
-                  <div className="absolute top-3 right-4 font-display text-[5.5rem] leading-none text-orange-DEFAULT/6 select-none pointer-events-none">
+                  <div className="absolute top-3 right-4 font-display text-[3rem] md:text-[5.5rem] leading-none text-orange-DEFAULT/6 select-none pointer-events-none overflow-hidden">
                     {String(i + 1).padStart(2, '0')}
                   </div>
                   <Icon size={28} className="text-orange-DEFAULT mb-5" />
