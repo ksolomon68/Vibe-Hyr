@@ -13,9 +13,16 @@ interface VideoPlayerProps {
   initialProgress?: number
 }
 
-// Branded backdrop — CSS gradient, no missing image dependency
+// Branded backdrop image
 const BACKDROP_STYLE: React.CSSProperties = {
-  background: 'radial-gradient(ellipse at 30% 40%, rgba(255,123,0,0.18) 0%, rgba(10,10,10,1) 65%)',
+  backgroundImage: 'url("/images/video-backdrop.png")',
+  backgroundSize: 'cover',
+  backgroundPosition: 'center',
+}
+
+// Orange tint over the backdrop image
+const TINT_STYLE: React.CSSProperties = {
+  background: 'radial-gradient(ellipse at 30% 40%, rgba(255,123,0,0.15) 0%, rgba(10,10,10,0.5) 65%)',
 }
 
 // Orange grid overlay
@@ -44,8 +51,10 @@ function ThumbnailOverlay({
       style={{ paddingBottom: '56.25%', background: '#0A0A0A' }}
       onClick={onClick}
     >
-      {/* Branded gradient backdrop (always rendered, no missing image) */}
+      {/* Branded backdrop image */}
       <div className="absolute inset-0" style={BACKDROP_STYLE} />
+      {/* Orange tint over backdrop */}
+      <div className="absolute inset-0" style={TINT_STYLE} />
       {/* Orange grid pattern */}
       <div className="absolute inset-0 opacity-10" style={GRID_STYLE} />
       {/* Optional thumbnail image on top */}
