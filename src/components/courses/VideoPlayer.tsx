@@ -5,18 +5,18 @@ import { Play, Volume2, VolumeX } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface VideoPlayerProps {
-  videoUrl:        string | null
-  title:           string
-  thumbnailUrl?:   string | null
-  onComplete?:     () => void
-  lessonId?:       string
-  duration?:       number
+  videoUrl: string | null
+  title: string
+  thumbnailUrl?: string | null
+  onComplete?: () => void
+  lessonId?: string
+  duration?: number
   initialProgress?: number
 }
 
 export function VideoPlayer({ videoUrl, title, thumbnailUrl, onComplete }: VideoPlayerProps) {
-  const [started,  setStarted]  = useState(false)
-  const [muted,    setMuted]    = useState(false)
+  const [started, setStarted] = useState(false)
+  const [muted, setMuted] = useState(false)
 
   // YouTube URL detection
   const isYouTube = videoUrl?.includes('youtube.com') || videoUrl?.includes('youtu.be')
@@ -32,7 +32,7 @@ export function VideoPlayer({ videoUrl, title, thumbnailUrl, onComplete }: Video
 
   // Cloudflare Stream URL detection
   const isCFStream = videoUrl?.includes('cloudflarestream.com') ||
-                     videoUrl?.includes('iframe.videodelivery.net')
+    videoUrl?.includes('iframe.videodelivery.net')
 
   // Extract Cloudflare video ID if it's a raw ID
   const cfEmbedUrl = videoUrl && !videoUrl.startsWith('http')
@@ -42,24 +42,33 @@ export function VideoPlayer({ videoUrl, title, thumbnailUrl, onComplete }: Video
   if (!videoUrl) {
     // Placeholder for when video hasn't been uploaded yet
     return (
-      <div className="relative w-full bg-black-3 border-b border-white/8"
-           style={{ paddingBottom: '56.25%' }}>
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-          <div className="w-20 h-20 rounded-full border-2 border-orange-DEFAULT flex items-center justify-center">
+      <div className="relative w-full bg-black-3 border-b border-white/8 overflow-hidden"
+        style={{ paddingBottom: '56.25%' }}>
+        {/* Branded backdrop */}
+        <div
+          className="absolute inset-0 z-0 opacity-75"
+          style={{
+            backgroundImage: 'url("/images/video-backdrop.png")',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        />
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-10">
+          <div className="w-20 h-20 rounded-full border-2 border-orange-DEFAULT flex items-center justify-center bg-black/20">
             <Play size={30} className="text-orange-DEFAULT ml-1" fill="currentColor" />
           </div>
           <div className="text-center px-8">
-            <p className="font-display text-xl tracking-widest text-white mb-1">{title}</p>
-            <p className="font-mono text-[0.58rem] tracking-[0.2em] text-grey-dark uppercase">
+            <p className="font-display text-xl tracking-widest text-white mb-1 drop-shadow-md">{title}</p>
+            <p className="font-mono text-[0.58rem] tracking-[0.2em] text-grey-dark uppercase drop-shadow-md">
               Video coming soon — read the lesson content below
             </p>
           </div>
           {/* Decorative grid lines */}
           <div className="absolute inset-0 pointer-events-none opacity-10"
-               style={{
-                 backgroundImage: 'linear-gradient(rgba(255,123,0,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255,123,0,0.3) 1px, transparent 1px)',
-                 backgroundSize: '60px 60px',
-               }}
+            style={{
+              backgroundImage: 'linear-gradient(rgba(255,123,0,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255,123,0,0.3) 1px, transparent 1px)',
+              backgroundSize: '60px 60px',
+            }}
           />
         </div>
       </div>
@@ -69,26 +78,42 @@ export function VideoPlayer({ videoUrl, title, thumbnailUrl, onComplete }: Video
   if (!started) {
     return (
       <div
-        className="relative w-full bg-black-3 cursor-pointer group border-b border-white/8"
+        className="relative w-full bg-black-3 cursor-pointer group border-b border-white/8 overflow-hidden"
         style={{ paddingBottom: '56.25%' }}
         onClick={() => setStarted(true)}
       >
-        {thumbnailUrl && (
+        {thumbnailUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={thumbnailUrl}
             alt={title}
             className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity"
           />
+        ) : (
+          /* Branded backdrop fallback */
+          <div
+            className="absolute inset-0 opacity-75 group-hover:opacity-90 transition-opacity"
+            style={{
+              backgroundImage: 'url("/images/video-backdrop.png")',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          />
         )}
-        <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/20 transition-colors">
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors z-10" />
+        {/* Centered play button + title */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-20">
           <div className="w-20 h-20 rounded-full bg-orange-DEFAULT flex items-center justify-center
                           group-hover:scale-105 transition-transform shadow-lg shadow-orange-DEFAULT/30">
             <Play size={28} className="text-black ml-1" fill="currentColor" />
           </div>
-        </div>
-        <div className="absolute bottom-4 left-4 right-4">
-          <p className="font-display text-lg tracking-widest text-white drop-shadow-lg">{title}</p>
+          <div className="text-center px-8">
+            <p className="font-display text-xl tracking-widest text-white mb-1 drop-shadow-md">{title}</p>
+            <p className="font-mono text-[0.58rem] tracking-[0.2em] text-grey-dark uppercase drop-shadow-md">
+              Click to play
+            </p>
+          </div>
         </div>
       </div>
     )
