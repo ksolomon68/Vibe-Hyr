@@ -128,7 +128,7 @@ export default async function DashboardPage() {
                         : 'Upgrade to Reality Master for Course 4, the full Assumption Lab, and monthly live Q&As.'
                       }
                     </p>
-                    <Link href="/pricing" className="btn-orange text-[0.62rem] px-6 py-3">
+                    <Link href="/#pricing" className="btn-orange text-[0.62rem] px-6 py-3">
                       View Plans
                     </Link>
                   </div>
@@ -173,7 +173,7 @@ export default async function DashboardPage() {
                             </Link>
                           ) : (
                             <Link
-                              href="/pricing"
+                              href="/#pricing"
                               className="font-mono text-[0.58rem] tracking-widest uppercase text-grey-dark hover:text-orange-DEFAULT transition-colors"
                             >
                               Upgrade

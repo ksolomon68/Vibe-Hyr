@@ -17,7 +17,7 @@ const LINKS = {
   Learn: [
     { label: 'Blog',             href: '/blog'    },
     { label: 'Free SATS Guide',  href: '/blog/sats-guide' },
-    { label: 'Pricing',          href: '/pricing' },
+    { label: 'Pricing',          href: '/#pricing' },
   ],
   Account: [
     { label: 'Sign Up',  href: '/auth/signup' },
