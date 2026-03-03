@@ -283,3 +283,19 @@ LEFT JOIN (
 LEFT JOIN (
   SELECT user_id, AVG(score_percent)::INTEGER AS avg_score FROM quiz_attempts GROUP BY user_id
 ) qa ON qa.user_id = p.id;
+
+-- ── 11. ADMIN ACCOUNT ─────────────────────────────────────────────
+-- Admin profile for k.solomon@live.com
+-- Auth user was pre-created via Admin API (id below)
+-- Run this after the auth user exists in auth.users
+INSERT INTO profiles (id, email, full_name, membership_tier)
+VALUES (
+  'aa6cfa82-f18e-4b69-93c6-77f8f24aadb5',
+  'k.solomon@live.com',
+  'Keisha Solomon',
+  'elite'
+)
+ON CONFLICT (id) DO UPDATE SET
+  membership_tier = 'elite',
+  full_name       = 'Keisha Solomon',
+  updated_at      = NOW();
