@@ -108,7 +108,7 @@ export function CourseCard({ course, userTier = 'free', progress, isLarge }: Cou
           </Link>
         ) : (
           <Link
-            href="/pricing"
+            href="/#pricing"
             className="btn-outline-orange w-full text-center flex items-center justify-center gap-2 text-[0.62rem]"
           >
             <Lock size={12} />

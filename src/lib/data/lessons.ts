@@ -10,7 +10,7 @@ export const COURSE_01_LESSONS: Lesson[] = [
     order_index: 1,
     title: 'The 11 Million Bit Problem',
     description: 'Your brain is drowning in data every second. Understand why it filters almost everything out — and who controls the filter.',
-    video_url: null,
+    video_url: 'https://www.youtube.com/embed/mTjDPbUC44U',
     duration_seconds: 720,
     is_preview: true,
     content_md: `## The 11 Million Bit Problem

@@ -18,6 +18,18 @@ export function VideoPlayer({ videoUrl, title, thumbnailUrl, onComplete }: Video
   const [started,  setStarted]  = useState(false)
   const [muted,    setMuted]    = useState(false)
 
+  // YouTube URL detection
+  const isYouTube = videoUrl?.includes('youtube.com') || videoUrl?.includes('youtu.be')
+
+  const getYouTubeEmbedUrl = (url: string): string => {
+    if (url.includes('youtube.com/embed')) return `${url}?autoplay=1`
+    const watchMatch = url.match(/[?&]v=([^&]+)/)
+    if (watchMatch) return `https://www.youtube.com/embed/${watchMatch[1]}?autoplay=1`
+    const shortMatch = url.match(/youtu\.be\/([^?&]+)/)
+    if (shortMatch) return `https://www.youtube.com/embed/${shortMatch[1]}?autoplay=1`
+    return url
+  }
+
   // Cloudflare Stream URL detection
   const isCFStream = videoUrl?.includes('cloudflarestream.com') ||
                      videoUrl?.includes('iframe.videodelivery.net')
@@ -78,6 +90,21 @@ export function VideoPlayer({ videoUrl, title, thumbnailUrl, onComplete }: Video
         <div className="absolute bottom-4 left-4 right-4">
           <p className="font-display text-lg tracking-widest text-white drop-shadow-lg">{title}</p>
         </div>
+      </div>
+    )
+  }
+
+  // YouTube embed
+  if (isYouTube) {
+    return (
+      <div className="relative w-full bg-black border-b border-white/8" style={{ paddingBottom: '56.25%' }}>
+        <iframe
+          className="absolute inset-0 w-full h-full"
+          src={getYouTubeEmbedUrl(videoUrl!)}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+          title={title}
+        />
       </div>
     )
   }

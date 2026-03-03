@@ -158,7 +158,7 @@ export default async function CoursePage({ params }: { params: { slug: string } 
                   </Link>
                 ) : (
                   <Link
-                    href={`/pricing`}
+                    href="/#pricing"
                     className="btn-orange w-full text-center flex items-center justify-center gap-2"
                   >
                     <Crown size={13} />
@@ -189,7 +189,7 @@ export default async function CoursePage({ params }: { params: { slug: string } 
                 {gateInfo.desc}
               </p>
               <div className="flex gap-4 justify-center flex-wrap">
-                <Link href="/pricing" className="btn-orange flex items-center gap-2">
+                <Link href="/#pricing" className="btn-orange flex items-center gap-2">
                   <Crown size={13} /> Upgrade — {gateInfo.price}
                 </Link>
                 <Link href="/courses/programming-the-gatekeeper" className="btn-outline">
