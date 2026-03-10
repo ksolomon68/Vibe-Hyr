@@ -40,9 +40,18 @@ export function Navbar() {
           .eq('id', user.id)
           .single()
           .then(({ data }) => setProfile(data))
+      } else {
+        setProfile(null)
       }
     })
   }, [])
+
+  const handleLogout = async () => {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    setProfile(null)
+    window.location.href = '/'
+  }
 
   return (
     <>
@@ -88,16 +97,24 @@ export function Navbar() {
           {/* Right side */}
           <div className="hidden md:flex items-center gap-4">
             {profile ? (
-              <Link href="/dashboard" className="flex items-center gap-3 group">
-                <div className="w-8 h-8 rounded-full bg-[var(--black-3)] border-2 border-[var(--orange)] flex items-center justify-center">
-                  <span className="font-display text-sm text-[var(--orange)]">
-                    {profile.full_name?.[0] ?? profile.email[0].toUpperCase()}
+              <div className="flex items-center gap-6">
+                <Link href="/dashboard" className="flex items-center gap-3 group">
+                  <div className="w-8 h-8 rounded-full bg-[var(--black-3)] border-2 border-[var(--orange)] flex items-center justify-center">
+                    <span className="font-display text-sm text-[var(--orange)]">
+                      {profile.full_name?.[0] ?? profile.email[0].toUpperCase()}
+                    </span>
+                  </div>
+                  <span className="font-mono text-[0.6rem] text-[var(--grey)] tracking-widest uppercase group-hover:text-[var(--orange)] transition-colors">
+                    {getTierLabel(profile.membership_tier)}
                   </span>
-                </div>
-                <span className="font-mono text-[0.6rem] text-[var(--grey)] tracking-widest uppercase group-hover:text-[var(--orange)] transition-colors">
-                  {getTierLabel(profile.membership_tier)}
-                </span>
-              </Link>
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="font-mono text-[0.62rem] tracking-[0.18em] uppercase text-[var(--grey)] hover:text-white transition-colors"
+                >
+                  Log Out
+                </button>
+              </div>
             ) : (
               <>
                 <Link
@@ -140,9 +157,14 @@ export function Navbar() {
             ))}
             <div className="pt-6 border-t border-white/10 flex flex-col gap-4">
               {profile ? (
-                <Link href="/dashboard" onClick={() => setOpen(false)} className="btn-orange text-center">
-                  Dashboard
-                </Link>
+                <>
+                  <Link href="/dashboard" onClick={() => setOpen(false)} className="btn-orange text-center">
+                    Dashboard
+                  </Link>
+                  <button onClick={handleLogout} className="btn-outline text-center">
+                    Log Out
+                  </button>
+                </>
               ) : (
                 <>
                   <Link href="/auth/login" onClick={() => setOpen(false)} className="btn-outline text-center">

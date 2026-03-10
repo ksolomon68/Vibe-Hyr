@@ -30,38 +30,38 @@ const FADE_UP = {
 }
 
 const STATS = [
-  { num: '1 in 5', desc: 'students experience a serious behavioral incident before graduation', source: 'National Center for Education Statistics' },
-  { num: '74%', desc: 'of teachers report feeling unprepared to handle escalating student conflict', source: 'Teacher Support Survey' },
-  { num: '3.7M', desc: 'students suspended annually — disproportionately students of color', source: 'ACLU School-to-Prison Pipeline Report' }
+  { num: '44%', desc: 'of new teachers leave the profession within the first five years', source: 'Department of Education' },
+  { num: '75%', desc: 'of educators report seeing students struggle with dysregulation daily', source: 'Teacher Wellness Survey' },
+  { num: '80%', desc: 'of teachers experience chronic stress that impacts their classroom climate', source: 'NEA Health Monitoring' }
 ]
 
 const PROBLEMS = [
-  { icon: '⚡', title: 'Escalating Student Conflict', desc: 'Fights, verbal aggression, and chronic disruption that existing discipline systems aren\'t resolving — because they address behavior without addressing the root.' },
-  { icon: '🧱', title: 'Discipline Without Understanding', desc: 'Suspension and punitive measures that remove students from learning without equipping them with the emotional tools to return and do differently.' },
-  { icon: '🪞', title: 'No Mirror for Self-Awareness', desc: 'Students who have never been taught to observe their own emotional states, triggers, or how their energy affects the people around them.' },
-  { icon: '🌊', title: 'Staff Bearing the Weight', desc: 'Teachers and counselors absorbing dysregulated energy daily with little support, language, or frameworks to redirect it effectively.' }
+  { icon: '🔥', title: 'Chronic Educator Burnout', desc: 'The "empty cup" phenomenon where staff are expected to pour into students while their own emotional and physiological reserves are depleted.' },
+  { icon: '⚡', title: 'Secondary Traumatic Stress', desc: 'Educators absorbing the dysregulated energy and trauma of their students without a framework to process or redirect it.' },
+  { icon: '🧱', title: 'Reactive Management Loops', desc: 'Classroom management that relies on power dynamics and reactivity instead of nervous system awareness and co-regulation.' },
+  { icon: '🔄', title: 'Disconnected Implementation', desc: 'Professional development that offers theory without the daily self-mastery tools needed to actually change classroom culture.' }
 ]
 
 const PROGRAMS = [
-  { number: '01', tag: 'Core Program', audience: 'Grades 6–12', name: 'The Student Reset', desc: 'Vibe Hyr\'s flagship student program. Builds the foundational self-awareness, emotional vocabulary, and conflict navigation skills every young person needs.', pills: ['Emotional Regulation', 'Conflict Resolution', 'Self-Awareness'], dark: true },
-  { number: '02', tag: 'Intervention Track', audience: 'High-risk cohorts', name: 'From Trigger to Clarity', desc: 'Targeted for students with repeated behavioral referrals. Neuroscience-backed tools for interrupting reactive patterns before they become incidents.', pills: ['Trigger Mapping', 'Nervous System Basics', 'Reentry Planning'], dark: false },
-  { number: '03', tag: 'Staff Training', audience: 'Educators & counselors', name: 'Teaching the Frequency', desc: 'Equips staff with Vibe Hyr\'s language and de-escalation frameworks — so they can meet students where they are without losing themselves.', pills: ['De-Escalation', 'Compassion Fatigue', 'Co-Regulation'], dark: false },
-  { number: '04', tag: 'DEI Integration', audience: 'DEI coordinators & admin', name: 'Equity Through Elevation', desc: 'Combines cultural responsiveness with Vibe Hyr\'s self-awareness framework to create equitable, restorative school cultures.', pills: ['Restorative Practices', 'Cultural Responsiveness', 'Discipline Equity'], dark: false }
+  { number: '01', tag: 'Flagship Training', audience: 'All K–12 Staff', name: 'The Educator Reset', desc: 'Vibe Hyr\'s core staff program. Focuses on teacher wellness, nervous system literacy, and the energy of leadership.', pills: ['Nervous System Health', 'Emotional Resilience', 'Self-Mastery'], dark: true },
+  { number: '02', tag: 'Leadership Track', audience: 'Admin & Principals', name: 'Vibrational Leadership', desc: 'How school leaders set the frequency for an entire building. Frameworks for supporting staff wellness from the top down.', pills: ['Culture Architecture', 'Wellness Advocacy', 'Conscious Leadership'], dark: false },
+  { number: '03', tag: 'Co-Regulation', audience: 'Classroom Teachers', name: 'Co-Regulation Mastery', desc: 'The science of meeting a student\'s storm with your calm. Practical tools for de-escalating through presence.', pills: ['De-Escalation', 'Classroom Climate', 'Biology of Calm'], dark: false },
+  { number: '04', tag: 'Sustainable Culture', audience: 'Districts & HR', name: 'The Retained Educator', desc: 'Systems-level approaches to reducing teacher turnover through culture-building and self-awareness integration.', pills: ['Staff Retention', 'Systemic Wellness', 'Culture ROI'], dark: false }
 ]
 
 const MODULES = [
-  { num: '01', name: 'Who Am I in This Room?', sub: 'Identity, presence, and the energy we bring without knowing it' },
-  { num: '02', name: 'The Trigger Anatomy', sub: 'Understanding what sets you off — and why it\'s not just "being angry"' },
-  { num: '03', name: 'Your Nervous System Story', sub: 'Neuroscience of fight/flight in plain language students can own' },
-  { num: '04', name: 'The 3-Second Gap', sub: 'Creating space between stimulus and reaction — the core skill' },
-  { num: '05', name: 'Conflict Without Casualties', sub: 'Language and moves for navigating confrontation with dignity' },
-  { num: '06', name: 'Raising Your Own Vibe', sub: 'Daily habits for emotional maintenance — not just crisis management' }
+  { num: '01', name: 'The Regulated Leader', sub: 'Understanding that your internal state is your most powerful tool' },
+  { num: '02', name: 'Nervous System Literacy', sub: 'The biology of stress/calm for adults — how to read your own body' },
+  { num: '03', name: 'The Co-Regulation Move', sub: 'Meeting dysregulation without becoming dysregulated yourself' },
+  { num: '04', name: 'The Gap Between stim/rx', sub: 'Redefining classroom management through personal self-awareness' },
+  { num: '05', name: 'Compassion Without Fatigue', sub: 'Language and boundaries for holding space without burning out' },
+  { num: '06', name: 'Elevating the Staff Room', sub: 'Building a peer culture that supports rather than drains energy' }
 ]
 
 const DELIVERY = [
-  { icon: <BookOpen className="w-8 h-8" />, tag: 'Scalable', name: 'Digital Curriculum', desc: 'Video-based modules with reflection journals, knowledge checks, and facilitator guides. Integrates with your LMS.', featured: false },
-  { icon: <GraduationCap className="w-8 h-8" />, tag: 'High-Impact', name: 'On-Site Workshop', desc: 'Immersive in-person sessions led by a certified Vibe Hyr facilitator. Ideal for targeted cohorts or culture initiatives.', featured: false },
-  { icon: <HeartHandshake className="w-8 h-8" />, tag: 'Recommended', name: 'Blended Implementation', desc: 'Digital curriculum paired with live facilitation and quarterly check-ins. The most sustainable model for lasting change.', featured: true }
+  { icon: <BookOpen className="w-8 h-8" />, tag: 'Self-Paced', name: 'Digital Professional Dev', desc: 'Video-based modules designed for busy staff. Includes reflection tools and actionable classroom protocols.', featured: false },
+  { icon: <GraduationCap className="w-8 h-8" />, tag: 'High-Impact', name: 'Professional Staff Day', desc: 'Immersive workshops led by Vibe Hyr facilitators. Transforming staff rooms through shared language and experiences.', featured: false },
+  { icon: <HeartHandshake className="w-8 h-8" />, tag: 'The Gold Standard', name: 'Annual Wellness Partnership', desc: 'A year-long integration including digital access, live coaching, and district-level wellness reporting.', featured: true }
 ]
 
 export default function EducationPage() {
@@ -88,15 +88,15 @@ export default function EducationPage() {
           >
             <div className="flex items-center gap-3 mb-8">
               <div className="w-10 h-[1px] bg-orange-DEFAULT" />
-              <span className="text-[0.7rem] uppercase tracking-[0.3em] text-orange-DEFAULT font-semibold">Educational Institutions</span>
+              <span className="text-[0.7rem] uppercase tracking-[0.3em] text-orange-DEFAULT font-semibold">For Educator Excellence</span>
             </div>
             <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-white leading-[0.95] mb-8">
-              When students learn <br/>
-              <span className="text-orange-bright font-bold italic">to vibe higher,</span> <br/>
-              schools transform.
+              Empowering the <br/>
+              <span className="text-orange-bright font-bold italic">educators who</span> <br/>
+              shape reality.
             </h1>
             <p className="font-body-alt text-lg text-white/70 max-w-lg mb-12 leading-relaxed">
-              Vibe Hyr brings neuroscience-backed self-awareness and conflict resolution training to K–12 and higher education — equipping students with the emotional tools schools wish they came with.
+              Vibe Hyr provides neuroscience-backed self-mastery and co-regulation training for K–12 staff — because a regulated school culture starts with a regulated adult.
             </p>
             <div className="flex flex-wrap gap-4 mb-12">
               <button 
@@ -110,7 +110,7 @@ export default function EducationPage() {
               </a>
             </div>
             <div className="flex flex-wrap gap-6 pt-10 border-t border-white/10">
-              {['DEI-Aligned', 'Trauma-Informed', 'MTSS Compatible', 'Restorative'].map(tag => (
+              {['Teacher Wellness', 'Co-Regulation', 'Staff Retention', 'Self-Mastery'].map(tag => (
                 <span key={tag} className="text-[0.65rem] uppercase tracking-[0.2em] text-white/40 font-bold">{tag}</span>
               ))}
             </div>
@@ -124,7 +124,7 @@ export default function EducationPage() {
             className="bg-ink p-10 md:p-14 rounded-sm border border-orange-DEFAULT/20 shadow-2xl relative overflow-hidden group"
           >
             <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-orange-DEFAULT via-gold to-transparent" />
-            <p className="text-gold text-[0.7rem] uppercase tracking-[0.3em] font-bold mb-10">The Cost of Unaddressed Conflict</p>
+            <p className="text-gold text-[0.7rem] uppercase tracking-[0.3em] font-bold mb-10">The State of the Educator</p>
             
             {STATS.map((stat, idx) => (
               <div key={idx} className={`pb-8 mb-8 border-b border-white/5 last:border-0 last:mb-0 last:pb-0`}>
@@ -134,7 +134,7 @@ export default function EducationPage() {
             ))}
             
             <p className="mt-10 pt-8 border-t border-white/5 text-[0.6rem] text-white/20 uppercase tracking-widest">
-              Sources: NCES, ACLU School-to-Prison Pipeline
+              Sources: NEA, Department of Education
             </p>
           </motion.div>
         </div>
@@ -144,10 +144,10 @@ export default function EducationPage() {
       <section className="py-24 md:py-32 px-6 md:px-14 bg-zinc-950">
         <div className="max-w-7xl mx-auto">
           <motion.div {...FADE_UP} className="mb-20">
-            <span className="text-[0.7rem] uppercase tracking-[0.3em] text-orange-DEFAULT font-bold mb-4 block">What We Address</span>
+            <span className="text-[0.7rem] uppercase tracking-[0.3em] text-orange-DEFAULT font-bold mb-4 block">The Challenge</span>
             <h2 className="font-serif text-4xl md:text-6xl text-white leading-tight max-w-2xl">
-              The real reason students escalate — <br/>
-              <span className="text-orange-bright italic">and why rules alone don't fix it.</span>
+              You can't give what you don't have — <br/>
+              <span className="text-orange-bright italic">regulation starts from within.</span>
             </h2>
           </motion.div>
 
@@ -174,10 +174,10 @@ export default function EducationPage() {
       <section id="programs" className="py-24 md:py-32 px-6 md:px-14 bg-black">
         <div className="max-w-7xl mx-auto">
           <motion.div {...FADE_UP} className="mb-20">
-            <span className="text-[0.7rem] uppercase tracking-[0.3em] text-orange-DEFAULT font-bold mb-4 block">Our Programs</span>
+            <span className="text-[0.7rem] uppercase tracking-[0.3em] text-orange-DEFAULT font-bold mb-4 block">Our Training</span>
             <h2 className="font-serif text-4xl md:text-6xl text-white leading-tight">
-              Built for students.<br/>
-              <span className="text-orange-DEFAULT">Designed for coordinators.</span>
+              Built for educators.<br/>
+              <span className="text-orange-DEFAULT">Proven in classrooms.</span>
             </h2>
           </motion.div>
 
@@ -228,23 +228,23 @@ export default function EducationPage() {
           <motion.div {...FADE_UP}>
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-gold/10 border border-gold/30 rounded-full text-gold text-[0.7rem] uppercase tracking-widest font-bold mb-8">
               <GraduationCap size={16} />
-              Flagship Program
+              Featured Training
             </div>
             <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl text-white mb-8 leading-tight">
-              <span className="text-orange-bright font-bold italic">The Student Reset</span><br/>
-              — what's inside
+              <span className="text-orange-bright font-bold italic">The Educator Reset</span><br/>
+              — curriculum modules
             </h2>
             <p className="text-white/60 text-lg leading-relaxed mb-12 max-w-xl">
-              Six modules that walk students through understanding themselves — using Vibe Hyr's signature blend of neuroscience and practical self-mastery. Real tools for real change.
+              Six modules that equip staff with the self-mastery tools needed to transform classroom climate — using Vibe Hyr's signature blend of neuroscience and practical adult education. 
             </p>
             <div className="space-y-6 mb-12">
               {[
-                'Emotional vocabulary for the real world',
-                'Measurable reduction in behavioral referrals',
-                'Shared de-escalation framework for staff',
-                'Restorative practices that actually stick',
-                'Equitable outcomes through self-awareness',
-                'Engagement tracking for administrators'
+                'Nervous system co-regulation frameworks',
+                'Protocols for reducing classroom conflict incidents',
+                'Personal self-care tools for high-stress days',
+                'Measurable improvement in staff retention rates',
+                'Equitable discipline through adult awareness',
+                'Wellness certifications for participating staff'
               ].map((item, idx) => (
                 <div key={idx} className="flex gap-4 items-center">
                   <div className="p-1 rounded-full bg-orange-DEFAULT/20 border border-orange-DEFAULT/40">
@@ -269,7 +269,7 @@ export default function EducationPage() {
             className="bg-white/5 border border-white/10 p-10 md:p-14 rounded-sm backdrop-blur-sm relative overflow-hidden"
           >
             <div className="absolute top-0 left-10 right-10 h-[1px] bg-gradient-to-r from-transparent via-orange-DEFAULT to-transparent" />
-            <p className="text-gold text-[0.7rem] uppercase tracking-[0.3em] font-bold mb-10">Program Curriculum</p>
+            <p className="text-gold text-[0.7rem] uppercase tracking-[0.3em] font-bold mb-10">Staff Curriculum</p>
             <div className="space-y-8">
               {MODULES.map((mod, idx) => (
                 <div key={idx} className="flex gap-6 pb-6 border-b border-white/10 last:border-0 last:pb-0">
@@ -291,8 +291,8 @@ export default function EducationPage() {
           <motion.div {...FADE_UP} className="text-center mb-20 max-w-3xl mx-auto">
             <span className="text-[0.7rem] uppercase tracking-[0.3em] text-orange-DEFAULT font-bold mb-4 block">Deployment</span>
             <h2 className="font-serif text-4xl md:text-6xl text-white leading-tight">
-              Flexible enough for any institution. <br/>
-              <span className="text-orange-DEFAULT">Structured enough to work.</span>
+              Flexible for any district schedule. <br/>
+              <span className="text-orange-DEFAULT">Structured to sustain wellness.</span>
             </h2>
           </motion.div>
 
@@ -332,20 +332,20 @@ export default function EducationPage() {
         
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center relative z-10">
           <motion.div {...FADE_UP}>
-            <span className="text-[0.7rem] uppercase tracking-[0.3em] text-orange-bright font-bold mb-4 block">For DEI & Training Coordinators</span>
+            <span className="text-[0.7rem] uppercase tracking-[0.3em] text-orange-bright font-bold mb-4 block">For Administration</span>
             <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl mb-8 leading-tight">
-              We speak your language — <br/>
-              <span className="text-orange-bright font-bold italic">and your students' too.</span>
+              A thriving school culture starts — <br/>
+              <span className="text-orange-bright font-bold italic">in the staff room.</span>
             </h2>
             <p className="text-white/70 text-lg leading-relaxed mb-12">
-              Vibe Hyr was built by someone who understands what it means to move through institutions that weren't designed with you in mind. Our programs are culturally responsive by design — not as an add-on. 
+              Vibe Hyr integration metrics allow administration to see real-time engagement in wellness tools and correlate them with behavioral incident trends. We provide the data you need to advocate for your staff.
             </p>
             <div className="grid grid-cols-2 gap-4">
               {[
-                { label: 'Dashboards', icon: <LayoutDashboard size={20}/> },
-                { label: 'Reporting', icon: <BrainCircuit size={20}/> },
-                { label: 'Tier 1/2 Support', icon: <Layers size={20}/> },
-                { label: 'Restorative', icon: <Users size={20}/> }
+                { label: 'Staff Dashboards', icon: <LayoutDashboard size={20}/> },
+                { label: 'Wellness Reporting', icon: <BrainCircuit size={20}/> },
+                { label: 'Culture Metrics', icon: <Layers size={20}/> },
+                { label: 'Retention Focus', icon: <Users size={20}/> }
               ].map(item => (
                 <div key={item.label} className="flex items-center gap-3 p-4 bg-white/5 border border-white/10 rounded-sm">
                   <div className="text-orange-bright">{item.icon}</div>
@@ -364,9 +364,9 @@ export default function EducationPage() {
             <div className="aspect-square bg-white shadow-2xl p-10 md:p-14 text-teal">
               <div className="h-full border border-teal/10 flex flex-col justify-between">
                 <div>
-                  <h4 className="font-serif text-4xl mb-6">Equitable Outcomes</h4>
+                  <h4 className="font-serif text-4xl mb-6">Adult Co-Regulation</h4>
                   <p className="text-sm leading-relaxed mb-8">
-                    "The self-awareness framework at the core of our curriculum honors every student's lived experience as the starting point for growth. We don't just change behavior; we empower identity."
+                    "When we empower teachers to master their own internal state, the classroom follows. We aren't just giving them a curriculum to teach; we're giving them a way to be."
                   </p>
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-full bg-orange-DEFAULT" />
@@ -391,11 +391,11 @@ export default function EducationPage() {
         <div className="max-w-3xl mx-auto relative z-10">
           <motion.div {...FADE_UP}>
             <h2 className="font-serif text-5xl md:text-7xl text-white leading-[0.95] mb-8">
-              Your students deserve tools <br/>
-              <span className="text-orange-bright font-bold italic">that actually reach them.</span>
+              Your staff deserves tools <br/>
+              <span className="text-orange-bright font-bold italic">that actually support them.</span>
             </h2>
             <p className="font-body-alt text-lg text-white/50 mb-12">
-              Download the full program guide to see curriculum details, implementation timelines, and case study outcomes.
+              Download the educator program guide to see training modules, implementation timelines, and staff retention case studies.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <button 
