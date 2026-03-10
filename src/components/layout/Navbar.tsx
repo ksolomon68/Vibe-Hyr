@@ -11,6 +11,8 @@ import { cn, getTierLabel } from '@/lib/utils'
 
 const NAV_LINKS = [
   { href: '/courses', label: 'Courses' },
+  { href: '/education', label: 'Education' },
+  { href: '/workplace', label: 'Workplace' },
   { href: '/journal', label: 'Journal' },
   { href: '/community', label: 'Community' },
   { href: '/blog', label: 'Blog' },

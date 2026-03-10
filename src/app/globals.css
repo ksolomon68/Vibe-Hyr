@@ -2,19 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:ital,wght@0,400;0,600;0,700;0,900;1,400;1,600&family=IBM+Plex+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&family=Bebas+Neue&family=Barlow:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap');
 
 :root {
-  --orange:   #FF7B00;
-  --orange-l: #FF9A33;
-  --orange-d: #CC6200;
-  --black:    #0A0A0A;
-  --black-2:  #111111;
-  --black-3:  #1A1A1A;
-  --black-4:  #222222;
-  --white:    #FFFFFF;
-  --grey:     #888888;
-  --grey-d:   #444444;
+  /* Core Brand Colors */
+  --orange:        #FF7B00;
+  --orange-bright: #FFA500;
+  --gold:          #EAB308;
+  --black:         #000000;
+  --black-2:       #111111;
+  --black-3:       #1A1A1A;
+  --black-4:       #222222;
+  --white:         #FFFFFF;
+  --grey:          #888888;
+  --grey-d:        #444444;
+
+  /* High-End Design System (Education/Workplace) */
+  --cream: #FAF9F6;
+  --cream-mid: #F3F1EC;
+  --teal: #004D4D;
+  --ink: #1A1208;
 }
 
 * { box-sizing: border-box; }
