@@ -26,6 +26,8 @@ import {
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { DiscoveryCallModal } from '@/components/business/DiscoveryCallModal'
+import { createClient } from '@/lib/supabase/client'
+import type { User } from '@supabase/supabase-js'
 
 const FADE_UP = {
   initial: { opacity: 0, y: 20 },
@@ -70,6 +72,14 @@ const FORMATS = [
 
 export default function WorkplaceTrainingPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
+
+  React.useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user)
+    })
+  }, [])
 
   return (
     <main className="bg-black min-h-screen text-white pt-20">
@@ -105,19 +115,22 @@ export default function WorkplaceTrainingPage() {
               When unresolved conflict, reactive behavior, and low self-awareness are costing you culture — and bottom line — Vibe Hyr's workplace training gives your people the tools to respond, not react.
             </p>
             <div className="flex flex-wrap gap-4">
-              <Link 
-                href="/business/learn/b-core/m01"
-                className="btn-open-app"
-              >
-                Open Business App
-              </Link>
-              <button 
-                onClick={() => setIsModalOpen(true)}
-                className="btn-open-app bg-zinc-800 text-white shadow-none hover:bg-zinc-700 hover:-translate-y-1"
-                style={{ background: '#3F3F46', boxShadow: 'none' }}
-              >
-                Get Training for Your Team
-              </button>
+              {user ? (
+                <Link 
+                  href="/business/learn/b-core/m01"
+                  className="btn-open-app"
+                >
+                  Open Business App
+                </Link>
+              ) : (
+                <button 
+                  onClick={() => setIsModalOpen(true)}
+                  className="btn-open-app bg-zinc-800 text-white shadow-none hover:bg-zinc-700 hover:-translate-y-1"
+                  style={{ background: '#3F3F46', boxShadow: 'none' }}
+                >
+                  Get Training for Your Team
+                </button>
+              )}
               <a href="#curriculum" className="px-10 py-5 border border-white/20 hover:border-orange-DEFAULT hover:text-orange-DEFAULT text-white text-[0.8rem] uppercase tracking-widest font-bold rounded-sm transition-all flex items-center justify-center">
                 See the Curriculum
               </a>
@@ -252,12 +265,21 @@ export default function WorkplaceTrainingPage() {
                 </div>
               ))}
             </div>
-            <button 
-              onClick={() => setIsModalOpen(true)}
-              className="btn-open-app"
-            >
-              Request This Training
-            </button>
+            {user ? (
+               <Link 
+                 href="/business/learn/b-core/m01"
+                 className="btn-open-app"
+               >
+                 Open Business App
+               </Link>
+            ) : (
+              <button 
+                onClick={() => setIsModalOpen(true)}
+                className="btn-open-app"
+              >
+                Request This Training
+              </button>
+            )}
           </motion.div>
 
           <motion.div 
@@ -327,17 +349,28 @@ export default function WorkplaceTrainingPage() {
             Whether you're dealing with an urgent culture problem or proactively investing in your people, we'll build the right program for your team.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-             <button 
-                onClick={() => setIsModalOpen(true)}
-                className="btn-open-app"
-              >
-                Book a Discovery Call
-              </button>
-              <button 
-                className="px-12 py-6 border border-white/10 hover:border-white/30 text-white text-[0.8rem] uppercase tracking-widest font-bold rounded-sm transition-all"
-              >
-                Download the Brochure
-              </button>
+            {user ? (
+                <Link 
+                  href="/business/learn/b-core/m01"
+                  className="btn-open-app"
+                >
+                  Open Business App
+                </Link>
+            ) : (
+              <>
+                <button 
+                  onClick={() => setIsModalOpen(true)}
+                  className="btn-open-app"
+                >
+                  Book a Discovery Call
+                </button>
+                <button 
+                  className="px-12 py-6 border border-white/10 hover:border-white/30 text-white text-[0.8rem] uppercase tracking-widest font-bold rounded-sm transition-all"
+                >
+                  Download the Brochure
+                </button>
+              </>
+            )}
           </div>
         </motion.div>
       </section>

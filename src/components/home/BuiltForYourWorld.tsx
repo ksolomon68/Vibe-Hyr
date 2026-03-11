@@ -19,16 +19,16 @@ const CARDS = [
   },
   {
     icon:    GraduationCap,
-    tag:     'Education',
-    heading: 'For Students & Institutions',
-    body:    'Give students the mental architecture for unshakeable academic resilience, deep focus, and identity-level confidence — reducing dropout and burnout.',
+    tag:     'Educators',
+    heading: 'For Educators & Institutions',
+    body:    'Give educators the mental architecture for unshakeable classroom resilience, deep focus, and identity-level confidence — reducing burnout and turnover.',
     features: [
-      'Overcome Academic Anxiety',
+      'Overcome Educator Burnout',
       'Build Deep Focus',
       'Develop Unshakeable Confidence',
     ],
-    cta:  'Explore Education Programs',
-    href: '/education',
+    cta:  'Explore Educator Programs',
+    href: '/educators',
   },
 ]
 

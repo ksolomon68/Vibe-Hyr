@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { 
@@ -21,6 +21,9 @@ import {
 } from 'lucide-react'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
+import { DiscoveryCallModal } from '@/components/business/DiscoveryCallModal'
+import { createClient } from '@/lib/supabase/client'
+import type { User } from '@supabase/supabase-js'
 
 const FADE_UP = {
   initial: { opacity: 0, y: 20 },
@@ -65,6 +68,16 @@ const DELIVERY = [
 ]
 
 export default function EducationPage() {
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
+
+  React.useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user)
+    })
+  }, [])
+
   return (
     <main className="bg-black min-h-screen pt-20 text-white">
       <Navbar />
@@ -97,12 +110,22 @@ export default function EducationPage() {
               Vibe Hyr provides neuroscience-backed self-mastery and co-regulation training for K–12 staff — because a regulated school culture starts with a regulated adult.
             </p>
             <div className="flex flex-wrap gap-4 mb-12">
-              <Link 
-                href="/educators/the-educator-reset/ed01-m01"
-                className="btn-open-app"
-              >
-                Open Education App
-              </Link>
+              {user ? (
+                <Link 
+                  href="/educators/the-educator-reset/ed01-m01"
+                  className="btn-open-app"
+                >
+                  Open Education App
+                </Link>
+              ) : (
+                <button 
+                  onClick={() => setIsModalOpen(true)}
+                  className="btn-open-app bg-zinc-800 text-white shadow-none hover:bg-zinc-700 hover:-translate-y-1"
+                  style={{ background: '#3F3F46', boxShadow: 'none' }}
+                >
+                  Get Training for Your Staff
+                </button>
+              )}
               <a href="#programs" className="px-8 py-4 border border-white/20 hover:border-orange-DEFAULT hover:text-orange-DEFAULT text-white text-[0.75rem] uppercase tracking-widest font-semibold rounded-sm transition-all">
                 See the Programs
               </a>
@@ -252,12 +275,21 @@ export default function EducationPage() {
                 </div>
               ))}
             </div>
-            <Link 
-              href="/educators/the-educator-reset/ed01-m01"
-              className="btn-open-app"
-            >
-              Open Education App
-            </Link>
+            {user ? (
+              <Link 
+                href="/educators/the-educator-reset/ed01-m01"
+                className="btn-open-app"
+              >
+                Open Education App
+              </Link>
+            ) : (
+              <button 
+                onClick={() => setIsModalOpen(true)}
+                className="btn-open-app"
+              >
+                Request This Training
+              </button>
+            )}
           </motion.div>
 
           <motion.div 
@@ -396,18 +428,35 @@ export default function EducationPage() {
               Download the educator program guide to see training modules, implementation timelines, and staff retention case studies.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <Link 
-                href="/educators/the-educator-reset/ed01-m01"
-                className="btn-open-app"
-              >
-                Open Education App
-              </Link>
+              {user ? (
+                <Link 
+                  href="/educators/the-educator-reset/ed01-m01"
+                  className="btn-open-app"
+                >
+                  Open Education App
+                </Link>
+              ) : (
+                <>
+                  <button 
+                    onClick={() => setIsModalOpen(true)}
+                    className="btn-open-app"
+                  >
+                    Book a Discovery Call
+                  </button>
+                  <button 
+                    className="px-12 py-6 border border-white/10 hover:border-white/30 text-white text-[0.8rem] uppercase tracking-widest font-bold rounded-sm transition-all"
+                  >
+                    Download the Brochure
+                  </button>
+                </>
+              )}
             </div>
           </motion.div>
         </div>
       </section>
 
       <Footer />
+      <DiscoveryCallModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </main>
   )
 }
