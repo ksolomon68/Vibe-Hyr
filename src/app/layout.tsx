@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Bebas_Neue, Barlow, IBM_Plex_Mono } from 'next/font/google'
+import { Bebas_Neue, Barlow, IBM_Plex_Mono, DM_Sans } from 'next/font/google'
 import './globals.css'
 import { Toaster } from 'react-hot-toast'
 
@@ -25,6 +25,12 @@ const ibmPlexMono = IBM_Plex_Mono({
   display: 'swap',
 })
 
+const dmSans = DM_Sans({
+  subsets: ['latin'],
+  variable: '--font-dm',
+  display: 'swap',
+})
+
 export const metadata: Metadata = {
   title: {
     default: 'Vibe Hyr — Raise Your Reality',
@@ -42,10 +48,11 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  console.log('ROOT LAYOUT RENDERING')
   return (
     <html
       lang="en"
-      className={`${bebasNeue.variable} ${barlow.variable} ${ibmPlexMono.variable}`}
+      className={`${bebasNeue.variable} ${barlow.variable} ${ibmPlexMono.variable} ${dmSans.variable}`}
     >
       <body className="font-body antialiased">
         {children}
