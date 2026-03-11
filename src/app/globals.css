@@ -5,7 +5,7 @@
 
 
 :root {
-  /* Core Brand Colors */
+  /* Core Brand Colors (site-wide) */
   --orange:        #FF7B00;
   --orange-bright: #FFA500;
   --gold:          #EAB308;
@@ -17,11 +17,36 @@
   --grey:          #888888;
   --grey-d:        #444444;
 
-  /* High-End Design System (Education/Workplace) */
+  /* High-End Design System */
   --cream: #FAF9F6;
   --cream-mid: #F3F1EC;
   --teal: #004D4D;
   --ink: #1A1208;
+
+  /* ── UNIFIED PLAYER DESIGN TOKENS ── */
+  /* These are used by all three vertical players (Personal / Educators / Business) */
+  --p-orange:      #E8621A;
+  --p-orange-dim:  #E8621A22;
+  --p-orange-mid:  #E8621A44;
+  --p-gold:        #C9A84C;
+  --p-gold-dim:    #C9A84C22;
+
+  --p-bg:          #0A0804;
+  --p-bg-mid:      #110E08;
+  --p-panel:       #161008;
+  --p-card:        #1C1409;
+  --p-card2:       #221A0C;
+
+  --p-border:      #2A1E0E;
+  --p-border2:     #3A2A14;
+
+  --p-cream:       #F0EAE0;
+  --p-cream-dim:   #F0EAE080;
+  --p-gray:        #8C7A60;
+  --p-muted:       #5A4A34;
+
+  --p-green:       #22C55E;
+  --p-red:         #EF4444;
 }
 
 * { box-sizing: border-box; }
@@ -145,3 +170,865 @@ body::after {
   .badge-architect { @apply font-mono text-[0.55rem] tracking-[0.25em] uppercase px-3 py-1 border border-[var(--orange)] text-[var(--orange)]; }
   .badge-elite   { @apply font-mono text-[0.55rem] tracking-[0.25em] uppercase px-3 py-1 border border-white text-white; }
 }
+
+/* ─────────────────────────────────────────────────────────
+   GLOBAL READABILITY — WCAG AA Compliance
+   ───────────────────────────────────────────────────────── */
+
+/* Base body: minimum 16px, never below */
+html { font-size: 16px; }
+body {
+  font-size: 1rem;         /* 16px */
+  line-height: 1.6;
+}
+
+/* All paragraph text: 15px minimum, WCAG-compliant color on dark */
+p, li, td, th, label, blockquote, figcaption {
+  font-size: max(0.9375rem, 1em);   /* min 15px */
+  line-height: 1.65;
+  color: inherit;
+}
+
+/* Secondary/caption/label text: never below 14px */
+small,
+.font-mono,
+.caption-text,
+[class*="text-xs"] {
+  font-size: max(0.875rem, 1em);    /* min 14px */
+}
+
+/* Card / pillar descriptive body copy */
+.card-dark p,
+.prose-vibe p,
+section p {
+  font-size: max(0.9375rem, 1em);   /* min 15px */
+  color: #D1D5DB;                   /* WCAG AA: 5.7:1 on #000 */
+  line-height: 1.65;
+}
+
+/* Override the low-contrast grey variable where it appears as body copy */
+.text-grey-DEFAULT,
+[class*="text-grey"],
+.text-gray-400,
+.text-gray-500 {
+  color: #B0B7C3 !important;        /* WCAG AA: 5.2:1 on very dark bg */
+}
+
+/* Pillar / infographic description text under headings */
+.font-body.text-sm.text-grey-DEFAULT,
+.font-body.text-sm,
+section .font-body.italic,
+section .font-body {
+  font-size: max(0.9375rem, 1em);
+  color: #D1D5DB;
+  line-height: 1.65;
+}
+
+/* Ensure heading sizes are never reduced */
+h1 { font-size: clamp(2.5rem, 6vw, 6rem) !important; }
+h2 { font-size: clamp(1.75rem, 4vw, 4rem) !important; }
+h3 { font-size: clamp(1.1rem, 2vw, 1.75rem) !important; }
+
+/* Active nav indicator dot — applied via JS/React when pathname matches */
+.nav-active-dot::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--orange);
+}
+
+/* Ensure focus rings are always visible and brand-colored */
+:focus-visible {
+  outline: 2px solid #F97316 !important;
+  outline-offset: 3px !important;
+}
+
+/* Light background text — used in education/workplace cream sections */
+.bg-cream p {
+  color: #1F2937;
+  font-size: max(0.9375rem, 1em);
+}
+
+/* Grain overlay must stay above content but below a11y widget */
+body::after { z-index: 9998 !important; }
+
+/* ── ACCESSIBILITY UTILITY CLASSES ── */
+.skip-nav { position:absolute; top:-40px; left:0; background:var(--p-orange); color:#fff; padding:8px 16px; z-index:10000; font-weight:700; font-size:14px; text-decoration:none; transition:top 0.2s; }
+.skip-nav:focus { top:0; }
+
+body.high-contrast * { background:#000 !important; color:#fff !important; border-color:#fff !important; }
+body.high-contrast a, body.high-contrast button { color:#E8621A !important; }
+body.high-contrast img { filter:grayscale(100%) contrast(150%); }
+
+
+body.low-saturation { filter:saturate(0.3) !important; }
+body.grayscale      { filter:grayscale(1) !important; }
+
+body.pause-animations * { animation-play-state:paused !important; transition:none !important; }
+
+body.large-targets button,
+body.large-targets a,
+body.large-targets [role="button"] { min-width:48px !important; min-height:48px !important; }
+
+body.keyboard-nav *:focus { outline:3px solid var(--p-orange) !important; outline-offset:2px !important; }
+
+body.highlight-links a { text-decoration:underline !important; background:rgba(232,98,26,0.12) !important; border-radius:2px; padding:0 2px; }
+
+body.highlight-headings h1,
+body.highlight-headings h2,
+body.highlight-headings h3,
+body.highlight-headings h4 { border-left:4px solid var(--p-orange) !important; padding-left:12px !important; }
+
+@import url('https://fonts.cdnfonts.com/css/opendyslexic');
+body.dyslexia-font, body.dyslexia-font p, body.dyslexia-font li, body.dyslexia-font span { font-family:'OpenDyslexic',sans-serif !important; }
+
+body.focus-mode p { opacity:0.2; transition:opacity 0.2s; }
+body.focus-mode p:hover, body.focus-mode p:focus { opacity:1; }
+
+.reading-guide { position:fixed; left:0; right:0; height:60px; background:rgba(232,98,26,0.12); border-top:1px solid rgba(232,98,26,0.25); border-bottom:1px solid rgba(232,98,26,0.25); pointer-events:none; z-index:9990; }
+.reading-mask-top, .reading-mask-bottom { position:fixed; left:0; right:0; background:rgba(10,8,4,0.85); pointer-events:none; z-index:9989; }
+
+body.reduce-cognitive [class*="gradient"], body.reduce-cognitive [class*="glow"] { display:none !important; }
+
+/* ── PLAYER CONTENT BLOCKS ── */
+.p-callout { background:var(--p-card); border-left:3px solid var(--p-orange); border-radius:0 10px 10px 0; padding:18px 22px; margin:24px 0; font-style:italic; color:var(--p-cream); line-height:1.6; font-size:18px; }
+.p-callout cite { color:var(--p-orange); font-style:normal; font-size:12px; font-weight:600; display:block; margin-top:8px; }
+.p-key-concept { background:var(--p-card2); border:1px solid var(--p-border2); border-top:2px solid var(--p-gold); border-radius:0 0 12px 12px; padding:20px 24px; margin:24px 0; }
+.p-key-concept-label { color:var(--p-gold); font-size:9px; letter-spacing:0.16em; font-weight:700; margin-bottom:10px; text-transform:uppercase; }
+.p-practice-box { background:rgba(232,98,26,0.05); border:1px solid rgba(232,98,26,0.27); border-radius:12px; padding:22px 26px; margin:28px 0; }
+.p-practice-label { color:var(--p-orange); font-size:9px; letter-spacing:0.16em; font-weight:700; margin-bottom:12px; text-transform:uppercase; }
+.p-bullet-list li { position:relative; padding-left:20px; margin-bottom:8px; }
+.p-bullet-list li::before { content:'◆'; color:var(--p-orange); font-size:8px; position:absolute; left:0; top:5px; }
+.p-stat-row { display:flex; gap:24px; flex-wrap:wrap; margin:24px 0; }
+.p-stat-row .p-stat { flex:1; min-width:120px; background:var(--p-card); border:1px solid var(--p-border); border-radius:10px; padding:16px; text-align:center; }
+.p-stat-row .p-stat .p-stat-num { font-size:32px; font-weight:700; color:var(--p-orange); display:block; }
+.p-stat-row .p-stat .p-stat-label { font-size:11px; color:var(--p-gray); letter-spacing:0.1em; }
+
+/* ── NAV DROPDOWN STYLES ── */
+.nav-item-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* The dropdown is always in the DOM but invisible by default */
+@media (min-width: 768px) {
+  .nav-dropdown {
+    position: absolute;
+    top: 100%;           /* flush to bottom of trigger — no gap */
+    left: 0;
+    min-width: 260px;
+    padding-top: 8px;    /* transparent padding bridges the gap between trigger and panel */
+    z-index: 500;
+
+    /* Hidden state */
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-4px);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+  }
+
+  /* Show on parent hover — the padding-top bridges any gap */
+  .nav-item-group:hover .nav-dropdown {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+}
+
+/* The visible card inside the padding wrapper */
+.nav-dropdown-inner {
+  background: #1C1409;
+  border: 1px solid #3A2A14;
+  border-radius: 10px;
+  padding: 8px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+}
+
+.nav-chevron {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 10px;
+  transition: transform 0.2s ease;
+}
+
+/* Rotate chevron when parent is hovered */
+@media (min-width: 768px) {
+  .nav-item-group:hover .nav-chevron {
+    transform: rotate(180deg);
+  }
+}
+
+.nav-dropdown-item {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 14px;
+  border-radius: 7px;
+  text-decoration: none;
+  transition: background 0.15s;
+  cursor: pointer;
+}
+
+.nav-dropdown-item:hover {
+  background: #2A1E0E;
+}
+
+.nav-dropdown-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #F0EAE0;
+  margin-bottom: 3px;
+  line-height: 1.3;
+}
+
+.nav-dropdown-desc {
+  font-size: 12px;
+  color: #9C8A70;
+  line-height: 1.3;
+}
+
+.nav-dropdown-item:hover .nav-dropdown-label {
+  color: #E8621A;
+}
+
+/* Chevron separator line above dropdown */
+.nav-dropdown-inner::before {
+  content: '';
+  display: block;
+  height: 2px;
+  background: linear-gradient(90deg, #E8621A, #C9A84C);
+  border-radius: 2px 2px 0 0;
+  margin-bottom: 6px;
+}
+
+/* ── TYPOGRAPHY & CONTRAST MINIMUMS ── */
+body                        { font-size: 16px; }
+p, li, .lesson-body p       { font-size: 16px; line-height: 1.75; }
+.nav-link, .nav-links a     { font-size: 14px; }
+.nav-dropdown-label         { font-size: 14px; }
+.nav-dropdown-desc          { font-size: 12px; }
+.sidebar-tab .tab-title     { font-size: 14px; }
+.lesson-item .lesson-title  { font-size: 13px; }
+.topbar-pct                 { font-size: 13px; }
+.tab-number-label           { font-size: 11px; }
+.quiz-option                { font-size: 15px; }
+.callout                    { font-size: 18px; }
+
+h1 { font-size: clamp(28px, 5vw, 56px) !important; }
+h2 { font-size: clamp(22px, 3.5vw, 38px) !important; }
+h3 { font-size: clamp(18px, 2.5vw, 26px) !important; }
+h4 { font-size: 18px !important; }
+
+/* Fix low-contrast gray text */
+.gray-text, .tab-number-label, .lesson-dur, .topbar-divider {
+  color: #9C8A70;
+}
+
+/* Fix muted labels */
+.section-label, .module-progress-bar + span, .badge-text {
+  color: #A09080;
+}
+
+/* ═══════════════════════════════════════════════
+   GLOBAL LIGHT MODE — applies to entire site
+   Triggered by: html.light-mode class on <html>
+   ═══════════════════════════════════════════════ */
+
+/* Light mode dropdown inner wrapper */
+html.light-mode .nav-dropdown-inner {
+  background: #FFFFFF;
+  border-color: #D8D0C4;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+html.light-mode .nav-dropdown-item:hover { background: #F5EDE0; }
+html.light-mode .nav-dropdown-label { color: #1A1008; }
+html.light-mode .nav-dropdown-desc  { color: #6A5A44; }
+html.light-mode .nav-dropdown-item:hover .nav-dropdown-label { color: #D4560F; }
+
+/* Base */
+html.light-mode body {
+  background-color: #F5F0E8;
+  color: #1A1008;
+}
+
+/* ─── NAVIGATION ─── */
+html.light-mode nav,
+html.light-mode .navbar,
+html.light-mode header {
+  background: #FFFFFF;
+  border-bottom: 1px solid #E0D8CC;
+}
+html.light-mode .nav-link,
+html.light-mode .nav-links a {
+  color: #3A2A18;
+}
+html.light-mode .nav-link:hover,
+html.light-mode .nav-links a:hover {
+  color: #D4560F;
+}
+html.light-mode .nav-logo,
+html.light-mode .topbar-logo {
+  color: #D4560F;
+}
+
+/* ─── HERO SECTIONS ─── */
+html.light-mode .hero,
+html.light-mode [class*="hero"],
+html.light-mode section:first-of-type {
+  background: #F5F0E8;
+}
+html.light-mode .hero h1,
+html.light-mode .hero h2,
+html.light-mode [class*="hero"] h1,
+html.light-mode [class*="hero"] h2 {
+  color: #1A1008;
+}
+html.light-mode .hero p,
+html.light-mode [class*="hero"] p {
+  color: #4A3828;
+}
+
+/* ─── ALL SECTION BACKGROUNDS ─── */
+html.light-mode section,
+html.light-mode .section,
+html.light-mode main,
+html.light-mode .page-content {
+  background-color: #F5F0E8;
+  color: #1A1008;
+}
+
+/* Alternating section backgrounds */
+html.light-mode section:nth-of-type(even),
+html.light-mode .section-alt {
+  background-color: #EDE8DC;
+}
+
+/* ─── CARDS ─── */
+html.light-mode .card,
+html.light-mode [class*="card"],
+html.light-mode .course-card,
+html.light-mode .track-card,
+html.light-mode .program-card,
+html.light-mode .feature-card,
+html.light-mode .problem-card,
+html.light-mode .format-card {
+  background: #FFFFFF;
+  border-color: #D8D0C4;
+  color: #1A1008;
+}
+html.light-mode .card:hover,
+html.light-mode [class*="card"]:hover {
+  border-color: #D4560F;
+  box-shadow: 0 4px 20px rgba(212, 86, 15, 0.12);
+}
+html.light-mode .card h3,
+html.light-mode [class*="card"] h3,
+html.light-mode .card h4,
+html.light-mode [class*="card"] h4 {
+  color: #1A1008;
+}
+html.light-mode .card p,
+html.light-mode [class*="card"] p {
+  color: #4A3828;
+}
+
+/* ─── ALL HEADINGS ─── */
+html.light-mode h1,
+html.light-mode h2,
+html.light-mode h3,
+html.light-mode h4,
+html.light-mode h5,
+html.light-mode h6 {
+  color: #1A1008;
+}
+
+/* ─── ALL BODY TEXT ─── */
+html.light-mode p,
+html.light-mode li,
+html.light-mode span:not(.nav-dropdown-desc):not([class*="badge"]):not([class*="tag"]) {
+  color: #2A1E10;
+}
+
+/* ─── STAT BLOCKS / METRIC SECTIONS ─── */
+html.light-mode .stat,
+html.light-mode [class*="stat"],
+html.light-mode .metric,
+html.light-mode [class*="metric"] {
+  background: #FFFFFF;
+  border-color: #D8D0C4;
+  color: #1A1008;
+}
+html.light-mode .stat-number,
+html.light-mode [class*="stat-number"] {
+  color: #D4560F;
+}
+html.light-mode .stat-label,
+html.light-mode [class*="stat-label"] {
+  color: #4A3828;
+}
+
+/* ─── COURSE/TRACK/PROGRAM LISTING SECTIONS ─── */
+html.light-mode .course-number,
+html.light-mode .track-number,
+html.light-mode [class*="-number"] {
+  color: #D4560F;
+}
+html.light-mode .course-tag,
+html.light-mode [class*="-tag"],
+html.light-mode [class*="-badge"] {
+  background: rgba(212, 86, 15, 0.1);
+  color: #D4560F;
+  border-color: rgba(212, 86, 15, 0.25);
+}
+
+/* ─── CTA SECTIONS ─── */
+html.light-mode .cta-section,
+html.light-mode [class*="cta"],
+html.light-mode .cta-strip {
+  background: #1A1008;  
+  color: #F0EAE0;
+}
+html.light-mode .cta-section h2,
+html.light-mode .cta-section p {
+  color: #F0EAE0;
+}
+
+/* ─── FOOTER ─── */
+html.light-mode footer,
+html.light-mode .footer {
+  background: #1A1008;
+  color: #F0EAE0;
+  border-top: 1px solid #3A2A18;
+}
+html.light-mode footer h4,
+html.light-mode .footer h4 {
+  color: #F0EAE0;
+}
+html.light-mode footer a,
+html.light-mode .footer a {
+  color: #C0A880;
+}
+html.light-mode footer a:hover,
+html.light-mode .footer a:hover {
+  color: #E8621A;
+}
+
+/* ─── LESSON PLAYER PAGES ─── */
+html.light-mode .topbar {
+  background: #FFFFFF;
+  border-bottom: 1px solid #D8D0C4;
+}
+html.light-mode .topbar-logo { color: #D4560F; }
+html.light-mode .topbar-title { color: #3A2A18; }
+html.light-mode .topbar-divider { color: #B0A090; }
+html.light-mode .topbar-pct { color: #4A3828; }
+
+html.light-mode .sidebar {
+  background: #EDE8DC;
+  border-right: 1px solid #D0C8BC;
+}
+html.light-mode .sidebar-section-label { color: #6A5A44; }
+html.light-mode .sidebar-tab {
+  background: #FFFFFF;
+  border-color: #D0C8BC;
+  color: #1A1008;
+}
+html.light-mode .sidebar-tab.active {
+  border-color: #D4560F;
+  background: #FDF6EE;
+}
+html.light-mode .tab-title { color: #1A1008; }
+html.light-mode .tab-number-label { color: #6A5A44; }
+
+html.light-mode .lesson-item { color: #1A1008; border-color: #D0C8BC; }
+html.light-mode .lesson-item:hover { background: #F0EAE0; }
+html.light-mode .lesson-item.active { background: #FDF6EE; border-color: #D4560F; }
+html.light-mode .lesson-title { color: #1A1008; }
+html.light-mode .lesson-dur { color: #6A5A44; }
+
+html.light-mode .main-content,
+html.light-mode .lesson-content,
+html.light-mode .module-content {
+  background: #F5F0E8;
+  color: #1A1008;
+}
+html.light-mode .lesson-body p,
+html.light-mode .module-body p { color: #2A1E10; }
+html.light-mode .lesson-body h2,
+html.light-mode .lesson-body h3,
+html.light-mode .module-body h2,
+html.light-mode .module-body h3 { color: #1A1008; }
+
+html.light-mode .callout {
+  background: #FDF6EE;
+  border-left-color: #D4560F;
+  color: #2A1E10;
+}
+html.light-mode .key-concept {
+  background: #FFFFFF;
+  border-color: #D0C8BC;
+  border-top-color: #A8863C;
+}
+html.light-mode .key-concept-label { color: #A8863C; }
+html.light-mode .practice-box {
+  background: rgba(212, 86, 15, 0.04);
+  border-color: rgba(212, 86, 15, 0.2);
+}
+
+html.light-mode .quiz-option {
+  background: #FFFFFF;
+  border-color: #D0C8BC;
+  color: #1A1008;
+}
+html.light-mode .quiz-option:hover { border-color: #D4560F; background: #FDF6EE; }
+html.light-mode .quiz-option.selected { border-color: #D4560F; background: rgba(212,86,15,0.07); }
+html.light-mode .quiz-letter { background: #EDE8DC; color: #4A3828; border-color: #D0C8BC; }
+
+/* ─── FORMS & INPUTS ─── */
+html.light-mode input,
+html.light-mode textarea,
+html.light-mode select {
+  background: #FFFFFF;
+  border-color: #D0C8BC;
+  color: #1A1008;
+}
+html.light-mode input::placeholder,
+html.light-mode textarea::placeholder { color: #9C8A70; }
+html.light-mode input:focus,
+html.light-mode textarea:focus { border-color: #D4560F; outline-color: #D4560F; }
+
+/* ─── ACCESSIBILITY WIDGET PANEL ─── */
+html.light-mode .a11y-panel {
+  background: #FFFFFF;
+  border-color: #D0C8BC;
+  color: #1A1008;
+}
+html.light-mode .a11y-section-label { color: #6A5A44; border-color: #D0C8BC; }
+html.light-mode .a11y-row-label { color: #2A1E10; }
+html.light-mode .seg-btn { color: #2A1E10; border-color: #C0B8AC; }
+html.light-mode .seg-btn:hover:not(.active) { border-color: #D4560F; color: #D4560F; }
+html.light-mode .toggle-switch:not(.on) { background: #C0B8AC; }
+
+
+/* ── BUTTON "OPEN APP" FIX 5 ── */
+.btn-open-app {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  border-radius: 10px;
+  background: #E8621A;
+  color: #FFFFFF;
+  border: none;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  font-family: var(--font-dm, sans-serif);
+  text-decoration: none;
+  transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+  box-shadow: 0 4px 16px rgba(232, 98, 26, 0.35);
+}
+
+.btn-open-app:hover {
+  background: #F07030;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(232, 98, 26, 0.5);
+}
+
+.btn-open-app:active {
+  background: #C9501A;
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(232, 98, 26, 0.3);
+}
+
+/* Light mode for button Open App */
+html.light-mode .btn-open-app {
+  background: #D4560F;
+  box-shadow: 0 4px 16px rgba(212, 86, 15, 0.3);
+}
+html.light-mode .btn-open-app:hover {
+  background: #E8621A;
+  box-shadow: 0 8px 24px rgba(212, 86, 15, 0.45);
+}
+
+
+/* ── A11Y TRIGGER & PANEL CSS (FIX 3 + 4) ── */
+.a11y-trigger {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 9999;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;           /* rounded square, not circle — more modern */
+  background: linear-gradient(135deg, #E8621A, #C9502E);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  box-shadow: 0 4px 16px rgba(232, 98, 26, 0.45), 0 2px 8px rgba(0,0,0,0.3);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.a11y-trigger:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 8px 24px rgba(232, 98, 26, 0.55), 0 4px 12px rgba(0,0,0,0.3);
+  background: linear-gradient(135deg, #F07030, #D4560F);
+}
+
+.a11y-trigger:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.a11y-trigger-label {
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: rgba(255,255,255,0.85);
+  font-family: var(--font-dm, sans-serif);
+  line-height: 1;
+}
+
+/* a11y-panel — dark mode base */
+.a11y-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 320px;
+  height: 100vh;
+  background: #1C1409;
+  border-left: 1px solid #3A2A14;
+  z-index: 9998;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -8px 0 40px rgba(0,0,0,0.6);
+  transform: translateX(100%);
+  transition: transform 0.25s ease;
+}
+
+.a11y-panel.open {
+  transform: translateX(0);
+}
+
+/* Header */
+.a11y-header {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid #3A2A14;
+  background: #221A0C;
+  flex-shrink: 0;
+}
+
+.a11y-header-title {
+  font-family: var(--font-bebas, sans-serif);
+  font-size: 20px;
+  letter-spacing: 0.08em;
+  color: #F0EAE0;           /* bright cream — high contrast */
+  margin: 0 0 4px 0;
+}
+
+.a11y-header-shortcut {
+  font-size: 11px;
+  color: #C9A84C;            /* gold — clearly visible, branded */
+  font-family: var(--font-dm, sans-serif);
+  letter-spacing: 0.06em;
+}
+
+.a11y-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #3A2A14;
+  border: 1px solid #E8621A;
+  color: #F0EAE0;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.a11y-close-btn:hover { background: #E8621A; }
+
+/* Scrollable body */
+.a11y-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 0 16px 0;
+}
+.a11y-body::-webkit-scrollbar { width: 4px; }
+.a11y-body::-webkit-scrollbar-track { background: #1C1409; }
+.a11y-body::-webkit-scrollbar-thumb { background: #3A2A14; border-radius: 2px; }
+
+/* Section labels */
+.a11y-section-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: #E8621A;             /* orange — clearly visible section header */
+  padding: 16px 20px 8px;
+  border-left: 3px solid #E8621A;
+  margin-left: 0;
+  font-family: var(--font-dm, sans-serif);
+  text-transform: uppercase;
+  background: rgba(232,98,26,0.04);
+}
+
+/* Row labels */
+.a11y-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid rgba(58,42,20,0.5);
+}
+
+.a11y-row-label {
+  font-size: 14px;             /* was too small — now clearly legible */
+  font-weight: 500;
+  color: #E8DDD0;              /* near-white — high contrast on dark panel */
+  font-family: var(--font-dm, sans-serif);
+  line-height: 1.3;
+}
+
+.a11y-row-desc {
+  font-size: 11px;
+  color: #9C8A70;
+  margin-top: 2px;
+}
+
+/* Segmented buttons */
+.seg-btn-group {
+  display: flex;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.seg-btn {
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid #4A3828;
+  background: transparent;
+  color: #C8BDB0;              /* light enough to read on dark bg */
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: var(--font-dm, sans-serif);
+}
+
+.seg-btn.active {
+  background: #E8621A;
+  border-color: #E8621A;
+  color: #FFFFFF;
+}
+
+.seg-btn:hover:not(.active) {
+  border-color: #E8621A;
+  color: #E8621A;
+}
+
+/* Text size control */
+.text-size-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.text-size-btn {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  border: 1px solid #4A3828;
+  background: transparent;
+  color: #E8DDD0;
+  font-size: 16px; font-weight: 700;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.text-size-btn:hover { background: #E8621A; border-color: #E8621A; }
+
+.text-size-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: #F0EAE0;
+  min-width: 44px;
+  text-align: center;
+  font-family: var(--font-dm, sans-serif);
+}
+
+/* Toggle switch */
+.toggle-switch {
+  width: 44px; height: 24px;
+  border-radius: 12px;
+  background: #4A3828;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
+  border: none;
+  flex-shrink: 0;
+}
+.toggle-switch.on { background: #E8621A; }
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: white;
+  top: 3px; left: 3px;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.toggle-switch.on::after { transform: translateX(20px); }
+
+/* Footer Links for A11y Panel */
+.a11y-footer {
+  padding: 16px 20px 24px;
+  border-top: 1px solid #3A2A14;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.a11y-reset-btn {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #E8621A;
+  background: transparent;
+  color: #E8621A;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-dm, sans-serif);
+  letter-spacing: 0.04em;
+  transition: all 0.15s;
+}
+.a11y-reset-btn:hover {
+  background: #E8621A;
+  color: #FFFFFF;
+}
+
+.a11y-statement-link {
+  display: block;
+  text-align: center;
+  font-size: 12px;
+  color: #9C8A70;
+  text-decoration: none;
+  font-family: var(--font-dm, sans-serif);
+  transition: color 0.15s;
+  padding: 4px 0;
+}
+.a11y-statement-link:hover { color: #E8621A; text-decoration: underline; }
+

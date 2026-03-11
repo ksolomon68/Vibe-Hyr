@@ -13,9 +13,9 @@ const SOCIAL = [
 ]
 
 const PLATFORM_LINKS = [
-  { label: 'Courses',   href: '/courses'   },
-  { label: 'Education', href: '/education' },
-  { label: 'Workplace', href: '/workplace' },
+  { label: 'Personal',   href: '/personal'   },
+  { label: 'Educators', href: '/educators' },
+  { label: 'Business', href: '/business' },
   { label: 'Journal',   href: '/journal'   },
   { label: 'Community', href: '/community' },
 ]

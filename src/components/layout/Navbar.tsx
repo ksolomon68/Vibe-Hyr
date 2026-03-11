@@ -8,18 +8,45 @@ import { Menu, X, ChevronDown } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/types'
 import { cn, getTierLabel } from '@/lib/utils'
+import { useTheme } from '@/app/providers/ThemeProvider'
 
-const WORKPLACE_TRACKS = [
-  { href: '/workplace/learn/t1/t1l1', label: 'Track 01 — Common Sense', tag: 'T1' },
-  { href: '/workplace/learn/t2/t2l1', label: 'Track 02 — De-Escalation', tag: 'T2' },
-  { href: '/workplace/learn/t3/t3l1', label: 'Track 03 — Self Mastery', tag: 'T3' },
-  { href: '/workplace/learn/t4/t4l1', label: 'Track 04 — Team Cohesion', tag: 'T4' },
+const NAV_ITEMS = [
+  {
+    label: 'Personal',
+    href: '/personal',
+    dropdown: [
+      { label: 'All Courses',               href: '/personal',                                              desc: 'Browse the full library' },
+      { label: 'Programming the Gatekeeper',href: '/personal/programming-the-gatekeeper/c01-l01',          desc: 'Free · Start here' },
+      { label: 'Mastery of Assumption',     href: '/personal/mastery-of-the-law-of-assumption/c02-l01',    desc: 'Architect tier' },
+      { label: 'SATS Reprogramming',        href: '/personal/subconscious-reprogramming-sats/c03-l01',     desc: 'Architect tier' },
+      { label: 'Echo Theory Delay',         href: '/personal/navigating-the-echo-theory-delay/c04-l01',    desc: 'Reality Master' },
+    ]
+  },
+  {
+    label: 'Educators',
+    href: '/educators',
+    dropdown: [
+      { label: 'All Programs',              href: '/educators',                                             desc: 'Browse educator programs' },
+      { label: 'The Educator Reset',        href: '/educators/the-educator-reset/ed01-m01',                desc: 'All K–12 staff' },
+      { label: 'Vibrational Leadership',    href: '/educators/vibrational-leadership/ed02-m01',            desc: 'Admin & principals' },
+      { label: 'Co-Regulation Mastery',     href: '/educators/co-regulation-mastery/ed03-m01',             desc: 'Classroom teachers' },
+      { label: 'The Retained Educator',     href: '/educators/the-retained-educator/ed04-m01',             desc: 'Districts & HR' },
+    ]
+  },
+  {
+    label: 'Business',
+    href: '/business',
+    dropdown: [
+      { label: 'All Tracks',                href: '/business',                                              desc: 'Browse training tracks' },
+      { label: 'Common Sense in the Workplace', href: '/business/learn/t1/t1l1',                           desc: 'Foundation' },
+      { label: 'From Reaction to Response', href: '/business/learn/t2/t2l1',                               desc: 'De-escalation' },
+      { label: 'Know Yourself, Lead Yourself',  href: '/business/learn/t3/t3l1',                           desc: 'Self mastery' },
+      { label: 'Vibing as a Unit',          href: '/business/learn/t4/t4l1',                               desc: 'Team cohesion' },
+    ]
+  },
 ]
 
-const NAV_LINKS = [
-  { href: '/courses', label: 'Courses' },
-  { href: '/education', label: 'Education' },
-  { href: '/workplace', label: 'Workplace', hasDropdown: true },
+const STATIC_LINKS = [
   { href: '/journal', label: 'Journal' },
   { href: '/community', label: 'Community' },
   { href: '/blog', label: 'Blog' },
@@ -29,10 +56,12 @@ export function Navbar() {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [profile, setProfile] = useState<Profile | null>(null)
-  const [workplaceOpen, setWorkplaceOpen] = useState(false)
-  const [mobileWorkplaceOpen, setMobileWorkplaceOpen] = useState(false)
+  
+  // Which dropdown is expanded on mobile? (null if none)
+  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null)
+
   const pathname = usePathname()
-  const dropdownRef = useRef<HTMLDivElement>(null)
+  const { theme, toggleTheme } = useTheme()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
@@ -40,20 +69,8 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Close dropdown on outside click
+  // Close mobile menu on route change
   useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setWorkplaceOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [])
-
-  // Close dropdown on route change
-  useEffect(() => {
-    setWorkplaceOpen(false)
     setOpen(false)
   }, [pathname])
 
@@ -89,9 +106,9 @@ export function Navbar() {
           scrolled ? 'bg-black/95 backdrop-blur-sm' : 'bg-black'
         )}
       >
-        <div className="flex items-center justify-between h-[68px] px-6 md:px-14">
+        <div className="flex items-center gap-6 h-[68px] px-6 md:px-14">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
+          <Link href="/" className="flex items-center gap-2 group flex-shrink-0">
             <Image
               src="/images/vhlogo.png"
               alt="Vibe Hyr"
@@ -103,107 +120,62 @@ export function Navbar() {
           </Link>
 
           {/* Desktop Nav */}
-          <ul className="hidden md:flex items-center gap-8">
-            {NAV_LINKS.map((link) =>
-              link.hasDropdown ? (
-                <li key={link.href} className="relative" ref={dropdownRef}>
-                  {/* Workplace trigger */}
-                  <button
-                    onClick={() => setWorkplaceOpen((v) => !v)}
-                    onKeyDown={(e) => e.key === 'Escape' && setWorkplaceOpen(false)}
-                    aria-haspopup="true"
-                    aria-expanded={workplaceOpen}
-                    aria-label="Workplace training tracks"
-                    className={cn(
-                      'font-mono text-[0.62rem] tracking-[0.18em] uppercase transition-colors duration-200 flex items-center gap-1',
-                      pathname.startsWith(link.href)
-                        ? 'text-[var(--orange)]'
-                        : 'text-[var(--grey)] hover:text-[var(--orange)]'
-                    )}
-                  >
-                    {link.label}
-                    <ChevronDown
-                      size={11}
-                      className={cn(
-                        'transition-transform duration-200',
-                        workplaceOpen ? 'rotate-180' : ''
-                      )}
-                    />
-                  </button>
+          <ul className="hidden md:flex items-center gap-6 xl:gap-8 flex-1">
+            {NAV_ITEMS.map((item) => {
+              const isActive = pathname.startsWith(item.href)
+              
+              return (
+                <li key={item.label} className="nav-item-group">
 
-                  {/* Dropdown panel */}
-                  {workplaceOpen && (
-                    <div
-                      role="menu"
-                      className={cn(
-                        'absolute top-full left-1/2 -translate-x-1/2 mt-3 w-64',
-                        'bg-[#0E0C08] border border-[#2E2416] rounded-xl shadow-2xl',
-                        'overflow-hidden z-50'
-                      )}
-                    >
-                      {/* Header row */}
-                      <div className="px-4 py-3 border-b border-[#2E2416] flex items-center justify-between">
-                        <Link
-                          href="/workplace"
-                          className="font-mono text-[0.62rem] tracking-[0.18em] uppercase text-[var(--grey)] hover:text-[var(--orange)] transition-colors"
-                          role="menuitem"
-                        >
-                          Workplace Overview
-                        </Link>
-                        <span className="font-mono text-[0.5rem] text-[#5A4A34] tracking-widest">
-                          4 TRACKS
-                        </span>
-                      </div>
+                  <Link href={item.href} className={cn(
+                    'font-mono text-[0.62rem] tracking-[0.18em] uppercase transition-colors duration-200 flex items-center gap-1 select-none nav-link',
+                    isActive ? 'text-[var(--orange)]' : 'text-[var(--grey)] hover:text-[var(--orange)]'
+                  )}>
+                    {item.label}
+                    <span className="nav-chevron">▾</span>
+                  </Link>
 
-                      {/* Track links */}
-                      {WORKPLACE_TRACKS.map((t) => (
-                        <Link
-                          key={t.href}
-                          href={t.href}
-                          role="menuitem"
-                          className={cn(
-                            'flex items-center gap-3 px-4 py-3 group',
-                            'hover:bg-[#1A1208] transition-colors duration-150',
-                            pathname === t.href ? 'bg-[#1A1208]' : ''
-                          )}
-                        >
-                          <span
-                            className={cn(
-                              'font-mono text-[0.52rem] tracking-widest px-1.5 py-0.5 rounded',
-                              'border border-[var(--orange)] text-[var(--orange)]',
-                              'group-hover:bg-[var(--orange)] group-hover:text-black transition-all duration-150'
-                            )}
-                          >
-                            {t.tag}
-                          </span>
-                          <span className="font-sans text-[0.75rem] text-[#8C7A60] group-hover:text-[#F7F2EA] transition-colors duration-150">
-                            {t.label.split(' — ')[1]}
-                          </span>
+                  <div className="nav-dropdown">
+                    <div className="nav-dropdown-inner">
+                      {item.dropdown.map(sub => (
+                        <Link key={sub.href} href={sub.href} className="nav-dropdown-item">
+                          <span className="nav-dropdown-label">{sub.label}</span>
+                          <span className="nav-dropdown-desc">{sub.desc}</span>
                         </Link>
                       ))}
                     </div>
-                  )}
-                </li>
-              ) : (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className={cn(
-                      'font-mono text-[0.62rem] tracking-[0.18em] uppercase transition-colors duration-200',
-                      pathname.startsWith(link.href)
-                        ? 'text-[var(--orange)]'
-                        : 'text-[var(--grey)] hover:text-[var(--orange)]'
-                    )}
-                  >
-                    {link.label}
-                  </Link>
+                  </div>
                 </li>
               )
-            )}
+            })}
+            
+            {STATIC_LINKS.map(link => (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  className={cn(
+                    'font-mono text-[0.62rem] tracking-[0.18em] uppercase transition-colors duration-200 relative pb-1',
+                    pathname.startsWith(link.href)
+                      ? 'text-[var(--orange)] nav-active-dot'
+                      : 'text-[var(--grey)] hover:text-[var(--orange)]'
+                  )}
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
           </ul>
+
+          <div className="hidden md:flex flex-1" />
 
           {/* Right side */}
           <div className="hidden md:flex items-center gap-4">
+            {/* Dark Mode Toggle */}
+            <button onClick={toggleTheme} aria-label="Toggle dark/light mode"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--cream)', padding: '6px 8px' }}>
+              {theme === 'dark' ? '☀️' : '🌙'}
+            </button>
+            
             {profile ? (
               <div className="flex items-center gap-6">
                 <Link href="/dashboard" className="flex items-center gap-3 group">
@@ -239,14 +211,20 @@ export function Navbar() {
           </div>
 
           {/* Mobile menu toggle */}
-          <button
-            onClick={() => setOpen(!open)}
-            className="md:hidden text-white"
-            aria-label={open ? 'Close menu' : 'Open menu'}
-            aria-expanded={open}
-          >
-            {open ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          <div className="md:hidden ml-auto flex items-center gap-3">
+            <button onClick={toggleTheme} aria-label="Toggle dark/light mode"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--cream)' }}>
+              {theme === 'dark' ? '☀️' : '🌙'}
+            </button>
+            <button
+              onClick={() => setOpen(!open)}
+              className="text-[var(--white)]"
+              aria-label={open ? 'Close menu' : 'Open menu'}
+              aria-expanded={open}
+            >
+              {open ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -258,57 +236,53 @@ export function Navbar() {
           aria-label="Mobile navigation"
         >
           <div className="flex flex-col p-8 gap-6">
-            {NAV_LINKS.map((link) =>
-              link.hasDropdown ? (
-                <div key={link.href}>
+            {NAV_ITEMS.map((item) => {
+              const isExpanded = mobileExpanded === item.label
+              return (
+                <div key={item.label}>
                   <button
-                    onClick={() => setMobileWorkplaceOpen((v) => !v)}
-                    aria-expanded={mobileWorkplaceOpen}
-                    className="font-display text-3xl tracking-widest text-white hover:text-[var(--orange)] transition-colors flex items-center gap-3 w-full text-left"
+                    onClick={() => setMobileExpanded(isExpanded ? null : item.label)}
+                    aria-expanded={isExpanded}
+                    className="font-display text-3xl tracking-widest text-white hover:text-[var(--orange)] transition-colors flex items-center justify-between w-full text-left"
                   >
-                    WORKPLACE
+                    {item.label}
                     <ChevronDown
                       size={20}
                       className={cn(
-                        'mt-1 transition-transform duration-200',
-                        mobileWorkplaceOpen ? 'rotate-180' : ''
+                        'transition-transform duration-200 text-[var(--orange)]',
+                        isExpanded ? 'rotate-180' : ''
                       )}
                     />
                   </button>
-                  {mobileWorkplaceOpen && (
-                    <div className="mt-3 pl-4 flex flex-col gap-3 border-l-2 border-[var(--orange)]">
-                      <Link
-                        href="/workplace"
-                        onClick={() => setOpen(false)}
-                        className="font-mono text-xs tracking-widest text-[#8C7A60] hover:text-[var(--orange)] transition-colors uppercase"
-                      >
-                        Overview
-                      </Link>
-                      {WORKPLACE_TRACKS.map((t) => (
+                  {isExpanded && (
+                    <div className="mt-3 pl-4 flex flex-col gap-4 border-l-2 border-[var(--orange)]">
+                      {item.dropdown.map(sub => (
                         <Link
-                          key={t.href}
-                          href={t.href}
+                          key={sub.href}
+                          href={sub.href}
                           onClick={() => setOpen(false)}
-                          className="font-sans text-base text-[#8C7A60] hover:text-[#F7F2EA] transition-colors"
+                          className="flex flex-col gap-1 hover:opacity-80 transition-opacity"
                         >
-                          <span className="font-mono text-xs text-[var(--orange)] mr-2">{t.tag}</span>
-                          {t.label.split(' — ')[1]}
+                          <span className="font-sans font-bold text-sm text-[var(--cream)]">{sub.label}</span>
+                          <span className="font-mono text-[0.55rem] tracking-widest text-[#8C7A60] uppercase">{sub.desc}</span>
                         </Link>
                       ))}
                     </div>
                   )}
                 </div>
-              ) : (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setOpen(false)}
-                  className="font-display text-3xl tracking-widest text-white hover:text-[var(--orange)] transition-colors"
-                >
-                  {link.label.toUpperCase()}
-                </Link>
               )
-            )}
+            })}
+
+            {STATIC_LINKS.map(link => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setOpen(false)}
+                className="font-display text-3xl tracking-widest text-white hover:text-[var(--orange)] transition-colors"
+              >
+                {link.label.toUpperCase()}
+              </Link>
+            ))}
 
             <div className="pt-6 border-t border-white/10 flex flex-col gap-4">
               {profile ? (

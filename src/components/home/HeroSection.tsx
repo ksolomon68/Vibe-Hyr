@@ -164,7 +164,7 @@ export function HeroSection() {
               <Link href="/auth/signup" className="btn-orange flex items-center gap-2">
                 Start Free <ArrowRight size={14} />
               </Link>
-              <Link href="/courses" className="btn-outline">
+              <Link href="/personal" className="btn-outline">
                 Explore Courses
               </Link>
             </motion.div>

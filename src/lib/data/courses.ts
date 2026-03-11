@@ -2,7 +2,7 @@ import type { Course, Quiz } from '@/types'
 
 export const COURSES: Course[] = [
   {
-    id: 'course-01',
+    id: 'c01',
     slug: 'programming-the-gatekeeper',
     title: 'Programming the Gatekeeper',
     subtitle: 'The Neuroscience of Focus & the Reticular Activating System',
@@ -16,7 +16,7 @@ export const COURSES: Course[] = [
     created_at: new Date().toISOString(),
   },
   {
-    id: 'course-02',
+    id: 'c02',
     slug: 'mastery-of-the-law-of-assumption',
     title: 'Mastery of the Law of Assumption',
     subtitle: 'From "Thinking Of" to "Thinking From" — Consciousness Objectified',
@@ -30,7 +30,7 @@ export const COURSES: Course[] = [
     created_at: new Date().toISOString(),
   },
   {
-    id: 'course-03',
+    id: 'c03',
     slug: 'subconscious-reprogramming-sats',
     title: 'Subconscious Reprogramming via SATS',
     subtitle: 'The Hypnagogic Window — Where New Realities Are Seeded',
@@ -44,7 +44,7 @@ export const COURSES: Course[] = [
     created_at: new Date().toISOString(),
   },
   {
-    id: 'course-04',
+    id: 'c04',
     slug: 'navigating-the-echo-theory-delay',
     title: 'Navigating the Echo Theory Delay',
     subtitle: 'The Mental Diet & Staying Faithful When Reality Lags',

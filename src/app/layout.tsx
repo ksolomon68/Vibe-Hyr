@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
-import { Bebas_Neue, Barlow, IBM_Plex_Mono, DM_Sans } from 'next/font/google'
+import { Bebas_Neue, Barlow, IBM_Plex_Mono, DM_Sans, Cormorant_Garamond } from 'next/font/google'
 import './globals.css'
 import { Toaster } from 'react-hot-toast'
+import { AccessibilityWidget } from '@/components/shared/AccessibilityWidget'
+import { ThemeProvider } from '@/app/providers/ThemeProvider'
 
 const bebasNeue = Bebas_Neue({
   weight: '400',
@@ -31,6 +33,14 @@ const dmSans = DM_Sans({
   display: 'swap',
 })
 
+const cormorant = Cormorant_Garamond({
+  weight: ['400', '600'],
+  style: ['normal', 'italic'],
+  subsets: ['latin'],
+  variable: '--font-cormorant',
+  display: 'swap',
+})
+
 export const metadata: Metadata = {
   title: {
     default: 'Vibe Hyr — Raise Your Reality',
@@ -52,23 +62,26 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${bebasNeue.variable} ${barlow.variable} ${ibmPlexMono.variable} ${dmSans.variable}`}
+      className={`${bebasNeue.variable} ${barlow.variable} ${ibmPlexMono.variable} ${dmSans.variable} ${cormorant.variable}`}
     >
       <body className="font-body antialiased">
-        {children}
-        <Toaster
-          position="bottom-right"
-          toastOptions={{
-            style: {
-              background: '#1A1A1A',
-              color: '#fff',
-              border: '1px solid rgba(255,123,0,0.4)',
-              fontFamily: 'var(--font-ibm-mono)',
-              fontSize: '0.75rem',
-              letterSpacing: '0.05em',
-            },
-          }}
-        />
+        <ThemeProvider>
+          {children}
+          <Toaster
+            position="bottom-right"
+            toastOptions={{
+              style: {
+                background: '#1A1A1A',
+                color: '#fff',
+                border: '1px solid rgba(255,123,0,0.4)',
+                fontFamily: 'var(--font-ibm-mono)',
+                fontSize: '0.75rem',
+                letterSpacing: '0.05em',
+              },
+            }}
+          />
+          <AccessibilityWidget />
+        </ThemeProvider>
       </body>
     </html>
   )

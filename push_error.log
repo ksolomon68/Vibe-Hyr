@@ -1,0 +1,24 @@
+Connecting to remote database...
+Do you want to push these migrations to the remote database?
+ ΓÇó 001_initial_schema.sql
+ ΓÇó 20260311_workplace_series.sql
+
+ [Y/n] Applying migration 001_initial_schema.sql...
+NOTICE (42710): extension "uuid-ossp" already exists, skipping
+ERROR: relation "profiles" already exists (SQLSTATE 42P07)                                                     
+At statement: 1                                                                                                
+-- ΓöÇΓöÇ 1. PROFILES ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ                                          
+CREATE TABLE profiles (                                                                                        
+  id                    UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,                          
+  email                 TEXT NOT NULL,                                                                         
+  full_name             TEXT,                                                                                  
+  avatar_url            TEXT,                                                                                  
+  membership_tier       TEXT NOT NULL DEFAULT 'free' CHECK (membership_tier IN ('free', 'architect', 'elite')),
+  stripe_customer_id    TEXT UNIQUE,                                                                           
+  stripe_subscription_id TEXT UNIQUE,                                                                          
+  journal_streak        INTEGER NOT NULL DEFAULT 0,                                                            
+  last_journal_date     DATE,                                                                                  
+  created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),                                                    
+  updated_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()                                                     
+)                                                                                                              
+Try rerunning the command with --debug to troubleshoot the error.

@@ -19,8 +19,11 @@ import { createClient } from "@/lib/supabase/client";
 // ─── Brand tokens ─────────────────────────────────────────────────────────────
 const T = {
   orange: "#E8621A", gold: "#C9A84C", dark: "#0E0C08", darkMid: "#1A1208",
-  panel: "#141008", card: "#1E1610", border: "#2E2416",
-  gray: "#8C7A60", muted: "#5A4A34", cream: "#F7F2EA",
+  panel: "#141008",  card:    "#1E1610",
+  border:  "#2E2416",
+  gray:    "#E2D9C8",
+  muted:   "#A39785",
+  cream:   "#F7F2EA",
   white: "#FFFFFF", teal: "#0F505A",
 };
 

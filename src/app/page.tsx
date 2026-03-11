@@ -3,10 +3,11 @@ import { Footer } from '@/components/layout/Footer'
 import { HeroSection } from '@/components/home/HeroSection'
 import { PricingSection } from '@/components/home/PricingSection'
 import { AssumptionLab } from '@/components/quiz/AssumptionLab'
-import { CourseCard } from '@/components/courses/CourseCard'
+import { CourseCard } from '@/components/personal/CourseCard'
 import { COURSES } from '@/lib/data/courses'
 import { ArrowRight, Brain, BookOpen, Users, Target } from 'lucide-react'
 import Link from 'next/link'
+import { BuiltForYourWorld } from '@/components/home/BuiltForYourWorld'
 
 const PILLARS = [
   { icon: Brain,    title: 'Structured Curriculum',  desc: '4 progressive courses moving from RAS programming to full Echo Theory mastery. Quiz-gated modules ensure real implementation.' },
@@ -66,7 +67,7 @@ export default function HomePage() {
                   <span className="text-orange-DEFAULT">OF REALITY</span>
                 </h2>
               </div>
-              <Link href="/courses" className="btn-outline-orange hidden md:flex items-center gap-2 self-end">
+              <Link href="/personal" className="btn-outline-orange hidden md:flex items-center gap-2 self-end">
                 All Courses <ArrowRight size={14} />
               </Link>
             </div>
@@ -82,11 +83,14 @@ export default function HomePage() {
               ))}
             </div>
 
-            <Link href="/courses" className="btn-outline-orange flex items-center gap-2 justify-center mt-6 md:hidden">
+            <Link href="/personal" className="btn-outline-orange flex items-center gap-2 justify-center mt-6 md:hidden">
               All Courses <ArrowRight size={14} />
             </Link>
           </div>
         </section>
+
+        {/* Built For Your World */}
+        <BuiltForYourWorld />
 
         {/* Assumption Lab Preview */}
         <section className="py-24 px-6 md:px-14">
@@ -122,7 +126,7 @@ export default function HomePage() {
               <Link href="/auth/signup" className="btn-orange text-base px-12">
                 Begin Free Today
               </Link>
-              <Link href="/courses" className="btn-outline text-base px-12">
+              <Link href="/personal" className="btn-outline text-base px-12">
                 Browse Courses
               </Link>
             </div>

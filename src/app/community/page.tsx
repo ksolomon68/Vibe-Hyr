@@ -33,7 +33,7 @@ const CATEGORY_COLORS: Record<PostCategory, string> = {
   sats_wins:           'border-orange-DEFAULT text-orange-DEFAULT',
   questions:           'border-blue-400 text-blue-400',
   bridge_of_incidents: 'border-green-400 text-green-400',
-  accountability:      'border-purple-400 text-purple-400',
+  accountability:      'border-[#dfbd8b] text-[#dfbd8b]',
 }
 const CATEGORY_LABELS: Record<PostCategory, string> = {
   general:             'General',

@@ -6,6 +6,13 @@ const nextConfig = {
       { protocol: 'https', hostname: '*.supabase.co' },
     ],
   },
+  async redirects() {
+    return [
+      { source: '/courses/:path*',   destination: '/personal/:path*',  permanent: true },
+      { source: '/education/:path*', destination: '/educators/:path*', permanent: true },
+      { source: '/workplace/:path*', destination: '/business/:path*',  permanent: true },
+    ]
+  },
 };
 
 module.exports = nextConfig;

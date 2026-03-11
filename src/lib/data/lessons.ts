@@ -6,7 +6,7 @@ import type { Lesson, Quiz } from '@/types'
 export const COURSE_01_LESSONS: Lesson[] = [
   {
     id: 'c01-l01',
-    course_id: 'course-01',
+    course_id: 'c01',
     order_index: 1,
     title: 'The 11 Million Bit Problem',
     description: 'Your brain is drowning in data every second. Understand why it filters almost everything out — and who controls the filter.',
@@ -50,7 +50,7 @@ That desire is the first filtering instruction we're going to install.`,
   },
   {
     id: 'c01-l02',
-    course_id: 'course-01',
+    course_id: 'c01',
     order_index: 2,
     title: 'The Car Model Phenomenon',
     description: 'Why you suddenly see your desired car everywhere after deciding to buy it — and how to weaponize this effect for every goal.',
@@ -100,7 +100,7 @@ We'll build each of these systematically across this course.`,
   },
   {
     id: 'c01-l03',
-    course_id: 'course-01',
+    course_id: 'c01',
     order_index: 3,
     title: 'Beta, Alpha, Theta — Your Three Operating Modes',
     description: "Your brain runs on different frequencies. Each one has a different relationship with your beliefs — and one is the master key to the subconscious.",
@@ -153,7 +153,7 @@ Each morning and evening, for just 5 minutes, enter a relaxed state (eyes closed
   },
   {
     id: 'c01-l04',
-    course_id: 'course-01',
+    course_id: 'c01',
     order_index: 4,
     title: 'Installing New Filtering Instructions',
     description: 'The three-part protocol for deliberately reprogramming your RAS — clarity, emotion, and repetition working in sequence.',
@@ -216,7 +216,7 @@ This is the beginning of the Mental Diet. We'll master this in Course 4.`,
   },
   {
     id: 'c01-l05',
-    course_id: 'course-01',
+    course_id: 'c01',
     order_index: 5,
     title: 'Module Quiz & Your RAS Assignment',
     description: 'Test your understanding of the RAS framework and receive your 7-day reprogramming assignment.',
@@ -261,7 +261,7 @@ After completing the quiz, you've unlocked **Course 2: Mastery of the Law of Ass
 // ─────────────────────────────────────────────────────────────────────────────
 export const COURSE_02_LESSONS: Lesson[] = [
   {
-    id: 'c02-l01', course_id: 'course-02', order_index: 1,
+    id: 'c02-l01', course_id: 'c02', order_index: 1,
     title: 'The Law vs. The Law of Attraction',
     description: "The critical distinction that changes everything — you're not attracting from outside, you're selecting from within.",
     video_url: null, duration_seconds: 840, is_preview: false,
@@ -300,7 +300,7 @@ One keeps the desire at arm's length. The other **collapses the distance entirel
     created_at: new Date().toISOString(),
   },
   {
-    id: 'c02-l02', course_id: 'course-02', order_index: 2,
+    id: 'c02-l02', course_id: 'c02', order_index: 2,
     title: 'Thinking Of vs. Thinking From',
     description: 'The single most important shift in manifestation practice — and how to make it in any moment.',
     video_url: null, duration_seconds: 900, is_preview: false,
@@ -337,7 +337,7 @@ A person who has money doesn't think about getting money. They think about what 
     created_at: new Date().toISOString(),
   },
   {
-    id: 'c02-l03', course_id: 'course-02', order_index: 3,
+    id: 'c02-l03', course_id: 'c02', order_index: 3,
     title: 'Living in the End',
     description: "Neville's most powerful instruction — what it actually means to inhabit the fulfilled state, and the common mistakes that prevent it.",
     video_url: null, duration_seconds: 960, is_preview: false,
@@ -378,7 +378,7 @@ Notice how different these thoughts feel from thoughts *about* the desire.`,
     created_at: new Date().toISOString(),
   },
   {
-    id: 'c02-l04', course_id: 'course-02', order_index: 4,
+    id: 'c02-l04', course_id: 'c02', order_index: 4,
     title: 'The Bridge of Incidents',
     description: 'The inevitable chain of events that moves your assumption into physical reality — and why you must never try to control it.',
     video_url: null, duration_seconds: 840, is_preview: false,
@@ -414,7 +414,7 @@ The subconscious is smarter than your conscious strategies. Trust the constructi
     created_at: new Date().toISOString(),
   },
   {
-    id: 'c02-l05', course_id: 'course-02', order_index: 5,
+    id: 'c02-l05', course_id: 'c02', order_index: 5,
     title: 'The Feeling Is the Secret',
     description: "Why emotion is the operative force — not visualization, not words, not logic — and how to generate genuine feeling on demand.",
     video_url: null, duration_seconds: 780, is_preview: false,
@@ -452,7 +452,7 @@ Practice one of these today. Notice the difference between feeling *about* a des
     created_at: new Date().toISOString(),
   },
   {
-    id: 'c02-l06', course_id: 'course-02', order_index: 6,
+    id: 'c02-l06', course_id: 'c02', order_index: 6,
     title: 'The Echo Theory — Understanding the Delay',
     description: "Why nothing seems to change immediately after you shift your assumption — and what's actually happening beneath the surface.",
     video_url: null, duration_seconds: 720, is_preview: false,
@@ -490,7 +490,7 @@ Are you genuinely thinking from the new state more than the old? That is the onl
     created_at: new Date().toISOString(),
   },
   {
-    id: 'c02-l07', course_id: 'course-02', order_index: 7,
+    id: 'c02-l07', course_id: 'c02', order_index: 7,
     title: 'Module Quiz & Assumption Assignment',
     description: 'Solidify your understanding of the Law of Assumption and receive your core practice for the next 30 days.',
     video_url: null, duration_seconds: 300, is_preview: false,
@@ -527,7 +527,7 @@ The subconscious is being impressed. Persistently, deliberately, consistently �
 // ─────────────────────────────────────────────────────────────────────────────
 export const COURSE_03_LESSONS: Lesson[] = [
   {
-    id: 'c03-l01', course_id: 'course-03', order_index: 1,
+    id: 'c03-l01', course_id: 'c03', order_index: 1,
     title: 'What Is SATS — and Why It Works',
     description: "The science and mysticism behind the hypnagogic state — the most direct access point to the subconscious mind ever identified.",
     video_url: null, duration_seconds: 840, is_preview: false,
@@ -563,7 +563,7 @@ Miss this window, and you'll either be too awake (critical factor active) or asl
     created_at: new Date().toISOString(),
   },
   {
-    id: 'c03-l02', course_id: 'course-03', order_index: 2,
+    id: 'c03-l02', course_id: 'c03', order_index: 2,
     title: 'Constructing Your SATS Scene',
     description: 'The exact specifications for a scene that works — first-person, implied, short, looped. Why each element matters.',
     video_url: null, duration_seconds: 960, is_preview: false,
@@ -601,7 +601,7 @@ You don't think about the scene. You *live* the scene, over and over, until cons
     created_at: new Date().toISOString(),
   },
   {
-    id: 'c03-l03', course_id: 'course-03', order_index: 3,
+    id: 'c03-l03', course_id: 'c03', order_index: 3,
     title: 'The 7-Night Integration Ritual',
     description: "The complete week-long protocol for building a layered subconscious foundation across 7 domains of your life.",
     video_url: null, duration_seconds: 1020, is_preview: false,
@@ -659,7 +659,7 @@ Run this cycle, then repeat. Each iteration deepens the impression.`,
     created_at: new Date().toISOString(),
   },
   {
-    id: 'c03-l04', course_id: 'course-03', order_index: 4,
+    id: 'c03-l04', course_id: 'c03', order_index: 4,
     title: 'Myelination — The 21-Day Science',
     description: 'Why consistency over 21 days creates permanent neural change — and how to structure your practice for maximum biological impact.',
     video_url: null, duration_seconds: 780, is_preview: false,
@@ -699,7 +699,7 @@ This is why consistent nightly SATS practice can produce identity shifts in week
     created_at: new Date().toISOString(),
   },
   {
-    id: 'c03-l05', course_id: 'course-03', order_index: 5,
+    id: 'c03-l05', course_id: 'c03', order_index: 5,
     title: 'Common SATS Mistakes & How to Fix Them',
     description: "The 7 most frequent failure points in SATS practice — why they happen and exactly how to correct each one.",
     video_url: null, duration_seconds: 900, is_preview: false,
@@ -735,7 +735,7 @@ This is why consistent nightly SATS practice can produce identity shifts in week
     created_at: new Date().toISOString(),
   },
   {
-    id: 'c03-l06', course_id: 'course-03', order_index: 6,
+    id: 'c03-l06', course_id: 'c03', order_index: 6,
     title: 'SATS for Specific Desires',
     description: 'How to customize your SATS scene for relationships, money, career, health, and creative work — with example scenes for each.',
     video_url: null, duration_seconds: 840, is_preview: false,
@@ -785,7 +785,7 @@ The subconscious has no limitation on how much it can receive. Be generous.`,
     created_at: new Date().toISOString(),
   },
   {
-    id: 'c03-l07', course_id: 'course-03', order_index: 7,
+    id: 'c03-l07', course_id: 'c03', order_index: 7,
     title: 'The Chemical Cement — Dopamine, Serotonin & the Impression Process',
     description: "Why positive emotion during SATS isn't just feel-good advice — it's the neurochemical mechanism that makes impressions permanent.",
     video_url: null, duration_seconds: 720, is_preview: false,
@@ -817,7 +817,7 @@ This is why a desperate SATS practice doesn't work. The fear-based emotional ton
     created_at: new Date().toISOString(),
   },
   {
-    id: 'c03-l08', course_id: 'course-03', order_index: 8,
+    id: 'c03-l08', course_id: 'c03', order_index: 8,
     title: 'Module Quiz & Your 21-Night SATS Commitment',
     description: 'Assess your SATS mastery and formalize your 21-night practice commitment.',
     video_url: null, duration_seconds: 300, is_preview: false,
@@ -860,7 +860,7 @@ Complete the quiz below, then begin tonight.`,
 // ─────────────────────────────────────────────────────────────────────────────
 export const COURSE_04_LESSONS: Lesson[] = [
   {
-    id: 'c04-l01', course_id: 'course-04', order_index: 1,
+    id: 'c04-l01', course_id: 'c04', order_index: 1,
     title: 'The Mental Diet — What It Actually Means',
     description: "Neville's most demanding instruction — and the one most practitioners underestimate until they implement it fully.",
     video_url: null, duration_seconds: 900, is_preview: false,
@@ -904,7 +904,7 @@ The mental diet shifts the score, one redirected thought at a time. By the end o
     created_at: new Date().toISOString(),
   },
   {
-    id: 'c04-l02', course_id: 'course-04', order_index: 2,
+    id: 'c04-l02', course_id: 'c04', order_index: 2,
     title: 'The Decision Matrix',
     description: 'A real-time tool for neutralizing limiting beliefs the moment they arise — without suppression, without spiritual bypass.',
     video_url: null, duration_seconds: 840, is_preview: false,
@@ -957,7 +957,7 @@ Three steps. 30 seconds. Repeat as needed, as many times as needed.`,
     created_at: new Date().toISOString(),
   },
   {
-    id: 'c04-l03', course_id: 'course-04', order_index: 3,
+    id: 'c04-l03', course_id: 'c04', order_index: 3,
     title: 'Staying Faithful When 3D Contradicts',
     description: 'The hardest skill in manifestation practice — maintaining your inner state when external evidence says the opposite.',
     video_url: null, duration_seconds: 960, is_preview: false,
@@ -1007,7 +1007,7 @@ That peace is the most powerful signal you can send to the subconscious. It says
     created_at: new Date().toISOString(),
   },
   {
-    id: 'c04-l04', course_id: 'course-04', order_index: 4,
+    id: 'c04-l04', course_id: 'c04', order_index: 4,
     title: 'Advanced Revision — Rewriting the Timeline',
     description: 'How to use the revision technique to neutralize not just today\'s events but years of accumulated emotional charge from the past.',
     video_url: null, duration_seconds: 900, is_preview: false,
@@ -1051,7 +1051,7 @@ Go to your Revision Journal. Identify one past experience to revise over the nex
     created_at: new Date().toISOString(),
   },
   {
-    id: 'c04-l05', course_id: 'course-04', order_index: 5,
+    id: 'c04-l05', course_id: 'c04', order_index: 5,
     title: 'Monitoring Your Inner Speech',
     description: 'Building the observer capacity to catch inner dialogue in real time — the skill that makes every other practice work better.',
     video_url: null, duration_seconds: 780, is_preview: false,
@@ -1096,7 +1096,7 @@ This is the mental diet working. One redirected thought at a time.`,
     created_at: new Date().toISOString(),
   },
   {
-    id: 'c04-l06', course_id: 'course-04', order_index: 6,
+    id: 'c04-l06', course_id: 'c04', order_index: 6,
     title: 'The Persistence Principle',
     description: "Why the practitioners who see the most dramatic results all share one quality — and how to develop it deliberately.",
     video_url: null, duration_seconds: 840, is_preview: false,
@@ -1139,7 +1139,7 @@ Track your practice publicly in the community forum. Share your journey — not 
     created_at: new Date().toISOString(),
   },
   {
-    id: 'c04-l07', course_id: 'course-04', order_index: 7,
+    id: 'c04-l07', course_id: 'c04', order_index: 7,
     title: 'Integrated Practice — All Four Systems Working Together',
     description: "How the RAS framework, Law of Assumption, SATS, and Mental Diet function as one unified system — and how to run them simultaneously.",
     video_url: null, duration_seconds: 900, is_preview: false,
@@ -1187,7 +1187,7 @@ This is the architecture of a reality that you built, deliberately, from the ins
     created_at: new Date().toISOString(),
   },
   {
-    id: 'c04-l08', course_id: 'course-04', order_index: 8,
+    id: 'c04-l08', course_id: 'c04', order_index: 8,
     title: 'The Life Mastery Score — Monthly Assessment Protocol',
     description: 'How to use the monthly Life Mastery Score diagnostic to track your internal shifts and generate your next-phase roadmap.',
     video_url: null, duration_seconds: 600, is_preview: false,
@@ -1230,7 +1230,7 @@ Available in your Elite member dashboard. Complete monthly on the same date each
     created_at: new Date().toISOString(),
   },
   {
-    id: 'c04-l09', course_id: 'course-04', order_index: 9,
+    id: 'c04-l09', course_id: 'c04', order_index: 9,
     title: 'Course Completion — Your Reality Architecture',
     description: "You've built the complete internal architecture. What comes next — and how to maintain what you've built.",
     video_url: null, duration_seconds: 600, is_preview: false,
@@ -1287,7 +1287,7 @@ Build the reality you actually want. You have everything required.
 // ─────────────────────────────────────────────────────────────────────────────
 export const LESSON_QUIZZES: Record<string, Quiz> = {
   'c01-l05': {
-    id: 'quiz-c01-final', course_id: 'course-01', lesson_id: 'c01-l05',
+    id: 'quiz-c01-final', course_id: 'c01', lesson_id: 'c01-l05',
     title: 'Course 1 Knowledge Check', description: null,
     quiz_type: 'knowledge_check', tier_required: 'free', pass_percent: 70,
     created_at: new Date().toISOString(),
@@ -1339,7 +1339,7 @@ export const LESSON_QUIZZES: Record<string, Quiz> = {
     ],
   },
   'c02-l07': {
-    id: 'quiz-c02-final', course_id: 'course-02', lesson_id: 'c02-l07',
+    id: 'quiz-c02-final', course_id: 'c02', lesson_id: 'c02-l07',
     title: 'Course 2 Knowledge Check', description: null,
     quiz_type: 'knowledge_check', tier_required: 'architect', pass_percent: 70,
     created_at: new Date().toISOString(),
@@ -1380,7 +1380,7 @@ export const LESSON_QUIZZES: Record<string, Quiz> = {
     ],
   },
   'c03-l08': {
-    id: 'quiz-c03-final', course_id: 'course-03', lesson_id: 'c03-l08',
+    id: 'quiz-c03-final', course_id: 'c03', lesson_id: 'c03-l08',
     title: 'SATS Mastery Diagnostic', description: null,
     quiz_type: 'sats_diagnostic', tier_required: 'architect', pass_percent: 70,
     created_at: new Date().toISOString(),
@@ -1421,7 +1421,7 @@ export const LESSON_QUIZZES: Record<string, Quiz> = {
     ],
   },
   'c04-l09': {
-    id: 'quiz-c04-final', course_id: 'course-04', lesson_id: 'c04-l09',
+    id: 'quiz-c04-final', course_id: 'c04', lesson_id: 'c04-l09',
     title: 'Course 4 Final Assessment', description: null,
     quiz_type: 'knowledge_check', tier_required: 'elite', pass_percent: 75,
     created_at: new Date().toISOString(),
@@ -1467,10 +1467,10 @@ export const LESSON_QUIZZES: Record<string, Quiz> = {
 // HELPER: get all lessons for a course
 // ─────────────────────────────────────────────────────────────────────────────
 export const ALL_LESSONS: Record<string, Lesson[]> = {
-  'course-01': COURSE_01_LESSONS,
-  'course-02': COURSE_02_LESSONS,
-  'course-03': COURSE_03_LESSONS,
-  'course-04': COURSE_04_LESSONS,
+  'c01': COURSE_01_LESSONS,
+  'c02': COURSE_02_LESSONS,
+  'c03': COURSE_03_LESSONS,
+  'c04': COURSE_04_LESSONS,
 }
 
 export function getLessonsForCourse(courseId: string): Lesson[] {
