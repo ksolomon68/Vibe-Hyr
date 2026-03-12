@@ -119,22 +119,12 @@ export default function EducationPage() {
               Vibe Hyr provides neuroscience-backed self-mastery and co-regulation training for K–12 staff — because a regulated school culture starts with a regulated adult.
             </p>
             <div className="flex flex-wrap gap-4 mb-12">
-              {user ? (
-                <Link 
-                  href="/educators/the-educator-reset/ed01-m01"
-                  className="btn-open-app"
-                >
-                  Open Education App
-                </Link>
-              ) : (
-                <button 
-                  onClick={() => setIsModalOpen(true)}
-                  className="btn-open-app bg-zinc-800 text-white shadow-none hover:bg-zinc-700 hover:-translate-y-1"
-                  style={{ background: '#3F3F46', boxShadow: 'none' }}
-                >
-                  Get Training for Your Staff
-                </button>
-              )}
+              <a 
+                href="#pricing"
+                className="btn-open-app"
+              >
+                Get Training for Your Staff
+              </a>
               <a href="#programs" className="px-8 py-4 border border-white/20 hover:border-orange-DEFAULT hover:text-orange-DEFAULT text-white text-[0.75rem] uppercase tracking-widest font-semibold rounded-sm transition-all">
                 See the Programs
               </a>
@@ -285,12 +275,12 @@ export default function EducationPage() {
               ))}
             </div>
             {user ? (
-              <Link 
-                href="/educators/the-educator-reset/ed01-m01"
+              <a 
+                href="#pricing"
                 className="btn-open-app"
               >
-                Open Education App
-              </Link>
+                View Pricing
+              </a>
             ) : (
               <button 
                 onClick={() => setIsModalOpen(true)}
@@ -560,30 +550,19 @@ export default function EducationPage() {
               Download the educator program guide to see training modules, implementation timelines, and staff retention case studies.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              {user ? (
-                <Link 
-                  href="/educators/the-educator-reset/ed01-m01"
-                  className="btn-open-app"
-                >
-                  Open Education App
-                </Link>
-              ) : (
-                <>
-                  <button 
-                    onClick={() => setIsModalOpen(true)}
-                    className="btn-open-app"
-                  >
-                    Book a Discovery Call
-                  </button>
-                  <a 
-                    href="/education.pdf"
-                    download
-                    className="px-12 py-6 border border-white/10 hover:border-white/30 text-white text-[0.8rem] uppercase tracking-widest font-bold rounded-sm transition-all inline-block"
-                  >
-                    Download the Brochure
-                  </a>
-                </>
-              )}
+              <button 
+                onClick={() => setIsModalOpen(true)}
+                className="btn-open-app"
+              >
+                Book a Discovery Call
+              </button>
+              <a 
+                href="/education.pdf"
+                download
+                className="px-12 py-6 border border-white/10 hover:border-white/30 text-white text-[0.8rem] uppercase tracking-widest font-bold rounded-sm transition-all inline-block"
+              >
+                Download the Brochure
+              </a>
             </div>
           </motion.div>
         </div>

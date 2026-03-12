@@ -456,24 +456,28 @@ html.light-mode body {
   color: #1A1008;
 }
 
-/* ─── NAVIGATION ─── */
+/* ─── NAVIGATION — always dark background to preserve logo legibility ─── */
 html.light-mode nav,
 html.light-mode .navbar,
 html.light-mode header {
-  background: #FFFFFF;
-  border-bottom: 1px solid #E0D8CC;
+  background: #000000 !important;
+  border-bottom: 2px solid var(--orange) !important;
 }
-html.light-mode .nav-link,
-html.light-mode .nav-links a {
-  color: #3A2A18;
+/* Nav links: light grey so they're readable on the dark navbar */
+html.light-mode nav .nav-link,
+html.light-mode nav a.font-mono {
+  color: #CCCCCC !important;
 }
-html.light-mode .nav-link:hover,
-html.light-mode .nav-links a:hover {
-  color: #D4560F;
+html.light-mode nav .nav-link:hover,
+html.light-mode nav a.font-mono:hover {
+  color: var(--orange) !important;
+}
+html.light-mode nav .text-\[var\(--grey\)\] {
+  color: #CCCCCC !important;
 }
 html.light-mode .nav-logo,
 html.light-mode .topbar-logo {
-  color: #D4560F;
+  color: var(--orange);
 }
 
 /* ─── HERO SECTIONS ─── */
@@ -1032,3 +1036,48 @@ html.light-mode .btn-open-app:hover {
 }
 .a11y-statement-link:hover { color: #E8621A; text-decoration: underline; }
 
+
+/* ─── LIGHT MODE: Override hardcoded Tailwind text-white classes in page content ─── */
+/* Main page sections get light backgrounds */
+html.light-mode main > section {
+  background-color: #F5F0E8;
+}
+html.light-mode main > section:nth-of-type(even),
+html.light-mode .bg-zinc-950,
+html.light-mode section.bg-zinc-950 {
+  background-color: #EDE8DC !important;
+}
+html.light-mode .bg-zinc-900:not(nav):not(.a11y-panel):not(.nav-dropdown-inner),
+html.light-mode section.bg-zinc-900 {
+  background-color: #F0EAE0 !important;
+}
+
+/* Headings in page sections */
+html.light-mode main section h1,
+html.light-mode main section h2,
+html.light-mode main section h3,
+html.light-mode main section h4 {
+  color: #1A1008 !important;
+}
+
+/* Paragraphs and list items in page sections */
+html.light-mode main section p,
+html.light-mode main section li,
+html.light-mode main section span:not(.text-orange-DEFAULT):not(.text-gold):not([class*="badge"]):not([class*="tag"]):not([class*="tracking"]) {
+  color: #2A1E10;
+}
+
+/* Ensure the footer + CTA dark strips remain dark */
+html.light-mode footer,
+html.light-mode .cta-section,
+html.light-mode section.bg-\[\#1A1008\] {
+  background-color: #1A1008 !important;
+  color: #F0EAE0 !important;
+}
+html.light-mode footer p,
+html.light-mode footer h4,
+html.light-mode footer span,
+html.light-mode footer a {
+  color: #C0A880 !important;
+}
+html.light-mode footer a:hover { color: #E8621A !important; }

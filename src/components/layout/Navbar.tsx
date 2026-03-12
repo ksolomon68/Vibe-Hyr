@@ -197,7 +197,7 @@ export function Navbar() {
               {theme === 'dark' ? '☀️' : '🌙'}
             </button>
             
-            {loggedIn ? (
+            {loggedIn && profile ? (
               <div className="flex items-center gap-6">
                 <Link href="/dashboard" className="flex items-center gap-3 group">
                   <div className="w-8 h-8 rounded-full bg-[var(--black-3)] border-2 border-[var(--orange)] flex items-center justify-center">
@@ -216,6 +216,14 @@ export function Navbar() {
                   Log Out
                 </button>
               </div>
+            ) : loggedIn && !profile ? (
+              /* Logged in but profile still loading — show just logout */
+              <button
+                onClick={handleLogout}
+                className="font-mono text-[0.62rem] tracking-[0.18em] uppercase text-[var(--grey)] hover:text-white transition-colors"
+              >
+                Log Out
+              </button>
             ) : (
               <>
                 <Link

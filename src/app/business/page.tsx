@@ -124,22 +124,12 @@ export default function WorkplaceTrainingPage() {
               When unresolved conflict, reactive behavior, and low self-awareness are costing you culture — and bottom line — Vibe Hyr's workplace training gives your people the tools to respond, not react.
             </p>
             <div className="flex flex-wrap gap-4">
-              {user ? (
-                <Link 
-                  href="/business/learn/b-core/m01"
-                  className="btn-open-app"
-                >
-                  Open Business App
-                </Link>
-              ) : (
-                <button 
-                  onClick={() => setIsModalOpen(true)}
-                  className="btn-open-app bg-zinc-800 text-white shadow-none hover:bg-zinc-700 hover:-translate-y-1"
-                  style={{ background: '#3F3F46', boxShadow: 'none' }}
-                >
-                  Get Training for Your Team
-                </button>
-              )}
+              <a 
+                href="#pricing"
+                className="btn-open-app"
+              >
+                Get Training for Your Team
+              </a>
               <a href="#curriculum" className="px-10 py-5 border border-white/20 hover:border-orange-DEFAULT hover:text-orange-DEFAULT text-white text-[0.8rem] uppercase tracking-widest font-bold rounded-sm transition-all flex items-center justify-center">
                 See the Curriculum
               </a>
@@ -275,12 +265,12 @@ export default function WorkplaceTrainingPage() {
               ))}
             </div>
             {user ? (
-               <Link 
-                 href="/business/learn/b-core/m01"
+               <a 
+                 href="#pricing"
                  className="btn-open-app"
                >
-                 Open Business App
-               </Link>
+                 View Pricing
+               </a>
             ) : (
               <button 
                 onClick={() => setIsModalOpen(true)}
@@ -481,30 +471,19 @@ export default function WorkplaceTrainingPage() {
             Whether you're dealing with an urgent culture problem or proactively investing in your people, we'll build the right program for your team.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            {user ? (
-                <Link 
-                  href="/business/learn/b-core/m01"
-                  className="btn-open-app"
-                >
-                  Open Business App
-                </Link>
-            ) : (
-              <>
-                <button 
-                  onClick={() => setIsModalOpen(true)}
-                  className="btn-open-app"
-                >
-                  Book a Discovery Call
-                </button>
-                <a 
-                  href="/business.pdf"
-                  download
-                  className="px-12 py-6 border border-white/10 hover:border-white/30 text-white text-[0.8rem] uppercase tracking-widest font-bold rounded-sm transition-all inline-block"
-                >
-                  Download the Brochure
-                </a>
-              </>
-            )}
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="btn-open-app"
+            >
+              Book a Discovery Call
+            </button>
+            <a 
+              href="/business.pdf"
+              download
+              className="px-12 py-6 border border-white/10 hover:border-white/30 text-white text-[0.8rem] uppercase tracking-widest font-bold rounded-sm transition-all inline-block"
+            >
+              Download the Brochure
+            </a>
           </div>
         </motion.div>
       </section>
