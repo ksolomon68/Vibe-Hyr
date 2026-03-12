@@ -46,7 +46,7 @@ export function getTierLabel(tier: MembershipTier): string {
 export function getTierColor(tier: MembershipTier): string {
   return {
     free:      'text-green-400 border-green-400',
-    architect: 'text-orange-DEFAULT border-orange-DEFAULT',
+    architect: 'text-orange border-orange',
     elite:     'text-white border-white',
   }[tier]
 }

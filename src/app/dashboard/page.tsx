@@ -53,8 +53,8 @@ export default async function DashboardPage() {
       <Navbar />
       <main className="pt-[68px] min-h-screen">
         {/* Header */}
-        <section className="py-12 px-6 md:px-14 border-b-2 border-orange-DEFAULT/20 relative">
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-DEFAULT" />
+        <section className="py-12 px-6 md:px-14 border-b-2 border-orange/20 relative">
+          <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange" />
           <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-6">
             <div>
               <div className="label mb-3">Member Dashboard</div>
@@ -65,10 +65,10 @@ export default async function DashboardPage() {
                 </span>
               </h1>
             </div>
-            <div className="flex items-center gap-3 bg-black-2 border border-orange-DEFAULT/40 px-5 py-3">
-              <Crown size={16} className="text-orange-DEFAULT" />
+            <div className="flex items-center gap-3 bg-black-2 border border-orange/40 px-5 py-3">
+              <Crown size={16} className="text-orange" />
               <div>
-                <span className="font-display text-xl text-orange-DEFAULT block leading-none">
+                <span className="font-display text-xl text-orange block leading-none">
                   {getTierLabel(tier)}
                 </span>
                 <span className="font-mono text-[0.55rem] tracking-widest text-grey-dark uppercase">
@@ -83,7 +83,7 @@ export default async function DashboardPage() {
           <div className="max-w-7xl mx-auto">
 
             {/* Stats row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-[2px] bg-orange-DEFAULT border-2 border-orange-DEFAULT mb-10">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-[2px] bg-orange border-2 border-orange mb-10">
               {[
                 { icon: Flame,    label: 'Journal Streak',    val: `${streak} days`,        sub: getStreakMessage(streak) },
                 { icon: BookOpen, label: 'Total Revisions',   val: totalJournal,             sub: 'entries in your timeline' },
@@ -105,26 +105,26 @@ export default async function DashboardPage() {
               <div className="lg:col-span-1">
                 <h2 className="font-display text-2xl tracking-widest text-white mb-5">QUICK ACTIONS</h2>
                 <div className="flex flex-col gap-2">
-                  {QUICK_LINKS.map(({ href, icon: Icon, label, desc }) => (
+                  {QUICK_LINKS.map(({ href, icon: Icon, label, desc }, i) => (
                     <Link
-                      key={href}
+                      key={i}
                       href={href}
-                      className="flex items-center gap-4 p-4 bg-black-2 border border-white/8 hover:border-orange-DEFAULT/30 hover:bg-black-3 transition-all group"
+                      className="flex items-center gap-4 p-4 bg-black-2 border border-white/8 hover:border-orange/30 hover:bg-black-3 transition-all group"
                     >
-                      <Icon size={18} className="text-orange-DEFAULT flex-shrink-0" />
+                      <Icon size={18} className="text-orange flex-shrink-0" />
                       <div className="flex-1">
                         <span className="font-mono text-[0.65rem] tracking-[0.1em] uppercase text-white block">{label}</span>
                         <span className="font-body text-xs text-grey-dark italic">{desc}</span>
                       </div>
-                      <ArrowRight size={14} className="text-grey-dark group-hover:text-orange-DEFAULT transition-colors" />
+                      <ArrowRight size={14} className="text-grey-dark group-hover:text-orange transition-colors" />
                     </Link>
                   ))}
                 </div>
 
                 {/* Upgrade CTA for non-elite */}
                 {tier !== 'elite' && (
-                  <div className="mt-6 bg-black-2 border border-orange-DEFAULT/40 p-5">
-                    <p className="font-mono text-[0.6rem] tracking-[0.2em] uppercase text-orange-DEFAULT mb-2">
+                  <div className="mt-6 bg-black-2 border border-orange/40 p-5">
+                    <p className="font-mono text-[0.6rem] tracking-[0.2em] uppercase text-orange mb-2">
                       ✦ Unlock More
                     </p>
                     <p className="font-body text-sm text-grey-DEFAULT mb-4 leading-relaxed">
@@ -147,7 +147,7 @@ export default async function DashboardPage() {
               <div className="lg:col-span-2">
                 <h2 className="font-display text-2xl tracking-widest text-white mb-5">YOUR COURSES</h2>
                 <div className="flex flex-col gap-3">
-                  {COURSES.map((course) => {
+                  {COURSES.map((course, i) => {
                     const tierRank: Record<string, number> = { free: 0, architect: 1, elite: 2 }
                     const hasAccess  = tierRank[tier] >= tierRank[course.tier]
                     // Determine which personal tier unlocks this course
@@ -155,10 +155,10 @@ export default async function DashboardPage() {
 
                     return (
                       <div
-                        key={course.id}
-                        className="flex items-center gap-5 p-5 bg-black-2 border border-white/8 hover:border-orange-DEFAULT/30 transition-all"
+                        key={i}
+                        className="flex items-center gap-5 p-5 bg-black-2 border border-white/8 hover:border-orange/30 transition-all"
                       >
-                        <div className="font-display text-3xl text-orange-DEFAULT/20 leading-none w-12 flex-shrink-0">
+                        <div className="font-display text-3xl text-orange/20 leading-none w-12 flex-shrink-0">
                           {String(course.order_index).padStart(2,'0')}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -170,7 +170,7 @@ export default async function DashboardPage() {
                           </p>
                           {hasAccess && (
                             <div className="mt-2 h-px bg-black-4">
-                              <div className="h-px bg-orange-DEFAULT" style={{ width: '0%' }} />
+                              <div className="h-px bg-orange" style={{ width: '0%' }} />
                             </div>
                           )}
                         </div>
@@ -178,14 +178,14 @@ export default async function DashboardPage() {
                           {hasAccess ? (
                             <Link
                               href={`/courses/${course.slug}`}
-                              className="font-mono text-[0.58rem] tracking-widest uppercase text-orange-DEFAULT hover:text-orange-light transition-colors flex items-center gap-1"
+                              className="font-mono text-[0.58rem] tracking-widest uppercase text-orange hover:text-orange-light transition-colors flex items-center gap-1"
                             >
                               Open <ArrowRight size={10} />
                             </Link>
                           ) : (
                             <PersonalUpgradeButton
                               tier={courseTier}
-                              className="font-mono text-[0.58rem] tracking-widest uppercase text-grey-dark hover:text-orange-DEFAULT transition-colors"
+                              className="font-mono text-[0.58rem] tracking-widest uppercase text-grey-dark hover:text-orange transition-colors"
                             >
                               Upgrade →
                             </PersonalUpgradeButton>

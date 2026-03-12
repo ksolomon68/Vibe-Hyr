@@ -41,7 +41,7 @@ export function AssumptionLab() {
   const selectedOption = question?.options.find(o => o.id === selected)
 
   return (
-    <div className="bg-black-2 border-2 border-orange-DEFAULT p-10 relative">
+    <div className="bg-black-2 border-2 border-orange p-10 relative">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -50,7 +50,7 @@ export function AssumptionLab() {
             SCENARIO {String(currentQ + 1).padStart(2, '0')} / {String(questions.length).padStart(2, '0')}
           </h3>
         </div>
-        <button onClick={handleReset} className="text-grey-DEFAULT hover:text-orange-DEFAULT transition-colors">
+        <button onClick={handleReset} className="text-grey hover:text-orange transition-colors">
           <RotateCcw size={16} />
         </button>
       </div>
@@ -58,7 +58,7 @@ export function AssumptionLab() {
       {/* Progress bar */}
       <div className="h-px bg-black-4 mb-8">
         <motion.div
-          className="h-px bg-orange-DEFAULT"
+          className="h-px bg-orange"
           animate={{ width: `${((currentQ) / questions.length) * 100}%` }}
           transition={{ duration: 0.4 }}
         />
@@ -87,12 +87,12 @@ export function AssumptionLab() {
                   className={cn(
                     'flex items-start gap-4 p-4 border text-left transition-all duration-200',
                     selected === opt.id
-                      ? 'border-orange-DEFAULT bg-orange-DEFAULT/10 text-white'
-                      : 'border-grey-dark text-grey-DEFAULT hover:border-orange-DEFAULT hover:text-white hover:bg-orange-DEFAULT/5',
+                      ? 'border-orange bg-orange/10 text-white'
+                      : 'border-grey-dark text-grey hover:border-orange hover:text-white hover:bg-orange/5',
                     showFeedback && selected !== opt.id && 'opacity-40'
                   )}
                 >
-                  <span className="font-display text-xl text-orange-DEFAULT leading-none mt-0.5 min-w-[20px]">
+                  <span className="font-display text-xl text-orange leading-none mt-0.5 min-w-[20px]">
                     {opt.label}
                   </span>
                   <span className="font-body text-sm leading-relaxed">{opt.text}</span>
@@ -106,7 +106,7 @@ export function AssumptionLab() {
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="border-l-4 border-orange-DEFAULT bg-orange-DEFAULT/8 p-5 mb-6"
+                  className="border-l-4 border-orange bg-orange/8 p-5 mb-6"
                 >
                   <p className="font-body text-sm italic text-offwhite leading-relaxed">
                     {selectedOption.feedback}
@@ -134,11 +134,11 @@ export function AssumptionLab() {
             animate={{ opacity: 1, scale: 1 }}
             className="text-center py-10"
           >
-            <div className="font-display text-7xl text-orange-DEFAULT mb-4">✦</div>
+            <div className="font-display text-7xl text-orange mb-4">✦</div>
             <h3 className="font-display text-3xl tracking-widest mb-4">
               LAB COMPLETE
             </h3>
-            <p className="font-body text-grey-DEFAULT mb-8 max-w-md mx-auto leading-relaxed">
+            <p className="font-body text-grey mb-8 max-w-md mx-auto leading-relaxed">
               You've run three scenarios through the Assumption Lab. The full version inside the platform includes 20+ scenarios across money, relationships, health, and self-worth — with a personalized readout of your default programs.
             </p>
             <div className="flex gap-4 justify-center flex-wrap">

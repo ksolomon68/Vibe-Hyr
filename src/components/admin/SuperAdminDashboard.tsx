@@ -587,7 +587,7 @@ function BypassPage({ bypassUsers, bypassOrgs, onEdit, onToast, onAddUser, onAdd
                   <TD>{o.seats_purchased} seats</TD>
                   <TD><Tag bypass label={o.bypass_reason??'—'}/></TD>
                   <TD muted>{formatExpiry(o.bypass_expiry)}</TD>
-                  <TD muted style={{ fontSize:11 }}>{o.admin_email??'—'}</TD>
+                  <TD muted><span style={{ fontSize:11 }}>{o.admin_email??'—'}</span></TD>
                   <TD><div style={{ display:'flex', gap:6 }}>
                     <Btn variant="ghost" size="sm" onClick={()=>onEdit({ type:'organization', id:o.id, name:o.name, tier:o.tier, reason:o.bypass_reason, expiry:o.bypass_expiry })}>Edit</Btn>
                     <Btn variant="success" size="sm" onClick={()=>onToast('Invoice flow coming soon.')}>Convert to Paid</Btn>
@@ -636,7 +636,7 @@ function OrgsPage({ orgs, onToast, onAddOrg, onAddUser }: { orgs:SAOrg[]; onToas
               <TD><Tag bypass={o.is_bypassed} label={o.is_bypassed?(o.bypass_reason??'Bypass'):'Paid'}/></TD>
               <TD muted={o.mrr===0}><span style={{ color:o.mrr>0?C.gold:C.muted }}>{o.mrr>0?`$${o.mrr.toLocaleString()}`:'$0'}</span></TD>
               <TD><Pill v={o.status as PillV} label={o.status}/></TD>
-              <TD muted style={{ fontSize:11 }}>{o.admin_email??'—'}</TD>
+              <TD muted><span style={{ fontSize:11 }}>{o.admin_email??'—'}</span></TD>
               <TD><div style={{ display:'flex', gap:6 }}>
                 <Btn variant="ghost" size="sm" onClick={()=>onToast(`Managing ${o.name}...`)}>Manage</Btn>
                 <Btn variant="ghost" size="sm" onClick={onAddUser}>+ User</Btn>

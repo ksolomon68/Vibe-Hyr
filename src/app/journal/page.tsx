@@ -33,24 +33,24 @@ export default async function JournalPage() {
       <Navbar />
       <main className="pt-[68px]">
         {/* Header */}
-        <section className="py-16 px-6 md:px-14 border-b-2 border-orange-DEFAULT/20 relative">
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-DEFAULT" />
+        <section className="py-16 px-6 md:px-14 border-b-2 border-orange/20 relative">
+          <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange" />
           <div className="max-w-5xl mx-auto">
             <div className="label mb-4">Daily Practice</div>
             <div className="flex items-end justify-between flex-wrap gap-4">
               <div>
                 <h1 className="font-display text-[clamp(3rem,7vw,6rem)] leading-[0.92] tracking-[0.02em] mb-2">
                   REVISION<br />
-                  <span className="text-orange-DEFAULT">JOURNAL</span>
+                  <span className="text-orange">JOURNAL</span>
                 </h1>
                 <p className="font-body italic text-grey-DEFAULT text-lg">
                   Neville's pruning shears — digitized. Rewrite your day, rewire your subconscious.
                 </p>
               </div>
-              <div className="flex items-center gap-3 bg-black-2 border border-orange-DEFAULT/40 px-5 py-3">
-                <Flame size={20} className="text-orange-DEFAULT" />
+              <div className="flex items-center gap-3 bg-black-2 border border-orange/40 px-5 py-3">
+                <Flame size={20} className="text-orange" />
                 <div>
-                  <span className="font-display text-3xl text-orange-DEFAULT">{streak}</span>
+                  <span className="font-display text-3xl text-orange">{streak}</span>
                   <span className="font-mono text-[0.55rem] tracking-widest text-grey-dark uppercase block">
                     day streak
                   </span>
@@ -71,7 +71,7 @@ export default async function JournalPage() {
             <div>
               <div className="bg-black-2 border border-white/8 p-6">
                 <div className="flex items-center gap-2 mb-5">
-                  <Calendar size={14} className="text-orange-DEFAULT" />
+                  <Calendar size={14} className="text-orange" />
                   <span className="font-mono text-[0.6rem] tracking-[0.25em] uppercase text-grey-DEFAULT">
                     Recent Revisions
                   </span>
@@ -82,9 +82,9 @@ export default async function JournalPage() {
                     {recentEntries.map((entry) => (
                       <div
                         key={entry.id}
-                        className="p-3 bg-black-3 border border-white/8 hover:border-orange-DEFAULT/30 transition-colors cursor-pointer"
+                        className="p-3 bg-black-3 border border-white/8 hover:border-orange/30 transition-colors cursor-pointer"
                       >
-                        <p className="font-mono text-[0.55rem] tracking-[0.15em] text-orange-DEFAULT mb-1">
+                        <p className="font-mono text-[0.55rem] tracking-[0.15em] text-orange mb-1">
                           {formatDate(entry.date)}
                         </p>
                         <p className="font-body text-xs text-grey-DEFAULT line-clamp-2 leading-relaxed">
@@ -107,8 +107,8 @@ export default async function JournalPage() {
               </div>
 
               {/* Nightly reminder */}
-              <div className="mt-4 bg-black-2 border border-orange-DEFAULT/30 p-5">
-                <p className="font-mono text-[0.55rem] tracking-[0.2em] uppercase text-orange-DEFAULT mb-2">
+              <div className="mt-4 bg-black-2 border border-orange/30 p-5">
+                <p className="font-mono text-[0.55rem] tracking-[0.2em] uppercase text-orange mb-2">
                   ✦ Tonight's Reminder
                 </p>
                 <p className="font-body text-sm italic text-grey-DEFAULT leading-relaxed">

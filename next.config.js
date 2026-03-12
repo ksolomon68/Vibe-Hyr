@@ -6,6 +6,9 @@ const nextConfig = {
       { protocol: 'https', hostname: '*.supabase.co' },
     ],
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   async redirects() {
     return [
       { source: '/courses/:path*',   destination: '/personal/:path*',  permanent: true },

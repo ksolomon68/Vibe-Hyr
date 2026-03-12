@@ -42,9 +42,9 @@ export function LessonContent({ content, className }: LessonContentProps) {
     if (line.startsWith('---')) {
       elements.push(
         <div key={i} className="flex items-center gap-4 my-10">
-          <div className="flex-1 h-px bg-orange-DEFAULT/20" />
-          <span className="text-orange-DEFAULT text-xs">✦</span>
-          <div className="flex-1 h-px bg-orange-DEFAULT/20" />
+          <div className="flex-1 h-px bg-orange/20" />
+          <span className="text-orange text-xs">✦</span>
+          <div className="flex-1 h-px bg-orange/20" />
         </div>
       )
       i++; continue
@@ -54,8 +54,8 @@ export function LessonContent({ content, className }: LessonContentProps) {
     if (line.startsWith('> ')) {
       const text = line.replace('> ', '')
       elements.push(
-        <blockquote key={i} className="border-l-4 border-orange-DEFAULT bg-orange-DEFAULT/6 px-6 py-4 my-6">
-          <p className="font-body text-lg italic text-grey-DEFAULT leading-relaxed">
+        <blockquote key={i} className="border-l-4 border-orange bg-orange/6 px-6 py-4 my-6">
+          <p className="font-body text-lg italic text-grey leading-relaxed">
             {renderInline(text)}
           </p>
         </blockquote>
@@ -73,8 +73,8 @@ export function LessonContent({ content, className }: LessonContentProps) {
       elements.push(
         <ul key={`ul-${i}`} className="flex flex-col gap-3 my-5 pl-0">
           {items.map((item, idx) => (
-            <li key={idx} className="flex items-start gap-3 font-body text-lg text-grey-DEFAULT leading-relaxed">
-              <span className="text-orange-DEFAULT mt-1.5 text-xs flex-shrink-0">■</span>
+            <li key={idx} className="flex items-start gap-3 font-body text-lg text-grey leading-relaxed">
+              <span className="text-orange mt-1.5 text-xs flex-shrink-0">■</span>
               <span>{renderInline(item)}</span>
             </li>
           ))}
@@ -93,8 +93,8 @@ export function LessonContent({ content, className }: LessonContentProps) {
       elements.push(
         <ol key={`ol-${i}`} className="flex flex-col gap-3 my-5 pl-0 counter-reset-item">
           {items.map((item, idx) => (
-            <li key={idx} className="flex items-start gap-4 font-body text-lg text-grey-DEFAULT leading-relaxed">
-              <span className="font-display text-xl text-orange-DEFAULT leading-none min-w-[28px] flex-shrink-0 mt-0.5">
+            <li key={idx} className="flex items-start gap-4 font-body text-lg text-grey leading-relaxed">
+              <span className="font-display text-xl text-orange leading-none min-w-[28px] flex-shrink-0 mt-0.5">
                 {String(idx + 1).padStart(2, '0')}
               </span>
               <span>{renderInline(item)}</span>
@@ -118,7 +118,7 @@ export function LessonContent({ content, className }: LessonContentProps) {
 
     // Regular paragraph
     elements.push(
-      <p key={i} className={cn("font-body text-lg text-grey-DEFAULT leading-relaxed mb-5 last:mb-0", className)}>
+      <p key={i} className={cn("font-body text-lg text-grey leading-relaxed mb-5 last:mb-0", className)}>
         {renderInline(line)}
       </p>
     )
@@ -148,7 +148,7 @@ function renderInline(text: string): React.ReactNode {
     } else if (raw.startsWith('*')) {
       parts.push(<em key={match.index} className="italic text-grey-light">{raw.slice(1, -1)}</em>)
     } else if (raw.startsWith('`')) {
-      parts.push(<code key={match.index} className="font-mono text-[0.85em] text-orange-DEFAULT bg-black-3 px-1.5 py-0.5">{raw.slice(1, -1)}</code>)
+      parts.push(<code key={match.index} className="font-mono text-[0.85em] text-orange bg-black-3 px-1.5 py-0.5">{raw.slice(1, -1)}</code>)
     }
     last = match.index + raw.length
   }
