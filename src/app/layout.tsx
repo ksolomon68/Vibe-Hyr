@@ -42,6 +42,7 @@ const cormorant = Cormorant_Garamond({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://vibehyr.com'),
   title: {
     default: 'Vibe Hyr — Raise Your Reality',
     template: '%s | Vibe Hyr',
@@ -55,7 +56,7 @@ export const metadata: Metadata = {
     siteName: 'Vibe Hyr',
     images: [
       {
-        url: '/images/og-image.png',
+        url: 'https://vibehyr.com/images/og-image.png',
         width: 1200,
         height: 630,
         alt: 'Vibe Hyr Open Graph Graphic',
