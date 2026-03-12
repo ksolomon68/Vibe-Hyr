@@ -25,10 +25,27 @@ export function DiscoveryCallModal({ isOpen, onClose }: DiscoveryCallModalProps)
     e.preventDefault()
     setStep('loading')
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    setStep('success')
-    toast.success('Discovery call request received!')
+    try {
+      await fetch('https://formsubmit.co/ajax/k.solomon@live.com', {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          ...formData,
+          _subject: `New Discovery Call Request: ${formData.company}`,
+          _captcha: "false"
+        })
+      })
+      
+      setStep('success')
+      toast.success('Discovery call request received!')
+    } catch (error) {
+      toast.error('Something went wrong. Please try again.')
+      setStep('form')
+      return
+    }
     
     // Reset after success
     setTimeout(() => {

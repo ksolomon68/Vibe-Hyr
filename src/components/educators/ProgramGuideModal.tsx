@@ -23,10 +23,27 @@ export function ProgramGuideModal({ isOpen, onClose }: ProgramGuideModalProps) {
     e.preventDefault()
     setStep('loading')
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    setStep('success')
-    toast.success('Guide sent to your email!')
+    try {
+      await fetch('https://formsubmit.co/ajax/k.solomon@live.com', {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          ...formData,
+          _subject: `New Program Guide Request: ${formData.institution}`,
+          _captcha: "false"
+        })
+      })
+      
+      setStep('success')
+      toast.success('Guide sent to your email!')
+    } catch (error) {
+      toast.error('Something went wrong. Please try again.')
+      setStep('form')
+      return
+    }
     
     // Reset after success
     setTimeout(() => {
