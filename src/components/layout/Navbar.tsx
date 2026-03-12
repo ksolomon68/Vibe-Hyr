@@ -56,7 +56,8 @@ export function Navbar() {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [profile, setProfile] = useState<Profile | null>(null)
-  
+  const [loggedIn, setLoggedIn] = useState(false)
+
   // Which dropdown is expanded on mobile? (null if none)
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null)
 
@@ -76,7 +77,25 @@ export function Navbar() {
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.auth.getUser().then(({ data: { user } }) => {
+
+    // Initial session check
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const user = session?.user ?? null
+      setLoggedIn(!!user)
+      if (user) {
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single()
+          .then(({ data }) => setProfile(data))
+      }
+    })
+
+    // Keep in sync with auth state changes (login / logout)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const user = session?.user ?? null
+      setLoggedIn(!!user)
       if (user) {
         supabase
           .from('profiles')
@@ -88,6 +107,8 @@ export function Navbar() {
         setProfile(null)
       }
     })
+
+    return () => subscription.unsubscribe()
   }, [])
 
   const handleLogout = async () => {
@@ -176,7 +197,7 @@ export function Navbar() {
               {theme === 'dark' ? '☀️' : '🌙'}
             </button>
             
-            {profile ? (
+            {loggedIn ? (
               <div className="flex items-center gap-6">
                 <Link href="/dashboard" className="flex items-center gap-3 group">
                   <div className="w-8 h-8 rounded-full bg-[var(--black-3)] border-2 border-[var(--orange)] flex items-center justify-center">
@@ -285,7 +306,7 @@ export function Navbar() {
             ))}
 
             <div className="pt-6 border-t border-white/10 flex flex-col gap-4">
-              {profile ? (
+              {loggedIn ? (
                 <>
                   <Link href="/dashboard" onClick={() => setOpen(false)} className="btn-orange text-center">
                     Dashboard
