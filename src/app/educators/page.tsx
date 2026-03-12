@@ -22,6 +22,8 @@ import {
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { DiscoveryCallModal } from '@/components/business/DiscoveryCallModal'
+import { CartPanel } from '@/components/pricing/CartPanel'
+import type { Tier } from '@/components/pricing/CartPanel'
 import { createClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
 
@@ -70,6 +72,13 @@ const DELIVERY = [
 export default function EducationPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [user, setUser] = useState<User | null>(null)
+  const [panelOpen, setPanelOpen] = useState(false)
+  const [panelTier, setPanelTier] = useState<Tier>('architect')
+
+  const handleOpenPanel = (tier: Tier) => {
+    setPanelTier(tier)
+    setPanelOpen(true)
+  }
 
   React.useEffect(() => {
     const supabase = createClient()
@@ -415,6 +424,129 @@ export default function EducationPage() {
         </div>
       </section>
 
+      {/* PRICING */}
+      <section id="pricing" className="py-24 md:py-32 px-6 md:px-14 bg-black">
+        <div className="max-w-7xl mx-auto">
+          <motion.div {...FADE_UP} className="text-center mb-20 max-w-2xl mx-auto">
+            <span className="text-[0.7rem] uppercase tracking-[0.3em] text-orange-DEFAULT font-bold mb-4 block">Investment</span>
+            <h2 className="font-serif text-4xl md:text-5xl text-white leading-tight">
+              Budget-friendly pricing <br/>
+              <span className="text-orange-bright italic">for every district.</span>
+            </h2>
+            <p className="text-white/50 text-sm mt-6">K–12 pricing · Annual billing · Volume discounts available</p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {/* SEEKER */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="bg-zinc-900/50 border border-white/5 p-10 rounded-sm flex flex-col"
+            >
+              <div className="mb-8">
+                <span className="text-[0.6rem] uppercase tracking-widest font-bold text-white/40">Seeker</span>
+                <div className="flex items-baseline gap-1 mt-4">
+                  <span className="font-display text-5xl text-white">$12</span>
+                  <span className="text-white/40 text-sm">/seat/yr</span>
+                </div>
+                <p className="text-white/30 text-xs mt-2">Min 30 seats · $360 annual floor</p>
+              </div>
+              <ul className="space-y-3 mb-10 flex-1">
+                {['The Educator Reset (Track 1)', 'Staff Reflection Journal', 'Core Content Library', 'Basic Staff Progress Tracking'].map(f => (
+                  <li key={f} className="flex gap-3 items-start text-sm text-white/60">
+                    <CheckCircle2 size={14} className="text-orange-DEFAULT mt-0.5 flex-shrink-0" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={() => handleOpenPanel('seeker')}
+                className="btn-outline-orange w-full text-center"
+              >
+                Get Started
+              </button>
+            </motion.div>
+
+            {/* ARCHITECT */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="bg-zinc-900 border border-orange-DEFAULT/40 p-10 rounded-sm flex flex-col relative -translate-y-2 shadow-2xl shadow-orange-DEFAULT/5"
+            >
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-DEFAULT via-gold to-orange-DEFAULT rounded-t-sm" />
+              <div className="mb-2">
+                <span className="text-[0.55rem] uppercase tracking-widest font-bold px-3 py-1 bg-gold/10 text-gold rounded-full">Most Popular</span>
+              </div>
+              <div className="mb-8">
+                <span className="text-[0.6rem] uppercase tracking-widest font-bold text-orange-DEFAULT">Architect</span>
+                <div className="flex items-baseline gap-1 mt-4">
+                  <span className="font-display text-5xl text-white">$24</span>
+                  <span className="text-white/40 text-sm">/seat/yr</span>
+                </div>
+                <p className="text-white/30 text-xs mt-2">Min 30 seats · $720 annual floor</p>
+              </div>
+              <ul className="space-y-3 mb-10 flex-1">
+                {['Tracks 1–3 (Reset, Leadership, Co-Regulation)', 'Full Reflection Journal + SATS Tools', 'Staff Diagnostics Engine', 'Admin Dashboard & Wellness Reporting', 'Academic Leadership Tracker'].map(f => (
+                  <li key={f} className="flex gap-3 items-start text-sm text-white/70">
+                    <CheckCircle2 size={14} className="text-orange-DEFAULT mt-0.5 flex-shrink-0" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={() => handleOpenPanel('architect')}
+                className="btn-orange w-full text-center"
+              >
+                Get Started
+              </button>
+            </motion.div>
+
+            {/* REALITY MASTER */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="bg-zinc-900/50 border border-white/5 p-10 rounded-sm flex flex-col"
+            >
+              <div className="mb-8">
+                <span className="text-[0.6rem] uppercase tracking-widest font-bold text-white/40">Reality Master</span>
+                <div className="flex items-baseline gap-1 mt-4">
+                  <span className="font-display text-5xl text-white">$45</span>
+                  <span className="text-white/40 text-sm">/seat/yr</span>
+                </div>
+                <p className="text-white/30 text-xs mt-2">Min 50 seats · $2,250 annual floor</p>
+              </div>
+              <ul className="space-y-3 mb-10 flex-1">
+                {['All 4 Staff Training Tracks', 'Live Weekly Q&As', 'Full Audio & SATS Library', 'Dedicated Wellness Coordinator', 'District-Level Culture Reporting'].map(f => (
+                  <li key={f} className="flex gap-3 items-start text-sm text-white/60">
+                    <CheckCircle2 size={14} className="text-orange-DEFAULT mt-0.5 flex-shrink-0" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={() => handleOpenPanel('reality-master')}
+                className="btn-outline-orange w-full text-center"
+              >
+                Get Started
+              </button>
+            </motion.div>
+          </div>
+
+          <motion.div {...FADE_UP} className="mt-12 text-center">
+            <p className="text-white/30 text-sm mb-4">Volume discounts: 10% (100+ seats) · 18% (250+ seats) · 25% (500+ seats)</p>
+            <Link href="/pricing" className="text-orange-DEFAULT text-[0.7rem] uppercase tracking-widest font-bold hover:text-orange-bright transition-colors">
+              View Full Pricing Calculator →
+            </Link>
+          </motion.div>
+        </div>
+      </section>
+
       {/* FINAL CTA */}
       <section className="py-32 md:py-48 px-6 md:px-14 text-center bg-black relative overflow-hidden">
         <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-display text-[20vw] text-white opacity-[0.015] pointer-events-none whitespace-nowrap">VIBE HYR</span>
@@ -459,6 +591,13 @@ export default function EducationPage() {
 
       <Footer />
       <DiscoveryCallModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <CartPanel
+        isOpen={panelOpen}
+        onClose={() => setPanelOpen(false)}
+        initialTier={panelTier}
+        initialSegment="k12"
+        initialBilling="annual"
+      />
     </main>
   )
 }

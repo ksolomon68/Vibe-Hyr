@@ -6,6 +6,8 @@ import { createClient } from '@/lib/supabase/server'
 import { COURSES } from '@/lib/data/courses'
 import { getTierLabel, getStreakMessage } from '@/lib/utils'
 import { Flame, BookOpen, Target, Users, ArrowRight, Crown, Sparkles } from 'lucide-react'
+import { PersonalUpgradeButton } from '@/components/pricing/PersonalUpgradeButton'
+import type { PersonalTier } from '@/components/pricing/PersonalCheckoutModal'
 
 export const metadata = { title: 'Dashboard' }
 
@@ -35,6 +37,9 @@ export default async function DashboardPage() {
   const streak      = profile?.journal_streak  ?? 0
   const totalJournal = journalEntries?.length   ?? 0
   const activeAssumptions = assumptions?.length ?? 0
+
+  // Map DB tier values to PersonalTier for the checkout modal
+  const upgradeTier: PersonalTier = tier === 'free' ? 'architect' : 'reality-master'
 
   const QUICK_LINKS = [
     { href: '/journal',   icon: BookOpen, label: 'Tonight\'s Revision', desc: 'Open the nightly journal' },
@@ -128,9 +133,12 @@ export default async function DashboardPage() {
                         : 'Upgrade to Reality Master for Course 4, the full Assumption Lab, and monthly live Q&As.'
                       }
                     </p>
-                    <Link href="/#pricing" className="btn-orange text-[0.62rem] px-6 py-3">
-                      View Plans
-                    </Link>
+                    <PersonalUpgradeButton
+                      tier={upgradeTier}
+                      className="btn-orange text-[0.62rem] px-6 py-3"
+                    >
+                      Upgrade Plan
+                    </PersonalUpgradeButton>
                   </div>
                 )}
               </div>
@@ -142,6 +150,9 @@ export default async function DashboardPage() {
                   {COURSES.map((course) => {
                     const tierRank: Record<string, number> = { free: 0, architect: 1, elite: 2 }
                     const hasAccess  = tierRank[tier] >= tierRank[course.tier]
+                    // Determine which personal tier unlocks this course
+                    const courseTier: PersonalTier = course.tier === 'elite' ? 'reality-master' : 'architect'
+
                     return (
                       <div
                         key={course.id}
@@ -172,12 +183,12 @@ export default async function DashboardPage() {
                               Open <ArrowRight size={10} />
                             </Link>
                           ) : (
-                            <Link
-                              href="/#pricing"
+                            <PersonalUpgradeButton
+                              tier={courseTier}
                               className="font-mono text-[0.58rem] tracking-widest uppercase text-grey-dark hover:text-orange-DEFAULT transition-colors"
                             >
-                              Upgrade
-                            </Link>
+                              Upgrade →
+                            </PersonalUpgradeButton>
                           )}
                         </div>
                       </div>

@@ -1,30 +1,50 @@
+'use client'
+
+import React, { useState, useEffect } from 'react'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { CourseCard } from '@/components/personal/CourseCard'
 import { COURSES } from '@/lib/data/courses'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/client'
 import type { MembershipTier } from '@/types'
+import { PersonalCheckoutModal } from '@/components/pricing/PersonalCheckoutModal'
+import type { PersonalTier } from '@/components/pricing/PersonalCheckoutModal'
 
-export const metadata = { title: 'Personal — The Architecture of Reality' }
+export default function CoursesPage() {
+  const [userTier,  setUserTier]  = useState<MembershipTier>('free')
+  const [modalOpen, setModalOpen] = useState(false)
+  const [modalTier, setModalTier] = useState<PersonalTier>('architect')
 
-export default async function CoursesPage() {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        supabase
+          .from('profiles')
+          .select('membership_tier')
+          .eq('id', user.id)
+          .single()
+          .then(({ data: profile }) => {
+            if (profile?.membership_tier) {
+              setUserTier(profile.membership_tier as MembershipTier)
+            }
+          })
+      }
+    })
+  }, [])
 
-  let userTier: MembershipTier = 'free'
-  if (user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('membership_tier')
-      .eq('id', user.id)
-      .single()
-    userTier = profile?.membership_tier ?? 'free'
+  const handleUpgrade = (tier: string) => {
+    // Normalize course tier values to PersonalTier
+    const personalTier: PersonalTier = tier === 'elite' ? 'reality-master' : 'architect'
+    setModalTier(personalTier)
+    setModalOpen(true)
   }
 
   return (
     <>
       <Navbar />
       <main className="pt-[68px]">
+
         {/* Page header */}
         <section className="py-20 px-6 md:px-14 border-b-2 border-orange-DEFAULT/20 relative">
           <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-DEFAULT" />
@@ -60,13 +80,25 @@ export default async function CoursesPage() {
           <div className="max-w-7xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-[2px] bg-orange-DEFAULT border-2 border-orange-DEFAULT">
               {COURSES.map((course) => (
-                <CourseCard key={course.id} course={course} userTier={userTier} />
+                <CourseCard
+                  key={course.id}
+                  course={course}
+                  userTier={userTier}
+                  onUpgrade={handleUpgrade}
+                />
               ))}
             </div>
           </div>
         </section>
+
       </main>
       <Footer />
+
+      <PersonalCheckoutModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        initialTier={modalTier}
+      />
     </>
   )
 }

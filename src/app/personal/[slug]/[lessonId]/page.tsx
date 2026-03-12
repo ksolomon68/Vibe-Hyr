@@ -49,45 +49,59 @@ export default async function LessonPage({
   let userTier: MembershipTier   = 'free'
   let completedLessons: string[] = []
   let passedQuizzes: string[]    = []
+  let hasDirectAccess: boolean   = false // Initialize outside the if block
 
   if (user) {
-    const [{ data: profile }, { data: progress }, { data: quizAttempts }] =
-      await Promise.all([
-        // Membership tier
-        supabase
-          .from('profiles')
-          .select('membership_tier')
-          .eq('id', user.id)
-          .single(),
+    const [
+      { data: profile },
+      { data: progress },
+      { data: quizAttempts },
+      { data: courseAccessData }
+    ] = await Promise.all([
+      // Membership tier
+      supabase
+        .from('profiles')
+        .select('membership_tier')
+        .eq('id', user.id)
+        .single(),
 
-        // Completed lessons — row-per-lesson schema
-        supabase
-          .from('course_progress')
-          .select('lesson_id')
-          .eq('user_id', user.id)
-          .eq('course_id', course.id),
+      // Completed lessons
+      supabase
+        .from('course_progress')
+        .select('lesson_id')
+        .eq('user_id', user.id)
+        .eq('course_id', course.id),
 
-        // Passed quizzes — row per attempt
-        supabase
-          .from('course_quiz_attempts')
-          .select('lesson_id')
-          .eq('user_id', user.id)
-          .eq('passed', true),
-      ])
+      // Passed quizzes
+      supabase
+        .from('course_quiz_attempts')
+        .select('lesson_id')
+        .eq('user_id', user.id)
+        .eq('passed', true),
+
+      // NEW: Direct course access grants (e.g. from seats or manual)
+      supabase
+        .from('course_access')
+        .select('course_slug')
+        .eq('user_id', user.id)
+        .eq('course_slug', course.slug)
+    ])
 
     userTier         = (profile?.membership_tier as MembershipTier) ?? 'free'
     completedLessons = (progress ?? []).map((r: { lesson_id: string }) => r.lesson_id)
     passedQuizzes    = (quizAttempts ?? []).map((r: { lesson_id: string }) => r.lesson_id)
-  }
+    
+    // If they have a direct record in course_access, they definitely have access
+    const hasDirectAccess = (courseAccessData ?? []).length > 0
 
-  // Enforce access — preview lessons are free, everything else requires tier
-  const canAccess = hasAccess(userTier, course.tier) || lesson.is_preview
-  if (!canAccess) {
-    redirect(`/courses/${course.slug}`)
-  }
-
-  // Redirect unauthenticated users away from non-preview lessons
-  if (!user && !lesson.is_preview) {
+    // Enforce access — preview lessons are free, everything else requires tier OR direct grant
+    const canAccess = hasAccess(userTier, course.tier) || lesson.is_preview || hasDirectAccess
+    
+    if (!canAccess) {
+      redirect(`/courses/${course.slug}`)
+    }
+  } else if (!lesson.is_preview) {
+    // Redirect unauthenticated users away from non-preview lessons
     redirect(`/auth/login?redirect=/courses/${course.slug}/${lesson.id}`)
   }
 

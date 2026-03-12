@@ -8,6 +8,7 @@ import { COURSES } from '@/lib/data/courses'
 import { ArrowRight, Brain, BookOpen, Users, Target } from 'lucide-react'
 import Link from 'next/link'
 import { BuiltForYourWorld } from '@/components/home/BuiltForYourWorld'
+import { CoursePreviewGrid } from '@/components/home/CoursePreviewGrid'
 
 const PILLARS = [
   { icon: Brain,    title: 'Structured Curriculum',  desc: '4 progressive courses moving from RAS programming to full Echo Theory mastery. Quiz-gated modules ensure real implementation.' },
@@ -77,11 +78,7 @@ export default function HomePage() {
 
             <div className="orange-rule">♛</div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-[2px] bg-orange-DEFAULT border-2 border-orange-DEFAULT">
-              {COURSES.map((course) => (
-                <CourseCard key={course.id} course={course} userTier="free" />
-              ))}
-            </div>
+            <CoursePreviewGrid />
 
             <Link href="/personal" className="btn-outline-orange flex items-center gap-2 justify-center mt-6 md:hidden">
               All Courses <ArrowRight size={14} />

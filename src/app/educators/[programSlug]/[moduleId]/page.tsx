@@ -23,23 +23,62 @@ export default async function EducationModulePage({
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/auth/login?redirect=/education/' + params.programSlug + '/' + params.moduleId)
+    redirect('/auth/login?redirect=/educators/' + params.programSlug + '/' + params.moduleId)
   }
 
   const pIdx = PROGRAMS.findIndex(p => p.slug === params.programSlug)
-  if (pIdx === -1) redirect('/education')
+  if (pIdx === -1) redirect('/educators')
   
   const program = PROGRAMS[pIdx]
   const mIdx = program.modules.findIndex(m => m.id === params.moduleId)
-  if (mIdx === -1) redirect(`/education/${program.slug}/${program.modules[0].id}`)
+  if (mIdx === -1) redirect(`/educators/${program.slug}/${program.modules[0].id}`)
   
   const module = program.modules[mIdx]
 
-  // Fetch completed modules for this user
-  const { data: progressData } = await supabase
-    .from('education_progress')
-    .select('module_id')
-    .eq('user_id', user.id)
+  // --- ACCESS GATING ---
+  const PROGRAM_TIERS: Record<string, string> = {
+    'the-educator-reset': 'free',
+    'vibrational-leadership': 'architect',
+    'co-regulation-mastery': 'architect',
+    'the-retained-educator': 'elite'
+  }
+
+  const [
+    { data: profile },
+    { data: progressData },
+    { data: courseAccessData }
+  ] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('membership_tier')
+      .eq('id', user.id)
+      .single(),
+    supabase
+      .from('education_progress')
+      .select('module_id')
+      .eq('user_id', user.id),
+    supabase
+      .from('course_access')
+      .select('course_slug')
+      .eq('user_id', user.id)
+      .eq('course_slug', params.programSlug)
+  ])
+
+  const userTier = (profile?.membership_tier as any) ?? 'free'
+  const requiredTier = PROGRAM_TIERS[params.programSlug] ?? 'free'
+  const hasDirectAccess = (courseAccessData ?? []).length > 0
+
+  // Admin access (architect or elite) or direct grant
+  const hasTierAccess = (userTier === 'architect' || userTier === 'elite' || userTier === 'admin')
+  
+  // Note: hasAccess(userTier, requiredTier) is better if hierarchy is strict
+  // For Educators, seeker(free) gets Reset, Architect gets 1-3, Elite gets all.
+  const TIER_RANK: Record<string, number> = { free: 0, architect: 1, elite: 2 }
+  const canAccess = TIER_RANK[userTier] >= TIER_RANK[requiredTier] || hasDirectAccess
+
+  if (!canAccess) {
+    redirect('/educators?error=upgrade_required')
+  }
 
   const initialCompleted = progressData?.map(p => p.module_id) || []
 

@@ -95,7 +95,7 @@ export function WorkplaceLessonPlayerWrapper({
       { onConflict: "user_id,track_id,lesson_id" }
     );
 
-    // Check track completion → trigger certificate / notification
+    // Check track completion → record + send branded email
     const trackLessonCounts: Record<string, number> = { t1: 6, t2: 6, t3: 6, t4: 6 };
     const newCount = (progress[trackId]?.length ?? 0) + 1;
     if (newCount >= trackLessonCounts[trackId]) {
@@ -103,7 +103,12 @@ export function WorkplaceLessonPlayerWrapper({
         { user_id: userId, track_id: trackId, completed_at: new Date().toISOString() },
         { onConflict: "user_id,track_id" }
       );
-      // TODO: trigger Resend email — "You completed Track X" + certificate link
+      // Fire-and-forget branded completion email via server route
+      fetch("/api/email/track-complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, trackId }),
+      }).catch((err) => console.error("[track-complete email]", err));
     }
   }, [userId, progress, supabase]);
 

@@ -8,6 +8,7 @@ interface CourseCardProps {
   userTier?: MembershipTier
   progress?: number
   isLarge?: boolean
+  onUpgrade?: (tier: string) => void
 }
 
 const TIER_BADGE: Record<string, string> = {
@@ -22,7 +23,7 @@ const TIER_LABEL: Record<string, string> = {
 }
 const COURSE_THEMES = ['01', '02', '03', '04']
 
-export function CourseCard({ course, userTier = 'free', progress, isLarge }: CourseCardProps) {
+export function CourseCard({ course, userTier = 'free', progress, isLarge, onUpgrade }: CourseCardProps) {
   const tierRank = { free: 0, architect: 1, elite: 2 }
   const hasAccess = tierRank[userTier] >= tierRank[course.tier]
   const num = COURSE_THEMES[course.order_index - 1] ?? '0'
@@ -107,13 +108,23 @@ export function CourseCard({ course, userTier = 'free', progress, isLarge }: Cou
             {progress ? 'Continue' : 'Start Course'}
           </Link>
         ) : (
-          <Link
-            href="/#pricing"
-            className="btn-outline-orange w-full text-center flex items-center justify-center gap-2 text-[0.62rem]"
-          >
-            <Lock size={12} />
-            Upgrade to Unlock
-          </Link>
+          onUpgrade ? (
+            <button
+              onClick={() => onUpgrade(course.tier)}
+              className="btn-outline-orange w-full text-center flex items-center justify-center gap-2 text-[0.62rem]"
+            >
+              <Lock size={12} />
+              Upgrade to Unlock
+            </button>
+          ) : (
+            <Link
+              href="/#pricing"
+              className="btn-outline-orange w-full text-center flex items-center justify-center gap-2 text-[0.62rem]"
+            >
+              <Lock size={12} />
+              Upgrade to Unlock
+            </Link>
+          )
         )}
       </div>
 

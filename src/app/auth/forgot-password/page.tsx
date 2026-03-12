@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Crown } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 
 export default function ForgotPasswordPage() {
@@ -14,14 +13,17 @@ export default function ForgotPasswordPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    const supabase   = createClient()
-    const redirectTo = `${window.location.origin}/auth/callback?next=/auth/reset-password`
-    const { error }  = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
-    if (error) {
-      toast.error(error.message)
-      setLoading(false)
-    } else {
+    try {
+      const res = await fetch('/api/email/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      if (!res.ok) throw new Error('Failed to send reset email')
       setSent(true)
+    } catch {
+      toast.error('Something went wrong. Please try again.')
+      setLoading(false)
     }
   }
 

@@ -23,7 +23,7 @@ const PLATFORM_LINKS = [
 const LEARN_LINKS = [
   { label: 'Blog',            href: '/blog'          },
   { label: 'Free SATS Guide', href: '/blog/sats-guide' },
-  { label: 'Pricing',         href: '/#pricing'      },
+  { label: 'Pricing',         href: '/personal'      },
 ]
 
 export function Footer() {

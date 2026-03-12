@@ -11,6 +11,8 @@ import {
   ChevronRight, Crown, ArrowRight
 } from 'lucide-react'
 import type { MembershipTier } from '@/types'
+import { PersonalUpgradeButton } from '@/components/pricing/PersonalUpgradeButton'
+import type { PersonalTier } from '@/components/pricing/PersonalCheckoutModal'
 
 export async function generateStaticParams() {
   return COURSES.map(c => ({ slug: c.slug }))
@@ -58,6 +60,7 @@ export default async function CoursePage({ params }: { params: { slug: string } 
   const nextLesson = lessons.find(l => !completedLessons.includes(l.id)) ?? lessons[0]
 
   const gateInfo = TIER_GATE_COPY[course.tier]
+  const courseTier: PersonalTier = course.tier === 'elite' ? 'reality-master' : 'architect'
 
   return (
     <>
@@ -157,13 +160,13 @@ export default async function CoursePage({ params }: { params: { slug: string } 
                     {pct === 0 ? 'Start Course' : pct === 100 ? 'Review Course' : 'Continue'}
                   </Link>
                 ) : (
-                  <Link
-                    href="/#pricing"
+                  <PersonalUpgradeButton
+                    tier={courseTier}
                     className="btn-orange w-full text-center flex items-center justify-center gap-2"
                   >
                     <Crown size={13} />
                     Upgrade to Unlock
-                  </Link>
+                  </PersonalUpgradeButton>
                 )}
 
                 {!user && (
@@ -189,9 +192,12 @@ export default async function CoursePage({ params }: { params: { slug: string } 
                 {gateInfo.desc}
               </p>
               <div className="flex gap-4 justify-center flex-wrap">
-                <Link href="/#pricing" className="btn-orange flex items-center gap-2">
+                <PersonalUpgradeButton
+                  tier={courseTier}
+                  className="btn-orange flex items-center gap-2"
+                >
                   <Crown size={13} /> Upgrade — {gateInfo.price}
-                </Link>
+                </PersonalUpgradeButton>
                 <Link href="/courses/programming-the-gatekeeper" className="btn-outline">
                   Start Free Course →
                 </Link>
