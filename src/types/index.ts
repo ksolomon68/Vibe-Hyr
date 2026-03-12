@@ -1,6 +1,7 @@
 // ── USER & AUTH ──────────────────────────────────────────────────────────────
 
 export type MembershipTier = 'free' | 'architect' | 'elite'
+export type InstitutionType = 'individual' | 'education' | 'business'
 
 export interface Profile {
   id: string
@@ -8,6 +9,8 @@ export interface Profile {
   full_name: string | null
   avatar_url: string | null
   membership_tier: MembershipTier
+  institution_type: InstitutionType
+  institution_id: string | null
   stripe_customer_id: string | null
   stripe_subscription_id: string | null
   journal_streak: number

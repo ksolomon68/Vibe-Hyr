@@ -3,7 +3,8 @@ import { Navbar } from '@/components/layout/Navbar'
 import { createClient } from '@/lib/supabase/server'
 import { COURSES } from '@/lib/data/courses'
 import { getLessonsForCourse, getLessonQuiz } from '@/lib/data/lessons'
-import { hasAccess } from '@/lib/utils'
+import { canAccessCourse } from '@/lib/courseAccess'
+import { CourseLockedScreen } from '@/components/CourseLockedScreen'
 import { LessonPlayerClient } from '@/components/personal/LessonPlayerClient'
 import type { MembershipTier } from '@/types'
 
@@ -47,9 +48,10 @@ export default async function LessonPage({
   const { data: { user } } = await supabase.auth.getUser()
 
   let userTier: MembershipTier   = 'free'
+  let institutionType            = 'individual'
   let completedLessons: string[] = []
   let passedQuizzes: string[]    = []
-  let hasDirectAccess: boolean   = false // Initialize outside the if block
+  let hasDirectAccess            = false
 
   if (user) {
     const [
@@ -58,10 +60,10 @@ export default async function LessonPage({
       { data: quizAttempts },
       { data: courseAccessData }
     ] = await Promise.all([
-      // Membership tier
+      // Membership tier + institution type
       supabase
         .from('profiles')
-        .select('membership_tier')
+        .select('membership_tier, institution_type')
         .eq('id', user.id)
         .single(),
 
@@ -79,7 +81,7 @@ export default async function LessonPage({
         .eq('user_id', user.id)
         .eq('passed', true),
 
-      // NEW: Direct course access grants (e.g. from seats or manual)
+      // Direct course access grants (e.g. from seats or manual admin grant)
       supabase
         .from('course_access')
         .select('course_slug')
@@ -88,21 +90,27 @@ export default async function LessonPage({
     ])
 
     userTier         = (profile?.membership_tier as MembershipTier) ?? 'free'
+    institutionType  = profile?.institution_type ?? 'individual'
     completedLessons = (progress ?? []).map((r: { lesson_id: string }) => r.lesson_id)
     passedQuizzes    = (quizAttempts ?? []).map((r: { lesson_id: string }) => r.lesson_id)
-    
-    // If they have a direct record in course_access, they definitely have access
-    const hasDirectAccess = (courseAccessData ?? []).length > 0
+    hasDirectAccess  = (courseAccessData ?? []).length > 0
 
-    // Enforce access — preview lessons are free, everything else requires tier OR direct grant
-    const canAccess = hasAccess(userTier, course.tier) || lesson.is_preview || hasDirectAccess
-    
-    if (!canAccess) {
-      redirect(`/courses/${course.slug}`)
+    // Preview lessons are always accessible regardless of tier or institution
+    if (!lesson.is_preview && !hasDirectAccess) {
+      const { allowed, reason } = canAccessCourse(course.slug, userTier, institutionType)
+
+      if (!allowed) {
+        return (
+          <>
+            <Navbar />
+            <CourseLockedScreen reason={reason!} courseSlug={course.slug} />
+          </>
+        )
+      }
     }
   } else if (!lesson.is_preview) {
     // Redirect unauthenticated users away from non-preview lessons
-    redirect(`/auth/login?redirect=/courses/${course.slug}/${lesson.id}`)
+    redirect(`/auth/login?redirect=/personal/${course.slug}/${lesson.id}`)
   }
 
   const quiz = getLessonQuiz(lesson.id)
