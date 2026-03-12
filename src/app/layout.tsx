@@ -53,6 +53,14 @@ export const metadata: Metadata = {
     description: 'The Architecture of Reality — a membership platform where neuroscience meets manifestation.',
     url: 'https://vibehyr.com',
     siteName: 'Vibe Hyr',
+    images: [
+      {
+        url: '/images/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Vibe Hyr Open Graph Graphic',
+      },
+    ],
     type: 'website',
   },
 }
