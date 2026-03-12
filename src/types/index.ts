@@ -15,8 +15,35 @@ export interface Profile {
   stripe_subscription_id: string | null
   journal_streak: number
   last_journal_date: string | null
+  // Super admin & bypass fields
+  is_super_admin: boolean
+  is_bypassed: boolean
+  bypass_reason: string | null
+  bypass_expiry: string | null
+  bypass_notes: string | null
+  bypass_added_by: string | null
   created_at: string
   updated_at: string
+}
+
+export interface Institution {
+  id: string
+  name: string
+  type: InstitutionType
+  plan: MembershipTier
+  seat_limit: number
+  seats_used: number
+  admin_user_id: string | null
+  billing_email: string | null
+  domain_restriction: string | null
+  is_bypassed: boolean
+  bypass_reason: string | null
+  bypass_expiry: string | null
+  mrr: number
+  status: 'active' | 'pending' | 'inactive'
+  website: string | null
+  industry: string | null
+  created_at: string
 }
 
 // ── COURSES ───────────────────────────────────────────────────────────────────
