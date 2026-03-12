@@ -443,11 +443,13 @@ export default function EducationPage() {
                   >
                     Book a Discovery Call
                   </button>
-                  <button 
-                    className="px-12 py-6 border border-white/10 hover:border-white/30 text-white text-[0.8rem] uppercase tracking-widest font-bold rounded-sm transition-all"
+                  <a 
+                    href="/education.pdf"
+                    download
+                    className="px-12 py-6 border border-white/10 hover:border-white/30 text-white text-[0.8rem] uppercase tracking-widest font-bold rounded-sm transition-all inline-block"
                   >
                     Download the Brochure
-                  </button>
+                  </a>
                 </>
               )}
             </div>
