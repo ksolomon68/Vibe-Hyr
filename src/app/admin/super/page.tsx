@@ -92,7 +92,7 @@ export default async function SuperAdminPage() {
   })
 
   // Fetch admin emails from profiles
-  const adminUserIds = [...new Set(Object.values(orgAdminMap))]
+  const adminUserIds = Array.from(new Set(Object.values(orgAdminMap)))
   let adminEmailMap: Record<string, string> = {}
   if (adminUserIds.length > 0) {
     const { data: adminProfiles } = await admin
@@ -103,8 +103,8 @@ export default async function SuperAdminPage() {
   }
 
   // Build org name map for users
-  const orgIds = [...new Set((rawUsers ?? [])
-    .map((u: { org_id: string | null }) => u.org_id).filter(Boolean))] as string[]
+  const orgIds = Array.from(new Set((rawUsers ?? [])
+    .map((u: { org_id: string | null }) => u.org_id).filter(Boolean))) as string[]
   let orgNameMap: Record<string, string> = {}
   if (orgIds.length > 0) {
     const { data: orgNames } = await admin
