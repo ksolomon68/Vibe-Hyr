@@ -132,7 +132,7 @@ export function welcomeFreeTemplate(name: string, dashboardUrl: string): string 
     ${heading(`Welcome,<br/><span style="color:${ORANGE};">${first.toUpperCase()}.</span>`)}
     ${divider}
     ${para(`Your Seeker account is ready. You now have free access to <strong style="color:${INK};">Course 1: Programming the Gatekeeper</strong> — the foundation of everything.`)}
-    ${para('Here's what you can do right now:')}
+    ${para("Here\u2019s what you can do right now:")}
     <table cellpadding="0" cellspacing="0" style="margin:0 0 20px;">
       ${['Start Course 1 for free', 'Explore the Identity Audit Mini', 'Access your member dashboard', 'Join the community (read access)'].map(item => `
       <tr>
