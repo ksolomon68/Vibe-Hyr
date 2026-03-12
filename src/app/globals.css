@@ -396,6 +396,12 @@ body.reduce-cognitive [class*="gradient"], body.reduce-cognitive [class*="glow"]
   color: #E8621A;
 }
 
+/* Profile dropdown — right-aligned variant */
+.nav-item-group .nav-dropdown[style*="right: 0"] {
+  left: auto;
+  right: 0;
+}
+
 /* Chevron separator line above dropdown */
 .nav-dropdown-inner::before {
   content: '';
@@ -449,6 +455,10 @@ html.light-mode .nav-dropdown-item:hover { background: #F5EDE0; }
 html.light-mode .nav-dropdown-label { color: #1A1008; }
 html.light-mode .nav-dropdown-desc  { color: #6A5A44; }
 html.light-mode .nav-dropdown-item:hover .nav-dropdown-label { color: #D4560F; }
+html.light-mode .nav-dropdown-item button,
+html.light-mode .nav-dropdown-item.w-full { background: transparent; }
+html.light-mode button.nav-dropdown-item { background: transparent; }
+html.light-mode button.nav-dropdown-item:hover { background: #F5EDE0; }
 
 /* Base */
 html.light-mode body {
@@ -1081,3 +1091,37 @@ html.light-mode footer a {
   color: #C0A880 !important;
 }
 html.light-mode footer a:hover { color: #E8621A !important; }
+
+/* ─── LIGHT MODE: Custom Tailwind dark color class overrides ─── */
+/* bg-black-* classes → light cream backgrounds */
+html.light-mode .bg-black-DEFAULT,
+html.light-mode .bg-black-2:not(nav):not(.a11y-panel),
+html.light-mode .bg-black-3:not(nav):not(.a11y-panel),
+html.light-mode .bg-black-4:not(nav):not(.a11y-panel),
+html.light-mode [class~="bg-black-2"]:not(nav):not(.a11y-panel),
+html.light-mode [class~="bg-black-3"]:not(nav):not(.a11y-panel),
+html.light-mode [class~="bg-black-4"]:not(nav):not(.a11y-panel) {
+  background-color: #FFFFFF !important;
+  border-color: #D8D0C4 !important;
+}
+/* Text that is white on dark backgrounds → dark on light */
+html.light-mode main .text-white:not(.btn-orange):not([class*="badge"]),
+html.light-mode main [class~="text-white"]:not(.btn-orange) {
+  color: #1A1008 !important;
+}
+html.light-mode main .text-\[var\(--white\)\] {
+  color: #1A1008 !important;
+}
+html.light-mode main .text-\[var\(--cream\)\],
+html.light-mode main .text-cream {
+  color: #2A1E10 !important;
+}
+html.light-mode main .text-\[var\(--grey\)\],
+html.light-mode main .text-grey-DEFAULT {
+  color: #4A3828 !important;
+}
+/* Keep orange text orange in light mode */
+html.light-mode .text-\[var\(--orange\)\],
+html.light-mode .text-orange-DEFAULT {
+  color: #D4560F !important;
+}

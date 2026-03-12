@@ -196,10 +196,11 @@ export function Navbar() {
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--cream)', padding: '6px 8px' }}>
               {theme === 'dark' ? '☀️' : '🌙'}
             </button>
-            
+
             {loggedIn && profile ? (
-              <div className="flex items-center gap-6">
-                <Link href="/dashboard" className="flex items-center gap-3 group">
+              <div className="nav-item-group">
+                {/* Profile trigger */}
+                <button className="flex items-center gap-3 group" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
                   <div className="w-8 h-8 rounded-full bg-[var(--black-3)] border-2 border-[var(--orange)] flex items-center justify-center">
                     <span className="font-display text-sm text-[var(--orange)]">
                       {profile.full_name?.[0] ?? profile.email[0].toUpperCase()}
@@ -207,14 +208,32 @@ export function Navbar() {
                   </div>
                   <span className="font-mono text-[0.6rem] text-[var(--grey)] tracking-widest uppercase group-hover:text-[var(--orange)] transition-colors">
                     {getTierLabel(profile.membership_tier)}
+                    <span className="nav-chevron" style={{ marginLeft: 4 }}>▾</span>
                   </span>
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="font-mono text-[0.62rem] tracking-[0.18em] uppercase text-[var(--grey)] hover:text-white transition-colors"
-                >
-                  Log Out
                 </button>
+
+                {/* Profile dropdown */}
+                <div className="nav-dropdown" style={{ right: 0, left: 'auto' }}>
+                  <div className="nav-dropdown-inner" style={{ minWidth: 200 }}>
+                    <Link href="/dashboard" className="nav-dropdown-item">
+                      <span className="nav-dropdown-label">Dashboard</span>
+                      <span className="nav-dropdown-desc">Your progress &amp; courses</span>
+                    </Link>
+                    {profile.is_super_admin && (
+                      <Link href="/admin/super" className="nav-dropdown-item">
+                        <span className="nav-dropdown-label" style={{ color: 'var(--orange)' }}>Super Admin</span>
+                        <span className="nav-dropdown-desc">Platform management</span>
+                      </Link>
+                    )}
+                    <button
+                      onClick={handleLogout}
+                      className="nav-dropdown-item w-full text-left"
+                      style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                      <span className="nav-dropdown-label">Log Out</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             ) : loggedIn && !profile ? (
               /* Logged in but profile still loading — show just logout */
@@ -319,6 +338,11 @@ export function Navbar() {
                   <Link href="/dashboard" onClick={() => setOpen(false)} className="btn-orange text-center">
                     Dashboard
                   </Link>
+                  {profile && profile.is_super_admin && (
+                    <Link href="/admin/super" onClick={() => setOpen(false)} className="btn-outline text-center" style={{ color: 'var(--orange)', borderColor: 'var(--orange)' }}>
+                      Super Admin
+                    </Link>
+                  )}
                   <button onClick={handleLogout} className="btn-outline text-center">
                     Log Out
                   </button>
