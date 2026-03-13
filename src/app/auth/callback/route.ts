@@ -8,10 +8,12 @@ import { createClient } from '@supabase/supabase-js'
 
 export async function GET(req: NextRequest) {
   const { searchParams, origin } = new URL(req.url)
-  const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/dashboard'
+  const code       = searchParams.get('code')
+  const token_hash = searchParams.get('token_hash')
+  const type       = searchParams.get('type')
+  const next       = searchParams.get('next') ?? '/dashboard'
 
-  if (!code) {
+  if (!code && !token_hash) {
     return NextResponse.redirect(`${origin}/auth/error?reason=no_code`)
   }
 
@@ -37,8 +39,22 @@ export async function GET(req: NextRequest) {
     }
   )
 
-  // Exchange code for session
-  const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+  // Handle token_hash (password recovery / email verification links)
+  if (token_hash && type) {
+    const { error: verifyErr } = await supabase.auth.verifyOtp({
+      token_hash,
+      type: type as 'recovery' | 'email' | 'signup' | 'invite' | 'magiclink' | 'email_change',
+    })
+    if (verifyErr) {
+      console.error('[auth/callback] verifyOtp failed:', verifyErr)
+      return NextResponse.redirect(`${origin}/auth/error?reason=invalid_token`)
+    }
+    // For recovery, redirect directly to the reset-password page
+    return NextResponse.redirect(`${origin}${next}`)
+  }
+
+  // Exchange code for session (OAuth / magic link)
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code!)
   if (error || !data.user) {
     console.error('[auth/callback] Session exchange failed:', error)
     return NextResponse.redirect(`${origin}/auth/error?reason=session_failed`)

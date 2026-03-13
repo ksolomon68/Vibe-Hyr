@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useCallback } from 'react'
+import { useState, useTransition, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -9,6 +9,9 @@ import {
   updateBypassDetails,
   overrideUserCourseAccess, overrideOrgCourseAccess,
   deactivateUser,
+  updateUserProfile,
+  adminSetUserPassword,
+  sendPasswordResetEmail,
 } from '@/app/admin/super/actions'
 
 // ── Exported Types ────────────────────────────────────────────────────────────
@@ -423,6 +426,130 @@ function EditBypassModal({ open, onClose, onSuccess, target }: { open:boolean; o
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+// EDIT USER MODAL
+// ══════════════════════════════════════════════════════════════════════════════
+
+type EditUser = { id: string; full_name: string | null; email: string; membership_tier: string; institution_type: string; org_id: string | null } | null
+
+function EditUserModal({ open, onClose, onSuccess, user, orgOptions }: {
+  open: boolean; onClose: ()=>void; onSuccess: (m: string)=>void
+  user: EditUser; orgOptions: { id: string; name: string }[]
+}) {
+  const [tab, setTab]           = useState<'profile'|'password'>('profile')
+  const [isPending, startTrans] = useTransition()
+  const [form, setForm]         = useState({ fullName:'', email:'', membershipTier:'free', institutionType:'individual', orgId:'' })
+  const [pw, setPw]             = useState('')
+  const [confirmPw, setConfirmPw] = useState('')
+
+  useEffect(() => {
+    if (user) {
+      setForm({ fullName: user.full_name??'', email: user.email, membershipTier: user.membership_tier, institutionType: user.institution_type, orgId: user.org_id??'' })
+      setPw(''); setConfirmPw('')
+    }
+  }, [user])
+
+  if (!user) return null
+  const set = (k: string, v: string) => setForm(f => ({...f, [k]: v}))
+
+  const tabSty = (active: boolean): React.CSSProperties => ({
+    fontSize:11, fontWeight:600, letterSpacing:'1.5px', textTransform:'uppercase',
+    padding:'9px 16px', color:active?C.orange:C.muted, cursor:'pointer',
+    borderBottom:active?`2px solid ${C.orange}`:'2px solid transparent',
+    marginBottom:-1, background:'none', border:'none',
+  })
+
+  function saveProfile() {
+    startTrans(async () => {
+      const res = await updateUserProfile(user!.id, user!.full_name??user!.email, {
+        fullName: form.fullName, email: form.email,
+        membershipTier: form.membershipTier, institutionType: form.institutionType,
+        orgId: form.orgId || null,
+      })
+      if (res.success) { onClose(); onSuccess('User profile updated.') }
+      else onSuccess(`Error: ${res.error}`)
+    })
+  }
+
+  function setPassword() {
+    if (pw.length < 8) return onSuccess('Error: Password must be at least 8 characters.')
+    if (pw !== confirmPw) return onSuccess('Error: Passwords do not match.')
+    startTrans(async () => {
+      const res = await adminSetUserPassword(user!.id, user!.full_name??user!.email, pw)
+      if (res.success) { setPw(''); setConfirmPw(''); onSuccess('Password set successfully.') }
+      else onSuccess(`Error: ${res.error}`)
+    })
+  }
+
+  function resetEmail() {
+    startTrans(async () => {
+      const res = await sendPasswordResetEmail(user!.id, user!.email, user!.full_name??user!.email)
+      if (res.success) onSuccess(`Password reset email sent to ${user!.email}`)
+      else onSuccess(`Error: ${res.error}`)
+    })
+  }
+
+  return (
+    <Modal open={open} onClose={onClose} title={`Edit User`} sub={user.email} wide>
+      <div style={{ display:'flex', gap:2, marginBottom:20, borderBottom:`1px solid ${C.border}` }}>
+        <button style={tabSty(tab==='profile')}  onClick={()=>setTab('profile')}>Profile</button>
+        <button style={tabSty(tab==='password')} onClick={()=>setTab('password')}>Password</button>
+      </div>
+
+      {tab==='profile' && (
+        <>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom:14 }}>
+            <FField label="Full Name"><input value={form.fullName} onChange={e=>set('fullName',e.target.value)} style={IS} placeholder="Full name"/></FField>
+            <FField label="Email Address"><input type="email" value={form.email} onChange={e=>set('email',e.target.value)} style={IS} placeholder="user@domain.com"/></FField>
+            <FField label="Membership Tier">
+              <select value={form.membershipTier} onChange={e=>set('membershipTier',e.target.value)} style={IS}>
+                <option value="free">Seeker</option>
+                <option value="architect">Architect</option>
+                <option value="elite">Reality Master</option>
+              </select>
+            </FField>
+            <FField label="Institution Type">
+              <select value={form.institutionType} onChange={e=>set('institutionType',e.target.value)} style={IS}>
+                <option value="individual">Individual</option>
+                <option value="education">Education</option>
+                <option value="business">Business</option>
+              </select>
+            </FField>
+            <FField label="Organization (optional)" span2>
+              <select value={form.orgId} onChange={e=>set('orgId',e.target.value)} style={IS}>
+                <option value="">— None (standalone) —</option>
+                {orgOptions.map(o=><option key={o.id} value={o.id}>{o.name}</option>)}
+              </select>
+            </FField>
+          </div>
+          <MFooter onClose={onClose} onConfirm={saveProfile} label="Save Profile" isPending={isPending}/>
+        </>
+      )}
+
+      {tab==='password' && (
+        <>
+          <SDivider label="Set New Password Directly"/>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom:14 }}>
+            <FField label="New Password"><input type="password" value={pw} onChange={e=>setPw(e.target.value)} style={IS} placeholder="Min 8 characters"/></FField>
+            <FField label="Confirm Password"><input type="password" value={confirmPw} onChange={e=>setConfirmPw(e.target.value)} style={IS} placeholder="Re-enter password"/></FField>
+          </div>
+          <Btn variant="primary" size="md" onClick={setPassword} disabled={isPending||pw.length<8||pw!==confirmPw}>Set Password</Btn>
+
+          <SDivider label="Send Reset Link by Email"/>
+          <div style={{ fontSize:12, color:C.muted, marginBottom:12 }}>
+            Send a password reset email to <strong style={{ color:C.cream }}>{user.email}</strong>. The user clicks the link to choose their own password.
+          </div>
+          <Btn variant="gold" size="md" onClick={resetEmail} disabled={isPending}>Send Reset Email →</Btn>
+
+          <div style={{ display:'flex', gap:10, justifyContent:'flex-end', marginTop:22, paddingTop:18, borderTop:`1px solid ${C.border}` }}>
+            <Btn variant="ghost" size="sm" onClick={onClose}>Close</Btn>
+          </div>
+        </>
+      )}
+    </Modal>
+  )
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 // PAGES
 // ══════════════════════════════════════════════════════════════════════════════
 
@@ -651,7 +778,7 @@ function OrgsPage({ orgs, onToast, onAddOrg, onAddUser }: { orgs:SAOrg[]; onToas
   )
 }
 
-function UsersPage({ users, onToast, onAddUser }: { users:SAUser[]; onToast:(m:string)=>void; onAddUser:()=>void }) {
+function UsersPage({ users, onToast, onAddUser, onEdit }: { users:SAUser[]; onToast:(m:string)=>void; onAddUser:()=>void; onEdit:(u:EditUser)=>void }) {
   const [query, setQuery] = useState('')
   const [typeF, setTypeF] = useState('All Types')
   const [tierF, setTierF] = useState('All Tiers')
@@ -695,7 +822,7 @@ function UsersPage({ users, onToast, onAddUser }: { users:SAUser[]; onToast:(m:s
                 <TD><Tag bypass={u.is_bypassed} label={u.is_bypassed?'Bypassed':'Paid'}/></TD>
                 <TD>{s==='bypassed'?<Pill v="bypassed" label="Bypassed"/>:s==='active'?<Pill v="active" label="Active"/>:<Pill v="inactive" label="Inactive"/>}</TD>
                 <TD><div style={{ display:'flex', gap:6 }}>
-                  <Btn variant="ghost" size="sm" onClick={()=>onToast(`Editing ${u.full_name??u.email}...`)}>Edit</Btn>
+                  <Btn variant="ghost" size="sm" onClick={()=>onEdit({ id:u.id, full_name:u.full_name, email:u.email, membership_tier:u.membership_tier, institution_type:u.institution_type, org_id:u.org_id })}>Edit</Btn>
                   {u.is_bypassed
                     ? <Btn variant="danger" size="sm" onClick={()=>onToast('Use Bypass Manager to revoke.')}>Revoke</Btn>
                     : <Btn variant="danger" size="sm" onClick={()=>handleDeactivate(u)} disabled={isPending}>Deactivate</Btn>
@@ -850,6 +977,7 @@ export function SuperAdminDashboard({ adminName, stats, bypassUsers, bypassOrgs,
   const [modalUser, setModalUser] = useState(false)
   const [modalOrg, setModalOrg]   = useState(false)
   const [editTarget, setEditTarget] = useState<EditTarget>(null)
+  const [editUser, setEditUser]   = useState<EditUser>(null)
   const router = useRouter()
 
   const showToast = useCallback((msg: string) => {
@@ -949,7 +1077,7 @@ export function SuperAdminDashboard({ adminName, stats, bypassUsers, bypassOrgs,
             {page==='overview' && <OverviewPage stats={stats} bypassUsers={bypassUsers} auditLog={auditLog} orgs={orgs} onNav={setPage} onAddUser={()=>setModalUser(true)} onAddOrg={()=>setModalOrg(true)}/>}
             {page==='bypass'   && <BypassPage bypassUsers={bypassUsers} bypassOrgs={bypassOrgs} onEdit={setEditTarget} onToast={showToast} onAddUser={()=>setModalUser(true)} onAddOrg={()=>setModalOrg(true)}/>}
             {page==='orgs'     && <OrgsPage orgs={orgs} onToast={showToast} onAddOrg={()=>setModalOrg(true)} onAddUser={()=>setModalUser(true)}/>}
-            {page==='users'    && <UsersPage users={users} onToast={showToast} onAddUser={()=>setModalUser(true)}/>}
+            {page==='users'    && <UsersPage users={users} onToast={showToast} onAddUser={()=>setModalUser(true)} onEdit={setEditUser}/>}
             {page==='courses'  && <CoursesPage orgs={orgs} users={users} onToast={showToast}/>}
             {page==='activity' && <ActivityPage auditLog={auditLog} onToast={showToast}/>}
             {page==='settings' && <SettingsPage onToast={showToast}/>}
@@ -960,6 +1088,7 @@ export function SuperAdminDashboard({ adminName, stats, bypassUsers, bypassOrgs,
       <AddUserModal open={modalUser} onClose={()=>setModalUser(false)} onSuccess={m=>{showToast(m);router.refresh()}} orgOptions={orgOptions}/>
       <AddOrgModal  open={modalOrg}  onClose={()=>setModalOrg(false)}  onSuccess={m=>{showToast(m);router.refresh()}}/>
       <EditBypassModal open={!!editTarget} onClose={()=>setEditTarget(null)} onSuccess={m=>{showToast(m);router.refresh()}} target={editTarget}/>
+      <EditUserModal open={!!editUser} onClose={()=>setEditUser(null)} onSuccess={m=>{showToast(m);router.refresh()}} user={editUser} orgOptions={orgOptions}/>
 
       {toastVis && (
         <div style={{ position:'fixed', bottom:28, right:28, background:C.dark3, border:`1px solid ${C.border2}`, borderRadius:5, padding:'12px 18px', fontSize:12.5, display:'flex', alignItems:'center', gap:8, boxShadow:'0 8px 32px rgba(0,0,0,0.5)', zIndex:300, animation:'toastIn 0.25s ease' }}>

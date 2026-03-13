@@ -3,6 +3,8 @@
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
+import { sendEmail } from '@/lib/email/resend'
+import { passwordResetTemplate } from '@/lib/email/templates'
 
 type ActionResult = { success: boolean; error?: string }
 
@@ -308,5 +310,94 @@ export async function deactivateUser(userId: string, userName: string): Promise<
 
   await logAudit(sa.userId, sa.email, 'USER_DEACTIVATED', 'user', userId, userName, null)
   revalidatePath('/admin/super')
+  return { success: true }
+}
+
+// ── Update User Profile (name, email, tier, type, org) ────────────────────────
+
+export async function updateUserProfile(
+  userId: string,
+  userName: string,
+  data: { fullName: string; email: string; membershipTier: string; institutionType: string; orgId: string | null }
+): Promise<ActionResult> {
+  const sa = await requireSuperAdmin()
+  if (!sa) return { success: false, error: 'Unauthorized' }
+
+  const admin = createAdminClient()
+
+  // Update auth record (email)
+  const { error: authErr } = await admin.auth.admin.updateUserById(userId, {
+    email: data.email,
+    user_metadata: { full_name: data.fullName },
+  })
+  if (authErr) return { success: false, error: authErr.message }
+
+  // Update profile row
+  const { error: profileErr } = await admin.from('profiles').update({
+    full_name: data.fullName,
+    email: data.email,
+    membership_tier: data.membershipTier,
+    institution_type: data.institutionType,
+    org_id: data.orgId || null,
+  }).eq('id', userId)
+  if (profileErr) return { success: false, error: profileErr.message }
+
+  await logAudit(sa.userId, sa.email, 'USER_PROFILE_UPDATED', 'user', userId, userName,
+    `Name: ${data.fullName} · Email: ${data.email} · Tier: ${data.membershipTier}`
+  )
+  revalidatePath('/admin/super')
+  return { success: true }
+}
+
+// ── Admin: Set User Password Directly ────────────────────────────────────────
+
+export async function adminSetUserPassword(
+  userId: string, userName: string, newPassword: string
+): Promise<ActionResult> {
+  const sa = await requireSuperAdmin()
+  if (!sa) return { success: false, error: 'Unauthorized' }
+
+  if (newPassword.length < 8) return { success: false, error: 'Password must be at least 8 characters' }
+
+  const admin = createAdminClient()
+  const { error } = await admin.auth.admin.updateUserById(userId, { password: newPassword })
+  if (error) return { success: false, error: error.message }
+
+  await logAudit(sa.userId, sa.email, 'USER_PASSWORD_RESET', 'user', userId, userName, 'Password set directly by super admin')
+  return { success: true }
+}
+
+// ── Admin: Send Password Reset Email ─────────────────────────────────────────
+
+export async function sendPasswordResetEmail(
+  userId: string, userEmail: string, userName: string
+): Promise<ActionResult> {
+  const sa = await requireSuperAdmin()
+  if (!sa) return { success: false, error: 'Unauthorized' }
+
+  const admin = createAdminClient()
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com'
+
+  const { data, error } = await admin.auth.admin.generateLink({
+    type: 'recovery',
+    email: userEmail,
+    options: { redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password` },
+  })
+  if (error || !data?.properties?.action_link) {
+    return { success: false, error: error?.message ?? 'Could not generate reset link' }
+  }
+
+  try {
+    await sendEmail({
+      to: userEmail,
+      subject: 'Reset your Vibe Hyr password',
+      html: passwordResetTemplate(data.properties.action_link),
+    })
+  } catch (e: any) {
+    return { success: false, error: e.message ?? 'Failed to send email' }
+  }
+
+  await logAudit(sa.userId, sa.email, 'PASSWORD_RESET_EMAIL_SENT', 'user', userId, userName,
+    `Reset link sent to ${userEmail}`)
   return { success: true }
 }
