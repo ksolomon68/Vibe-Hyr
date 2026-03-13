@@ -1070,10 +1070,10 @@ html.light-mode main section h4 {
   color: #1A1008 !important;
 }
 
-/* Paragraphs and list items in page sections */
-html.light-mode main section p,
-html.light-mode main section li,
-html.light-mode main section span:not(.text-orange-DEFAULT):not(.text-gold):not([class*="badge"]):not([class*="tag"]):not([class*="tracking"]) {
+/* Paragraphs and list items in page sections (excluding persistent dark sections) */
+html.light-mode main section:not(.dark-section-persistent) p,
+html.light-mode main section:not(.dark-section-persistent) li,
+html.light-mode main section:not(.dark-section-persistent) span:not(.text-orange-DEFAULT):not(.text-gold):not([class*="badge"]):not([class*="tag"]):not([class*="tracking"]) {
   color: #2A1E10;
 }
 
@@ -1112,17 +1112,36 @@ html.light-mode .bg-black-3 {
 
 /* Global persistent dark page/section overrides */
 html.light-mode .dark-page-persistent,
-html.light-mode .dark-section-persistent {
+html.light-mode .dark-section-persistent,
+html.light-mode nav.dark-section-persistent,
+html.light-mode footer.dark-section-persistent {
   background-color: #000000 !important;
   color: #FFFFFF !important;
 }
-html.light-mode .dark-page-persistent h1,
-html.light-mode .dark-page-persistent h2,
-html.light-mode .dark-page-persistent h3,
-html.light-mode .dark-page-persistent p,
-html.light-mode .dark-page-persistent li,
-html.light-mode .dark-page-persistent span:not(.text-orange-DEFAULT):not(.text-gold) {
+html.light-mode .dark-page-persistent h1, html.light-mode .dark-section-persistent h1,
+html.light-mode .dark-page-persistent h2, html.light-mode .dark-section-persistent h2,
+html.light-mode .dark-page-persistent h3, html.light-mode .dark-section-persistent h3,
+html.light-mode .dark-page-persistent p,  html.light-mode .dark-section-persistent p,
+html.light-mode .dark-page-persistent li, html.light-mode .dark-section-persistent li,
+html.light-mode .dark-page-persistent span:not(.text-orange-DEFAULT):not(.text-gold),
+html.light-mode .dark-section-persistent span:not(.text-orange-DEFAULT):not(.text-gold) {
   color: #FFFFFF !important;
+}
+
+/* Ensure grey text colors revert to light on dark backgrounds in light mode */
+html.light-mode .dark-section-persistent .text-grey-DEFAULT,
+html.light-mode .dark-section-persistent .text-grey-dark,
+html.light-mode .dark-section-persistent [class~="text-grey-DEFAULT"],
+html.light-mode .dark-section-persistent .text-\[\#D1D5DB\],
+html.light-mode .dark-section-persistent .text-\[\#E5E7EB\],
+html.light-mode .dark-section-persistent .text-\[\#8C7A60\],
+html.light-mode .dark-section-persistent [class*="text-grey"] {
+  color: #9C8A70 !important; /* Revert to light grey for dark mode theme */
+}
+
+/* Specific fix for Navbar dropdown descriptions */
+html.light-mode .dark-section-persistent .nav-dropdown-desc {
+  color: #8C7A60 !important;
 }
 
 /* Text that is white on dark backgrounds -> dark on light (excluding persistent sections) */

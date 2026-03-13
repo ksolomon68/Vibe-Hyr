@@ -34,7 +34,7 @@ const CARDS = [
 
 export function BuiltForYourWorld() {
   return (
-    <section className="py-24 px-6 md:px-14 bg-black">
+    <section className="py-24 px-6 md:px-14 bg-black dark-section-persistent">
       <div className="max-w-7xl mx-auto">
         {/* Section header */}
         <div className="label mb-4">Extended Platform</div>

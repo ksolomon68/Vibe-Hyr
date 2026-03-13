@@ -123,7 +123,7 @@ export function Navbar() {
       <nav
         className={cn(
           'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
-          'border-b-2 border-[var(--orange)]',
+          'border-b-2 border-[var(--orange)] dark-section-persistent',
           scrolled ? 'bg-black/95 backdrop-blur-sm' : 'bg-black'
         )}
       >

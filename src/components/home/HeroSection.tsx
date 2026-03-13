@@ -95,7 +95,7 @@ export function HeroSection() {
   useLightRays(canvasRef)
 
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden pt-[68px]">
+    <section className="relative min-h-screen flex items-center overflow-hidden pt-[68px] dark-section-persistent">
 
       {/* Light rays canvas */}
       <canvas
