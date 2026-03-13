@@ -23,14 +23,14 @@ interface WrapperProps {
 //   architect → Tracks 01–03
 //   reality_master → all 4 tracks
 const TIER_ACCESS: Record<string, string[]> = {
-  seeker:         ["t1"],
-  architect:      ["t1", "t2", "t3"],
-  reality_master: ["t1", "t2", "t3", "t4"],
+  seeker:         ["common-sense-in-the-workplace"],
+  architect:      ["common-sense-in-the-workplace", "from-reaction-to-response", "know-yourself-lead-yourself"],
+  reality_master: ["common-sense-in-the-workplace", "from-reaction-to-response", "know-yourself-lead-yourself", "the-high-frequency-team"],
 };
 
 export function WorkplaceLessonPlayerWrapper({
-  initialTrackId = "t1",
-  initialLessonId = "t1l1",
+  initialTrackId = "common-sense-in-the-workplace",
+  initialLessonId = "the-awareness-gap",
 }: WrapperProps) {
   const supabase = createClient();
   const router   = useRouter();
@@ -45,7 +45,7 @@ export function WorkplaceLessonPlayerWrapper({
   useEffect(() => {
     async function init() {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { router.replace("/auth/login?redirect=/workplace/learn"); return; }
+      if (!user) { router.replace("/auth/login?redirect=/business"); return; }
 
       const uid = user.id;
       setUserId(uid);
@@ -96,7 +96,12 @@ export function WorkplaceLessonPlayerWrapper({
     );
 
     // Check track completion → record + send branded email
-    const trackLessonCounts: Record<string, number> = { t1: 6, t2: 6, t3: 6, t4: 6 };
+    const trackLessonCounts: Record<string, number> = { 
+      "common-sense-in-the-workplace": 6, 
+      "from-reaction-to-response": 6, 
+      "know-yourself-lead-yourself": 3, 
+      "the-high-frequency-team": 1 
+    };
     const newCount = (progress[trackId]?.length ?? 0) + 1;
     if (newCount >= trackLessonCounts[trackId]) {
       await supabase.from("track_completions").upsert(
@@ -115,7 +120,7 @@ export function WorkplaceLessonPlayerWrapper({
   // ── URL sync ───────────────────────────────────────────────────────────────
   const handleNavigate = useCallback((trackId: string, lessonId: string) => {
     startTransition(() => {
-      router.push(`/workplace/learn/${trackId}/${lessonId}`, { scroll: false });
+      router.push(`/business/${trackId}/${lessonId}`, { scroll: false });
     });
   }, [router]);
 
@@ -138,7 +143,7 @@ export function WorkplaceLessonPlayerWrapper({
     );
   }
 
-  const allowedTracks = TIER_ACCESS[userTier] ?? ["t1"];
+  const allowedTracks = TIER_ACCESS[userTier] ?? ["common-sense-in-the-workplace"];
 
   return (
     <WorkplaceLessonPlayer

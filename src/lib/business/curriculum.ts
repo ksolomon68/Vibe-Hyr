@@ -39,7 +39,7 @@ const T = {
 
 export const TRACKS: Track[] = [
   {
-    id: "t1",
+    id: "common-sense-in-the-workplace",
     num: "01",
     tag: "Foundation",
     title: "Common Sense in the Workplace",
@@ -49,7 +49,7 @@ export const TRACKS: Track[] = [
     description: "The foundational track. Before de-escalation, self-mastery, or team cohesion is possible, every professional needs a baseline level of emotional awareness, communication clarity, and personal vibe hygiene.",
     lessons: [
       {
-        id: "t1l1",
+        id: "the-awareness-gap",
         num: "01",
         title: "The Awareness Gap",
         duration: "20 min",
@@ -96,7 +96,7 @@ export const TRACKS: Track[] = [
         ],
       },
       {
-        id: "t1l2",
+        id: "emotional-signals-at-work",
         num: "02",
         title: "Emotional Signals at Work",
         duration: "22 min",
@@ -121,7 +121,7 @@ export const TRACKS: Track[] = [
         ],
       },
       {
-        id: "t1l3",
+        id: "communication-architecture",
         num: "03",
         title: "Communication Architecture",
         duration: "25 min",
@@ -145,7 +145,7 @@ export const TRACKS: Track[] = [
         ],
       },
       {
-        id: "t1l4",
+        id: "trigger-mapping",
         num: "04",
         title: "Trigger Mapping",
         duration: "20 min",
@@ -169,7 +169,7 @@ export const TRACKS: Track[] = [
         ],
       },
       {
-        id: "t1l5",
+        id: "vibe-hygiene",
         num: "05",
         title: "Vibe Hygiene",
         duration: "18 min",
@@ -193,7 +193,7 @@ export const TRACKS: Track[] = [
         ],
       },
       {
-        id: "t1l6",
+        id: "live-integration-session",
         num: "06",
         title: "Live Integration Session",
         duration: "60 min",
@@ -208,7 +208,7 @@ export const TRACKS: Track[] = [
     ],
   },
   {
-    id: "t2",
+    id: "from-reaction-to-response",
     num: "02",
     tag: "De-Escalation",
     title: "From Reaction to Response",
@@ -218,7 +218,7 @@ export const TRACKS: Track[] = [
     description: "Conflict isn't the problem. Unconscious escalation is. This track installs a five-stage Escalation Ladder.",
     lessons: [
        {
-        id: "t2l1",
+        id: "the-reactivity-spectrum",
         num: "01",
         title: "The Reactivity Spectrum",
         duration: "18 min",
@@ -236,7 +236,7 @@ export const TRACKS: Track[] = [
         ],
       },
       {
-        id: "t2l2",
+        id: "the-escalation-ladder",
         num: "02",
         title: "The Escalation Ladder",
         duration: "22 min",
@@ -254,7 +254,7 @@ export const TRACKS: Track[] = [
         ],
       },
       {
-        id: "t2l3",
+        id: "stage-1-intervention",
         num: "03",
         title: "Stage 1 Intervention",
         duration: "20 min",
@@ -272,7 +272,7 @@ export const TRACKS: Track[] = [
         ],
       },
       {
-        id: "t2l4",
+        id: "pattern-interrupts",
         num: "04",
         title: "Pattern Interrupts",
         duration: "22 min",
@@ -290,7 +290,7 @@ export const TRACKS: Track[] = [
         ],
       },
       {
-        id: "t2l5",
+        id: "response-protocols",
         num: "05",
         title: "Response Protocols",
         duration: "20 min",
@@ -308,7 +308,7 @@ export const TRACKS: Track[] = [
         ],
       },
       {
-        id: "t2l6",
+        id: "live-de-escalation-workshop",
         num: "06",
         title: "Live De-Escalation Workshop",
         duration: "60 min",
@@ -323,7 +323,7 @@ export const TRACKS: Track[] = [
     ],
   },
   {
-    id: "t3",
+    id: "know-yourself-lead-yourself",
     num: "03",
     tag: "Self Mastery",
     title: "Know Yourself, Lead Yourself",
@@ -333,7 +333,7 @@ export const TRACKS: Track[] = [
     description: "Leadership begins with self-knowledge. This track uses neuroscience and the Law of Assumption.",
     lessons: [
        {
-        id: "t3l1",
+        id: "identity-architecture",
         num: "01",
         title: "Identity Architecture",
         duration: "22 min",
@@ -351,7 +351,7 @@ export const TRACKS: Track[] = [
         ],
       },
       {
-        id: "t3l2",
+        id: "the-four-archetypes",
         num: "02",
         title: "The Four Archetypes",
         duration: "25 min",
@@ -369,7 +369,7 @@ export const TRACKS: Track[] = [
         ],
       },
       {
-        id: "t3l3",
+        id: "the-assumption-audit",
         num: "03",
         title: "The Assumption Audit",
         duration: "22 min",
@@ -389,7 +389,7 @@ export const TRACKS: Track[] = [
     ],
   },
   {
-    id: "t4",
+    id: "the-high-frequency-team",
     num: "04",
     tag: "Team Excellence",
     title: "The High-Frequency Team",
@@ -399,7 +399,7 @@ export const TRACKS: Track[] = [
     description: "High performance is a byproduct of high frequency. This track builds the team architecture for sustained excellence.",
     lessons: [
        {
-        id: "t4l1",
+        id: "team-frequency-mapping",
         num: "01",
         title: "Team Frequency Mapping",
         duration: "18 min",

@@ -265,19 +265,19 @@ export default function WorkplaceTrainingPage() {
               ))}
             </div>
             {user ? (
-               <a 
-                 href="#pricing"
+               <Link 
+                 href="/business/common-sense-in-the-workplace/the-awareness-gap"
                  className="btn-open-app"
                >
-                 View Pricing
-               </a>
+                 Continue Training
+               </Link>
             ) : (
-              <button 
-                onClick={() => setIsModalOpen(true)}
-                className="btn-open-app"
-              >
-                Request This Training
-              </button>
+               <button 
+                 onClick={() => setIsModalOpen(true)}
+                 className="btn-open-app"
+               >
+                 Request This Training
+               </button>
             )}
           </motion.div>
 

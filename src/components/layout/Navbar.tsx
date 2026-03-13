@@ -37,10 +37,10 @@ const NAV_ITEMS = [
     href: '/business',
     dropdown: [
       { label: 'All Tracks',                href: '/business',                                              desc: 'Browse training tracks' },
-      { label: 'Common Sense in the Workplace', href: '/business/learn/t1/t1l1',                           desc: 'Foundation' },
-      { label: 'From Reaction to Response', href: '/business/learn/t2/t2l1',                               desc: 'De-escalation' },
-      { label: 'Know Yourself, Lead Yourself',  href: '/business/learn/t3/t3l1',                           desc: 'Self mastery' },
-      { label: 'Vibing as a Unit',          href: '/business/learn/t4/t4l1',                               desc: 'Team cohesion' },
+      { label: 'Common Sense in the Workplace', href: '/business/common-sense-in-the-workplace/the-awareness-gap',                           desc: 'Foundation' },
+      { label: 'From Reaction to Response', href: '/business/from-reaction-to-response/the-reactivity-spectrum',                               desc: 'De-escalation' },
+      { label: 'Know Yourself, Lead Yourself',  href: '/business/know-yourself-lead-yourself/the-sovereign-interrupt',                           desc: 'Self mastery' },
+      { label: 'Vibing as a Unit',          href: '/business/the-high-frequency-team/resonant-leadership',                               desc: 'Team cohesion' },
     ]
   },
 ]

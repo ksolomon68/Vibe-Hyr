@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, ReactNode, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PlayerTopbar } from "@/components/shared/PlayerTopbar";
@@ -23,6 +25,7 @@ const T = {
   cream:   "#F7F2EA",
   white:   "#FFFFFF",
   teal:    "#0F505A",
+  purple:  "#A855F7",
   green:   "#22C55E",
   red:     "#EF4444",
 };
@@ -247,7 +250,7 @@ export default function WorkplaceLessonPlayer({
                 VIBE HYR
               </div>
               <div style={{ fontSize: 10, color: T.muted, letterSpacing: "0.16em", marginTop: 2, fontWeight: 700 }}>
-                WORKPLACE TRAINING SERIES
+                BUSINESS TRAINING SERIES
               </div>
             </div>
 
@@ -355,7 +358,7 @@ export default function WorkplaceLessonPlayer({
           onToggleSidebar={() => setSidebarOpen(o => !o)}
           breadcrumb={{
             label: "Business",
-            href: "/business/learn"
+            href: "/business"
           }}
         />
 
@@ -505,7 +508,7 @@ export default function WorkplaceLessonPlayer({
                   </div>
 
                   {/* Tool / worksheet / Assumption Lab */}
-                  {activeLesson.id === 't1l1' ? (
+                  {activeLesson.id === 'the-awareness-gap' ? (
                     <div className="my-12">
                       <AssumptionLab 
                         title="Awareness Gap Audit"
@@ -516,7 +519,7 @@ export default function WorkplaceLessonPlayer({
                         onComplete={handleComplete}
                       />
                     </div>
-                  ) : activeLesson.id === 't2l1' ? (
+                  ) : activeLesson.id === 'the-reactivity-spectrum' ? (
                     <div className="my-12">
                       <AssumptionLab 
                         title="Reactivity Spectrum"
@@ -527,12 +530,13 @@ export default function WorkplaceLessonPlayer({
                         onComplete={handleComplete}
                       />
                     </div>
-                  ) : activeTrackId === "t3" && activeLesson.tool ? (
+                  ) : activeTrackId === "know-yourself-lead-yourself" && activeLesson.tool ? (
                     <div className="my-12">
                       <AssumptionLab 
                         title="Assumption Audit"
                         subtitle={activeLesson.tool}
                         prompt={`In the context of ${activeLesson.title}, examine your current assumption: "${activeLesson.objectives[0]}". How would your behavior shift if you assumed the opposite were true?`}
+                        accentColor={T.purple}
                         onComplete={handleComplete}
                       />
                     </div>
