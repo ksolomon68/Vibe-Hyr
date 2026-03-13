@@ -47,6 +47,49 @@
 
   --p-green:       #22C55E;
   --p-red:         #EF4444;
+
+  /* ── THEME TOKENS (default: dark) ── */
+  --text-primary:   #FFFFFF;
+  --text-secondary: #D1D5DB;
+  --text-muted:     #B0B7C3;
+  --text-inverse:   #F0EAE0;   /* text shown ON dark sections */
+  --bg-primary:     #000000;
+  --bg-secondary:   #111111;
+  --bg-dark:        #000000;   /* nav, hero, footer, dark sections — always dark */
+  --bg-card:        #1A1A1A;
+  --accent:         #FF7B00;
+  --accent-dark:    #D4560F;
+  --border:         #2E2416;
+}
+
+/* ── DARK THEME TOKENS ── */
+[data-theme="dark"] {
+  --text-primary:   #FFFFFF;
+  --text-secondary: #D1D5DB;
+  --text-muted:     #B0B7C3;
+  --text-inverse:   #F0EAE0;
+  --bg-primary:     #000000;
+  --bg-secondary:   #111111;
+  --bg-dark:        #000000;
+  --bg-card:        #1A1A1A;
+  --accent:         #FF7B00;
+  --accent-dark:    #D4560F;
+  --border:         #2E2416;
+}
+
+/* ── LIGHT THEME TOKENS ── */
+[data-theme="light"] {
+  --text-primary:   #1A1008;
+  --text-secondary: #4A3828;
+  --text-muted:     #6A5A44;
+  --text-inverse:   #F0EAE0;   /* light text used ON dark sections in light mode */
+  --bg-primary:     #F5F0E8;
+  --bg-secondary:   #EDE8DC;
+  --bg-dark:        #000000;   /* dark sections stay dark even in light mode */
+  --bg-card:        #FFFFFF;
+  --accent:         #D4560F;
+  --accent-dark:    #B84510;
+  --border:         #D8D0C4;
 }
 
 * { box-sizing: border-box; }
@@ -57,8 +100,8 @@ html {
 }
 
 body {
-  background: var(--black);
-  color: var(--white);
+  background: var(--bg-primary);
+  color: var(--text-primary);
   font-family: var(--font-barlow, 'Barlow', sans-serif);
 }
 
@@ -442,291 +485,333 @@ h4 { font-size: 18px !important; }
 
 /* ═══════════════════════════════════════════════
    GLOBAL LIGHT MODE — applies to entire site
-   Triggered by: html.light-mode class on <html>
+   Triggered by: data-theme="light" on <html>
    ═══════════════════════════════════════════════ */
 
+/* ── DARK SECTIONS: always dark, both themes ──
+   nav, .bg-black*, .dark-section-persistent always use var(--bg-dark) = #000.
+   Footer handled separately below (uses #1A1008 ink tone).
+   var(--text-inverse) = #F0EAE0 — cream text shown on dark backgrounds. */
+[data-theme="light"] nav,
+[data-theme="light"] .navbar,
+[data-theme="light"] header,
+[data-theme="light"] .bg-black,
+[data-theme="light"] .bg-black-2,
+[data-theme="light"] .bg-black-3,
+[data-theme="light"] .dark-section-persistent,
+[data-theme="light"] .dark-page-persistent {
+  background-color: var(--bg-dark) !important;
+  color: var(--text-inverse) !important;
+}
+
+/* Children of dark sections get light (cream) text */
+[data-theme="light"] nav h1, [data-theme="light"] nav h2, [data-theme="light"] nav h3,
+[data-theme="light"] nav p, [data-theme="light"] nav a,
+[data-theme="light"] .dark-section-persistent h1,
+[data-theme="light"] .dark-section-persistent h2,
+[data-theme="light"] .dark-section-persistent h3,
+[data-theme="light"] .dark-section-persistent h4,
+[data-theme="light"] .dark-section-persistent p,
+[data-theme="light"] .dark-section-persistent li,
+[data-theme="light"] .dark-section-persistent span:not([class*="text-orange"]):not([class*="text-gold"]):not([class*="text-orange-DEFAULT"]),
+[data-theme="light"] .dark-page-persistent h1,
+[data-theme="light"] .dark-page-persistent h2,
+[data-theme="light"] .dark-page-persistent h3,
+[data-theme="light"] .dark-page-persistent p,
+[data-theme="light"] .dark-page-persistent li {
+  color: var(--text-inverse) !important;
+}
+
+/* Muted/grey text in dark sections — readable warm grey */
+[data-theme="light"] .dark-section-persistent .text-grey-DEFAULT,
+[data-theme="light"] .dark-section-persistent [class*="text-grey"],
+[data-theme="light"] .dark-section-persistent .text-\[\#D1D5DB\],
+[data-theme="light"] .dark-section-persistent .text-\[\#E5E7EB\] {
+  color: #C0B0A0 !important;
+}
+
 /* Light mode dropdown inner wrapper */
-html.light-mode .nav-dropdown-inner {
+[data-theme="light"] .nav-dropdown-inner {
   background: #FFFFFF;
   border-color: #D8D0C4;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
 }
-html.light-mode .nav-dropdown-item:hover { background: #F5EDE0; }
-html.light-mode .nav-dropdown-label { color: #1A1008; }
-html.light-mode .nav-dropdown-desc  { color: #6A5A44; }
-html.light-mode .nav-dropdown-item:hover .nav-dropdown-label { color: #D4560F; }
-html.light-mode .nav-dropdown-item button,
-html.light-mode .nav-dropdown-item.w-full { background: transparent; }
-html.light-mode button.nav-dropdown-item { background: transparent; }
-html.light-mode button.nav-dropdown-item:hover { background: #F5EDE0; }
+[data-theme="light"] .nav-dropdown-item:hover { background: #F5EDE0; }
+[data-theme="light"] .nav-dropdown-label { color: #1A1008; }
+[data-theme="light"] .nav-dropdown-desc  { color: #6A5A44; }
+[data-theme="light"] .nav-dropdown-item:hover .nav-dropdown-label { color: #D4560F; }
+[data-theme="light"] .nav-dropdown-item button,
+[data-theme="light"] .nav-dropdown-item.w-full { background: transparent; }
+[data-theme="light"] button.nav-dropdown-item { background: transparent; }
+[data-theme="light"] button.nav-dropdown-item:hover { background: #F5EDE0; }
 
-/* Base */
-html.light-mode body {
-  background-color: #F5F0E8;
-  color: #1A1008;
+/* Base — tokens handle these; this is a fallback for browsers without cascade layers */
+[data-theme="light"] body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
 }
 
 /* ─── NAVIGATION — always dark background to preserve logo legibility ─── */
-html.light-mode nav,
-html.light-mode .navbar,
-html.light-mode header {
+[data-theme="light"] nav,
+[data-theme="light"] .navbar,
+[data-theme="light"] header {
   background: #000000 !important;
   border-bottom: 2px solid var(--orange) !important;
 }
 /* Nav links: light grey so they're readable on the dark navbar */
-html.light-mode nav .nav-link,
-html.light-mode nav a.font-mono {
+[data-theme="light"] nav .nav-link,
+[data-theme="light"] nav a.font-mono {
   color: #CCCCCC !important;
 }
-html.light-mode nav .nav-link:hover,
-html.light-mode nav a.font-mono:hover {
+[data-theme="light"] nav .nav-link:hover,
+[data-theme="light"] nav a.font-mono:hover {
   color: var(--orange) !important;
 }
-html.light-mode nav .text-\[var\(--grey\)\] {
+[data-theme="light"] nav .text-\[var\(--grey\)\] {
   color: #CCCCCC !important;
 }
-html.light-mode .nav-logo,
-html.light-mode .topbar-logo {
+[data-theme="light"] .nav-logo,
+[data-theme="light"] .topbar-logo {
   color: var(--orange);
 }
 
 /* ─── HERO SECTIONS ─── */
-html.light-mode .hero,
-html.light-mode [class*="hero"],
-html.light-mode section:first-of-type {
+[data-theme="light"] .hero,
+[data-theme="light"] [class*="hero"],
+[data-theme="light"] section:first-of-type {
   background: #F5F0E8;
 }
-html.light-mode .hero h1,
-html.light-mode .hero h2,
-html.light-mode [class*="hero"] h1,
-html.light-mode [class*="hero"] h2 {
+[data-theme="light"] .hero h1,
+[data-theme="light"] .hero h2,
+[data-theme="light"] [class*="hero"] h1,
+[data-theme="light"] [class*="hero"] h2 {
   color: #1A1008;
 }
-html.light-mode .hero p,
-html.light-mode [class*="hero"] p {
+[data-theme="light"] .hero p,
+[data-theme="light"] [class*="hero"] p {
   color: #4A3828;
 }
 
 /* ─── ALL SECTION BACKGROUNDS ─── */
-html.light-mode section,
-html.light-mode .section,
-html.light-mode main,
-html.light-mode .page-content {
+[data-theme="light"] section,
+[data-theme="light"] .section,
+[data-theme="light"] main,
+[data-theme="light"] .page-content {
   background-color: #F5F0E8;
   color: #1A1008;
 }
 
 /* Alternating section backgrounds */
-html.light-mode section:nth-of-type(even),
-html.light-mode .section-alt {
+[data-theme="light"] section:nth-of-type(even),
+[data-theme="light"] .section-alt {
   background-color: #EDE8DC;
 }
 
 /* ─── CARDS ─── */
-html.light-mode .card,
-html.light-mode [class*="card"],
-html.light-mode .course-card,
-html.light-mode .track-card,
-html.light-mode .program-card,
-html.light-mode .feature-card,
-html.light-mode .problem-card,
-html.light-mode .format-card {
+[data-theme="light"] .card,
+[data-theme="light"] [class*="card"],
+[data-theme="light"] .course-card,
+[data-theme="light"] .track-card,
+[data-theme="light"] .program-card,
+[data-theme="light"] .feature-card,
+[data-theme="light"] .problem-card,
+[data-theme="light"] .format-card {
   background: #FFFFFF;
   border-color: #D8D0C4;
   color: #1A1008;
 }
-html.light-mode .card:hover,
-html.light-mode [class*="card"]:hover {
+[data-theme="light"] .card:hover,
+[data-theme="light"] [class*="card"]:hover {
   border-color: #D4560F;
   box-shadow: 0 4px 20px rgba(212, 86, 15, 0.12);
 }
-html.light-mode .card h3,
-html.light-mode [class*="card"] h3,
-html.light-mode .card h4,
-html.light-mode [class*="card"] h4 {
+[data-theme="light"] .card h3,
+[data-theme="light"] [class*="card"] h3,
+[data-theme="light"] .card h4,
+[data-theme="light"] [class*="card"] h4 {
   color: #1A1008;
 }
-html.light-mode .card p,
-html.light-mode [class*="card"] p {
+[data-theme="light"] .card p,
+[data-theme="light"] [class*="card"] p {
   color: #4A3828;
 }
 
 /* ─── ALL HEADINGS ─── */
-html.light-mode h1,
-html.light-mode h2,
-html.light-mode h3,
-html.light-mode h4,
-html.light-mode h5,
-html.light-mode h6 {
+[data-theme="light"] h1,
+[data-theme="light"] h2,
+[data-theme="light"] h3,
+[data-theme="light"] h4,
+[data-theme="light"] h5,
+[data-theme="light"] h6 {
   color: #1A1008;
 }
 
 /* ─── ALL BODY TEXT ─── */
-html.light-mode p,
-html.light-mode li,
-html.light-mode span:not(.nav-dropdown-desc):not([class*="badge"]):not([class*="tag"]) {
+[data-theme="light"] p,
+[data-theme="light"] li,
+[data-theme="light"] span:not(.nav-dropdown-desc):not([class*="badge"]):not([class*="tag"]) {
   color: #2A1E10;
 }
 
 /* ─── STAT BLOCKS / METRIC SECTIONS ─── */
-html.light-mode .stat,
-html.light-mode [class*="stat"],
-html.light-mode .metric,
-html.light-mode [class*="metric"] {
+[data-theme="light"] .stat,
+[data-theme="light"] [class*="stat"],
+[data-theme="light"] .metric,
+[data-theme="light"] [class*="metric"] {
   background: #FFFFFF;
   border-color: #D8D0C4;
   color: #1A1008;
 }
-html.light-mode .stat-number,
-html.light-mode [class*="stat-number"] {
+[data-theme="light"] .stat-number,
+[data-theme="light"] [class*="stat-number"] {
   color: #D4560F;
 }
-html.light-mode .stat-label,
-html.light-mode [class*="stat-label"] {
+[data-theme="light"] .stat-label,
+[data-theme="light"] [class*="stat-label"] {
   color: #4A3828;
 }
 
 /* ─── COURSE/TRACK/PROGRAM LISTING SECTIONS ─── */
-html.light-mode .course-number,
-html.light-mode .track-number,
-html.light-mode [class*="-number"] {
+[data-theme="light"] .course-number,
+[data-theme="light"] .track-number,
+[data-theme="light"] [class*="-number"] {
   color: #D4560F;
 }
-html.light-mode .course-tag,
-html.light-mode [class*="-tag"],
-html.light-mode [class*="-badge"] {
+[data-theme="light"] .course-tag,
+[data-theme="light"] [class*="-tag"],
+[data-theme="light"] [class*="-badge"] {
   background: rgba(212, 86, 15, 0.1);
   color: #D4560F;
   border-color: rgba(212, 86, 15, 0.25);
 }
 
 /* ─── CTA SECTIONS ─── */
-html.light-mode .cta-section,
-html.light-mode [class*="cta"],
-html.light-mode .cta-strip {
+[data-theme="light"] .cta-section,
+[data-theme="light"] [class*="cta"],
+[data-theme="light"] .cta-strip {
   background: #1A1008;  
   color: #F0EAE0;
 }
-html.light-mode .cta-section h2,
-html.light-mode .cta-section p {
+[data-theme="light"] .cta-section h2,
+[data-theme="light"] .cta-section p {
   color: #F0EAE0;
 }
 
 /* ─── FOOTER ─── */
-html.light-mode footer,
-html.light-mode .footer {
+[data-theme="light"] footer,
+[data-theme="light"] .footer {
   background: #1A1008;
   color: #F0EAE0;
   border-top: 1px solid #3A2A18;
 }
-html.light-mode footer h4,
-html.light-mode .footer h4 {
+[data-theme="light"] footer h4,
+[data-theme="light"] .footer h4 {
   color: #F0EAE0;
 }
-html.light-mode footer a,
-html.light-mode .footer a {
+[data-theme="light"] footer a,
+[data-theme="light"] .footer a {
   color: #C0A880;
 }
-html.light-mode footer a:hover,
-html.light-mode .footer a:hover {
+[data-theme="light"] footer a:hover,
+[data-theme="light"] .footer a:hover {
   color: #E8621A;
 }
 
 /* ─── LESSON PLAYER PAGES ─── */
-html.light-mode .topbar {
+[data-theme="light"] .topbar {
   background: #FFFFFF;
   border-bottom: 1px solid #D8D0C4;
 }
-html.light-mode .topbar-logo { color: #D4560F; }
-html.light-mode .topbar-title { color: #3A2A18; }
-html.light-mode .topbar-divider { color: #B0A090; }
-html.light-mode .topbar-pct { color: #4A3828; }
+[data-theme="light"] .topbar-logo { color: #D4560F; }
+[data-theme="light"] .topbar-title { color: #3A2A18; }
+[data-theme="light"] .topbar-divider { color: #B0A090; }
+[data-theme="light"] .topbar-pct { color: #4A3828; }
 
-html.light-mode .sidebar {
+[data-theme="light"] .sidebar {
   background: #EDE8DC;
   border-right: 1px solid #D0C8BC;
 }
-html.light-mode .sidebar-section-label { color: #6A5A44; }
-html.light-mode .sidebar-tab {
+[data-theme="light"] .sidebar-section-label { color: #6A5A44; }
+[data-theme="light"] .sidebar-tab {
   background: #FFFFFF;
   border-color: #D0C8BC;
   color: #1A1008;
 }
-html.light-mode .sidebar-tab.active {
+[data-theme="light"] .sidebar-tab.active {
   border-color: #D4560F;
   background: #FDF6EE;
 }
-html.light-mode .tab-title { color: #1A1008; }
-html.light-mode .tab-number-label { color: #6A5A44; }
+[data-theme="light"] .tab-title { color: #1A1008; }
+[data-theme="light"] .tab-number-label { color: #6A5A44; }
 
-html.light-mode .lesson-item { color: #1A1008; border-color: #D0C8BC; }
-html.light-mode .lesson-item:hover { background: #F0EAE0; }
-html.light-mode .lesson-item.active { background: #FDF6EE; border-color: #D4560F; }
-html.light-mode .lesson-title { color: #1A1008; }
-html.light-mode .lesson-dur { color: #6A5A44; }
+[data-theme="light"] .lesson-item { color: #1A1008; border-color: #D0C8BC; }
+[data-theme="light"] .lesson-item:hover { background: #F0EAE0; }
+[data-theme="light"] .lesson-item.active { background: #FDF6EE; border-color: #D4560F; }
+[data-theme="light"] .lesson-title { color: #1A1008; }
+[data-theme="light"] .lesson-dur { color: #6A5A44; }
 
-html.light-mode .main-content,
-html.light-mode .lesson-content,
-html.light-mode .module-content {
+[data-theme="light"] .main-content,
+[data-theme="light"] .lesson-content,
+[data-theme="light"] .module-content {
   background: #F5F0E8;
   color: #1A1008;
 }
-html.light-mode .lesson-body p,
-html.light-mode .module-body p { color: #2A1E10; }
-html.light-mode .lesson-body h2,
-html.light-mode .lesson-body h3,
-html.light-mode .module-body h2,
-html.light-mode .module-body h3 { color: #1A1008; }
+[data-theme="light"] .lesson-body p,
+[data-theme="light"] .module-body p { color: #2A1E10; }
+[data-theme="light"] .lesson-body h2,
+[data-theme="light"] .lesson-body h3,
+[data-theme="light"] .module-body h2,
+[data-theme="light"] .module-body h3 { color: #1A1008; }
 
-html.light-mode .callout {
+[data-theme="light"] .callout {
   background: #FDF6EE;
   border-left-color: #D4560F;
   color: #2A1E10;
 }
-html.light-mode .key-concept {
+[data-theme="light"] .key-concept {
   background: #FFFFFF;
   border-color: #D0C8BC;
   border-top-color: #A8863C;
 }
-html.light-mode .key-concept-label { color: #A8863C; }
-html.light-mode .practice-box {
+[data-theme="light"] .key-concept-label { color: #A8863C; }
+[data-theme="light"] .practice-box {
   background: rgba(212, 86, 15, 0.04);
   border-color: rgba(212, 86, 15, 0.2);
 }
 
-html.light-mode .quiz-option {
+[data-theme="light"] .quiz-option {
   background: #FFFFFF;
   border-color: #D0C8BC;
   color: #1A1008;
 }
-html.light-mode .quiz-option:hover { border-color: #D4560F; background: #FDF6EE; }
-html.light-mode .quiz-option.selected { border-color: #D4560F; background: rgba(212,86,15,0.07); }
-html.light-mode .quiz-letter { background: #EDE8DC; color: #4A3828; border-color: #D0C8BC; }
+[data-theme="light"] .quiz-option:hover { border-color: #D4560F; background: #FDF6EE; }
+[data-theme="light"] .quiz-option.selected { border-color: #D4560F; background: rgba(212,86,15,0.07); }
+[data-theme="light"] .quiz-letter { background: #EDE8DC; color: #4A3828; border-color: #D0C8BC; }
 
 /* ─── FORMS & INPUTS ─── */
-html.light-mode input,
-html.light-mode textarea,
-html.light-mode select {
+[data-theme="light"] input,
+[data-theme="light"] textarea,
+[data-theme="light"] select {
   background: #FFFFFF;
   border-color: #D0C8BC;
   color: #1A1008;
 }
-html.light-mode input::placeholder,
-html.light-mode textarea::placeholder { color: #9C8A70; }
-html.light-mode input:focus,
-html.light-mode textarea:focus { border-color: #D4560F; outline-color: #D4560F; }
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder { color: #9C8A70; }
+[data-theme="light"] input:focus,
+[data-theme="light"] textarea:focus { border-color: #D4560F; outline-color: #D4560F; }
 
 /* ─── ACCESSIBILITY WIDGET PANEL ─── */
-html.light-mode .a11y-panel {
+[data-theme="light"] .a11y-panel {
   background: #FFFFFF;
   border-color: #D0C8BC;
   color: #1A1008;
 }
-html.light-mode .a11y-section-label { color: #6A5A44; border-color: #D0C8BC; }
-html.light-mode .a11y-row-label { color: #2A1E10; }
-html.light-mode .seg-btn { color: #2A1E10; border-color: #C0B8AC; }
-html.light-mode .seg-btn:hover:not(.active) { border-color: #D4560F; color: #D4560F; }
-html.light-mode .toggle-switch:not(.on) { background: #C0B8AC; }
+[data-theme="light"] .a11y-section-label { color: #6A5A44; border-color: #D0C8BC; }
+[data-theme="light"] .a11y-row-label { color: #2A1E10; }
+[data-theme="light"] .seg-btn { color: #2A1E10; border-color: #C0B8AC; }
+[data-theme="light"] .seg-btn:hover:not(.active) { border-color: #D4560F; color: #D4560F; }
+[data-theme="light"] .toggle-switch:not(.on) { background: #C0B8AC; }
 
 
 /* ── BUTTON "OPEN APP" FIX 5 ── */
@@ -762,11 +847,11 @@ html.light-mode .toggle-switch:not(.on) { background: #C0B8AC; }
 }
 
 /* Light mode for button Open App */
-html.light-mode .btn-open-app {
+[data-theme="light"] .btn-open-app {
   background: #D4560F;
   box-shadow: 0 4px 16px rgba(212, 86, 15, 0.3);
 }
-html.light-mode .btn-open-app:hover {
+[data-theme="light"] .btn-open-app:hover {
   background: #E8621A;
   box-shadow: 0 8px 24px rgba(212, 86, 15, 0.45);
 }
@@ -1049,118 +1134,75 @@ html.light-mode .btn-open-app:hover {
 
 /* ─── LIGHT MODE: Override hardcoded Tailwind text-white classes in page content ─── */
 /* Main page sections get light backgrounds */
-html.light-mode main > section {
+[data-theme="light"] main > section {
   background-color: #F5F0E8;
 }
-html.light-mode main > section:nth-of-type(even),
-html.light-mode .bg-zinc-950,
-html.light-mode section.bg-zinc-950 {
+[data-theme="light"] main > section:nth-of-type(even),
+[data-theme="light"] .bg-zinc-950,
+[data-theme="light"] section.bg-zinc-950 {
   background-color: #EDE8DC !important;
 }
-html.light-mode .bg-zinc-900:not(nav):not(.a11y-panel):not(.nav-dropdown-inner),
-html.light-mode section.bg-zinc-900 {
+[data-theme="light"] .bg-zinc-900:not(nav):not(.a11y-panel):not(.nav-dropdown-inner),
+[data-theme="light"] section.bg-zinc-900 {
   background-color: #F0EAE0 !important;
 }
 
-/* Headings in page sections */
-html.light-mode main section h1,
-html.light-mode main section h2,
-html.light-mode main section h3,
-html.light-mode main section h4 {
+/* Headings in light page sections (exclude dark-section-persistent — those stay white) */
+[data-theme="light"] main section:not(.dark-section-persistent):not(.dark-page-persistent) h1,
+[data-theme="light"] main section:not(.dark-section-persistent):not(.dark-page-persistent) h2,
+[data-theme="light"] main section:not(.dark-section-persistent):not(.dark-page-persistent) h3,
+[data-theme="light"] main section:not(.dark-section-persistent):not(.dark-page-persistent) h4 {
   color: #1A1008 !important;
 }
 
 /* Paragraphs and list items in page sections (excluding persistent dark sections) */
-html.light-mode main section:not(.dark-section-persistent) p,
-html.light-mode main section:not(.dark-section-persistent) li,
-html.light-mode main section:not(.dark-section-persistent) span:not(.text-orange-DEFAULT):not(.text-gold):not([class*="badge"]):not([class*="tag"]):not([class*="tracking"]) {
+[data-theme="light"] main section:not(.dark-section-persistent) p,
+[data-theme="light"] main section:not(.dark-section-persistent) li,
+[data-theme="light"] main section:not(.dark-section-persistent) span:not(.text-orange-DEFAULT):not(.text-gold):not([class*="badge"]):not([class*="tag"]):not([class*="tracking"]) {
   color: #2A1E10;
 }
 
 /* Ensure the footer + CTA dark strips remain dark */
-html.light-mode footer,
-html.light-mode .cta-section,
-html.light-mode section.bg-\[\#1A1008\] {
+[data-theme="light"] footer,
+[data-theme="light"] .cta-section,
+[data-theme="light"] section.bg-\[\#1A1008\] {
   background-color: #1A1008 !important;
   color: #F0EAE0 !important;
 }
-html.light-mode footer p,
-html.light-mode footer h4,
-html.light-mode footer span,
-html.light-mode footer a {
+[data-theme="light"] footer p,
+[data-theme="light"] footer h4,
+[data-theme="light"] footer span,
+[data-theme="light"] footer a {
   color: #C0A880 !important;
 }
-html.light-mode footer a:hover { color: #E8621A !important; }
+[data-theme="light"] footer a:hover { color: #E8621A !important; }
 
 /* ───── LIGHT MODE: Custom Tailwind dark color class overrides ───── */
 /* bg-black-* classes -> stay dark or turn light based on section type */
 /* We keep bg-black-4 turning white for general cards/panels that should be light in light mode */
-html.light-mode .bg-black-4:not(nav):not(.a11y-panel):not(.dark-section-persistent),
-html.light-mode [class~="bg-black-4"]:not(nav):not(.a11y-panel):not(.dark-section-persistent) {
+[data-theme="light"] .bg-black-4:not(nav):not(.a11y-panel):not(.dark-section-persistent),
+[data-theme="light"] [class~="bg-black-4"]:not(nav):not(.a11y-panel):not(.dark-section-persistent) {
   background-color: #FFFFFF !important;
   border-color: #D8D0C4 !important;
 }
 
-/* Ensure bg-black and bg-black-2/3 remain dark in light mode as requested */
-html.light-mode .bg-black-DEFAULT,
-html.light-mode .bg-black,
-html.light-mode .bg-black-2,
-html.light-mode .bg-black-3 {
-  background-color: #000000 !important; /* or their respective dark colors */
-  color: #FFFFFF !important;
-}
-
-/* Global persistent dark page/section overrides */
-html.light-mode .dark-page-persistent,
-html.light-mode .dark-section-persistent,
-html.light-mode nav.dark-section-persistent,
-html.light-mode footer.dark-section-persistent {
-  background-color: #000000 !important;
-  color: #FFFFFF !important;
-}
-html.light-mode .dark-page-persistent h1, html.light-mode .dark-section-persistent h1,
-html.light-mode .dark-page-persistent h2, html.light-mode .dark-section-persistent h2,
-html.light-mode .dark-page-persistent h3, html.light-mode .dark-section-persistent h3,
-html.light-mode .dark-page-persistent p,  html.light-mode .dark-section-persistent p,
-html.light-mode .dark-page-persistent li, html.light-mode .dark-section-persistent li,
-html.light-mode .dark-page-persistent span:not(.text-orange-DEFAULT):not(.text-gold),
-html.light-mode .dark-section-persistent span:not(.text-orange-DEFAULT):not(.text-gold) {
-  color: #FFFFFF !important;
-}
-
-/* Ensure grey text colors revert to light on dark backgrounds in light mode */
-html.light-mode .dark-section-persistent .text-grey-DEFAULT,
-html.light-mode .dark-section-persistent .text-grey-dark,
-html.light-mode .dark-section-persistent [class~="text-grey-DEFAULT"],
-html.light-mode .dark-section-persistent .text-\[\#D1D5DB\],
-html.light-mode .dark-section-persistent .text-\[\#E5E7EB\],
-html.light-mode .dark-section-persistent .text-\[\#8C7A60\],
-html.light-mode .dark-section-persistent [class*="text-grey"] {
-  color: #9C8A70 !important; /* Revert to light grey for dark mode theme */
-}
-
-/* Specific fix for Navbar dropdown descriptions */
-html.light-mode .dark-section-persistent .nav-dropdown-desc {
-  color: #8C7A60 !important;
-}
-
 /* Text that is white on dark backgrounds -> dark on light (excluding persistent sections) */
-html.light-mode main:not(.dark-page-persistent) .text-white:not(.btn-orange):not([class*="badge"]):not(.dark-section-persistent),
-html.light-mode main:not(.dark-page-persistent) [class~="text-white"]:not(.btn-orange):not(.dark-section-persistent),
-html.light-mode main:not(.dark-page-persistent) .text-\[var\(--white\)\]:not(.dark-section-persistent) {
+[data-theme="light"] main:not(.dark-page-persistent) .text-white:not(.btn-orange):not([class*="badge"]):not(.dark-section-persistent),
+[data-theme="light"] main:not(.dark-page-persistent) [class~="text-white"]:not(.btn-orange):not(.dark-section-persistent),
+[data-theme="light"] main:not(.dark-page-persistent) .text-\[var\(--white\)\]:not(.dark-section-persistent) {
   color: #1A1008 !important;
 }
 
-html.light-mode main:not(.dark-page-persistent) .text-\[var\(--cream\)\]:not(.dark-section-persistent),
-html.light-mode main:not(.dark-page-persistent) .text-cream:not(.dark-section-persistent) {
+[data-theme="light"] main:not(.dark-page-persistent) .text-\[var\(--cream\)\]:not(.dark-section-persistent),
+[data-theme="light"] main:not(.dark-page-persistent) .text-cream:not(.dark-section-persistent) {
   color: #2A1E10 !important;
 }
-html.light-mode main:not(.dark-page-persistent) .text-\[var\(--grey\)\]:not(.dark-section-persistent),
-html.light-mode main:not(.dark-page-persistent) .text-grey-DEFAULT:not(.dark-section-persistent) {
+[data-theme="light"] main:not(.dark-page-persistent) .text-\[var\(--grey\)\]:not(.dark-section-persistent),
+[data-theme="light"] main:not(.dark-page-persistent) .text-grey-DEFAULT:not(.dark-section-persistent) {
   color: #4A3828 !important;
 }
 /* Keep orange text orange in light mode */
-html.light-mode .text-\[var\(--orange\)\],
-html.light-mode .text-orange-DEFAULT {
+[data-theme="light"] .text-\[var\(--orange\)\],
+[data-theme="light"] .text-orange-DEFAULT {
   color: #D4560F !important;
 }

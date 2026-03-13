@@ -11,6 +11,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const stored = localStorage.getItem('vh_theme') as Theme | null
     const initial = stored || 'dark'
     setTheme(initial)
+    document.documentElement.setAttribute('data-theme', initial)
     document.documentElement.classList.toggle('light-mode', initial === 'light')
   }, [])
 
@@ -18,6 +19,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const next = theme === 'dark' ? 'light' : 'dark'
     setTheme(next)
     localStorage.setItem('vh_theme', next)
+    document.documentElement.setAttribute('data-theme', next)
     document.documentElement.classList.toggle('light-mode', next === 'light')
   }
 
