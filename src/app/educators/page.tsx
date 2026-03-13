@@ -26,6 +26,7 @@ import { CartPanel } from '@/components/pricing/CartPanel'
 import type { Tier } from '@/components/pricing/CartPanel'
 import { createClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
+import { EnergyFieldDiagram } from '@/components/education/EnergyFieldDiagram'
 
 const FADE_UP = {
   initial: { opacity: 0, y: 20 },
@@ -354,7 +355,7 @@ export default function EducationPage() {
         </div>
       </section>
 
-      {/* DEI / EQUITY */}
+      {/* ENERGY FIELD DIAGRAM */}
       <section className="bg-teal py-24 md:py-32 px-6 md:px-14 text-white overflow-hidden relative">
         {/* Subtle texture */}
         <div className="absolute inset-0 opacity-10 mix-blend-overlay pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/pinstriped-suit.png')]" />
@@ -390,26 +391,7 @@ export default function EducationPage() {
             viewport={{ once: true }}
             className="relative"
           >
-            <div className="aspect-square bg-white shadow-2xl p-10 md:p-14 text-teal">
-              <div className="h-full border border-teal/10 flex flex-col justify-between">
-                <div>
-                  <h4 className="font-serif text-4xl mb-6">Adult Co-Regulation</h4>
-                  <p className="text-sm leading-relaxed mb-8">
-                    "When we empower teachers to master their own internal state, the classroom follows. We aren't just giving them a curriculum to teach; we're giving them a way to be."
-                  </p>
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-orange-DEFAULT" />
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-widest">Khalil Ghaile</p>
-                      <p className="text-[0.6rem] uppercase tracking-widest text-teal/40">Founder, Vibe Hyr</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex justify-end">
-                   <Zap className="text-orange-DEFAULT w-12 h-12" fill="currentColor"/>
-                </div>
-              </div>
-            </div>
+            <EnergyFieldDiagram />
           </motion.div>
         </div>
       </section>

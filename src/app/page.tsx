@@ -64,8 +64,8 @@ export default function HomePage() {
               <div>
                 <div className="label mb-4">Core Curriculum</div>
                 <h2 className="font-display text-[clamp(3rem,6vw,5rem)] leading-[0.95] tracking-[0.02em]">
-                  THE ARCHITECTURE<br />
-                  <span className="text-orange">OF REALITY</span>
+                  CORE<br />
+                  <span className="text-orange">CURRICULUM</span>
                 </h2>
               </div>
               <Link href="/personal" className="btn-outline-orange hidden md:flex items-center gap-2 self-end">

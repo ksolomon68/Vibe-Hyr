@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
@@ -8,7 +8,6 @@ import { Menu, X, ChevronDown } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/types'
 import { cn, getTierLabel } from '@/lib/utils'
-import { useTheme } from '@/app/providers/ThemeProvider'
 
 const NAV_ITEMS = [
   {
@@ -62,8 +61,6 @@ export function Navbar() {
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null)
 
   const pathname = usePathname()
-  const { theme, toggleTheme } = useTheme()
-
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
     window.addEventListener('scroll', onScroll)
@@ -122,9 +119,8 @@ export function Navbar() {
     <>
       <nav
         className={cn(
-          'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
-          'border-b-2 border-[var(--orange)] dark-section-persistent',
-          scrolled ? 'bg-black/95 backdrop-blur-sm' : 'bg-black'
+          'navbar',
+          scrolled ? 'shadow-[0_4px_24px_rgba(0,0,0,0.4)]' : ''
         )}
       >
         <div className="flex items-center gap-6 h-[68px] px-6 md:px-14">
@@ -191,12 +187,6 @@ export function Navbar() {
 
           {/* Right side */}
           <div className="hidden md:flex items-center gap-4">
-            {/* Dark Mode Toggle */}
-            <button onClick={toggleTheme} aria-label="Toggle dark/light mode"
-              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--cream)', padding: '6px 8px' }}>
-              {theme === 'dark' ? '☀️' : '🌙'}
-            </button>
-
             {loggedIn && profile ? (
               <div className="nav-item-group">
                 {/* Profile trigger */}
@@ -260,10 +250,6 @@ export function Navbar() {
 
           {/* Mobile menu toggle */}
           <div className="md:hidden ml-auto flex items-center gap-3">
-            <button onClick={toggleTheme} aria-label="Toggle dark/light mode"
-              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--cream)' }}>
-              {theme === 'dark' ? '☀️' : '🌙'}
-            </button>
             <button
               onClick={() => setOpen(!open)}
               className="text-[var(--white)]"

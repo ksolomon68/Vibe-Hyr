@@ -110,10 +110,14 @@ export default function EducationPageClient({
         contentTitle={program.title}
         completionPct={overallPct}
         onToggleSidebar={() => setSidebarOpen(o => !o)}
+        breadcrumb={{
+          label: 'Educators',
+          href: '/educators'
+        }}
       />
 
       {/* Body: sidebar + content */}
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', flexDirection: 'row-reverse' }}>
         <PlayerSidebar
           entries={sidebarEntries}
           activeEntryIdx={initialProgramIdx}
@@ -132,6 +136,7 @@ export default function EducationPageClient({
           completedMap={completedMap}
           onMarkComplete={handleMarkComplete}
           onNavigate={handleNavigate}
+          isLoggedIn={!!userId}
         />
       </div>
 

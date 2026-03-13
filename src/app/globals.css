@@ -48,48 +48,29 @@
   --p-green:       #22C55E;
   --p-red:         #EF4444;
 
-  /* ── THEME TOKENS (default: dark) ── */
+  /* ── THEME TOKENS ── */
   --text-primary:   #FFFFFF;
   --text-secondary: #D1D5DB;
-  --text-muted:     #B0B7C3;
-  --text-inverse:   #F0EAE0;   /* text shown ON dark sections */
-  --bg-primary:     #000000;
-  --bg-secondary:   #111111;
-  --bg-dark:        #000000;   /* nav, hero, footer, dark sections — always dark */
-  --bg-card:        #1A1A1A;
-  --accent:         #FF7B00;
-  --accent-dark:    #D4560F;
-  --border:         #2E2416;
-}
-
-/* ── DARK THEME TOKENS ── */
-[data-theme="dark"] {
-  --text-primary:   #FFFFFF;
-  --text-secondary: #D1D5DB;
-  --text-muted:     #B0B7C3;
+  --text-muted:     #8C7A60;
   --text-inverse:   #F0EAE0;
   --bg-primary:     #000000;
   --bg-secondary:   #111111;
   --bg-dark:        #000000;
-  --bg-card:        #1A1A1A;
+  --bg-card:        #111111;
   --accent:         #FF7B00;
-  --accent-dark:    #D4560F;
+  --accent-dark:    #E8621A;
   --border:         #2E2416;
-}
+  --border-soft:    #2A2A2A;
 
-/* ── LIGHT THEME TOKENS ── */
-[data-theme="light"] {
-  --text-primary:   #1A1008;
-  --text-secondary: #4A3828;
-  --text-muted:     #6A5A44;
-  --text-inverse:   #F0EAE0;   /* light text used ON dark sections in light mode */
-  --bg-primary:     #F5F0E8;
-  --bg-secondary:   #EDE8DC;
-  --bg-dark:        #000000;   /* dark sections stay dark even in light mode */
-  --bg-card:        #FFFFFF;
-  --accent:         #D4560F;
-  --accent-dark:    #B84510;
-  --border:         #D8D0C4;
+  /* ── UI SPACING / MOTION TOKENS ── */
+  --radius-lg:      14px;
+  --radius-md:      10px;
+  --radius-sm:      6px;
+  --shadow-soft:    0 8px 30px rgba(0,0,0,.08);
+  --shadow-card:    0 6px 18px rgba(0,0,0,.12);
+  --shadow-glow:    0 0 40px rgba(255,123,0,.15);
+  --transition-fast:   0.2s ease;
+  --transition-smooth: 0.35s cubic-bezier(.4,.0,.2,1);
 }
 
 * { box-sizing: border-box; }
@@ -97,12 +78,50 @@
 html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   background: var(--bg-primary);
   color: var(--text-primary);
   font-family: var(--font-barlow, 'Barlow', sans-serif);
+}
+
+/* ── NAVBAR — floating glass ── */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  background: rgba(0, 0, 0, 1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 1000;
+}
+.navbar a {
+  color: #ffffff;
+}
+
+/* ── PREMIUM CARD SYSTEM ── */
+.card-premium {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-card);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+.card-premium:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-glow);
+  border-color: rgba(255,123,0,0.35);
+}
+
+/* ── SECTION SPACING UPGRADE ── */
+/* Applied on sections that don't have explicit Tailwind padding */
+section.section-padded {
+  padding-top: 100px;
+  padding-bottom: 100px;
 }
 
 /* ── GRAIN TEXTURE ── */
@@ -157,33 +176,53 @@ body::after {
   .btn-orange {
     @apply font-mono text-[0.65rem] tracking-[0.2em] uppercase font-bold
            px-9 py-4 bg-[var(--orange)] text-black border-2 border-[var(--orange)]
-           inline-block transition-all duration-200 cursor-pointer;
+           inline-block cursor-pointer;
+    border-radius: var(--radius-md);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast), color var(--transition-fast);
+    box-shadow: 0 4px 14px rgba(255,123,0,0.3);
   }
   .btn-orange:hover {
     @apply bg-transparent text-[var(--orange)];
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(255,123,0,0.4);
   }
   .btn-outline {
     @apply font-mono text-[0.65rem] tracking-[0.2em] uppercase font-bold
            px-9 py-4 bg-transparent text-white border-2 border-[var(--grey-d)]
-           inline-block transition-all duration-200 cursor-pointer;
+           inline-block cursor-pointer;
+    border-radius: var(--radius-md);
+    transition: transform var(--transition-fast), border-color var(--transition-fast);
   }
   .btn-outline:hover {
     @apply border-white;
+    transform: translateY(-2px);
   }
   .btn-outline-orange {
     @apply font-mono text-[0.65rem] tracking-[0.2em] uppercase font-bold
            px-9 py-4 bg-transparent text-[var(--orange)] border-2 border-[var(--orange)]
-           inline-block transition-all duration-200 cursor-pointer;
+           inline-block cursor-pointer;
+    border-radius: var(--radius-md);
+    transition: transform var(--transition-fast), background var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
   }
   .btn-outline-orange:hover {
     @apply bg-[var(--orange)] text-black;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(255,123,0,0.35);
   }
 
   /* ── CARDS ── */
   .card-dark {
-    @apply bg-[var(--black-2)] border border-white/[0.08] transition-all duration-200;
+    background: var(--bg-card);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
   }
-  .card-dark:hover { @apply bg-[var(--black-3)] border-[var(--orange)]/30; }
+  .card-dark:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255,123,0,0.4);
+    box-shadow: var(--shadow-glow);
+  }
 
   /* ── ORANGE BORDER GRID ── */
   .orange-grid {
@@ -195,23 +234,63 @@ body::after {
 
   /* ── INPUT ── */
   .input-dark {
-    @apply w-full bg-[var(--black-3)] border border-[var(--grey-d)] text-white
-           font-body text-base px-4 py-3 outline-none
-           transition-colors duration-200 placeholder:text-white/20;
+    @apply w-full font-body text-base px-4 py-3 outline-none;
+    background: var(--bg-card);
+    border: 1px solid var(--border-soft);
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
   }
-  .input-dark:focus { @apply border-[var(--orange)]; }
+  .input-dark::placeholder { color: var(--text-muted); }
+  .input-dark:focus {
+    border-color: var(--orange);
+    box-shadow: 0 0 0 3px rgba(255,123,0,0.15);
+  }
 
   textarea.input-dark { resize: vertical; min-height: 100px; }
-
-  /* ── SCROLLBAR ── */
-  ::-webkit-scrollbar        { width: 4px; }
-  ::-webkit-scrollbar-track  { background: var(--black-2); }
-  ::-webkit-scrollbar-thumb  { background: var(--orange); }
 
   /* ── TIER BADGES ── */
   .badge-free    { @apply font-mono text-[0.55rem] tracking-[0.25em] uppercase px-3 py-1 border border-green-400 text-green-400; }
   .badge-architect { @apply font-mono text-[0.55rem] tracking-[0.25em] uppercase px-3 py-1 border border-[var(--orange)] text-[var(--orange)]; }
   .badge-elite   { @apply font-mono text-[0.55rem] tracking-[0.25em] uppercase px-3 py-1 border border-white text-white; }
+
+  /* ── UNIFIED GRID SYSTEM (BLUEPRINT) ── */
+  .vh-grid-container {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 1.5rem;
+    max-width: 80rem; /* 1280px */
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  .vh-grid-full { grid-column: span 12 / span 12; }
+  .vh-grid-half { grid-column: span 6 / span 6; }
+  .vh-grid-third { grid-column: span 4 / span 4; }
+  .vh-grid-qrtr { grid-column: span 3 / span 3; }
+
+  @media (max-width: 1024px) {
+    .vh-grid-half, .vh-grid-third, .vh-grid-qrtr { grid-column: span 6 / span 6; }
+  }
+  @media (max-width: 640px) {
+    .vh-grid-half, .vh-grid-third, .vh-grid-qrtr { grid-column: span 12 / span 12; }
+  }
+
+  /* ── UNIFIED FLEX ALIGNMENT ── */
+  .vh-flex-center { display: flex; align-items: center; justify-content: center; }
+  .vh-flex-between { display: flex; align-items: center; justify-content: space-between; }
+  .vh-flex-start { display: flex; align-items: flex-start; }
+  .vh-flex-end { display: flex; align-items: flex-end; }
+
+  /* ── UNIFIED SECTION SPACING ── */
+  .vh-section {
+    padding-top: 5rem;
+    padding-bottom: 5rem;
+  }
+  .vh-section-thin {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -285,11 +364,6 @@ h3 { font-size: clamp(1.1rem, 2vw, 1.75rem) !important; }
   background: var(--orange);
 }
 
-/* Ensure focus rings are always visible and brand-colored */
-:focus-visible {
-  outline: 2px solid #F97316 !important;
-  outline-offset: 3px !important;
-}
 
 /* Light background text — used in education/workplace cream sections */
 .bg-cream p {
@@ -388,9 +462,9 @@ body.reduce-cognitive [class*="gradient"], body.reduce-cognitive [class*="glow"]
 .nav-dropdown-inner {
   background: #1C1409;
   border: 1px solid #3A2A14;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   padding: 8px;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255,255,255,0.04);
 }
 
 .nav-chevron {
@@ -411,9 +485,9 @@ body.reduce-cognitive [class*="gradient"], body.reduce-cognitive [class*="glow"]
   display: flex;
   flex-direction: column;
   padding: 10px 14px;
-  border-radius: 7px;
+  border-radius: var(--radius-md);
   text-decoration: none;
-  transition: background 0.15s;
+  transition: background var(--transition-fast);
   cursor: pointer;
 }
 
@@ -436,7 +510,7 @@ body.reduce-cognitive [class*="gradient"], body.reduce-cognitive [class*="glow"]
 }
 
 .nav-dropdown-item:hover .nav-dropdown-label {
-  color: #E8621A;
+  color: var(--orange);
 }
 
 /* Profile dropdown — right-aligned variant */
@@ -483,344 +557,26 @@ h4 { font-size: 18px !important; }
   color: #A09080;
 }
 
-/* ═══════════════════════════════════════════════
-   GLOBAL LIGHT MODE — applies to entire site
-   Triggered by: data-theme="light" on <html>
-   ═══════════════════════════════════════════════ */
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-secondary); }
+::-webkit-scrollbar-thumb { background: var(--orange); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-dark, #E8621A); }
 
-/* ── DARK SECTIONS: always dark, both themes ──
-   nav, .bg-black*, .dark-section-persistent always use var(--bg-dark) = #000.
-   Footer handled separately below (uses #1A1008 ink tone).
-   var(--text-inverse) = #F0EAE0 — cream text shown on dark backgrounds. */
-[data-theme="light"] nav,
-[data-theme="light"] .navbar,
-[data-theme="light"] header,
-[data-theme="light"] .bg-black,
-[data-theme="light"] .bg-black-2,
-[data-theme="light"] .bg-black-3,
-[data-theme="light"] .dark-section-persistent,
-[data-theme="light"] .dark-page-persistent {
-  background-color: var(--bg-dark) !important;
-  color: var(--text-inverse) !important;
+/* ── FOCUS RING ── */
+:focus-visible {
+  outline: 2px solid var(--orange) !important;
+  outline-offset: 3px !important;
+  border-radius: 2px;
 }
 
-/* Children of dark sections get light (cream) text */
-[data-theme="light"] nav h1, [data-theme="light"] nav h2, [data-theme="light"] nav h3,
-[data-theme="light"] nav p, [data-theme="light"] nav a,
-[data-theme="light"] .dark-section-persistent h1,
-[data-theme="light"] .dark-section-persistent h2,
-[data-theme="light"] .dark-section-persistent h3,
-[data-theme="light"] .dark-section-persistent h4,
-[data-theme="light"] .dark-section-persistent p,
-[data-theme="light"] .dark-section-persistent li,
-[data-theme="light"] .dark-section-persistent span:not([class*="text-orange"]):not([class*="text-gold"]):not([class*="text-orange-DEFAULT"]),
-[data-theme="light"] .dark-page-persistent h1,
-[data-theme="light"] .dark-page-persistent h2,
-[data-theme="light"] .dark-page-persistent h3,
-[data-theme="light"] .dark-page-persistent p,
-[data-theme="light"] .dark-page-persistent li {
-  color: var(--text-inverse) !important;
-}
-
-/* Muted/grey text in dark sections — readable warm grey */
-[data-theme="light"] .dark-section-persistent .text-grey-DEFAULT,
-[data-theme="light"] .dark-section-persistent [class*="text-grey"],
-[data-theme="light"] .dark-section-persistent .text-\[\#D1D5DB\],
-[data-theme="light"] .dark-section-persistent .text-\[\#E5E7EB\] {
-  color: #C0B0A0 !important;
-}
-
-/* Light mode dropdown inner wrapper */
-[data-theme="light"] .nav-dropdown-inner {
-  background: #FFFFFF;
-  border-color: #D8D0C4;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-}
-[data-theme="light"] .nav-dropdown-item:hover { background: #F5EDE0; }
-[data-theme="light"] .nav-dropdown-label { color: #1A1008; }
-[data-theme="light"] .nav-dropdown-desc  { color: #6A5A44; }
-[data-theme="light"] .nav-dropdown-item:hover .nav-dropdown-label { color: #D4560F; }
-[data-theme="light"] .nav-dropdown-item button,
-[data-theme="light"] .nav-dropdown-item.w-full { background: transparent; }
-[data-theme="light"] button.nav-dropdown-item { background: transparent; }
-[data-theme="light"] button.nav-dropdown-item:hover { background: #F5EDE0; }
-
-/* Base — tokens handle these; this is a fallback for browsers without cascade layers */
-[data-theme="light"] body {
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-}
-
-/* ─── NAVIGATION — always dark background to preserve logo legibility ─── */
-[data-theme="light"] nav,
-[data-theme="light"] .navbar,
-[data-theme="light"] header {
-  background: #000000 !important;
-  border-bottom: 2px solid var(--orange) !important;
-}
-/* Nav links: light grey so they're readable on the dark navbar */
-[data-theme="light"] nav .nav-link,
-[data-theme="light"] nav a.font-mono {
-  color: #CCCCCC !important;
-}
-[data-theme="light"] nav .nav-link:hover,
-[data-theme="light"] nav a.font-mono:hover {
-  color: var(--orange) !important;
-}
-[data-theme="light"] nav .text-\[var\(--grey\)\] {
-  color: #CCCCCC !important;
-}
-[data-theme="light"] .nav-logo,
-[data-theme="light"] .topbar-logo {
-  color: var(--orange);
-}
-
-/* ─── HERO SECTIONS ─── */
-[data-theme="light"] .hero,
-[data-theme="light"] [class*="hero"],
-[data-theme="light"] section:first-of-type {
-  background: #F5F0E8;
-}
-[data-theme="light"] .hero h1,
-[data-theme="light"] .hero h2,
-[data-theme="light"] [class*="hero"] h1,
-[data-theme="light"] [class*="hero"] h2 {
-  color: #1A1008;
-}
-[data-theme="light"] .hero p,
-[data-theme="light"] [class*="hero"] p {
-  color: #4A3828;
-}
-
-/* ─── ALL SECTION BACKGROUNDS ─── */
-[data-theme="light"] section,
-[data-theme="light"] .section,
-[data-theme="light"] main,
-[data-theme="light"] .page-content {
-  background-color: #F5F0E8;
-  color: #1A1008;
-}
-
-/* Alternating section backgrounds */
-[data-theme="light"] section:nth-of-type(even),
-[data-theme="light"] .section-alt {
-  background-color: #EDE8DC;
-}
-
-/* ─── CARDS ─── */
-[data-theme="light"] .card,
-[data-theme="light"] [class*="card"],
-[data-theme="light"] .course-card,
-[data-theme="light"] .track-card,
-[data-theme="light"] .program-card,
-[data-theme="light"] .feature-card,
-[data-theme="light"] .problem-card,
-[data-theme="light"] .format-card {
-  background: #FFFFFF;
-  border-color: #D8D0C4;
-  color: #1A1008;
-}
-[data-theme="light"] .card:hover,
-[data-theme="light"] [class*="card"]:hover {
-  border-color: #D4560F;
-  box-shadow: 0 4px 20px rgba(212, 86, 15, 0.12);
-}
-[data-theme="light"] .card h3,
-[data-theme="light"] [class*="card"] h3,
-[data-theme="light"] .card h4,
-[data-theme="light"] [class*="card"] h4 {
-  color: #1A1008;
-}
-[data-theme="light"] .card p,
-[data-theme="light"] [class*="card"] p {
-  color: #4A3828;
-}
-
-/* ─── ALL HEADINGS ─── */
-[data-theme="light"] h1,
-[data-theme="light"] h2,
-[data-theme="light"] h3,
-[data-theme="light"] h4,
-[data-theme="light"] h5,
-[data-theme="light"] h6 {
-  color: #1A1008;
-}
-
-/* ─── ALL BODY TEXT ─── */
-[data-theme="light"] p,
-[data-theme="light"] li,
-[data-theme="light"] span:not(.nav-dropdown-desc):not([class*="badge"]):not([class*="tag"]) {
-  color: #2A1E10;
-}
-
-/* ─── STAT BLOCKS / METRIC SECTIONS ─── */
-[data-theme="light"] .stat,
-[data-theme="light"] [class*="stat"],
-[data-theme="light"] .metric,
-[data-theme="light"] [class*="metric"] {
-  background: #FFFFFF;
-  border-color: #D8D0C4;
-  color: #1A1008;
-}
-[data-theme="light"] .stat-number,
-[data-theme="light"] [class*="stat-number"] {
-  color: #D4560F;
-}
-[data-theme="light"] .stat-label,
-[data-theme="light"] [class*="stat-label"] {
-  color: #4A3828;
-}
-
-/* ─── COURSE/TRACK/PROGRAM LISTING SECTIONS ─── */
-[data-theme="light"] .course-number,
-[data-theme="light"] .track-number,
-[data-theme="light"] [class*="-number"] {
-  color: #D4560F;
-}
-[data-theme="light"] .course-tag,
-[data-theme="light"] [class*="-tag"],
-[data-theme="light"] [class*="-badge"] {
-  background: rgba(212, 86, 15, 0.1);
-  color: #D4560F;
-  border-color: rgba(212, 86, 15, 0.25);
-}
-
-/* ─── CTA SECTIONS ─── */
-[data-theme="light"] .cta-section,
-[data-theme="light"] [class*="cta"],
-[data-theme="light"] .cta-strip {
-  background: #1A1008;  
-  color: #F0EAE0;
-}
-[data-theme="light"] .cta-section h2,
-[data-theme="light"] .cta-section p {
-  color: #F0EAE0;
-}
-
-/* ─── FOOTER ─── */
-[data-theme="light"] footer,
-[data-theme="light"] .footer {
-  background: #1A1008;
-  color: #F0EAE0;
-  border-top: 1px solid #3A2A18;
-}
-[data-theme="light"] footer h4,
-[data-theme="light"] .footer h4 {
-  color: #F0EAE0;
-}
-[data-theme="light"] footer a,
-[data-theme="light"] .footer a {
-  color: #C0A880;
-}
-[data-theme="light"] footer a:hover,
-[data-theme="light"] .footer a:hover {
-  color: #E8621A;
-}
-
-/* ─── LESSON PLAYER PAGES ─── */
-[data-theme="light"] .topbar {
-  background: #FFFFFF;
-  border-bottom: 1px solid #D8D0C4;
-}
-[data-theme="light"] .topbar-logo { color: #D4560F; }
-[data-theme="light"] .topbar-title { color: #3A2A18; }
-[data-theme="light"] .topbar-divider { color: #B0A090; }
-[data-theme="light"] .topbar-pct { color: #4A3828; }
-
-[data-theme="light"] .sidebar {
-  background: #EDE8DC;
-  border-right: 1px solid #D0C8BC;
-}
-[data-theme="light"] .sidebar-section-label { color: #6A5A44; }
-[data-theme="light"] .sidebar-tab {
-  background: #FFFFFF;
-  border-color: #D0C8BC;
-  color: #1A1008;
-}
-[data-theme="light"] .sidebar-tab.active {
-  border-color: #D4560F;
-  background: #FDF6EE;
-}
-[data-theme="light"] .tab-title { color: #1A1008; }
-[data-theme="light"] .tab-number-label { color: #6A5A44; }
-
-[data-theme="light"] .lesson-item { color: #1A1008; border-color: #D0C8BC; }
-[data-theme="light"] .lesson-item:hover { background: #F0EAE0; }
-[data-theme="light"] .lesson-item.active { background: #FDF6EE; border-color: #D4560F; }
-[data-theme="light"] .lesson-title { color: #1A1008; }
-[data-theme="light"] .lesson-dur { color: #6A5A44; }
-
-[data-theme="light"] .main-content,
-[data-theme="light"] .lesson-content,
-[data-theme="light"] .module-content {
-  background: #F5F0E8;
-  color: #1A1008;
-}
-[data-theme="light"] .lesson-body p,
-[data-theme="light"] .module-body p { color: #2A1E10; }
-[data-theme="light"] .lesson-body h2,
-[data-theme="light"] .lesson-body h3,
-[data-theme="light"] .module-body h2,
-[data-theme="light"] .module-body h3 { color: #1A1008; }
-
-[data-theme="light"] .callout {
-  background: #FDF6EE;
-  border-left-color: #D4560F;
-  color: #2A1E10;
-}
-[data-theme="light"] .key-concept {
-  background: #FFFFFF;
-  border-color: #D0C8BC;
-  border-top-color: #A8863C;
-}
-[data-theme="light"] .key-concept-label { color: #A8863C; }
-[data-theme="light"] .practice-box {
-  background: rgba(212, 86, 15, 0.04);
-  border-color: rgba(212, 86, 15, 0.2);
-}
-
-[data-theme="light"] .quiz-option {
-  background: #FFFFFF;
-  border-color: #D0C8BC;
-  color: #1A1008;
-}
-[data-theme="light"] .quiz-option:hover { border-color: #D4560F; background: #FDF6EE; }
-[data-theme="light"] .quiz-option.selected { border-color: #D4560F; background: rgba(212,86,15,0.07); }
-[data-theme="light"] .quiz-letter { background: #EDE8DC; color: #4A3828; border-color: #D0C8BC; }
-
-/* ─── FORMS & INPUTS ─── */
-[data-theme="light"] input,
-[data-theme="light"] textarea,
-[data-theme="light"] select {
-  background: #FFFFFF;
-  border-color: #D0C8BC;
-  color: #1A1008;
-}
-[data-theme="light"] input::placeholder,
-[data-theme="light"] textarea::placeholder { color: #9C8A70; }
-[data-theme="light"] input:focus,
-[data-theme="light"] textarea:focus { border-color: #D4560F; outline-color: #D4560F; }
-
-/* ─── ACCESSIBILITY WIDGET PANEL ─── */
-[data-theme="light"] .a11y-panel {
-  background: #FFFFFF;
-  border-color: #D0C8BC;
-  color: #1A1008;
-}
-[data-theme="light"] .a11y-section-label { color: #6A5A44; border-color: #D0C8BC; }
-[data-theme="light"] .a11y-row-label { color: #2A1E10; }
-[data-theme="light"] .seg-btn { color: #2A1E10; border-color: #C0B8AC; }
-[data-theme="light"] .seg-btn:hover:not(.active) { border-color: #D4560F; color: #D4560F; }
-[data-theme="light"] .toggle-switch:not(.on) { background: #C0B8AC; }
-
-
-/* ── BUTTON "OPEN APP" FIX 5 ── */
+/* ── BTN OPEN APP ── */
 .btn-open-app {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 14px 28px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: #E8621A;
   color: #FFFFFF;
   border: none;
@@ -830,34 +586,20 @@ h4 { font-size: 18px !important; }
   cursor: pointer;
   font-family: var(--font-dm, sans-serif);
   text-decoration: none;
-  transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
-  box-shadow: 0 4px 16px rgba(232, 98, 26, 0.35);
+  transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+  box-shadow: 0 4px 16px rgba(232,98,26,0.35);
 }
-
 .btn-open-app:hover {
   background: #F07030;
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(232, 98, 26, 0.5);
+  box-shadow: 0 8px 24px rgba(232,98,26,0.5);
 }
-
 .btn-open-app:active {
   background: #C9501A;
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(232, 98, 26, 0.3);
 }
 
-/* Light mode for button Open App */
-[data-theme="light"] .btn-open-app {
-  background: #D4560F;
-  box-shadow: 0 4px 16px rgba(212, 86, 15, 0.3);
-}
-[data-theme="light"] .btn-open-app:hover {
-  background: #E8621A;
-  box-shadow: 0 8px 24px rgba(212, 86, 15, 0.45);
-}
-
-
-/* ── A11Y TRIGGER & PANEL CSS (FIX 3 + 4) ── */
+/* ── ACCESSIBILITY TRIGGER ── */
 .a11y-trigger {
   position: fixed;
   bottom: 28px;
@@ -865,7 +607,7 @@ h4 { font-size: 18px !important; }
   z-index: 9999;
   width: 56px;
   height: 56px;
-  border-radius: 16px;           /* rounded square, not circle — more modern */
+  border-radius: 16px;
   background: linear-gradient(135deg, #E8621A, #C9502E);
   border: none;
   cursor: pointer;
@@ -874,20 +616,15 @@ h4 { font-size: 18px !important; }
   align-items: center;
   justify-content: center;
   gap: 2px;
-  box-shadow: 0 4px 16px rgba(232, 98, 26, 0.45), 0 2px 8px rgba(0,0,0,0.3);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  box-shadow: 0 4px 16px rgba(232,98,26,0.45), 0 2px 8px rgba(0,0,0,0.3);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
-
 .a11y-trigger:hover {
   transform: translateY(-2px) scale(1.04);
-  box-shadow: 0 8px 24px rgba(232, 98, 26, 0.55), 0 4px 12px rgba(0,0,0,0.3);
+  box-shadow: 0 8px 24px rgba(232,98,26,0.55), 0 4px 12px rgba(0,0,0,0.3);
   background: linear-gradient(135deg, #F07030, #D4560F);
 }
-
-.a11y-trigger:active {
-  transform: translateY(0) scale(0.98);
-}
-
+.a11y-trigger:active { transform: translateY(0) scale(0.98); }
 .a11y-trigger-label {
   font-size: 8px;
   font-weight: 800;
@@ -897,7 +634,7 @@ h4 { font-size: 18px !important; }
   line-height: 1;
 }
 
-/* a11y-panel — dark mode base */
+/* ── ACCESSIBILITY PANEL ── */
 .a11y-panel {
   position: fixed;
   top: 0;
@@ -913,34 +650,27 @@ h4 { font-size: 18px !important; }
   transform: translateX(100%);
   transition: transform 0.25s ease;
 }
+.a11y-panel.open { transform: translateX(0); }
 
-.a11y-panel.open {
-  transform: translateX(0);
-}
-
-/* Header */
 .a11y-header {
   padding: 20px 20px 16px;
   border-bottom: 1px solid #3A2A14;
   background: #221A0C;
   flex-shrink: 0;
 }
-
 .a11y-header-title {
   font-family: var(--font-bebas, sans-serif);
   font-size: 20px;
   letter-spacing: 0.08em;
-  color: #F0EAE0;           /* bright cream — high contrast */
+  color: #F0EAE0;
   margin: 0 0 4px 0;
 }
-
 .a11y-header-shortcut {
   font-size: 11px;
-  color: #C9A84C;            /* gold — clearly visible, branded */
+  color: #C9A84C;
   font-family: var(--font-dm, sans-serif);
   letter-spacing: 0.06em;
 }
-
 .a11y-close-btn {
   position: absolute;
   top: 16px;
@@ -953,36 +683,33 @@ h4 { font-size: 18px !important; }
   color: #F0EAE0;
   font-size: 16px;
   cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: background 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition-fast);
 }
 .a11y-close-btn:hover { background: #E8621A; }
 
-/* Scrollable body */
 .a11y-body {
   flex: 1;
   overflow-y: auto;
   padding: 0 0 16px 0;
 }
-.a11y-body::-webkit-scrollbar { width: 4px; }
+.a11y-body::-webkit-scrollbar       { width: 4px; }
 .a11y-body::-webkit-scrollbar-track { background: #1C1409; }
 .a11y-body::-webkit-scrollbar-thumb { background: #3A2A14; border-radius: 2px; }
 
-/* Section labels */
 .a11y-section-label {
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.18em;
-  color: #E8621A;             /* orange — clearly visible section header */
+  color: #E8621A;
   padding: 16px 20px 8px;
   border-left: 3px solid #E8621A;
-  margin-left: 0;
   font-family: var(--font-dm, sans-serif);
   text-transform: uppercase;
   background: rgba(232,98,26,0.04);
 }
-
-/* Row labels */
 .a11y-row {
   display: flex;
   align-items: center;
@@ -990,15 +717,13 @@ h4 { font-size: 18px !important; }
   padding: 12px 20px;
   border-bottom: 1px solid rgba(58,42,20,0.5);
 }
-
 .a11y-row-label {
-  font-size: 14px;             /* was too small — now clearly legible */
+  font-size: 14px;
   font-weight: 500;
-  color: #E8DDD0;              /* near-white — high contrast on dark panel */
+  color: #E8DDD0;
   font-family: var(--font-dm, sans-serif);
   line-height: 1.3;
 }
-
 .a11y-row-desc {
   font-size: 11px;
   color: #9C8A70;
@@ -1006,44 +731,23 @@ h4 { font-size: 18px !important; }
 }
 
 /* Segmented buttons */
-.seg-btn-group {
-  display: flex;
-  gap: 5px;
-  flex-shrink: 0;
-}
-
+.seg-btn-group { display: flex; gap: 5px; flex-shrink: 0; }
 .seg-btn {
   padding: 5px 12px;
   border-radius: 6px;
   border: 1px solid #4A3828;
   background: transparent;
-  color: #C8BDB0;              /* light enough to read on dark bg */
+  color: #C8BDB0;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all var(--transition-fast);
   font-family: var(--font-dm, sans-serif);
 }
+.seg-btn.active { background: #E8621A; border-color: #E8621A; color: #FFFFFF; }
+.seg-btn:hover:not(.active) { border-color: #E8621A; color: #E8621A; }
 
-.seg-btn.active {
-  background: #E8621A;
-  border-color: #E8621A;
-  color: #FFFFFF;
-}
-
-.seg-btn:hover:not(.active) {
-  border-color: #E8621A;
-  color: #E8621A;
-}
-
-/* Text size control */
-.text-size-control {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-}
-
+.text-size-control { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .text-size-btn {
   width: 28px; height: 28px;
   border-radius: 6px;
@@ -1053,10 +757,9 @@ h4 { font-size: 18px !important; }
   font-size: 16px; font-weight: 700;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  transition: all 0.15s;
+  transition: all var(--transition-fast);
 }
 .text-size-btn:hover { background: #E8621A; border-color: #E8621A; }
-
 .text-size-value {
   font-size: 14px;
   font-weight: 700;
@@ -1090,7 +793,6 @@ h4 { font-size: 18px !important; }
 }
 .toggle-switch.on::after { transform: translateX(20px); }
 
-/* Footer Links for A11y Panel */
 .a11y-footer {
   padding: 16px 20px 24px;
   border-top: 1px solid #3A2A14;
@@ -1099,7 +801,6 @@ h4 { font-size: 18px !important; }
   gap: 10px;
   margin-top: 8px;
 }
-
 .a11y-reset-btn {
   width: 100%;
   padding: 10px;
@@ -1112,12 +813,9 @@ h4 { font-size: 18px !important; }
   cursor: pointer;
   font-family: var(--font-dm, sans-serif);
   letter-spacing: 0.04em;
-  transition: all 0.15s;
+  transition: all var(--transition-fast);
 }
-.a11y-reset-btn:hover {
-  background: #E8621A;
-  color: #FFFFFF;
-}
+.a11y-reset-btn:hover { background: #E8621A; color: #FFFFFF; }
 
 .a11y-statement-link {
   display: block;
@@ -1126,83 +824,8 @@ h4 { font-size: 18px !important; }
   color: #9C8A70;
   text-decoration: none;
   font-family: var(--font-dm, sans-serif);
-  transition: color 0.15s;
+  transition: color var(--transition-fast);
   padding: 4px 0;
 }
 .a11y-statement-link:hover { color: #E8621A; text-decoration: underline; }
 
-
-/* ─── LIGHT MODE: Override hardcoded Tailwind text-white classes in page content ─── */
-/* Main page sections get light backgrounds */
-[data-theme="light"] main > section {
-  background-color: #F5F0E8;
-}
-[data-theme="light"] main > section:nth-of-type(even),
-[data-theme="light"] .bg-zinc-950,
-[data-theme="light"] section.bg-zinc-950 {
-  background-color: #EDE8DC !important;
-}
-[data-theme="light"] .bg-zinc-900:not(nav):not(.a11y-panel):not(.nav-dropdown-inner),
-[data-theme="light"] section.bg-zinc-900 {
-  background-color: #F0EAE0 !important;
-}
-
-/* Headings in light page sections (exclude dark-section-persistent — those stay white) */
-[data-theme="light"] main section:not(.dark-section-persistent):not(.dark-page-persistent) h1,
-[data-theme="light"] main section:not(.dark-section-persistent):not(.dark-page-persistent) h2,
-[data-theme="light"] main section:not(.dark-section-persistent):not(.dark-page-persistent) h3,
-[data-theme="light"] main section:not(.dark-section-persistent):not(.dark-page-persistent) h4 {
-  color: #1A1008 !important;
-}
-
-/* Paragraphs and list items in page sections (excluding persistent dark sections) */
-[data-theme="light"] main section:not(.dark-section-persistent) p,
-[data-theme="light"] main section:not(.dark-section-persistent) li,
-[data-theme="light"] main section:not(.dark-section-persistent) span:not(.text-orange-DEFAULT):not(.text-gold):not([class*="badge"]):not([class*="tag"]):not([class*="tracking"]) {
-  color: #2A1E10;
-}
-
-/* Ensure the footer + CTA dark strips remain dark */
-[data-theme="light"] footer,
-[data-theme="light"] .cta-section,
-[data-theme="light"] section.bg-\[\#1A1008\] {
-  background-color: #1A1008 !important;
-  color: #F0EAE0 !important;
-}
-[data-theme="light"] footer p,
-[data-theme="light"] footer h4,
-[data-theme="light"] footer span,
-[data-theme="light"] footer a {
-  color: #C0A880 !important;
-}
-[data-theme="light"] footer a:hover { color: #E8621A !important; }
-
-/* ───── LIGHT MODE: Custom Tailwind dark color class overrides ───── */
-/* bg-black-* classes -> stay dark or turn light based on section type */
-/* We keep bg-black-4 turning white for general cards/panels that should be light in light mode */
-[data-theme="light"] .bg-black-4:not(nav):not(.a11y-panel):not(.dark-section-persistent),
-[data-theme="light"] [class~="bg-black-4"]:not(nav):not(.a11y-panel):not(.dark-section-persistent) {
-  background-color: #FFFFFF !important;
-  border-color: #D8D0C4 !important;
-}
-
-/* Text that is white on dark backgrounds -> dark on light (excluding persistent sections) */
-[data-theme="light"] main:not(.dark-page-persistent) .text-white:not(.btn-orange):not([class*="badge"]):not(.dark-section-persistent),
-[data-theme="light"] main:not(.dark-page-persistent) [class~="text-white"]:not(.btn-orange):not(.dark-section-persistent),
-[data-theme="light"] main:not(.dark-page-persistent) .text-\[var\(--white\)\]:not(.dark-section-persistent) {
-  color: #1A1008 !important;
-}
-
-[data-theme="light"] main:not(.dark-page-persistent) .text-\[var\(--cream\)\]:not(.dark-section-persistent),
-[data-theme="light"] main:not(.dark-page-persistent) .text-cream:not(.dark-section-persistent) {
-  color: #2A1E10 !important;
-}
-[data-theme="light"] main:not(.dark-page-persistent) .text-\[var\(--grey\)\]:not(.dark-section-persistent),
-[data-theme="light"] main:not(.dark-page-persistent) .text-grey-DEFAULT:not(.dark-section-persistent) {
-  color: #4A3828 !important;
-}
-/* Keep orange text orange in light mode */
-[data-theme="light"] .text-\[var\(--orange\)\],
-[data-theme="light"] .text-orange-DEFAULT {
-  color: #D4560F !important;
-}

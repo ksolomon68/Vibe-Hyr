@@ -1,5 +1,4 @@
 import { notFound, redirect } from 'next/navigation'
-import { Navbar } from '@/components/layout/Navbar'
 import { createClient } from '@/lib/supabase/server'
 import { COURSES } from '@/lib/data/courses'
 import { getLessonsForCourse, getLessonQuiz } from '@/lib/data/lessons'
@@ -101,10 +100,7 @@ export default async function LessonPage({
 
       if (!allowed) {
         return (
-          <>
-            <Navbar />
-            <CourseLockedScreen reason={reason!} courseSlug={course.slug} />
-          </>
+          <CourseLockedScreen reason={reason!} courseSlug={course.slug} />
         )
       }
     }
@@ -121,20 +117,17 @@ export default async function LessonPage({
   const nextLesson = idx < lessons.length - 1 ? lessons[idx + 1] : null
 
   return (
-    <>
-      <Navbar />
-      <LessonPlayerClient
-        course={course}
-        lesson={lesson}
-        lessons={lessons}
-        quiz={quiz}
-        completedLessons={completedLessons}
-        passedQuizzes={passedQuizzes}
-        prevLesson={prevLesson}
-        nextLesson={nextLesson}
-        userTier={userTier}
-        isLoggedIn={!!user}
-      />
-    </>
+    <LessonPlayerClient
+      course={course}
+      lesson={lesson}
+      lessons={lessons}
+      quiz={quiz}
+      completedLessons={completedLessons}
+      passedQuizzes={passedQuizzes}
+      prevLesson={prevLesson}
+      nextLesson={nextLesson}
+      userTier={userTier}
+      isLoggedIn={!!user}
+    />
   )
 }

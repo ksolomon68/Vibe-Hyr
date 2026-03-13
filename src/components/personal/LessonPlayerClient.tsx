@@ -6,14 +6,16 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ChevronLeft, ChevronRight, Menu, X, PanelRight,
-  CheckCircle, Lock, ArrowRight, BookOpen, Crown
+  CheckCircle, Lock, ArrowRight, BookOpen, Crown, Sparkles, BrainCircuit, Loader2
 } from 'lucide-react'
 import { VideoPlayer }  from '@/components/personal/VideoPlayer'
 import { LessonContent } from '@/components/personal/LessonContent'
 import { LessonSidebar } from '@/components/personal/LessonSidebar'
 import { LessonQuiz }   from '@/components/personal/LessonQuiz'
+import { AssumptionLab } from '@/components/shared/AssumptionLab'
 
 import { useCourseProgress } from '@/hooks/useCourseProgress'
+import { useLessonNotes } from '@/hooks/useLessonNotes'
 import { cn, formatDuration, getTierLabel } from '@/lib/utils'
 import type { Course, Lesson, Quiz, MembershipTier } from '@/types'
 import toast from 'react-hot-toast'
@@ -47,8 +49,9 @@ export function LessonPlayerClient({
 }: LessonPlayerClientProps) {
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [activeTab,   setActiveTab]   = useState<Tab>('lesson')
-  const [quizPassed,  setQuizPassed]  = useState(() => initialPassed.includes(quiz?.id ?? ''))
+  const [activeTab, setActiveTab] = useState<Tab>('lesson')
+  const [quizPassed, setQuizPassed] = useState(() => initialPassed.includes(quiz?.id ?? ''))
+  const { content: lessonNotes, handleChange: handleNotesChange, saving: notesSaving, saved: notesSaved } = useLessonNotes(lesson.id)
 
   const { markComplete, isComplete, completedIds, percentDone } =
     useCourseProgress(course.id, lessons.length)
@@ -93,93 +96,115 @@ export function LessonPlayerClient({
   return (
     <div className="min-h-screen bg-black flex flex-col">
       {/* ─── TOP BAR ─────────────────────────────────────────────── */}
-      <div className="h-[52px] bg-black-2 border-b-2 border-orange-DEFAULT flex items-center justify-between px-5 flex-shrink-0 relative z-30">
+      <div className="h-[64px] bg-[#0E0C08] border-b border-white/5 flex items-center justify-between px-6 flex-shrink-0 relative z-30">
         {/* Left: back + breadcrumb */}
-        <div className="flex items-center gap-3 min-w-0">
-          <Link href="/" className="font-display text-[1rem] tracking-widest text-orange-DEFAULT hidden sm:block">
+        <div className="flex items-center gap-4 min-w-0">
+          <Link href="/" className="font-display text-xl tracking-widest text-[#E8621A] hover:opacity-80 transition-opacity hidden sm:block">
             VIBE<span className="text-white">HYR</span>
           </Link>
-          <span className="text-grey-dark text-xs flex-shrink-0 hidden sm:block">/</span>
+          <span className="text-white/10 text-xs flex-shrink-0 hidden sm:block">/</span>
           <Link
             href={`/courses/${course.slug}`}
-            className="flex items-center gap-1.5 text-grey-dark hover:text-orange-DEFAULT transition-colors flex-shrink-0"
+            className="flex items-center gap-2 text-white/40 hover:text-[#E8621A] transition-colors flex-shrink-0"
           >
-            <span className="font-mono text-[0.55rem] tracking-[0.15em] uppercase hidden md:block">
+            <span className="font-mono text-[0.6rem] tracking-[0.2em] uppercase hidden md:block">
               {course.title}
             </span>
-            <span className="font-mono text-[0.55rem] tracking-[0.15em] uppercase md:hidden">
+            <span className="font-mono text-[0.6rem] tracking-[0.2em] uppercase md:hidden">
               Courses
             </span>
           </Link>
-          <span className="text-grey-dark text-xs flex-shrink-0">/</span>
-          <span className="font-mono text-[0.55rem] tracking-[0.12em] text-white truncate max-w-[200px] md:max-w-none">
+          <span className="text-white/10 text-xs flex-shrink-0">/</span>
+          <span className="font-mono text-[0.65rem] tracking-[0.15em] text-white/90 truncate max-w-[200px] md:max-w-none uppercase">
             {String(lessonIndex).padStart(2,'0')} — {lesson.title}
           </span>
         </div>
 
         {/* Center: progress bar (desktop only) */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden lg:flex items-center gap-3">
-          <span className="font-mono text-[0.52rem] tracking-[0.2em] uppercase text-grey-dark">
-            {lessonIndex} of {lessons.length}
-          </span>
-          <div className="w-32 h-px bg-black-4 relative">
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden lg:flex items-center gap-4">
+          <div className="w-40 h-[2px] bg-white/5 relative rounded-full overflow-hidden">
             <div
-              className="absolute left-0 top-0 h-px bg-orange-DEFAULT transition-all duration-500"
+              className="absolute left-0 top-0 h-full bg-[#E8621A] transition-all duration-700 ease-out"
               style={{ width: `${percentDone}%` }}
             />
           </div>
-          <span className="font-mono text-[0.52rem] tracking-[0.2em] text-orange-DEFAULT">
+          <span className="font-mono text-[0.6rem] tracking-[0.2em] text-[#E8621A] font-bold">
             {percentDone}%
           </span>
         </div>
 
         {/* Right: nav arrows + sidebar toggle */}
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-3 flex-shrink-0">
           {prevLesson && (
             <Link
               href={`/courses/${course.slug}/${prevLesson.id}`}
-              className="text-grey-dark hover:text-orange-DEFAULT transition-colors p-1"
+              className="text-white/40 hover:text-[#E8621A] transition-colors p-2 hover:bg-white/5 rounded-lg"
               title="Previous lesson"
             >
-              <ChevronLeft size={16} />
+              <ChevronLeft size={18} />
             </Link>
           )}
           {nextLesson && (
             <Link
               href={`/courses/${course.slug}/${nextLesson.id}`}
               className={cn(
-                'p-1 transition-colors',
+                'p-2 transition-colors rounded-lg',
                 canAdvance
-                  ? 'text-grey-dark hover:text-orange-DEFAULT'
-                  : 'text-grey-dark/30 cursor-not-allowed pointer-events-none'
+                  ? 'text-white/40 hover:text-[#E8621A] hover:bg-white/5'
+                  : 'text-white/10 cursor-not-allowed pointer-events-none'
               )}
               title={canAdvance ? 'Next lesson' : 'Complete quiz to advance'}
             >
-              <ChevronRight size={16} />
+              <ChevronRight size={18} />
             </Link>
           )}
           <button
             onClick={() => setSidebarOpen(o => !o)}
             className={cn(
-              'ml-1 p-1.5 transition-colors hidden lg:block',
+              'ml-1 p-2 transition-colors hidden lg:block rounded-lg hover:bg-white/5',
               sidebarOpen
-                ? 'text-orange-DEFAULT'
-                : 'text-grey-dark hover:text-orange-DEFAULT'
+                ? 'text-[#E8621A]'
+                : 'text-white/40 hover:text-[#E8621A]'
             )}
             title="Toggle sidebar"
           >
-            <PanelRight size={16} />
+            <PanelRight size={20} />
           </button>
         </div>
       </div>
 
       {/* ─── BODY ───────────────────────────────────────────────── */}
-      <div className="flex flex-1 min-h-0 overflow-hidden">
+      <div className="flex flex-1 min-h-0 overflow-hidden flex-col lg:flex-row-reverse">
+        
+        {/* ── SIDEBAR (desktop) ── */}
+        <AnimatePresence>
+          {sidebarOpen && (
+            <motion.div
+              key="sidebar"
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 320, opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: 'easeInOut' }}
+              className="hidden lg:block flex-shrink-0 overflow-hidden border-l border-white/5 bg-[#0E0C08]/80 backdrop-blur-xl"
+              style={{ width: 320 }}
+            >
+              <div className="w-[320px] h-full">
+                <LessonSidebar
+                  course={course}
+                  lessons={lessons}
+                  currentLesson={lesson}
+                  completedIds={completedIds.length > 0 ? completedIds : initialCompleted}
+                  hasAccess={true}
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* ── MAIN CONTENT ── */}
-        <div className="flex-1 flex flex-col overflow-y-auto min-w-0">
+        <div className="flex-1 flex flex-col overflow-y-auto min-w-0 bg-[#0E0C08]">
 
-          {/* Video player */}
+          {/* Video player AT TOP */}
           <VideoPlayer
             videoUrl={lesson.video_url}
             lessonId={lesson.id}
@@ -190,66 +215,118 @@ export function LessonPlayerClient({
           />
 
           {/* Content area */}
-          <div className="flex-1 max-w-3xl w-full mx-auto px-6 md:px-10 py-10">
+          <div className="flex-1 max-w-3xl w-full mx-auto px-6 md:px-10 py-10 lg:py-16">
 
             {/* Lesson header */}
-            <div className="mb-8">
-              <div className="flex items-center gap-3 mb-3 flex-wrap">
-                <span className="font-mono text-[0.55rem] tracking-[0.2em] uppercase text-orange-DEFAULT">
-                  Lesson {String(lessonIndex).padStart(2,'0')} · {formatDuration(lesson.duration_seconds)}
-                </span>
-                {lesson.is_preview && (
-                  <span className="font-mono text-[0.5rem] tracking-widest uppercase px-2 py-0.5 border border-green-400 text-green-400">
-                    Preview
-                  </span>
-                )}
-                {isLessonDone && (
-                  <span className="font-mono text-[0.5rem] tracking-widest uppercase px-2 py-0.5 border border-orange-DEFAULT text-orange-DEFAULT flex items-center gap-1">
-                    <CheckCircle size={9} /> Complete
-                  </span>
-                )}
+            <div className="mb-10">
+              <div className="flex items-center gap-4 mb-4">
+                 <div className="h-10 w-10 rounded-full border-2 border-[#E8621A] flex items-center justify-center flex-shrink-0">
+                    <span className="text-[10px] font-bold text-[#E8621A] uppercase tracking-tighter">{lesson.order_index}</span>
+                 </div>
+                 <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-mono text-[0.55rem] tracking-[0.2em] uppercase text-orange-DEFAULT/60">
+                         Module {lesson.order_index}
+                      </span>
+                      {lesson.is_preview && (
+                        <span className="font-mono text-[0.5rem] tracking-widest uppercase px-2 py-0.5 border border-green-400 text-green-400">
+                          Preview
+                        </span>
+                      )}
+                      {isLessonDone && (
+                        <span className="font-mono text-[0.5rem] tracking-widest uppercase px-2 py-0.5 border border-orange-DEFAULT text-orange-DEFAULT flex items-center gap-1">
+                          <CheckCircle size={9} /> Complete
+                        </span>
+                      )}
+                    </div>
+                    <h1 className="font-display text-[clamp(1.8rem,4vw,3.5rem)] leading-[0.95] tracking-[0.02em] text-white">
+                      {lesson.title}
+                    </h1>
+                 </div>
               </div>
-              <h1 className="font-display text-[clamp(1.8rem,4vw,3.5rem)] leading-[0.95] tracking-[0.02em] text-white mb-3">
-                {lesson.title}
-              </h1>
               {lesson.description && (
-                <p className="font-body text-base italic text-grey-DEFAULT leading-relaxed">
+                <p className="font-body text-base italic text-grey-DEFAULT leading-relaxed max-w-2xl">
                   {lesson.description}
                 </p>
               )}
             </div>
 
-            {/* Tab switcher (Lesson / Quiz) */}
-            {hasQuiz && (
-              <div className="flex gap-[2px] bg-orange-DEFAULT border border-orange-DEFAULT mb-10 w-fit">
-                {(['lesson', 'quiz'] as const).map(tab => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={cn(
-                      'font-mono text-[0.6rem] tracking-[0.2em] uppercase px-6 py-2.5 transition-colors',
-                      activeTab === tab
-                        ? 'bg-orange-DEFAULT text-black font-bold'
-                        : 'bg-black-2 text-grey-DEFAULT hover:text-white'
-                    )}
-                  >
-                    {tab === 'lesson' ? 'Lesson Notes' : `Quiz ${quizPassed ? '✓' : ''}`}
-                  </button>
-                ))}
-              </div>
+            {/* ── ASSUMPTION LABS ── */}
+            {activeTab === 'lesson' && lesson.id === 'c01-l01' && (
+              <AssumptionLab 
+                title="The 11 Million Bit Filter"
+                subtitle="Exposing the Invisible Ceiling"
+                scenario="Usually, you see 'closed stores' or 'sold out' signs in your neighborhood. Your RAS is programmed to protect you by finding evidence of lack."
+                prompt="What one opportunity has your RAS been filtering out because it didn't fit your old story of 'not enough'?"
+                accentColor="#E8621A"
+              />
             )}
 
-            {/* Lesson content */}
+            {activeTab === 'lesson' && lesson.id === 'c02-l02' && (
+              <AssumptionLab 
+                title="Thinking From vs. Of"
+                subtitle="The Tactile Shift"
+                scenario="You are currently 'thinking of' a beach (distance/wanting). Shift to 'thinking from' the beach (possession), while remembering the old desk as a distant dream."
+                prompt="Describe the tactile feeling of the sand under your feet while remembering the old 'office self' as a distant, separate character."
+                accentColor="#C9A84C"
+              />
+            )}
+
+            {/* ── TABS ── */}
+            <div className="flex items-center gap-8 border-b border-white/5 mb-8">
+              <button
+                onClick={() => setActiveTab('lesson')}
+                className={cn(
+                  'pb-4 text-[0.65rem] tracking-[0.2em] uppercase font-mono transition-all relative',
+                  activeTab === 'lesson' ? 'text-[#E8621A]' : 'text-white/30 hover:text-white/60'
+                )}
+              >
+                01. Lesson
+                {activeTab === 'lesson' && (
+                  <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#E8621A]" />
+                )}
+              </button>
+
+              {hasQuiz && (
+                <button
+                  onClick={() => setActiveTab('quiz')}
+                  className={cn(
+                    'pb-4 text-[0.65rem] tracking-[0.2em] uppercase font-mono transition-all relative',
+                    activeTab === 'quiz' ? 'text-[#E8621A]' : 'text-white/30 hover:text-white/60'
+                  )}
+                >
+                  02. Quiz
+                  {activeTab === 'quiz' && (
+                    <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#E8621A]" />
+                  )}
+                </button>
+              )}
+
+              <button
+                onClick={() => setActiveTab('notes')}
+                className={cn(
+                  'pb-4 text-[0.65rem] tracking-[0.2em] uppercase font-mono transition-all relative',
+                  activeTab === 'notes' ? 'text-[#E8621A]' : 'text-white/30 hover:text-white/60'
+                )}
+              >
+                03. My Notes
+                {activeTab === 'notes' && (
+                  <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#E8621A]" />
+                )}
+              </button>
+            </div>
+
+            {/* ── TAB CONTENT ── */}
             <AnimatePresence mode="wait">
-              {activeTab === 'lesson' && lesson.content_md && (
+              {activeTab === 'lesson' && (
                 <motion.div
-                  key="lesson"
+                  key="content"
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <LessonContent content={lesson.content_md} />
+                  <LessonContent content={lesson.content_md || ''} />
                 </motion.div>
               )}
 
@@ -265,6 +342,34 @@ export function LessonPlayerClient({
                     quiz={quiz}
                     onPass={handleQuizPass}
                     alreadyPassed={quizPassed}
+                  />
+                </motion.div>
+              )}
+
+              {activeTab === 'notes' && (
+                <motion.div
+                  key="notes"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="min-h-[400px] flex flex-col"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="font-body text-sm text-white/40 italic">
+                      Your insights and action steps for this lesson…
+                    </p>
+                    <div className="flex items-center gap-2">
+                       {notesSaving && <Loader2 size={12} className="text-[#E8621A] animate-spin" />}
+                       {notesSaved && <span className="font-mono text-[0.6rem] tracking-widest text-[#E8621A]">All changes saved</span>}
+                    </div>
+                  </div>
+                    <textarea
+                    className="flex-1 w-full bg-white/5 border border-white/5 rounded-xl p-6 text-white font-body text-lg leading-relaxed
+                               focus:bg-white/[0.08] focus:border-[#E8621A]/30 outline-none transition-all resize-none min-h-[400px]"
+                    placeholder="Capture your thoughts here…"
+                    value={lessonNotes || ''}
+                    onChange={(e) => handleNotesChange(e.target.value)}
                   />
                 </motion.div>
               )}
@@ -405,30 +510,6 @@ export function LessonPlayerClient({
           </div>
         </div>
 
-        {/* ── SIDEBAR (desktop) ── */}
-        <AnimatePresence>
-          {sidebarOpen && (
-            <motion.div
-              key="sidebar"
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: 320, opacity: 1 }}
-              exit={{ width: 0, opacity: 0 }}
-              transition={{ duration: 0.2, ease: 'easeInOut' }}
-              className="hidden lg:block flex-shrink-0 overflow-hidden"
-              style={{ width: 320 }}
-            >
-              <div className="w-[320px] h-full">
-                <LessonSidebar
-                  course={course}
-                  lessons={lessons}
-                  currentLesson={lesson}
-                  completedIds={completedIds.length > 0 ? completedIds : initialCompleted}
-                  hasAccess={true}
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
 
       {/* ─── MOBILE SIDEBAR DRAWER ─────────────────────────────── */}

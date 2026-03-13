@@ -6,6 +6,10 @@ import EducationReflection from './EducationReflection'
 import { PlayerProgressBars } from '@/components/shared/PlayerProgressBars'
 import { PlayerVideoPlaceholder } from '@/components/shared/PlayerVideoPlaceholder'
 import { PlayerNav } from '@/components/shared/PlayerNav'
+import { AssumptionLab } from '@/components/shared/AssumptionLab'
+import { useLessonNotes } from '@/hooks/useLessonNotes'
+import { Loader2, CheckCircle } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { PROGRAMS, EducationModule, EducationProgram } from '@/lib/education/curriculum'
 
 interface EducationModulePlayerProps {
@@ -16,6 +20,7 @@ interface EducationModulePlayerProps {
   completedMap:     Record<string, boolean>
   onMarkComplete:   (moduleId: string) => void
   onNavigate:       (programIdx: number, moduleIdx: number) => void
+  isLoggedIn:       boolean
 }
 
 export default function EducationModulePlayer({
@@ -26,7 +31,11 @@ export default function EducationModulePlayer({
   completedMap,
   onMarkComplete,
   onNavigate,
+  isLoggedIn,
 }: EducationModulePlayerProps) {
+  const [activeTab, setActiveTab] = React.useState<'lesson' | 'notes'>('lesson')
+  const { content: notes, handleChange: handleNotesChange, saving: notesSaving, saved: notesSaved } = useLessonNotes(module.id)
+
   const isDone     = completedMap[module.id]
   const totalMods  = program.modules.length
   const completedCount = program.modules.filter(m => completedMap[m.id]).length
@@ -64,26 +73,10 @@ export default function EducationModulePlayer({
     >
       <div style={{ maxWidth: 780, margin: '0 auto', padding: '48px 28px 80px' }}>
 
-        {/* Breadcrumb */}
-        <nav aria-label="Breadcrumb" style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', color: 'var(--p-gray)', textTransform: 'uppercase', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Link href="/educators" style={{ color: 'var(--p-gray)', textDecoration: 'none' }} className="hover:text-[var(--p-orange)]">Educators</Link>
-          <span style={{ color: 'var(--p-muted)' }}>›</span>
-          <button onClick={() => onNavigate(activeProgramIdx, 0)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--p-gray)', fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' }}
-            className="hover:text-[var(--p-orange)]"
-          >
-            {program.title}
-          </button>
-          <span style={{ color: 'var(--p-muted)' }}>›</span>
-          <span style={{ color: 'var(--p-cream-dim)' }}>Module {module.num}</span>
-        </nav>
-
-        {/* Progress bars */}
-        <PlayerProgressBars
-          itemLabel="Program"
-          currentCompleted={completedCount}
-          currentTotal={totalMods}
-          overallPct={overallPct}
-        />
+        {/* Video at the absolute top */}
+        <div className="mb-10">
+          <PlayerVideoPlaceholder duration={module.duration} />
+        </div>
 
         {/* Module meta */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 20px', alignItems: 'center', marginBottom: 16 }}>
@@ -91,41 +84,116 @@ export default function EducationModulePlayer({
             Program {program.num} · Module {module.num} of {totalMods}
           </span>
           <span style={{ fontSize: 12, color: 'var(--p-muted)', fontStyle: 'italic' }}>· {module.duration}</span>
-          {module.hasReflection && (
-            <span style={{ fontSize: 9, padding: '2px 8px', background: 'var(--p-orange-dim)', color: 'var(--p-orange)', border: '1px solid var(--p-orange-mid)', borderRadius: 4, fontWeight: 700, letterSpacing: '0.1em' }}>
-              REFLECTION
-            </span>
-          )}
           {isDone && (
             <span style={{ fontSize: 11, color: 'var(--p-orange)', fontWeight: 700, letterSpacing: '0.12em' }}>✓ COMPLETE</span>
           )}
         </div>
 
         {/* Title */}
-        <h1 style={{ fontFamily: 'var(--font-bebas, "Bebas Neue", serif)', fontSize: 'clamp(40px, 6vw, 72px)', color: 'var(--p-cream)', lineHeight: 1.05, letterSpacing: '0.03em', marginBottom: 12 }}>
+        <h1 style={{ fontFamily: 'var(--font-bebas, "Bebas Neue", serif)', fontSize: 'clamp(44px, 6vw, 84px)', color: 'var(--p-cream)', lineHeight: 1.0, letterSpacing: '0.02em', marginBottom: 12 }}>
           {module.title}
         </h1>
-        <p style={{ fontFamily: 'var(--font-cormorant, serif)', fontSize: 'clamp(18px, 2vw, 22px)', color: 'var(--p-gray)', fontStyle: 'italic', lineHeight: 1.5, marginBottom: 40, maxWidth: '90%' }}>
+        <p style={{ fontFamily: 'var(--font-cormorant, serif)', fontSize: 'clamp(18px, 2vw, 24px)', color: 'var(--p-gray)', fontStyle: 'italic', lineHeight: 1.5, marginBottom: 48, maxWidth: '90%' }}>
           {module.subtitle}
         </p>
 
-        {/* Video placeholder */}
-        <PlayerVideoPlaceholder duration={module.duration} />
+        {/* Tabs */}
+        <div className="flex items-center gap-8 border-b border-white/10 mb-8">
+          <button
+            onClick={() => setActiveTab('lesson')}
+            className={cn(
+              'pb-4 text-[0.65rem] tracking-[0.2em] uppercase font-mono transition-all relative',
+              activeTab === 'lesson' ? 'text-[var(--p-orange)]' : 'text-white/30 hover:text-white/60'
+            )}
+          >
+            01. Lesson
+            {activeTab === 'lesson' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--p-orange)]" />
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('notes')}
+            className={cn(
+              'pb-4 text-[0.65rem] tracking-[0.2em] uppercase font-mono transition-all relative',
+              activeTab === 'notes' ? 'text-[var(--p-orange)]' : 'text-white/30 hover:text-white/60'
+            )}
+          >
+            02. My Notes
+            {activeTab === 'notes' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--p-orange)]" />
+            )}
+          </button>
+        </div>
 
-        {/* Module content */}
-        <div
-          className="module-body"
-          style={{ fontSize: 16, color: 'var(--p-cream-dim)', lineHeight: 1.8 }}
-          dangerouslySetInnerHTML={{ __html: module.content }}
-        />
+        {activeTab === 'lesson' ? (
+          <>
+            {/* Module content */}
+            <div
+              className="content-area mb-12"
+              style={{ fontSize: 17, color: 'rgba(255,255,255,0.75)', lineHeight: 1.8 }}
+              dangerouslySetInnerHTML={{ __html: module.content }}
+            />
 
-        {/* Reflection quiz */}
-        {module.hasReflection && module.quiz && (
-          <EducationReflection
-            quiz={module.quiz}
-            moduleId={module.id}
-            onComplete={() => onMarkComplete(module.id)}
-          />
+            {/* Assumption Lab - Integrated into Educators */}
+            {module.hasReflection && (
+              <div className="my-16">
+                {module.id === 'ed01-m03' ? (
+                  <AssumptionLab 
+                    title="Co-Regulation Move"
+                    subtitle="From Defiance to Biological Safety"
+                    scenario="A student is shouting in the hallway. Your immediate assumption (and physiological response) is 'Defiance' or 'Disrespect'."
+                    prompt="If you shifted your assumption to 'Safety/Biological Emergency', how would your first 10 seconds of interaction (voice, proximity, eye contact) change?"
+                    accentColor="var(--p-orange)"
+                    onComplete={() => !module.quiz && onMarkComplete(module.id)}
+                  />
+                ) : module.id === 'ed01-m01' ? (
+                  <AssumptionLab 
+                    title="The Regulated Leader"
+                    subtitle="The Morning Pivot"
+                    scenario="A chaotic morning commute or personal issue has you in a state of 'Survival' before the first bell ever rings."
+                    prompt="How would leading from a deliberate 'Sovereign' assumption change your very first interaction with a difficult colleague today?"
+                    accentColor="var(--p-orange)"
+                    onComplete={() => !module.quiz && onMarkComplete(module.id)}
+                  />
+                ) : (
+                  <AssumptionLab 
+                    title="Identity Workshop"
+                    subtitle="Reflecting on Your Educational Standard"
+                    prompt={`In the context of "${module.title}", what is one assumption you've held about your students or your environment that no longer serves the standard you're building?`}
+                    onComplete={() => !module.quiz && onMarkComplete(module.id)}
+                  />
+                )}
+              </div>
+            )}
+
+            {/* Reflection quiz */}
+            {module.hasReflection && module.quiz && (
+              <EducationReflection
+                quiz={module.quiz}
+                moduleId={module.id}
+                onComplete={() => onMarkComplete(module.id)}
+              />
+            )}
+          </>
+        ) : (
+          <div className="min-h-[400px] flex flex-col mb-12">
+            <div className="flex items-center justify-between mb-4">
+              <p className="font-body text-sm text-white/40 italic">
+                Your insights and action steps for this module…
+              </p>
+              <div className="flex items-center gap-2">
+                 {notesSaving && <Loader2 size={12} className="text-[var(--p-orange)] animate-spin" />}
+                 {notesSaved && <span className="font-mono text-[0.6rem] tracking-widest text-[var(--p-orange)]">All changes saved</span>}
+              </div>
+            </div>
+              <textarea
+              className="flex-1 w-full bg-white/5 border border-white/5 rounded-xl p-6 text-white font-body text-lg leading-relaxed
+                         focus:bg-white/[0.08] focus:border-[var(--p-orange)]/30 outline-none transition-all resize-none min-h-[400px]"
+              placeholder="Capture your thoughts here…"
+              value={notes || ''}
+              onChange={(e) => handleNotesChange(e.target.value)}
+            />
+          </div>
         )}
 
         {/* Nav buttons */}
