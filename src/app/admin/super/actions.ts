@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { sendEmail } from '@/lib/email/resend'
 import { passwordResetTemplate } from '@/lib/email/templates'
+import { createClient as createPublicClient } from '@/lib/supabase/client'
 
 type ActionResult = { success: boolean; error?: string }
 
@@ -375,29 +376,18 @@ export async function sendPasswordResetEmail(
   const sa = await requireSuperAdmin()
   if (!sa) return { success: false, error: 'Unauthorized' }
 
-  const admin = createAdminClient()
+  const supabase = createPublicClient()
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com'
 
-  const { data, error } = await admin.auth.admin.generateLink({
-    type: 'recovery',
-    email: userEmail,
-    options: { redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password` },
+  const { error } = await supabase.auth.resetPasswordForEmail(userEmail, {
+    redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password`,
   })
-  if (error || !data?.properties?.action_link) {
-    return { success: false, error: error?.message ?? 'Could not generate reset link' }
-  }
 
-  try {
-    await sendEmail({
-      to: userEmail,
-      subject: 'Reset your Vibe Hyr password',
-      html: passwordResetTemplate(data.properties.action_link),
-    })
-  } catch (e: any) {
-    return { success: false, error: e.message ?? 'Failed to send email' }
+  if (error) {
+    return { success: false, error: error.message ?? 'Could not send reset email' }
   }
 
   await logAudit(sa.userId, sa.email, 'PASSWORD_RESET_EMAIL_SENT', 'user', userId, userName,
-    `Reset link sent to ${userEmail}`)
+    `Reset email triggered to ${userEmail}`)
   return { success: true }
 }

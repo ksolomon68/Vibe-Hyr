@@ -14,15 +14,15 @@ export default function ForgotPasswordPage() {
     e.preventDefault()
     setLoading(true)
     try {
-      const res = await fetch('/api/email/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+      const { createClient } = await import('@/lib/supabase/client')
+      const supabase = createClient()
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/callback?next=/auth/reset-password`,
       })
-      if (!res.ok) throw new Error('Failed to send reset email')
+      if (error) throw error
       setSent(true)
-    } catch {
-      toast.error('Something went wrong. Please try again.')
+    } catch (err: any) {
+      toast.error(err.message || 'Something went wrong. Please try again.')
       setLoading(false)
     }
   }

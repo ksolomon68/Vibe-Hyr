@@ -56,7 +56,7 @@ export default function AccessibilityPage() {
   return (
     <>
       <Navbar />
-      <main className="pt-[68px] min-h-screen bg-black">
+      <main className="pt-[68px] min-h-screen bg-black dark-page-persistent">
         {/* Hero */}
         <section className="py-20 px-6 md:px-14 border-b border-white/8">
           <div className="max-w-4xl mx-auto">

@@ -1092,32 +1092,52 @@ html.light-mode footer a {
 }
 html.light-mode footer a:hover { color: #E8621A !important; }
 
-/* ─── LIGHT MODE: Custom Tailwind dark color class overrides ─── */
-/* bg-black-* classes → light cream backgrounds */
-html.light-mode .bg-black-DEFAULT,
-html.light-mode .bg-black-2:not(nav):not(.a11y-panel),
-html.light-mode .bg-black-3:not(nav):not(.a11y-panel),
-html.light-mode .bg-black-4:not(nav):not(.a11y-panel),
-html.light-mode [class~="bg-black-2"]:not(nav):not(.a11y-panel),
-html.light-mode [class~="bg-black-3"]:not(nav):not(.a11y-panel),
-html.light-mode [class~="bg-black-4"]:not(nav):not(.a11y-panel) {
+/* ───── LIGHT MODE: Custom Tailwind dark color class overrides ───── */
+/* bg-black-* classes -> stay dark or turn light based on section type */
+/* We keep bg-black-4 turning white for general cards/panels that should be light in light mode */
+html.light-mode .bg-black-4:not(nav):not(.a11y-panel):not(.dark-section-persistent),
+html.light-mode [class~="bg-black-4"]:not(nav):not(.a11y-panel):not(.dark-section-persistent) {
   background-color: #FFFFFF !important;
   border-color: #D8D0C4 !important;
 }
-/* Text that is white on dark backgrounds → dark on light */
-html.light-mode main .text-white:not(.btn-orange):not([class*="badge"]),
-html.light-mode main [class~="text-white"]:not(.btn-orange) {
+
+/* Ensure bg-black and bg-black-2/3 remain dark in light mode as requested */
+html.light-mode .bg-black-DEFAULT,
+html.light-mode .bg-black,
+html.light-mode .bg-black-2,
+html.light-mode .bg-black-3 {
+  background-color: #000000 !important; /* or their respective dark colors */
+  color: #FFFFFF !important;
+}
+
+/* Global persistent dark page/section overrides */
+html.light-mode .dark-page-persistent,
+html.light-mode .dark-section-persistent {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+}
+html.light-mode .dark-page-persistent h1,
+html.light-mode .dark-page-persistent h2,
+html.light-mode .dark-page-persistent h3,
+html.light-mode .dark-page-persistent p,
+html.light-mode .dark-page-persistent li,
+html.light-mode .dark-page-persistent span:not(.text-orange-DEFAULT):not(.text-gold) {
+  color: #FFFFFF !important;
+}
+
+/* Text that is white on dark backgrounds -> dark on light (excluding persistent sections) */
+html.light-mode main:not(.dark-page-persistent) .text-white:not(.btn-orange):not([class*="badge"]):not(.dark-section-persistent),
+html.light-mode main:not(.dark-page-persistent) [class~="text-white"]:not(.btn-orange):not(.dark-section-persistent),
+html.light-mode main:not(.dark-page-persistent) .text-\[var\(--white\)\]:not(.dark-section-persistent) {
   color: #1A1008 !important;
 }
-html.light-mode main .text-\[var\(--white\)\] {
-  color: #1A1008 !important;
-}
-html.light-mode main .text-\[var\(--cream\)\],
-html.light-mode main .text-cream {
+
+html.light-mode main:not(.dark-page-persistent) .text-\[var\(--cream\)\]:not(.dark-section-persistent),
+html.light-mode main:not(.dark-page-persistent) .text-cream:not(.dark-section-persistent) {
   color: #2A1E10 !important;
 }
-html.light-mode main .text-\[var\(--grey\)\],
-html.light-mode main .text-grey-DEFAULT {
+html.light-mode main:not(.dark-page-persistent) .text-\[var\(--grey\)\]:not(.dark-section-persistent),
+html.light-mode main:not(.dark-page-persistent) .text-grey-DEFAULT:not(.dark-section-persistent) {
   color: #4A3828 !important;
 }
 /* Keep orange text orange in light mode */
