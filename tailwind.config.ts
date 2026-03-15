@@ -12,10 +12,10 @@ const config: Config = {
       colors: {
         // Brand
         orange: {
-          DEFAULT: '#FF7B00',
-          light:   '#FF9A33',
-          lighter: '#FFB566',
-          dark:    '#CC6200',
+          DEFAULT: '#E8621A',
+          light:   '#F07840',
+          lighter: '#F59060',
+          dark:    '#C04E10',
         },
         // Blacks
         black: {

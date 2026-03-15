@@ -3,11 +3,11 @@ import Link from 'next/link'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { createClient } from '@/lib/supabase/server'
-import { COURSES } from '@/lib/data/courses'
 import { getTierLabel, getStreakMessage } from '@/lib/utils'
 import { Flame, BookOpen, Target, Users, ArrowRight, Crown, Sparkles } from 'lucide-react'
 import { PersonalUpgradeButton } from '@/components/pricing/PersonalUpgradeButton'
 import type { PersonalTier } from '@/components/pricing/PersonalCheckoutModal'
+import type { Course } from '@/types'
 
 export const metadata = { title: 'Dashboard' }
 
@@ -33,6 +33,16 @@ export default async function DashboardPage() {
     .eq('user_id', user.id)
     .eq('status', 'active')
 
+  const { data: courses } = await supabase
+    .from('courses')
+    .select('*')
+    .order('order_index')
+
+  const { data: courseProgress } = await supabase
+    .from('course_progress')
+    .select('*')
+    .eq('user_id', user.id)
+
   const tier        = profile?.membership_tier ?? 'free'
   const streak      = profile?.journal_streak  ?? 0
   const totalJournal = journalEntries?.length   ?? 0
@@ -44,7 +54,7 @@ export default async function DashboardPage() {
   const QUICK_LINKS = [
     { href: '/journal',   icon: BookOpen, label: 'Tonight\'s Revision', desc: 'Open the nightly journal' },
     { href: '/courses',   icon: Target,   label: 'Continue Course',     desc: 'Pick up where you left off' },
-    { href: '/quizzes',   icon: Sparkles, label: 'Take a Quiz',         desc: 'Test your implementation' },
+    { href: '/personal',  icon: Sparkles, label: 'Take a Quiz',         desc: 'Test your implementation' },
     { href: '/community', icon: Users,    label: 'Community',           desc: 'Share your bridge' },
   ]
 
@@ -147,11 +157,12 @@ export default async function DashboardPage() {
               <div className="lg:col-span-2">
                 <h2 className="font-display text-2xl tracking-widest text-white mb-5">YOUR COURSES</h2>
                 <div className="flex flex-col gap-3">
-                  {COURSES.map((course, i) => {
+                  {(courses ?? []).map((course, i) => {
                     const tierRank: Record<string, number> = { free: 0, architect: 1, elite: 2 }
-                    const hasAccess  = tierRank[tier] >= tierRank[course.tier]
+                    const hasAccess  = profile?.is_super_admin || tierRank[tier] >= tierRank[course.tier]
                     // Determine which personal tier unlocks this course
                     const courseTier: PersonalTier = course.tier === 'elite' ? 'reality-master' : 'architect'
+                    const progress = courseProgress?.find(p => p.course_id === course.id)?.progress_percent ?? 0
 
                     return (
                       <div
@@ -170,7 +181,7 @@ export default async function DashboardPage() {
                           </p>
                           {hasAccess && (
                             <div className="mt-2 h-px bg-black-4">
-                              <div className="h-px bg-orange" style={{ width: '0%' }} />
+                              <div className="h-px bg-orange" style={{ width: `${progress}%` }} />
                             </div>
                           )}
                         </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Check, X } from 'lucide-react'
+import { Check, X, Diamond } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
@@ -15,9 +15,9 @@ import './pricing.css'
 // ─── Institutional pricing data ────────────────────────────────────────────
 const ORG_PRICING = {
   corporate: {
-    seeker:          { prices: [29,  3.5],  minSeats: 25,  floor: 725  },
-    architect:       { prices: [59,  5.9],  minSeats: 25,  floor: 1475 },
-    'reality-master':{ prices: [99,  9.9],  minSeats: 50,  floor: 4950 },
+    seeker:          { prices: [59,  5.65], minSeats: 25,  floor: 1475 },
+    architect:       { prices: [59,  5.65], minSeats: 25,  floor: 1475 },
+    'reality-master':{ prices: [99,  9.48], minSeats: 50,  floor: 4950 },
   },
   university: {
     seeker:          { prices: [19,  2.25], minSeats: 50,  floor: 950  },
@@ -34,13 +34,6 @@ const ORG_PRICING = {
     architect:       { prices: [65,  6.5],  minSeats: 5,   floor: 325  },
     'reality-master':{ prices: [110, 11.0], minSeats: 10,  floor: 1100 },
   },
-}
-
-const SEG_LABELS: Record<Segment, string> = {
-  corporate:       'Corporate / Enterprise',
-  university:      'University',
-  k12:             'K-12 School',
-  'small-business':'Small Business',
 }
 
 // ─── Individual pricing data ────────────────────────────────────────────────
@@ -68,7 +61,7 @@ const PERSONAL_PLANS = [
     id:       'architect',
     tier:     'architect' as PersonalTier,
     name:     'ARCHITECT',
-    monthly:  27,
+    monthly:  25.88,
     annual:   270,
     tagline:  'The serious practitioner. Full curriculum, daily tools, and community.',
     featured: true,
@@ -87,7 +80,7 @@ const PERSONAL_PLANS = [
     id:       'elite',
     tier:     'reality-master' as PersonalTier,
     name:     'REALITY MASTER',
-    monthly:  67,
+    monthly:  64.21,
     annual:   670,
     tagline:  'The complete system. Every course, every tool, every month.',
     featured: false,
@@ -104,10 +97,25 @@ const PERSONAL_PLANS = [
   },
 ]
 
-type Track = 'individuals' | 'organizations'
+type Track = 'individuals' | 'education' | 'business'
 
 export default function PricingPage() {
   const [track, setTrack] = useState<Track>('individuals')
+
+  const getTrackButtonStyle = (active: boolean) => ({
+    padding: '14px 24px',
+    fontFamily: 'var(--font-dm, "DM Sans", sans-serif)',
+    fontSize: '0.75rem',
+    fontWeight: 800,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.12em',
+    border: '2px solid',
+    borderColor: active ? '#E8621A' : 'rgba(255,255,255,0.25)',
+    background: active ? '#E8621A' : 'rgba(255,255,255,0.12)',
+    color: active ? '#fff' : '#0f172a',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+  })
 
   // ── Individual state ────────────────────────────────────────────────────
   const [personalBilling, setPersonalBilling] = useState<PersonalBilling>('monthly')
@@ -116,7 +124,6 @@ export default function PricingPage() {
 
   // ── Institutional state ─────────────────────────────────────────────────
   const [billing,  setBilling]  = useState<Billing>('annual')
-  const [segment,  setSegment]  = useState<Segment>('corporate')
   const [panelOpen,    setPanelOpen]    = useState(false)
   const [panelTier,    setPanelTier]    = useState<Tier>('architect')
   const [panelBilling, setPanelBilling] = useState<Billing>('annual')
@@ -129,16 +136,17 @@ export default function PricingPage() {
   }
 
   // Org handlers
-  const handleOpenPanel = (tier: Tier) => {
+  const handleOpenPanel = (tier: Tier, segment: Segment) => {
     setPanelTier(tier)
-    setPanelBilling(billing)
     setPanelSegment(segment)
+    setPanelBilling(billing)
     setPanelOpen(true)
   }
 
   const billIdx    = billing === 'annual' ? 0 : 1
   const cycleLabel = billing === 'annual' ? 'year' : 'month'
-  const curPricing = ORG_PRICING[segment]
+  const orgPricingKey = track === 'education' ? 'university' : 'corporate'
+  const curPricing = ORG_PRICING[orgPricingKey]
 
   return (
     <>
@@ -156,33 +164,23 @@ export default function PricingPage() {
             <button
               onClick={() => setTrack('individuals')}
               className="transition-all"
-              style={{
-                padding: '14px 36px',
-                fontFamily: 'var(--font-dm, "DM Sans", sans-serif)',
-                fontSize: '0.75rem', fontWeight: 800,
-                textTransform: 'uppercase', letterSpacing: '0.12em',
-                background: track === 'individuals' ? '#E8621A' : 'transparent',
-                color:      track === 'individuals' ? '#fff' : 'rgba(247,242,234,0.45)',
-                border: '2px solid #E8621A',
-                borderRight: 'none',
-              }}
+              style={getTrackButtonStyle(track === 'individuals')}
             >
-              For Individuals
+              Individuals
             </button>
             <button
-              onClick={() => setTrack('organizations')}
+              onClick={() => setTrack('education')}
               className="transition-all"
-              style={{
-                padding: '14px 36px',
-                fontFamily: 'var(--font-dm, "DM Sans", sans-serif)',
-                fontSize: '0.75rem', fontWeight: 800,
-                textTransform: 'uppercase', letterSpacing: '0.12em',
-                background: track === 'organizations' ? '#E8621A' : 'transparent',
-                color:      track === 'organizations' ? '#fff' : 'rgba(247,242,234,0.45)',
-                border: '2px solid #E8621A',
-              }}
+              style={getTrackButtonStyle(track === 'education')}
             >
-              For Organizations
+              Education
+            </button>
+            <button
+              onClick={() => setTrack('business')}
+              className="transition-all"
+              style={getTrackButtonStyle(track === 'business')}
+            >
+              Business
             </button>
           </div>
         </div>
@@ -195,47 +193,21 @@ export default function PricingPage() {
             <div className="max-w-[1000px] mx-auto">
 
               {/* Billing toggle */}
-              <div className="flex items-center gap-2 mb-10">
-                <button
-                  onClick={() => setPersonalBilling('monthly')}
-                  className="transition-all"
-                  style={{
-                    padding: '10px 24px',
-                    fontFamily: 'var(--font-dm, "DM Sans", sans-serif)',
-                    fontSize: '0.7rem', fontWeight: 700,
-                    textTransform: 'uppercase', letterSpacing: '0.1em',
-                    border: '1.5px solid',
-                    borderColor: personalBilling === 'monthly' ? '#E8621A' : 'rgba(247,242,234,0.2)',
-                    background:  personalBilling === 'monthly' ? '#E8621A' : 'transparent',
-                    color:       personalBilling === 'monthly' ? '#fff' : 'rgba(247,242,234,0.5)',
-                  }}
-                >
-                  Monthly
-                </button>
-                <button
-                  onClick={() => setPersonalBilling('annual')}
-                  className="transition-all flex items-center gap-2"
-                  style={{
-                    padding: '10px 24px',
-                    fontFamily: 'var(--font-dm, "DM Sans", sans-serif)',
-                    fontSize: '0.7rem', fontWeight: 700,
-                    textTransform: 'uppercase', letterSpacing: '0.1em',
-                    border: '1.5px solid',
-                    borderColor: personalBilling === 'annual' ? '#E8621A' : 'rgba(247,242,234,0.2)',
-                    background:  personalBilling === 'annual' ? '#E8621A' : 'transparent',
-                    color:       personalBilling === 'annual' ? '#fff' : 'rgba(247,242,234,0.5)',
-                  }}
-                >
-                  Annual
-                  <span style={{
-                    fontSize: '0.5rem', fontWeight: 800,
-                    padding: '2px 8px', borderRadius: '20px',
-                    background: personalBilling === 'annual' ? 'rgba(255,255,255,0.25)' : '#E8621A',
-                    color: '#fff',
-                  }}>
-                    SAVE 15%
-                  </span>
-                </button>
+              <div className="flex justify-center mb-10">
+                <div className="billing-toggle">
+                  <button
+                    className={`toggle-opt ${personalBilling === 'annual' ? 'active' : ''}`}
+                    onClick={() => setPersonalBilling('annual')}
+                  >
+                    ANNUAL <span className="toggle-badge">SAVE 15%</span>
+                  </button>
+                  <button
+                    className={`toggle-opt ${personalBilling === 'monthly' ? 'active' : ''}`}
+                    onClick={() => setPersonalBilling('monthly')}
+                  >
+                    MONTHLY
+                  </button>
+                </div>
               </div>
 
               {/* Individual plan cards */}
@@ -259,10 +231,9 @@ export default function PricingPage() {
                       key={plan.id}
                       className={cn(
                         'tier-card',
-                        plan.featured && 'featured',
-                        !plan.featured && 'border-b md:border-b-0',
-                        plan.id === 'elite' && 'md:border-l border-white/10',
-                        plan.id === 'free' && 'md:border-r border-white/10',
+                        plan.id === 'free' && 'border-b md:border-b-0 md:border-r border-white/10',
+                        plan.id === 'architect' && 'featured',
+                        plan.id === 'elite' && 'border-t md:border-t-0 md:border-l border-white/10',
                       )}
                     >
                       {plan.featured && (
@@ -284,7 +255,7 @@ export default function PricingPage() {
                             style={{ opacity: f.included ? 1 : 0.35, display: 'flex', alignItems: 'center', gap: '8px' }}
                           >
                             {f.included
-                              ? <Check size={12} style={{ color: '#E8621A', flexShrink: 0 }} />
+                              ? <Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />
                               : <X size={12} style={{ color: 'currentColor', flexShrink: 0 }} />
                             }
                             {f.text}
@@ -328,7 +299,7 @@ export default function PricingPage() {
                 <p style={{ fontSize: '0.75rem', color: 'rgba(247,242,234,0.45)', fontFamily: 'var(--font-dm, "DM Sans", sans-serif)' }}>
                   Purchasing for a team or institution?{' '}
                   <button
-                    onClick={() => setTrack('organizations')}
+                    onClick={() => setTrack('business')}
                     style={{ color: '#E8621A', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit' }}
                   >
                     View organization plans →
@@ -342,11 +313,11 @@ export default function PricingPage() {
         {/* ════════════════════════════════════════════════════════════════════
             ORGANIZATION TRACK
         ════════════════════════════════════════════════════════════════════ */}
-        {track === 'organizations' && (
+        {(track === 'education' || track === 'business') && (
           <>
             <div className="pricing-hero fade-up" style={{ paddingTop: 0 }}>
-              <div className="eyebrow">✦ Institutional & Enterprise Pricing</div>
-              <p>The Architecture of Reality — where cognitive neuroscience meets peak organizational performance.</p>
+              <div className="eyebrow">✦ {track === 'education' ? 'Education' : 'Business'} Institutional Pricing</div>
+              <p>The Architecture of Reality — where cognitive neuroscience meets peak {track === 'education' ? 'educational' : 'organizational'} performance.</p>
 
               <div className="billing-toggle">
                 <button
@@ -363,17 +334,6 @@ export default function PricingPage() {
                 </button>
               </div>
 
-              <div className="segment-row">
-                {(Object.keys(SEG_LABELS) as Segment[]).map(seg => (
-                  <button
-                    key={seg}
-                    className={`seg-btn ${segment === seg ? 'active' : ''}`}
-                    onClick={() => setSegment(seg)}
-                  >
-                    {SEG_LABELS[seg]}
-                  </button>
-                ))}
-              </div>
             </div>
 
             {/* Org tier cards */}
@@ -388,15 +348,15 @@ export default function PricingPage() {
                     <div className="price-amount">${curPricing.seeker.prices[billIdx]}</div>
                   </div>
                   <div className="price-unit">per seat / {cycleLabel} · min {curPricing.seeker.minSeats} seats</div>
-                  <div className="price-floor">{billing === 'annual' ? 'Annual' : 'Monthly'} floor ${curPricing.seeker.floor.toLocaleString()}</div>
+                  <div className="price-floor">{billing === 'annual' ? 'Annual' : 'Monthly'} floor ${(billing === 'annual' ? curPricing.seeker.floor : Math.round(curPricing.seeker.minSeats * curPricing.seeker.prices[1])).toLocaleString()}</div>
                   <hr className="tier-divider my-6" />
                   <ul className="feature-list">
-                    <li>Course 1: Programming the Gatekeeper (RAS)</li>
-                    <li>Mini Identity Audit</li>
-                    <li>Core Content Library</li>
-                    <li>Basic Progress Tracking</li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Course 1: Programming the Gatekeeper (RAS)</li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Mini Identity Audit</li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Core Content Library</li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Basic Progress Tracking</li>
                   </ul>
-                  <button className="btn-outline-orange w-full text-center mt-6" onClick={() => handleOpenPanel('seeker')}>
+                  <button className="btn-outline-orange w-full text-center mt-6" onClick={() => handleOpenPanel('seeker', track === 'education' ? 'university' : 'corporate')}>
                     GET STARTED
                   </button>
                 </div>
@@ -410,16 +370,16 @@ export default function PricingPage() {
                     <div className="price-amount">${curPricing.architect.prices[billIdx]}</div>
                   </div>
                   <div className="price-unit">per seat / {cycleLabel} · min {curPricing.architect.minSeats} seats</div>
-                  <div className="price-floor">{billing === 'annual' ? 'Annual' : 'Monthly'} floor ${curPricing.architect.floor.toLocaleString()}</div>
+                  <div className="price-floor">{billing === 'annual' ? 'Annual' : 'Monthly'} floor ${(billing === 'annual' ? curPricing.architect.floor : Math.round(curPricing.architect.minSeats * curPricing.architect.prices[1])).toLocaleString()}</div>
                   <hr className="tier-divider my-6" />
                   <ul className="feature-list">
-                    <li>Courses 1–3 (RAS, Law of Assumption, SATS)</li>
-                    <li>Full Revision Journal</li>
-                    <li>SATS Diagnostics Engine</li>
-                    <li>Core Community Access</li>
-                    <li>Academic / Leadership Tracker</li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Courses 1–3 (RAS, Law of Assumption, SATS)</li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Full Revision Journal</li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />SATS Diagnostics Engine</li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Core Community Access</li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Academic / Leadership Tracker</li>
                   </ul>
-                  <button className="btn-orange w-full text-center mt-6" onClick={() => handleOpenPanel('architect')}>
+                  <button className="btn-orange w-full text-center mt-6" onClick={() => handleOpenPanel('architect', track === 'education' ? 'university' : 'corporate')}>
                     GET STARTED
                   </button>
                 </div>
@@ -432,17 +392,17 @@ export default function PricingPage() {
                     <div className="price-amount">${curPricing['reality-master'].prices[billIdx]}</div>
                   </div>
                   <div className="price-unit">per seat / {cycleLabel} · min {curPricing['reality-master'].minSeats} seats</div>
-                  <div className="price-floor">{billing === 'annual' ? 'Annual' : 'Monthly'} floor ${curPricing['reality-master'].floor.toLocaleString()}</div>
+                  <div className="price-floor">{billing === 'annual' ? 'Annual' : 'Monthly'} floor ${(billing === 'annual' ? curPricing['reality-master'].floor : Math.round(curPricing['reality-master'].minSeats * curPricing['reality-master'].prices[1])).toLocaleString()}</div>
                   <hr className="tier-divider my-6" />
                   <ul className="feature-list">
-                    <li>All 4 Courses incl. Echo Theory Delay</li>
-                    <li>Full Assumption Lab</li>
-                    <li>Live Weekly Q&amp;As</li>
-                    <li>Full Audio SATS Library</li>
-                    <li>Dedicated Reality Architect</li>
-                    <li>Custom Institutional Onboarding</li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />All 4 Courses incl. Echo Theory Delay</li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Full Assumption Lab</li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Live Weekly Q&amp;As</li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Full Audio SATS Library</li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Dedicated Reality Architect</li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Custom Institutional Onboarding</li>
                   </ul>
-                  <button className="btn-outline-orange w-full text-center mt-6" onClick={() => handleOpenPanel('reality-master')}>
+                  <button className="btn-outline-orange w-full text-center mt-6" onClick={() => handleOpenPanel('reality-master', track === 'education' ? 'university' : 'corporate')}>
                     GET STARTED
                   </button>
                 </div>
@@ -456,42 +416,40 @@ export default function PricingPage() {
               <div className="section-title">The more seats, the greater the impact</div>
 
               <div className="overflow-x-auto">
-                <table className="volume-table min-w-[700px]">
-                  <thead>
-                    <tr>
-                      <th>Seat Range</th>
-                      <th>Discount</th>
-                      <th>Architect / Corp (effective)</th>
-                      <th>Reality Master / Corp</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>25–99 seats</td>
-                      <td>—</td>
-                      <td>$59 / seat</td>
-                      <td>$99 / seat</td>
-                    </tr>
-                    <tr>
-                      <td>100–249 seats</td>
-                      <td><span className="discount-pill">10% off</span></td>
-                      <td>$53.10 / seat</td>
-                      <td>$89.10 / seat</td>
-                    </tr>
-                    <tr>
-                      <td>250–499 seats</td>
-                      <td><span className="discount-pill">18% off</span></td>
-                      <td>$48.38 / seat</td>
-                      <td>$81.18 / seat</td>
-                    </tr>
-                    <tr>
-                      <td>500+ seats</td>
-                      <td><span className="discount-pill">25% off</span></td>
-                      <td>$44.25 / seat</td>
-                      <td>$74.25 / seat</td>
-                    </tr>
-                  </tbody>
-                </table>
+                {(() => {
+                  const archBase = curPricing.architect.prices[billIdx]
+                  const rmBase   = curPricing['reality-master'].prices[billIdx]
+                  const label    = billing === 'annual' ? 'seat / yr' : 'seat / mo'
+                  const trackLabel = track === 'education' ? 'Edu' : 'Corp'
+                  const TIERS = [
+                    { range: `${curPricing.architect.minSeats}–99 seats`, discount: null,   mult: 1 },
+                    { range: '100–249 seats',                             discount: '10%',  mult: 0.90 },
+                    { range: '250–499 seats',                             discount: '18%',  mult: 0.82 },
+                    { range: '500+ seats',                                discount: '25%',  mult: 0.75 },
+                  ]
+                  return (
+                    <table className="volume-table min-w-[700px]">
+                      <thead>
+                        <tr>
+                          <th>Seat Range</th>
+                          <th>Discount</th>
+                          <th>Architect / {trackLabel} (effective)</th>
+                          <th>Reality Master / {trackLabel}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {TIERS.map(({ range, discount, mult }) => (
+                          <tr key={range}>
+                            <td>{range}</td>
+                            <td>{discount ? <span className="discount-pill">{discount} off</span> : '—'}</td>
+                            <td>${(archBase * mult).toFixed(2)} / {label}</td>
+                            <td>${(rmBase   * mult).toFixed(2)} / {label}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )
+                })()}
               </div>
             </div>
 
@@ -526,7 +484,6 @@ export default function PricingPage() {
         isOpen={panelOpen}
         onClose={() => setPanelOpen(false)}
         initialTier={panelTier}
-        initialSegment={panelSegment}
         initialBilling={panelBilling}
       />
     </>
