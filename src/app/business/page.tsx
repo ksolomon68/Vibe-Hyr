@@ -361,15 +361,15 @@ export default function WorkplaceTrainingPage() {
       </section>
 
       {/* PRICING */}
-      <section id="pricing" className="py-24 md:py-32 px-6 md:px-14 bg-zinc-950">
+      <section id="pricing" className="py-24 md:py-32 px-6 md:px-14" style={{ background: '#0E0C08' }}>
         <div className="max-w-7xl mx-auto">
           <motion.div {...FADE_UP} className="text-center mb-20 max-w-2xl mx-auto">
             <span className="text-[0.7rem] uppercase tracking-[0.3em] text-orange-DEFAULT font-bold mb-4 block">Investment</span>
-            <h2 className="font-serif text-4xl md:text-5xl text-white leading-tight">
+            <h2 className="font-display text-5xl md:text-6xl text-white leading-tight">
               Simple, transparent <br/>
-              <span className="text-orange-bright italic">per-seat pricing.</span>
+              <span className="text-orange-DEFAULT">per-seat pricing.</span>
             </h2>
-            <p className="text-white/50 text-sm mt-6">Corporate pricing · Annual billing · Volume discounts available</p>
+            <p className="text-white/60 text-sm mt-6" style={{ color: '#A39785' }}>Corporate pricing · Annual billing · Volume discounts available</p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
@@ -379,19 +379,20 @@ export default function WorkplaceTrainingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
-              className="bg-zinc-900/50 border border-white/5 p-10 rounded-sm flex flex-col"
+              className="flex flex-col p-10 rounded-sm"
+              style={{ background: '#1E1610', border: '1px solid #2E2416' }}
             >
               <div className="mb-8">
-                <span className="text-[0.6rem] uppercase tracking-widest font-bold text-white/40">Seeker</span>
+                <span className="font-mono text-[0.6rem] uppercase tracking-widest font-bold" style={{ color: '#A39785' }}>Seeker</span>
                 <div className="flex items-baseline gap-1 mt-4">
-                  <span className="font-display text-5xl text-white">$29</span>
-                  <span className="text-white/40 text-sm">/seat/yr</span>
+                  <span className="font-display text-6xl" style={{ color: '#E8621A' }}>$29</span>
+                  <span className="text-sm" style={{ color: '#A39785' }}>/seat/yr</span>
                 </div>
-                <p className="text-white/30 text-xs mt-2">Min 25 seats · $725 annual floor</p>
+                <p className="text-xs mt-2" style={{ color: '#A39785' }}>Min 25 seats · $725 annual floor</p>
               </div>
               <ul className="space-y-3 mb-10 flex-1">
                 {['Course 1: Common Sense In The Workplace', 'Daily Revision Journal', 'Core Content Library', 'Basic Progress Tracking'].map(f => (
-                  <li key={f} className="flex gap-3 items-start text-sm text-white/60">
+                  <li key={f} className="flex gap-3 items-start text-sm" style={{ color: '#E2D9C8' }}>
                     <CheckCircle2 size={14} className="text-orange-DEFAULT mt-0.5 flex-shrink-0" />
                     {f}
                   </li>
@@ -411,23 +412,24 @@ export default function WorkplaceTrainingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="bg-zinc-900 border border-orange-DEFAULT/40 p-10 rounded-sm flex flex-col relative -translate-y-2 shadow-2xl shadow-orange-DEFAULT/5"
+              className="flex flex-col p-10 rounded-sm relative -translate-y-2 shadow-2xl"
+              style={{ background: '#1A1208', border: '1px solid #E8621A', boxShadow: '0 0 40px rgba(232,98,26,0.12)' }}
             >
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-DEFAULT via-gold to-orange-DEFAULT rounded-t-sm" />
+              <div className="absolute top-0 left-0 w-full h-[2px] rounded-t-sm" style={{ background: 'linear-gradient(90deg, #E8621A, #C9A84C, #E8621A)' }} />
               <div className="mb-2">
-                <span className="text-[0.55rem] uppercase tracking-widest font-bold px-3 py-1 bg-gold/10 text-gold rounded-full">Most Popular</span>
+                <span className="font-mono text-[0.55rem] uppercase tracking-widest font-bold px-3 py-1 rounded-full" style={{ background: 'rgba(201,168,76,0.12)', color: '#C9A84C' }}>Most Popular</span>
               </div>
               <div className="mb-8">
-                <span className="text-[0.6rem] uppercase tracking-widest font-bold text-orange-DEFAULT">Architect</span>
+                <span className="font-mono text-[0.6rem] uppercase tracking-widest font-bold" style={{ color: '#E8621A' }}>Architect</span>
                 <div className="flex items-baseline gap-1 mt-4">
-                  <span className="font-display text-5xl text-white">$59</span>
-                  <span className="text-white/40 text-sm">/seat/yr</span>
+                  <span className="font-display text-6xl text-white">$39</span>
+                  <span className="text-sm" style={{ color: '#A39785' }}>/seat/yr</span>
                 </div>
-                <p className="text-white/30 text-xs mt-2">Min 25 seats · $1,475 annual floor</p>
+                <p className="text-xs mt-2" style={{ color: '#A39785' }}>Min 25 seats · $975 annual floor</p>
               </div>
               <ul className="space-y-3 mb-10 flex-1">
                 {['Courses 1–3 (Foundation through Self Mastery)', 'Full Revision Journal + SATS Tools', 'Team Diagnostics Engine', 'Community Access', 'Leadership Progress Tracker'].map(f => (
-                  <li key={f} className="flex gap-3 items-start text-sm text-white/70">
+                  <li key={f} className="flex gap-3 items-start text-sm" style={{ color: '#F7F2EA' }}>
                     <CheckCircle2 size={14} className="text-orange-DEFAULT mt-0.5 flex-shrink-0" />
                     {f}
                   </li>
@@ -447,19 +449,20 @@ export default function WorkplaceTrainingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="bg-zinc-900/50 border border-white/5 p-10 rounded-sm flex flex-col"
+              className="flex flex-col p-10 rounded-sm"
+              style={{ background: '#1E1610', border: '1px solid #2E2416' }}
             >
               <div className="mb-8">
-                <span className="text-[0.6rem] uppercase tracking-widest font-bold text-white/40">Reality Master</span>
+                <span className="font-mono text-[0.6rem] uppercase tracking-widest font-bold" style={{ color: '#A39785' }}>Reality Master</span>
                 <div className="flex items-baseline gap-1 mt-4">
-                  <span className="font-display text-5xl text-white">$99</span>
-                  <span className="text-white/40 text-sm">/seat/yr</span>
+                  <span className="font-display text-6xl" style={{ color: '#E8621A' }}>$49</span>
+                  <span className="text-sm" style={{ color: '#A39785' }}>/seat/yr</span>
                 </div>
-                <p className="text-white/30 text-xs mt-2">Min 50 seats · $4,950 annual floor</p>
+                <p className="text-xs mt-2" style={{ color: '#A39785' }}>Min 25 seats · $1,225 annual floor</p>
               </div>
               <ul className="space-y-3 mb-10 flex-1">
                 {['All 4 Training Tracks', 'Live Weekly Group Sessions', 'Full Audio & SATS Library', 'Dedicated Culture Coach', 'Custom Organizational Onboarding'].map(f => (
-                  <li key={f} className="flex gap-3 items-start text-sm text-white/60">
+                  <li key={f} className="flex gap-3 items-start text-sm" style={{ color: '#E2D9C8' }}>
                     <CheckCircle2 size={14} className="text-orange-DEFAULT mt-0.5 flex-shrink-0" />
                     {f}
                   </li>
@@ -475,7 +478,7 @@ export default function WorkplaceTrainingPage() {
           </div>
 
           <motion.div {...FADE_UP} className="mt-12 text-center">
-            <p className="text-white/30 text-sm mb-4">Volume discounts: 10% (100+ seats) · 18% (250+ seats) · 25% (500+ seats)</p>
+            <p className="text-sm mb-4" style={{ color: '#A39785' }}>Volume discounts: 5% off (100+ seats) · ~10% off (500+ seats)</p>
             <Link href="/pricing" className="text-orange-DEFAULT text-[0.7rem] uppercase tracking-widest font-bold hover:text-orange-bright transition-colors">
               View Full Pricing Calculator →
             </Link>

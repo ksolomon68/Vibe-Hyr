@@ -69,8 +69,8 @@ export default function CoursesPage() {
             <span className="font-mono text-[0.58rem] tracking-[0.25em] uppercase text-grey-dark">Access Key:</span>
             <div className="flex flex-wrap gap-4">
               <span className="badge-free">Free — Seeker</span>
-              <span className="badge-architect">Pro — Architect ($27/mo)</span>
-              <span className="badge-elite">Elite — Reality Master ($67/mo)</span>
+              <span className="badge-architect">Pro — Architect ($19/mo)</span>
+              <span className="badge-elite">Elite — Reality Master ($29/mo)</span>
             </div>
           </div>
         </section>

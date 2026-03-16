@@ -41,9 +41,9 @@ const FADE_UP = {
 }
 
 const STATS = [
-  { num: '44%', desc: 'of new teachers leave the profession within the first five years', source: 'Department of Education' },
-  { num: '75%', desc: 'of educators report seeing students struggle with dysregulation daily', source: 'Teacher Wellness Survey' },
-  { num: '80%', desc: 'of teachers experience chronic stress that impacts their classroom climate', source: 'NEA Health Monitoring' }
+  { val: '44', unit: '%', desc: 'of new teachers leave the profession within the first five years' },
+  { val: '75', unit: '%', desc: 'of educators report seeing students struggle with dysregulation daily' },
+  { val: '80', unit: '%', desc: 'of teachers experience chronic stress that impacts their classroom climate' }
 ]
 
 const PROBLEMS = [
@@ -117,14 +117,18 @@ export default function EducationPage() {
       <Navbar />
       
       {/* HERO */}
-      <section className="relative min-h-[90vh] flex items-center px-6 md:px-14 overflow-hidden">
-        {/* BG Grid */}
-        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
-             style={{ backgroundImage: 'linear-gradient(#ffffff 1.5px, transparent 1.5px), linear-gradient(90deg, #ffffff 1.5px, transparent 1.5px)', backgroundSize: '60px 60px' }} />
-        <div className="absolute top-0 right-0 w-[60%] h-full bg-radial-at-tr from-orange-DEFAULT/15 via-transparent to-transparent pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[50%] h-[60%] bg-radial-at-bl from-teal/10 via-transparent to-transparent pointer-events-none" />
+      <section className="relative min-h-[95vh] flex items-center px-6 md:px-14 overflow-hidden">
+        {/* Dynamic BG */}
+        <div className="absolute inset-0 z-0 h-full w-full">
+          <div className="absolute top-0 right-0 w-[70%] h-full bg-radial-at-tr from-orange-DEFAULT/15 via-transparent to-transparent blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-[50%] h-[60%] bg-radial-at-bl from-gold/5 via-transparent to-transparent blur-3xl" />
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] opacity-10" />
+        </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        {/* Diagonal Line */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1px] h-full bg-gradient-to-b from-transparent via-orange-DEFAULT/20 to-transparent rotate-12 pointer-events-none" />
+
+        <div className="relative z-10 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
           <motion.div 
             initial={{ opacity: 0, x: -30 }} 
             animate={{ opacity: 1, x: 0 }} 
@@ -162,25 +166,23 @@ export default function EducationPage() {
           </motion.div>
 
           {/* Stat Card */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }} 
-            animate={{ opacity: 1, scale: 1 }} 
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="bg-ink p-10 md:p-14 rounded-sm border border-orange-DEFAULT/20 shadow-2xl relative overflow-hidden group"
+            className="bg-zinc-900/50 backdrop-blur-xl border border-white/10 p-10 md:p-14 rounded-sm relative overflow-hidden"
           >
             <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-orange-DEFAULT via-gold to-transparent" />
-            <p className="text-gold text-[0.7rem] uppercase tracking-[0.3em] font-bold mb-10">The State of the Educator</p>
-            
-            {STATS.map((stat, idx) => (
-              <div key={idx} className={`pb-8 mb-8 border-b border-white/5 last:border-0 last:mb-0 last:pb-0`}>
-                <h3 className="text-orange-bright font-display text-5xl md:text-6xl mb-2">{stat.num}</h3>
-                <p className="text-white/60 text-sm leading-relaxed max-w-xs">{stat.desc}</p>
-              </div>
-            ))}
-            
-            <p className="mt-10 pt-8 border-t border-white/5 text-[0.6rem] text-white/20 uppercase tracking-widest">
-              Sources: NEA, Department of Education
-            </p>
+            <p className="text-gold text-[0.7rem] uppercase tracking-[0.3em] font-bold mb-12">The State of the Educator</p>
+            <div className="space-y-10">
+              {STATS.map((stat, idx) => (
+                <div key={idx} className="flex items-baseline gap-2 pb-6 border-b border-white/5 last:border-0 last:pb-0">
+                  <span className="font-display text-5xl md:text-6xl text-orange-bright">{stat.val}</span>
+                  <span className="text-2xl text-orange-DEFAULT font-bold">{stat.unit}</span>
+                  <p className="text-white/40 text-xs ml-4 max-w-[200px]">{stat.desc}</p>
+                </div>
+              ))}
+            </div>
           </motion.div>
         </div>
       </section>
@@ -421,15 +423,15 @@ export default function EducationPage() {
       </section>
 
       {/* PRICING */}
-      <section id="pricing" className="py-24 md:py-32 px-6 md:px-14 bg-black">
+      <section id="pricing" className="py-24 md:py-32 px-6 md:px-14" style={{ background: '#0E0C08' }}>
         <div className="max-w-7xl mx-auto">
           <motion.div {...FADE_UP} className="text-center mb-20 max-w-2xl mx-auto">
             <span className="text-[0.7rem] uppercase tracking-[0.3em] text-orange-DEFAULT font-bold mb-4 block">Investment</span>
-            <h2 className="font-serif text-4xl md:text-5xl text-white leading-tight">
+            <h2 className="font-display text-5xl md:text-6xl text-white leading-tight">
               Budget-friendly pricing <br/>
-              <span className="text-orange-bright italic">for every district.</span>
+              <span className="text-orange-DEFAULT">for every district.</span>
             </h2>
-            <p className="text-white/50 text-sm mt-6">K–12 pricing · Annual billing · Volume discounts available</p>
+            <p className="text-sm mt-6" style={{ color: '#A39785' }}>Education pricing · Annual billing · Volume discounts available</p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
@@ -439,19 +441,20 @@ export default function EducationPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
-              className="bg-zinc-900/50 border border-white/5 p-10 rounded-sm flex flex-col"
+              className="flex flex-col p-10 rounded-sm"
+              style={{ background: '#1E1610', border: '1px solid #2E2416' }}
             >
               <div className="mb-8">
-                <span className="text-[0.6rem] uppercase tracking-widest font-bold text-white/40">Seeker</span>
+                <span className="font-mono text-[0.6rem] uppercase tracking-widest font-bold" style={{ color: '#A39785' }}>Seeker</span>
                 <div className="flex items-baseline gap-1 mt-4">
-                  <span className="font-display text-5xl text-white">$12</span>
-                  <span className="text-white/40 text-sm">/seat/yr</span>
+                  <span className="font-display text-6xl" style={{ color: '#E8621A' }}>$19</span>
+                  <span className="text-sm" style={{ color: '#A39785' }}>/seat/yr</span>
                 </div>
-                <p className="text-white/30 text-xs mt-2">Min 30 seats · $360 annual floor</p>
+                <p className="text-xs mt-2" style={{ color: '#A39785' }}>Min 50 seats · $950 annual floor</p>
               </div>
               <ul className="space-y-3 mb-10 flex-1">
                 {['The Educator Reset (Track 1)', 'Staff Reflection Journal', 'Core Content Library', 'Basic Staff Progress Tracking'].map(f => (
-                  <li key={f} className="flex gap-3 items-start text-sm text-white/60">
+                  <li key={f} className="flex gap-3 items-start text-sm" style={{ color: '#E2D9C8' }}>
                     <CheckCircle2 size={14} className="text-orange-DEFAULT mt-0.5 flex-shrink-0" />
                     {f}
                   </li>
@@ -471,23 +474,24 @@ export default function EducationPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="bg-zinc-900 border border-orange-DEFAULT/40 p-10 rounded-sm flex flex-col relative -translate-y-2 shadow-2xl shadow-orange-DEFAULT/5"
+              className="flex flex-col p-10 rounded-sm relative -translate-y-2 shadow-2xl"
+              style={{ background: '#1A1208', border: '1px solid #E8621A', boxShadow: '0 0 40px rgba(232,98,26,0.12)' }}
             >
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-DEFAULT via-gold to-orange-DEFAULT rounded-t-sm" />
+              <div className="absolute top-0 left-0 w-full h-[2px] rounded-t-sm" style={{ background: 'linear-gradient(90deg, #E8621A, #C9A84C, #E8621A)' }} />
               <div className="mb-2">
-                <span className="text-[0.55rem] uppercase tracking-widest font-bold px-3 py-1 bg-gold/10 text-gold rounded-full">Most Popular</span>
+                <span className="font-mono text-[0.55rem] uppercase tracking-widest font-bold px-3 py-1 rounded-full" style={{ background: 'rgba(201,168,76,0.12)', color: '#C9A84C' }}>Most Popular</span>
               </div>
               <div className="mb-8">
-                <span className="text-[0.6rem] uppercase tracking-widest font-bold text-orange-DEFAULT">Architect</span>
+                <span className="font-mono text-[0.6rem] uppercase tracking-widest font-bold" style={{ color: '#E8621A' }}>Architect</span>
                 <div className="flex items-baseline gap-1 mt-4">
-                  <span className="font-display text-5xl text-white">$24</span>
-                  <span className="text-white/40 text-sm">/seat/yr</span>
+                  <span className="font-display text-6xl text-white">$39</span>
+                  <span className="text-sm" style={{ color: '#A39785' }}>/seat/yr</span>
                 </div>
-                <p className="text-white/30 text-xs mt-2">Min 30 seats · $720 annual floor</p>
+                <p className="text-xs mt-2" style={{ color: '#A39785' }}>Min 50 seats · $1,950 annual floor</p>
               </div>
               <ul className="space-y-3 mb-10 flex-1">
                 {['Tracks 1–3 (Reset, Leadership, Co-Regulation)', 'Full Reflection Journal + SATS Tools', 'Staff Diagnostics Engine', 'Admin Dashboard & Wellness Reporting', 'Academic Leadership Tracker'].map(f => (
-                  <li key={f} className="flex gap-3 items-start text-sm text-white/70">
+                  <li key={f} className="flex gap-3 items-start text-sm" style={{ color: '#F7F2EA' }}>
                     <CheckCircle2 size={14} className="text-orange-DEFAULT mt-0.5 flex-shrink-0" />
                     {f}
                   </li>
@@ -507,19 +511,20 @@ export default function EducationPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="bg-zinc-900/50 border border-white/5 p-10 rounded-sm flex flex-col"
+              className="flex flex-col p-10 rounded-sm"
+              style={{ background: '#1E1610', border: '1px solid #2E2416' }}
             >
               <div className="mb-8">
-                <span className="text-[0.6rem] uppercase tracking-widest font-bold text-white/40">Reality Master</span>
+                <span className="font-mono text-[0.6rem] uppercase tracking-widest font-bold" style={{ color: '#A39785' }}>Reality Master</span>
                 <div className="flex items-baseline gap-1 mt-4">
-                  <span className="font-display text-5xl text-white">$45</span>
-                  <span className="text-white/40 text-sm">/seat/yr</span>
+                  <span className="font-display text-6xl" style={{ color: '#E8621A' }}>$49</span>
+                  <span className="text-sm" style={{ color: '#A39785' }}>/seat/yr</span>
                 </div>
-                <p className="text-white/30 text-xs mt-2">Min 50 seats · $2,250 annual floor</p>
+                <p className="text-xs mt-2" style={{ color: '#A39785' }}>Min 50 seats · $2,450 annual floor</p>
               </div>
               <ul className="space-y-3 mb-10 flex-1">
                 {['All 4 Staff Training Tracks', 'Live Weekly Q&As', 'Full Audio & SATS Library', 'Dedicated Wellness Coordinator', 'District-Level Culture Reporting'].map(f => (
-                  <li key={f} className="flex gap-3 items-start text-sm text-white/60">
+                  <li key={f} className="flex gap-3 items-start text-sm" style={{ color: '#E2D9C8' }}>
                     <CheckCircle2 size={14} className="text-orange-DEFAULT mt-0.5 flex-shrink-0" />
                     {f}
                   </li>
@@ -535,7 +540,7 @@ export default function EducationPage() {
           </div>
 
           <motion.div {...FADE_UP} className="mt-12 text-center">
-            <p className="text-white/30 text-sm mb-4">Volume discounts: 10% (100+ seats) · 18% (250+ seats) · 25% (500+ seats)</p>
+            <p className="text-sm mb-4" style={{ color: '#A39785' }}>Volume discounts: 5% off (250+ seats) · ~10% off (500+ seats)</p>
             <Link href="/pricing" className="text-orange-DEFAULT text-[0.7rem] uppercase tracking-widest font-bold hover:text-orange-bright transition-colors">
               View Full Pricing Calculator →
             </Link>
