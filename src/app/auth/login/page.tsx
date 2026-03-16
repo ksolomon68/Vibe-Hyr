@@ -117,8 +117,8 @@ function LoginForm() {
 
           <p className="text-center font-body text-sm text-grey-dark mt-8">
             Don't have an account?{' '}
-            <Link href="/auth/signup" className="text-orange-DEFAULT hover:text-orange-light transition-colors">
-              Join free
+            <Link href="/pricing" className="text-orange-DEFAULT hover:text-orange-light transition-colors">
+              Sign Up
             </Link>
           </p>
         </div>

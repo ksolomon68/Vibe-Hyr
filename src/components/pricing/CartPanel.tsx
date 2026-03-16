@@ -7,37 +7,25 @@ import { useCheckout } from '@/hooks/useCheckout'
 import { createClient } from '@/lib/supabase/client'
 
 export type Tier = 'seeker' | 'architect' | 'reality-master'
-export type Segment = 'corporate' | 'university' | 'k12' | 'small-business'
+export type Segment = 'corporate' | 'university'
 export type Billing = 'annual' | 'monthly'
 
 const PRICING: Record<Segment, Record<Tier, { prices: [number, number]; minSeats: number; floor: number }>> = {
   corporate: {
-    seeker:          { prices: [29,  3.5],  minSeats: 25,  floor: 725  },
-    architect:       { prices: [59,  5.9],  minSeats: 25,  floor: 1475 },
-    'reality-master':{ prices: [99,  9.9],  minSeats: 50,  floor: 4950 },
+    seeker:          { prices: [29, 2.90], minSeats: 25, floor: 725  },
+    architect:       { prices: [39, 3.90], minSeats: 25, floor: 975  },
+    'reality-master':{ prices: [49, 4.90], minSeats: 25, floor: 1225 },
   },
   university: {
-    seeker:          { prices: [19,  2.25], minSeats: 50,  floor: 950  },
-    architect:       { prices: [39,  3.9],  minSeats: 50,  floor: 1950 },
-    'reality-master':{ prices: [69,  6.9],  minSeats: 100, floor: 6900 },
-  },
-  k12: {
-    seeker:          { prices: [12,  1.4],  minSeats: 30,  floor: 360  },
-    architect:       { prices: [24,  2.4],  minSeats: 30,  floor: 720  },
-    'reality-master':{ prices: [45,  4.5],  minSeats: 50,  floor: 2250 },
-  },
-  'small-business': {
-    seeker:          { prices: [35,  4.2],  minSeats: 5,   floor: 175  },
-    architect:       { prices: [65,  6.5],  minSeats: 5,   floor: 325  },
-    'reality-master':{ prices: [110, 11.0], minSeats: 10,  floor: 1100 },
+    seeker:          { prices: [19, 1.90], minSeats: 50, floor: 950  },
+    architect:       { prices: [39, 3.90], minSeats: 50, floor: 1950 },
+    'reality-master':{ prices: [49, 4.90], minSeats: 50, floor: 2450 },
   },
 }
 
 const SEG_LABELS: Record<Segment, string> = {
-  corporate:       'Corporate / Enterprise',
-  university:      'University',
-  k12:             'K-12 School',
-  'small-business':'Small Business',
+  corporate:  'Business',
+  university: 'Education',
 }
 
 const TIER_LABELS: Record<Tier, string> = {
@@ -52,10 +40,10 @@ const TIER_DESCRIPTIONS: Record<Tier, string> = {
   'reality-master':"Elite, full-platform access with live sessions and dedicated coaching.",
 }
 
-function getVolumeDiscount(n: number): number {
-  if (n >= 500) return 0.25
-  if (n >= 250) return 0.18
-  if (n >= 100) return 0.10
+function getVolumeDiscount(n: number, segment: Segment): number {
+  if (n >= 500) return 1 - 0.9025           // Level 3: two sequential 5% drops
+  if (segment === 'university' && n >= 250) return 0.05  // Level 2 Edu: 250+
+  if (segment === 'corporate'  && n >= 100) return 0.05  // Level 2 Biz: 100+
   return 0
 }
 
@@ -147,14 +135,17 @@ export function CartPanel({
     const idx       = panelBilling === 'annual' ? 0 : 1
     const data      = PRICING[panelSegment][activeTier]
     const base      = data.prices[idx]
-    const disc      = getVolumeDiscount(panelSeats)
+    const disc      = getVolumeDiscount(panelSeats, panelSegment)
     const effective = base * (1 - disc)
     const total     = Math.round(effective * panelSeats)
     const savings   = Math.round((base - effective) * panelSeats)
     const annualEq  = panelBilling === 'monthly'
       ? Math.round(effective * panelSeats * 12)
       : total
-    return { base, disc, effective, total, savings, annualEq, floor: data.floor }
+    const floor = panelBilling === 'annual'
+      ? data.floor
+      : Math.round(data.minSeats * data.prices[1])
+    return { base, disc, effective, total, savings, annualEq, floor }
   }, [panelSegment, initialTier, panelBilling, panelSeats])
 
   const cycleLabel = panelBilling === 'annual' ? 'year' : 'month'
@@ -296,28 +287,12 @@ export function CartPanel({
                 </div>
               </div>
 
-              {/* Segment selector */}
+              {/* Organization type (fixed based on category) */}
               <div>
                 <p style={labelStyle}>Organization Type</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {(Object.keys(SEG_LABELS) as Segment[]).map(seg => (
-                    <button
-                      key={seg}
-                      onClick={() => handleSegmentChange(seg)}
-                      className="px-3 py-2.5 rounded-sm transition-all text-left leading-tight"
-                      style={{
-                        fontSize: '0.65rem', fontWeight: 700,
-                        textTransform: 'uppercase', letterSpacing: '0.06em',
-                        fontFamily: 'var(--font-dm, "DM Sans", sans-serif)',
-                        border: `1.5px solid ${panelSegment === seg ? ORANGE : `${INK}18`}`,
-                        background: panelSegment === seg ? `${ORANGE}10` : 'transparent',
-                        color: panelSegment === seg ? ORANGE : `${INK}60`,
-                      }}
-                    >
-                      {SEG_LABELS[seg]}
-                    </button>
-                  ))}
-                </div>
+                <p style={{ fontSize: '0.75rem', color: `${INK}80`, marginTop: 4 }}>
+                  {SEG_LABELS[panelSegment]}
+                </p>
               </div>
 
               {/* Seat stepper */}

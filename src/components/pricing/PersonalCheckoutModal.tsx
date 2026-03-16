@@ -17,8 +17,8 @@ const PERSONAL_PRICING: Record<PersonalTier, {
 }> = {
   architect: {
     name: 'ARCHITECT',
-    monthly: 27,
-    annual: 270,
+    monthly: 19,
+    annual: 205,
     features: [
       'Everything in Seeker',
       'Courses 1, 2 & 3 (full access)',
@@ -31,8 +31,8 @@ const PERSONAL_PRICING: Record<PersonalTier, {
   },
   'reality-master': {
     name: 'REALITY MASTER',
-    monthly: 67,
-    annual: 670,
+    monthly: 29,
+    annual: 313,
     features: [
       'Everything in Architect',
       'Course 4: Echo Theory (Elite only)',

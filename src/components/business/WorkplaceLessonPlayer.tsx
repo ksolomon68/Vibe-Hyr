@@ -3,6 +3,8 @@
 import { useState, ReactNode, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PlayerTopbar } from "@/components/shared/PlayerTopbar";
+import { PlayerSidebar } from "@/components/shared/PlayerSidebar";
+import type { SidebarEntry } from "@/components/shared/PlayerSidebar";
 import { PlayerVideoPlaceholder } from "@/components/shared/PlayerVideoPlaceholder";
 import { PlayerNav } from "@/components/shared/PlayerNav";
 import { AssumptionLab } from "@/components/shared/AssumptionLab";
@@ -41,22 +43,6 @@ export interface WorkplaceLessonPlayerProps {
   userTier?: string;
 }
 
-// ─── Progress ring ─────────────────────────────────────────────────────────────
-function ProgressRing({
-  progress, size = 36, stroke = 3, color = T.orange,
-}: { progress: number; size?: number; stroke?: number; color?: string }) {
-  const r = (size - stroke * 2) / 2;
-  const circ = 2 * Math.PI * r;
-  const dash = circ * progress;
-  return (
-    <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={T.border} strokeWidth={stroke} />
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke}
-        strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
-        style={{ transition: "stroke-dasharray 0.4s ease" }} />
-    </svg>
-  );
-}
 
 // ─── Quiz component ────────────────────────────────────────────────────────────
 function QuizGate({
@@ -194,12 +180,6 @@ export default function WorkplaceLessonPlayer({
   const activeTrack = TRACKS.find(t => t.id === activeTrackId) ?? TRACKS[0];
   const activeLesson = activeTrack.lessons.find(l => l.id === activeLessonId) ?? activeTrack.lessons[0];
   const isCompleted = (tid: string, lid: string) => completedMap[tid]?.includes(lid) ?? false;
-  const trackProgress = (tid: string) => {
-    const track = TRACKS.find(t => t.id === tid);
-    if (!track) return 0;
-    const done = completedMap[tid]?.length ?? 0;
-    return done / track.lessons.length;
-  };
 
   function navigate(trackId: string, lessonId: string) {
     setActiveTrackId(trackId);
@@ -231,141 +211,55 @@ export default function WorkplaceLessonPlayer({
   const hasQuiz = activeLesson.quiz.length > 0;
   const alreadyCompleted = isCompleted(activeTrackId, activeLessonId);
 
+  const activeTrackIdx   = TRACKS.findIndex(t => t.id === activeTrackId)
+  const activeLessonIdx  = activeTrack.lessons.findIndex(l => l.id === activeLessonId)
+  const totalAll         = TRACKS.reduce((a, t) => a + t.lessons.length, 0)
+  const completedAll     = Object.values(completedMap).reduce((a, arr) => a + arr.length, 0)
+  const overallPct       = totalAll > 0 ? Math.round((completedAll / totalAll) * 100) : 0
+  const completedItemIds = Object.values(completedMap).flat()
+
+  const sidebarEntries: SidebarEntry[] = TRACKS.map((track) => ({
+    id:          track.id,
+    slug:        track.id,
+    num:         track.num,
+    title:       track.title,
+    audienceTag: track.tag,
+    totalTime:   track.totalTime,
+    items:       track.lessons.map((lesson) => ({
+      id:       lesson.id,
+      num:      lesson.num,
+      title:    lesson.title,
+      duration: lesson.duration,
+      isQuiz:   lesson.quiz.length > 0,
+    })),
+  }))
+
   return (
-    <div style={{
-      display: "flex", height: "100vh", background: T.dark, color: T.cream,
-      fontFamily: "'DM Sans', 'Segoe UI', sans-serif", overflow: "hidden",
-      flexDirection: "row-reverse"
-    }}>
-      {/* ── Sidebar ──────────────────────────────────────────────────────────── */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <motion.aside
-            initial={{ x: 320, opacity: 0 }} animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 320, opacity: 0 }} transition={{ duration: 0.2 }}
-            style={{
-              width: 320, background: T.darkMid, borderLeft: `1px solid ${T.border}`,
-              display: "flex", flexDirection: "column", flexShrink: 0, overflowY: "auto",
-              position: "relative", zIndex: 40
-            }}>
-            {/* Logo */}
-            <div style={{ padding: "24px 24px 20px", borderBottom: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 20, fontWeight: 900, color: T.orange,
-                fontFamily: "'Bebas Neue', sans-serif", letterSpacing: "0.1em" }}>
-                VIBE HYR
-              </div>
-              <div style={{ fontSize: 10, color: T.muted, letterSpacing: "0.16em", marginTop: 2, fontWeight: 700 }}>
-                BUSINESS TRAINING SERIES
-              </div>
-            </div>
+    <div style={{ background: T.dark, minHeight: "100vh", display: "flex", flexDirection: "column", color: T.cream, fontFamily: "'DM Sans', 'Segoe UI', sans-serif" }}>
+      {/* Shared topbar */}
+      <PlayerTopbar
+        vertical="business"
+        verticalLabel="BUSINESS"
+        contentTitle={activeTrack.title}
+        completionPct={overallPct}
+        onToggleSidebar={() => setSidebarOpen(o => !o)}
+        breadcrumb={{ label: "Business", href: "/business" }}
+      />
 
-            {/* Track list */}
-            <div style={{ padding: "16px 0", flex: 1 }}>
-              {TRACKS.map(track => {
-                const locked = !allowedTracks.includes(track.id);
-                const prog = trackProgress(track.id);
-                const activeT = track.id === activeTrackId;
-
-                return (
-                  <div key={track.id} style={{ marginBottom: 4 }}>
-                    {/* Track header */}
-                    <button
-                      onClick={() => !locked && navigate(track.id, track.lessons[0].id)}
-                      disabled={locked}
-                      style={{
-                        width: "100%", display: "flex", alignItems: "center", gap: 12,
-                        padding: "12px 20px", background: activeT ? `${track.color}10` : "transparent",
-                        border: "none", cursor: locked ? "not-allowed" : "pointer",
-                        borderLeft: `3px solid ${activeT ? track.color : "transparent"}`,
-                        transition: "all 0.15s",
-                      }}>
-                      <div style={{ position: "relative", flexShrink: 0 }}>
-                        <ProgressRing progress={prog} size={34} stroke={2.5} color={track.color} />
-                        <span style={{
-                          position: "absolute", inset: 0, display: "flex", alignItems: "center",
-                          justifyContent: "center", fontSize: 9, fontWeight: 800,
-                          color: locked ? T.muted : track.color,
-                        }}>
-                          {locked ? "🔒" : `${Math.round(prog * 100)}%`}
-                        </span>
-                      </div>
-                      <div style={{ flex: 1, textAlign: "left" }}>
-                        <div style={{ fontSize: 9, letterSpacing: "0.12em", fontWeight: 800,
-                          color: locked ? T.muted : track.color, textTransform: "uppercase" }}>
-                          TRACK {track.num} · {track.tag}
-                        </div>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: locked ? T.muted : T.cream,
-                          lineHeight: 1.3, marginTop: 2 }}>
-                          {track.title}
-                        </div>
-                      </div>
-                    </button>
-
-                    {/* Lesson list (expanded when track active) */}
-                    {activeT && (
-                      <div style={{ paddingLeft: 64, marginTop: 4, display: "flex", flexDirection: "column", gap: 2 }}>
-                        {track.lessons.map(lesson => {
-                          const done = isCompleted(track.id, lesson.id);
-                          const active = lesson.id === activeLessonId;
-                          return (
-                            <button key={lesson.id}
-                              onClick={() => navigate(track.id, lesson.id)}
-                              style={{
-                                width: "100%", display: "flex", alignItems: "center", gap: 10,
-                                padding: "8px 12px 8px 0", background: "transparent", border: "none",
-                                cursor: "pointer", textAlign: "left",
-                                borderLeft: `2px solid ${active ? track.color : "transparent"}`,
-                                paddingLeft: 12,
-                              }}>
-                              <span style={{
-                                width: 18, height: 18, borderRadius: "50%", flexShrink: 0,
-                                background: done ? track.color : "transparent",
-                                border: `1.5px solid ${done ? track.color : active ? track.color : T.border}`,
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                fontSize: 9, color: T.dark, fontWeight: 800
-                              }}>
-                                {done ? "✓" : ""}
-                              </span>
-                              <span style={{
-                                fontSize: 13, color: active ? T.cream : done ? T.gray : T.muted,
-                                fontWeight: active ? 600 : 400, lineHeight: 1.4,
-                              }}>
-                                {lesson.isLive && <span style={{ color: T.orange }}>⚡ </span>}
-                                {lesson.num}. {lesson.title}
-                              </span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Tier badge */}
-            <div style={{ padding: "16px 20px", borderTop: `1px solid ${T.border}`,
-              fontSize: 10, letterSpacing: "0.14em", color: T.muted, textTransform: "uppercase" }}>
-              Access: <span style={{ color: T.gold, fontWeight: 800 }}>{userTier.replace("_", " ")}</span>
-            </div>
-          </motion.aside>
-        )}
-      </AnimatePresence>
-
-      {/* ── Main content ─────────────────────────────────────────────────────── */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        {/* Topbar */}
-        <PlayerTopbar
-          vertical="business"
-          verticalLabel="BUSINESS"
-          contentTitle={activeTrack.title}
-          completionPct={Math.round(trackProgress(activeTrack.id) * 100)}
-          onToggleSidebar={() => setSidebarOpen(o => !o)}
-          breadcrumb={{
-            label: "Business",
-            href: "/business"
-          }}
+      {/* Body: sidebar + content */}
+      <div style={{ display: "flex", flex: 1, overflow: "hidden", flexDirection: "row-reverse" }}>
+        <PlayerSidebar
+          entries={sidebarEntries}
+          activeEntryIdx={activeTrackIdx}
+          activeItemIdx={activeLessonIdx}
+          completedItemIds={completedItemIds}
+          onSelectEntry={(tIdx) => navigate(TRACKS[tIdx].id, TRACKS[tIdx].lessons[0].id)}
+          onSelectItem={(tIdx, lIdx) => navigate(TRACKS[tIdx].id, TRACKS[tIdx].lessons[lIdx].id)}
+          isOpen={sidebarOpen}
         />
+
+        {/* ── Main content ──────────────────────────────────────────────────── */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
         {/* Tab System */}
         <div style={{ 
@@ -711,5 +605,6 @@ export default function WorkplaceLessonPlayer({
         </div>
       </div>
     </div>
+  </div>
   );
 }

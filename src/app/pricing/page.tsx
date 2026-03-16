@@ -15,24 +15,14 @@ import './pricing.css'
 // ─── Institutional pricing data ────────────────────────────────────────────
 const ORG_PRICING = {
   corporate: {
-    seeker:          { prices: [59,  5.65], minSeats: 25,  floor: 1475 },
-    architect:       { prices: [59,  5.65], minSeats: 25,  floor: 1475 },
-    'reality-master':{ prices: [99,  9.48], minSeats: 50,  floor: 4950 },
+    seeker:          { prices: [29,  2.90], minSeats: 25, floor: 725  },
+    architect:       { prices: [39,  3.90], minSeats: 25, floor: 975  },
+    'reality-master':{ prices: [49,  4.90], minSeats: 25, floor: 1225 },
   },
   university: {
-    seeker:          { prices: [19,  2.25], minSeats: 50,  floor: 950  },
-    architect:       { prices: [39,  3.9],  minSeats: 50,  floor: 1950 },
-    'reality-master':{ prices: [69,  6.9],  minSeats: 100, floor: 6900 },
-  },
-  k12: {
-    seeker:          { prices: [12,  1.4],  minSeats: 30,  floor: 360  },
-    architect:       { prices: [24,  2.4],  minSeats: 30,  floor: 720  },
-    'reality-master':{ prices: [45,  4.5],  minSeats: 50,  floor: 2250 },
-  },
-  'small-business': {
-    seeker:          { prices: [35,  4.2],  minSeats: 5,   floor: 175  },
-    architect:       { prices: [65,  6.5],  minSeats: 5,   floor: 325  },
-    'reality-master':{ prices: [110, 11.0], minSeats: 10,  floor: 1100 },
+    seeker:          { prices: [19,  1.90], minSeats: 50, floor: 950  },
+    architect:       { prices: [39,  3.90], minSeats: 50, floor: 1950 },
+    'reality-master':{ prices: [49,  4.90], minSeats: 50, floor: 2450 },
   },
 }
 
@@ -61,8 +51,8 @@ const PERSONAL_PLANS = [
     id:       'architect',
     tier:     'architect' as PersonalTier,
     name:     'ARCHITECT',
-    monthly:  25.88,
-    annual:   270,
+    monthly:  19,
+    annual:   205,
     tagline:  'The serious practitioner. Full curriculum, daily tools, and community.',
     featured: true,
     cta:      'Become an Architect',
@@ -80,8 +70,8 @@ const PERSONAL_PLANS = [
     id:       'elite',
     tier:     'reality-master' as PersonalTier,
     name:     'REALITY MASTER',
-    monthly:  64.21,
-    annual:   670,
+    monthly:  29,
+    annual:   313,
     tagline:  'The complete system. Every course, every tool, every month.',
     featured: false,
     cta:      'Claim Mastery',
@@ -421,12 +411,17 @@ export default function PricingPage() {
                   const rmBase   = curPricing['reality-master'].prices[billIdx]
                   const label    = billing === 'annual' ? 'seat / yr' : 'seat / mo'
                   const trackLabel = track === 'education' ? 'Edu' : 'Corp'
-                  const TIERS = [
-                    { range: `${curPricing.architect.minSeats}–99 seats`, discount: null,   mult: 1 },
-                    { range: '100–249 seats',                             discount: '10%',  mult: 0.90 },
-                    { range: '250–499 seats',                             discount: '18%',  mult: 0.82 },
-                    { range: '500+ seats',                                discount: '25%',  mult: 0.75 },
-                  ]
+                  const TIERS = track === 'education'
+                    ? [
+                        { range: '50–249 seats',  discount: null,   mult: 1      },
+                        { range: '250–499 seats', discount: '5%',   mult: 0.95   },
+                        { range: '500+ seats',    discount: '~10%', mult: 0.9025 },
+                      ]
+                    : [
+                        { range: '25–99 seats',   discount: null,   mult: 1      },
+                        { range: '100–499 seats', discount: '5%',   mult: 0.95   },
+                        { range: '500+ seats',    discount: '~10%', mult: 0.9025 },
+                      ]
                   return (
                     <table className="volume-table min-w-[700px]">
                       <thead>
@@ -485,6 +480,7 @@ export default function PricingPage() {
         onClose={() => setPanelOpen(false)}
         initialTier={panelTier}
         initialBilling={panelBilling}
+        initialSegment={panelSegment}
       />
     </>
   )
