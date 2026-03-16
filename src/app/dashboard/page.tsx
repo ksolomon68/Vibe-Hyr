@@ -218,24 +218,43 @@ export default async function DashboardPage() {
                   ))}
                 </div>
 
-                {/* Upgrade CTA for non-elite */}
-                {tier !== 'elite' && institutionType === 'individual' && (
+                {/* Upgrade CTA for all non-elite users */}
+                {tier !== 'elite' && !isSuperAdmin && (
                   <div className="mt-6 bg-black-2 border border-orange/40 p-5">
                     <p className="font-mono text-[0.6rem] tracking-[0.2em] uppercase text-orange mb-2">
                       ✦ Unlock More
                     </p>
-                    <p className="font-body text-sm text-grey-DEFAULT mb-4 leading-relaxed">
-                      {tier === 'free'
-                        ? 'Upgrade to Architect for the full journal, Courses 2 & 3, and community access.'
-                        : 'Upgrade to Reality Master for Course 4, the full Assumption Lab, and monthly live Q&As.'
-                      }
-                    </p>
-                    <PersonalUpgradeButton
-                      tier={upgradeTier}
-                      className="btn-orange text-[0.62rem] px-6 py-3"
-                    >
-                      Upgrade Plan
-                    </PersonalUpgradeButton>
+                    {institutionType === 'individual' ? (
+                      <>
+                        <p className="font-body text-sm text-grey-DEFAULT mb-4 leading-relaxed">
+                          {tier === 'free'
+                            ? 'Upgrade to Architect for the full journal, Courses 2 & 3, and community access.'
+                            : 'Upgrade to Reality Master for Course 4, the full Assumption Lab, and monthly live Q&As.'
+                          }
+                        </p>
+                        <PersonalUpgradeButton
+                          tier={upgradeTier}
+                          className="btn-orange text-[0.62rem] px-6 py-3"
+                        >
+                          Upgrade Plan
+                        </PersonalUpgradeButton>
+                      </>
+                    ) : (
+                      <>
+                        <p className="font-body text-sm text-grey-DEFAULT mb-4 leading-relaxed">
+                          {tier === 'free'
+                            ? 'Your organization is on the Seeker plan. Ask your administrator to upgrade for access to more courses and tools.'
+                            : 'Your organization is on the Architect plan. Ask your administrator to upgrade to Reality Master for the full curriculum.'
+                          }
+                        </p>
+                        <Link
+                          href={institutionType === 'education' ? '/educators#pricing' : '/business#pricing'}
+                          className="btn-outline-orange text-[0.62rem] px-6 py-3"
+                        >
+                          View Plan Options
+                        </Link>
+                      </>
+                    )}
                   </div>
                 )}
               </div>

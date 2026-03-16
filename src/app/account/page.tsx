@@ -14,7 +14,7 @@ export default function AccountSettingsPage() {
   const [message, setMessage] = useState('')
   const router = useRouter()
 
-  // Form state
+  // Form state — institution_type and membership_tier are read-only (set by admin/billing)
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
@@ -69,8 +69,6 @@ export default function AccountSettingsPage() {
         .from('profiles')
         .update({
           full_name: formData.full_name,
-          institution_type: formData.institution_type,
-          membership_tier: formData.membership_tier
         })
         .eq('id', profile.id)
 
@@ -161,32 +159,23 @@ export default function AccountSettingsPage() {
 
               <div>
                 <label className="block text-sm font-medium text-grey-DEFAULT mb-2">
-                  Institution Type
+                  Account Type
                 </label>
-                <select
-                  value={formData.institution_type}
-                  onChange={(e) => setFormData(prev => ({ ...prev, institution_type: e.target.value as any }))}
-                  className="w-full px-4 py-3 bg-black-2 border border-white/10 rounded-lg text-white focus:border-orange focus:outline-none"
-                >
-                  <option value="individual">Individual</option>
-                  <option value="education">Education</option>
-                  <option value="business">Business</option>
-                </select>
+                <div className="w-full px-4 py-3 bg-black-2 border border-white/10 rounded-lg text-grey-dark capitalize">
+                  {formData.institution_type}
+                </div>
+                <p className="text-xs text-grey-dark mt-1">
+                  Account type is assigned by your organization administrator.
+                </p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-grey-DEFAULT mb-2">
                   Membership Tier
                 </label>
-                <select
-                  value={formData.membership_tier}
-                  disabled
-                  className="w-full px-4 py-3 bg-black-2 border border-white/10 rounded-lg text-grey-dark cursor-not-allowed"
-                >
-                  <option value="free">Seeker (Free)</option>
-                  <option value="architect">Architect ($27/mo)</option>
-                  <option value="elite">Reality Master ($67/mo)</option>
-                </select>
+                <div className="w-full px-4 py-3 bg-black-2 border border-white/10 rounded-lg text-grey-dark">
+                  {formData.membership_tier === 'free' ? 'Seeker (Free)' : formData.membership_tier === 'architect' ? 'Architect ($19/mo)' : 'Reality Master ($29/mo)'}
+                </div>
                 <p className="text-xs text-grey-dark mt-1">
                   Tier changes are managed through billing.
                 </p>
