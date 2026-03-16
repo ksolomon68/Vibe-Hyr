@@ -7,9 +7,29 @@ import { getTierLabel, getStreakMessage } from '@/lib/utils'
 import { Flame, BookOpen, Target, Users, ArrowRight, Crown, Sparkles } from 'lucide-react'
 import { PersonalUpgradeButton } from '@/components/pricing/PersonalUpgradeButton'
 import type { PersonalTier } from '@/components/pricing/PersonalCheckoutModal'
-import type { Course } from '@/types'
+import { COURSES } from '@/lib/data/courses'
+import { TRACKS } from '@/lib/business/curriculum'
+import { PROGRAMS } from '@/lib/education/curriculum'
 
 export const metadata = { title: 'Dashboard' }
+
+// Tier rank helper
+const TIER_RANK: Record<string, number> = { free: 0, architect: 1, elite: 2 }
+
+// Business tier access (matches business/[trackId]/[lessonId]/page.tsx)
+const BUSINESS_TIER_ACCESS: Record<string, string[]> = {
+  free:      ['common-sense-in-the-workplace'],
+  architect: ['common-sense-in-the-workplace', 'from-reaction-to-response', 'know-yourself-lead-yourself'],
+  elite:     ['common-sense-in-the-workplace', 'from-reaction-to-response', 'know-yourself-lead-yourself', 'the-high-frequency-team'],
+}
+
+// Education program tier requirements (matches educators/[programSlug]/[moduleId]/page.tsx)
+const PROGRAM_TIERS: Record<string, string> = {
+  'the-educator-reset':    'free',
+  'vibrational-leadership': 'architect',
+  'co-regulation-mastery': 'architect',
+  'the-retained-educator': 'elite',
+}
 
 export default async function DashboardPage() {
   const supabase = createClient()
@@ -22,41 +42,108 @@ export default async function DashboardPage() {
     .eq('id', user.id)
     .single()
 
-  const { data: journalEntries } = await supabase
-    .from('journal_entries')
-    .select('id')
-    .eq('user_id', user.id)
+  const tier             = profile?.membership_tier ?? 'free'
+  const institutionType  = profile?.institution_type ?? 'individual'
+  const isSuperAdmin     = profile?.is_super_admin ?? false
 
-  const { data: assumptions } = await supabase
-    .from('assumptions')
-    .select('*')
-    .eq('user_id', user.id)
-    .eq('status', 'active')
+  // ── Stats queries (shared across all user types) ───────────────────────────
+  const [
+    { data: journalEntries },
+    { data: assumptions },
+  ] = await Promise.all([
+    supabase.from('journal_entries').select('id').eq('user_id', user.id),
+    supabase.from('assumptions').select('*').eq('user_id', user.id).eq('status', 'active'),
+  ])
 
-  const { data: courses } = await supabase
-    .from('courses')
-    .select('*')
-    .order('order_index')
+  // ── Progress queries (type-specific) ──────────────────────────────────────
+  let personalProgress:  Array<{ course_id: string; progress_percent: number }> = []
+  let educationProgress: Array<{ program_id: string; module_id: string }> = []
+  let workplaceProgress: Array<{ track_id: string; lesson_id: string }> = []
 
-  const { data: courseProgress } = await supabase
-    .from('course_progress')
-    .select('*')
-    .eq('user_id', user.id)
+  if (institutionType === 'education') {
+    const { data } = await supabase
+      .from('education_progress')
+      .select('program_id, module_id')
+      .eq('user_id', user.id)
+    educationProgress = data ?? []
+  } else if (institutionType === 'business') {
+    const { data } = await supabase
+      .from('workplace_progress')
+      .select('track_id, lesson_id')
+      .eq('user_id', user.id)
+    workplaceProgress = data ?? []
+  } else {
+    // individual (or super admin)
+    const { data } = await supabase
+      .from('course_progress')
+      .select('course_id, progress_percent')
+      .eq('user_id', user.id)
+    personalProgress = data ?? []
+  }
 
-  const tier        = profile?.membership_tier ?? 'free'
-  const streak      = profile?.journal_streak  ?? 0
-  const totalJournal = journalEntries?.length   ?? 0
+  const streak            = profile?.journal_streak ?? 0
+  const totalJournal      = journalEntries?.length ?? 0
   const activeAssumptions = assumptions?.length ?? 0
 
-  // Map DB tier values to PersonalTier for the checkout modal
+  // Map DB tier to PersonalTier for checkout modal
   const upgradeTier: PersonalTier = tier === 'free' ? 'architect' : 'reality-master'
 
   const QUICK_LINKS = [
-    { href: '/journal',   icon: BookOpen, label: 'Tonight\'s Revision', desc: 'Open the nightly journal' },
-    { href: '/courses',   icon: Target,   label: 'Continue Course',     desc: 'Pick up where you left off' },
+    { href: '/journal',   icon: BookOpen, label: "Tonight's Revision", desc: 'Open the nightly journal' },
+    {
+      href: institutionType === 'education' ? '/educators' : institutionType === 'business' ? '/business' : '/personal',
+      icon: Target,
+      label: 'Continue Course',
+      desc: 'Pick up where you left off',
+    },
     { href: '/personal',  icon: Sparkles, label: 'Take a Quiz',         desc: 'Test your implementation' },
-    { href: '/community', icon: Users,    label: 'Community',           desc: 'Share your bridge' },
+    { href: '/community', icon: Users,    label: 'Community',            desc: 'Share your bridge' },
   ]
+
+  // ── Build course list based on institution type ────────────────────────────
+
+  // Personal courses
+  const personalCourses = COURSES.map(course => {
+    const hasAccess = isSuperAdmin || TIER_RANK[tier] >= TIER_RANK[course.tier]
+    const progress  = personalProgress.find(p => p.course_id === course.id)?.progress_percent ?? 0
+    const courseTier: PersonalTier = course.tier === 'elite' ? 'reality-master' : 'architect'
+    return { ...course, hasAccess, progress, courseTier }
+  })
+
+  // Business tracks
+  const allowedTracks = isSuperAdmin
+    ? TRACKS.map(t => t.id)
+    : BUSINESS_TIER_ACCESS[tier] ?? ['common-sense-in-the-workplace']
+
+  const businessTracks = TRACKS.map(track => {
+    const completedLessons = workplaceProgress
+      .filter(p => p.track_id === track.id)
+      .map(p => p.lesson_id)
+    const total    = track.lessons.length
+    const done     = completedLessons.length
+    const pct      = total ? Math.round((done / total) * 100) : 0
+    const hasAccess = allowedTracks.includes(track.id)
+    // Find first incomplete lesson for "Continue" link
+    const nextLesson = track.lessons.find(l => !completedLessons.includes(l.id)) ?? track.lessons[0]
+    const href = `/business/${track.id}/${nextLesson.id}`
+    return { ...track, hasAccess, progress: pct, href }
+  })
+
+  // Education programs
+  const educationPrograms = PROGRAMS.map(program => {
+    const completedModules = educationProgress
+      .filter(p => p.program_id === program.id)
+      .map(p => p.module_id)
+    const total    = program.modules.length
+    const done     = completedModules.length
+    const pct      = total ? Math.round((done / total) * 100) : 0
+    const programTier = PROGRAM_TIERS[program.slug] ?? 'free'
+    const hasAccess = isSuperAdmin || TIER_RANK[tier] >= TIER_RANK[programTier]
+    // Find first incomplete module
+    const nextModule = program.modules.find(m => !completedModules.includes(m.id)) ?? program.modules[0]
+    const href = `/educators/${program.slug}/${nextModule.id}`
+    return { ...program, hasAccess, progress: pct, href }
+  })
 
   return (
     <>
@@ -95,10 +182,10 @@ export default async function DashboardPage() {
             {/* Stats row */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-[2px] bg-orange border-2 border-orange mb-10">
               {[
-                { icon: Flame,    label: 'Journal Streak',    val: `${streak} days`,        sub: getStreakMessage(streak) },
-                { icon: BookOpen, label: 'Total Revisions',   val: totalJournal,             sub: 'entries in your timeline' },
-                { icon: Sparkles, label: 'Active Assumptions', val: activeAssumptions,        sub: 'bridges being built' },
-                { icon: Crown,    label: 'Tier',              val: getTierLabel(tier),        sub: 'upgrade to unlock more' },
+                { icon: Flame,    label: 'Journal Streak',    val: `${streak} days`,   sub: getStreakMessage(streak) },
+                { icon: BookOpen, label: 'Total Revisions',   val: totalJournal,        sub: 'entries in your timeline' },
+                { icon: Sparkles, label: 'Active Assumptions', val: activeAssumptions,  sub: 'bridges being built' },
+                { icon: Crown,    label: 'Tier',              val: getTierLabel(tier),  sub: 'upgrade to unlock more' },
               ].map(({ icon: Icon, label, val, sub }) => (
                 <div key={label} className="bg-black-2 p-7 hover:bg-black-3 transition-colors">
                   <Icon size={18} className="text-orange-DEFAULT mb-3" />
@@ -132,7 +219,7 @@ export default async function DashboardPage() {
                 </div>
 
                 {/* Upgrade CTA for non-elite */}
-                {tier !== 'elite' && (
+                {tier !== 'elite' && institutionType === 'individual' && (
                   <div className="mt-6 bg-black-2 border border-orange/40 p-5">
                     <p className="font-mono text-[0.6rem] tracking-[0.2em] uppercase text-orange mb-2">
                       ✦ Unlock More
@@ -153,59 +240,154 @@ export default async function DashboardPage() {
                 )}
               </div>
 
-              {/* Courses progress */}
+              {/* Course list — varies by institution type */}
               <div className="lg:col-span-2">
-                <h2 className="font-display text-2xl tracking-widest text-white mb-5">YOUR COURSES</h2>
-                <div className="flex flex-col gap-3">
-                  {(courses ?? []).map((course, i) => {
-                    const tierRank: Record<string, number> = { free: 0, architect: 1, elite: 2 }
-                    const hasAccess  = profile?.is_super_admin || tierRank[tier] >= tierRank[course.tier]
-                    // Determine which personal tier unlocks this course
-                    const courseTier: PersonalTier = course.tier === 'elite' ? 'reality-master' : 'architect'
-                    const progress = courseProgress?.find(p => p.course_id === course.id)?.progress_percent ?? 0
 
-                    return (
-                      <div
-                        key={i}
-                        className="flex items-center gap-5 p-5 bg-black-2 border border-white/8 hover:border-orange/30 transition-all"
-                      >
-                        <div className="font-display text-3xl text-orange/20 leading-none w-12 flex-shrink-0">
-                          {String(course.order_index).padStart(2,'0')}
+                {/* ── PERSONAL COURSES ── */}
+                {(institutionType === 'individual' || isSuperAdmin) && (
+                  <>
+                    <h2 className="font-display text-2xl tracking-widest text-white mb-5">YOUR COURSES</h2>
+                    <div className="flex flex-col gap-3">
+                      {personalCourses.map((course, i) => (
+                        <div
+                          key={i}
+                          className="flex items-center gap-5 p-5 bg-black-2 border border-white/8 hover:border-orange/30 transition-all"
+                        >
+                          <div className="font-display text-3xl text-orange/20 leading-none w-12 flex-shrink-0">
+                            {String(course.order_index).padStart(2, '0')}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-display text-base tracking-[0.04em] text-white leading-tight mb-0.5 truncate">
+                              {course.title}
+                            </p>
+                            <p className="font-body text-xs italic text-grey-dark truncate">
+                              {course.subtitle}
+                            </p>
+                            {course.hasAccess && (
+                              <div className="mt-2 h-px bg-black-4">
+                                <div className="h-px bg-orange" style={{ width: `${course.progress}%` }} />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-shrink-0">
+                            {course.hasAccess ? (
+                              <Link
+                                href={`/personal/${course.slug}`}
+                                className="font-mono text-[0.58rem] tracking-widest uppercase text-orange hover:text-orange-light transition-colors flex items-center gap-1"
+                              >
+                                Open <ArrowRight size={10} />
+                              </Link>
+                            ) : (
+                              <PersonalUpgradeButton
+                                tier={course.courseTier}
+                                className="font-mono text-[0.58rem] tracking-widest uppercase text-grey-dark hover:text-orange transition-colors"
+                              >
+                                Upgrade →
+                              </PersonalUpgradeButton>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-display text-base tracking-[0.04em] text-white leading-tight mb-0.5 truncate">
-                            {course.title}
-                          </p>
-                          <p className="font-body text-xs italic text-grey-dark truncate">
-                            {course.subtitle}
-                          </p>
-                          {hasAccess && (
-                            <div className="mt-2 h-px bg-black-4">
-                              <div className="h-px bg-orange" style={{ width: `${progress}%` }} />
-                            </div>
-                          )}
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {/* ── BUSINESS TRACKS ── */}
+                {(institutionType === 'business' || isSuperAdmin) && (
+                  <div className={institutionType === 'individual' ? 'mt-10' : ''}>
+                    <h2 className="font-display text-2xl tracking-widest text-white mb-5">
+                      WORKPLACE TRAINING
+                    </h2>
+                    <div className="flex flex-col gap-3">
+                      {businessTracks.map((track, i) => (
+                        <div
+                          key={i}
+                          className="flex items-center gap-5 p-5 bg-black-2 border border-white/8 hover:border-orange/30 transition-all"
+                        >
+                          <div className="font-display text-3xl text-orange/20 leading-none w-12 flex-shrink-0">
+                            {track.num}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-display text-base tracking-[0.04em] text-white leading-tight mb-0.5 truncate">
+                              {track.title}
+                            </p>
+                            <p className="font-body text-xs italic text-grey-dark truncate">
+                              {track.subtitle}
+                            </p>
+                            {track.hasAccess && (
+                              <div className="mt-2 h-px bg-black-4">
+                                <div className="h-px bg-orange" style={{ width: `${track.progress}%` }} />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-shrink-0">
+                            {track.hasAccess ? (
+                              <Link
+                                href={track.href}
+                                className="font-mono text-[0.58rem] tracking-widest uppercase text-orange hover:text-orange-light transition-colors flex items-center gap-1"
+                              >
+                                {track.progress > 0 ? 'Continue' : 'Start'} <ArrowRight size={10} />
+                              </Link>
+                            ) : (
+                              <span className="font-mono text-[0.58rem] tracking-widest uppercase text-grey-dark">
+                                Locked
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex-shrink-0">
-                          {hasAccess ? (
-                            <Link
-                              href={`/courses/${course.slug}`}
-                              className="font-mono text-[0.58rem] tracking-widest uppercase text-orange hover:text-orange-light transition-colors flex items-center gap-1"
-                            >
-                              Open <ArrowRight size={10} />
-                            </Link>
-                          ) : (
-                            <PersonalUpgradeButton
-                              tier={courseTier}
-                              className="font-mono text-[0.58rem] tracking-widest uppercase text-grey-dark hover:text-orange transition-colors"
-                            >
-                              Upgrade →
-                            </PersonalUpgradeButton>
-                          )}
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── EDUCATION PROGRAMS ── */}
+                {(institutionType === 'education' || isSuperAdmin) && (
+                  <div className={institutionType === 'individual' ? 'mt-10' : ''}>
+                    <h2 className="font-display text-2xl tracking-widest text-white mb-5">
+                      EDUCATOR PROGRAMS
+                    </h2>
+                    <div className="flex flex-col gap-3">
+                      {educationPrograms.map((program, i) => (
+                        <div
+                          key={i}
+                          className="flex items-center gap-5 p-5 bg-black-2 border border-white/8 hover:border-orange/30 transition-all"
+                        >
+                          <div className="font-display text-3xl text-orange/20 leading-none w-12 flex-shrink-0">
+                            {program.num}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-display text-base tracking-[0.04em] text-white leading-tight mb-0.5 truncate">
+                              {program.title}
+                            </p>
+                            <p className="font-body text-xs italic text-grey-dark truncate">
+                              {program.subtitle}
+                            </p>
+                            {program.hasAccess && (
+                              <div className="mt-2 h-px bg-black-4">
+                                <div className="h-px bg-orange" style={{ width: `${program.progress}%` }} />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-shrink-0">
+                            {program.hasAccess ? (
+                              <Link
+                                href={program.href}
+                                className="font-mono text-[0.58rem] tracking-widest uppercase text-orange hover:text-orange-light transition-colors flex items-center gap-1"
+                              >
+                                {program.progress > 0 ? 'Continue' : 'Start'} <ArrowRight size={10} />
+                              </Link>
+                            ) : (
+                              <span className="font-mono text-[0.58rem] tracking-widest uppercase text-grey-dark">
+                                Locked
+                              </span>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    )
-                  })}
-                </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
               </div>
             </div>
           </div>

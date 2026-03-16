@@ -29,7 +29,7 @@ export function LessonSidebar({
       {/* Course title header */}
       <div className="px-5 py-4 border-b border-white/8 flex-shrink-0">
         <Link
-          href={`/courses/${course.slug}`}
+          href={`/personal/${course.slug}`}
           className="font-mono text-[0.55rem] tracking-[0.2em] uppercase text-orange-DEFAULT hover:text-orange-light transition-colors flex items-center gap-1"
         >
           ← {course.title}
@@ -78,7 +78,7 @@ export function LessonSidebar({
                     </div>
                   ) : (
                     <Link
-                      href={`/courses/${course.slug}/${lesson.id}`}
+                      href={`/personal/${course.slug}/${lesson.id}`}
                       className={cn(
                         'flex items-start gap-3 px-5 py-3 transition-colors group',
                         current

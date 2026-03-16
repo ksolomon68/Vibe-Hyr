@@ -147,7 +147,7 @@ export default function BlogPostPage({ params }: Props) {
                 <Link href="/auth/signup" className="btn-orange">
                   Join Free
                 </Link>
-                <Link href="/courses" className="btn-outline">
+                <Link href="/personal" className="btn-outline">
                   Explore Courses
                 </Link>
               </div>

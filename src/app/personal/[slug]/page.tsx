@@ -25,8 +25,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 }
 
 const TIER_GATE_COPY: Record<string, { label: string; price: string; desc: string }> = {
-  architect: { label: 'Architect',     price: '$27/mo', desc: 'Unlock Courses 2 & 3, the full Revision Journal, SATS audio library, and community access.' },
-  elite:     { label: 'Reality Master', price: '$67/mo', desc: 'The complete system — all 4 courses, monthly Life Mastery Score, live Q&As, and every tool.' },
+  architect: { label: 'Architect',     price: '$19/mo', desc: 'Unlock Courses 2 & 3, the full Revision Journal, SATS audio library, and community access.' },
+  elite:     { label: 'Reality Master', price: '$29/mo', desc: 'The complete system — all 4 courses, monthly Life Mastery Score, live Q&As, and every tool.' },
 }
 
 export default async function CoursePage({ params }: { params: { slug: string } }) {
@@ -79,7 +79,7 @@ export default async function CoursePage({ params }: { params: { slug: string } 
           <div className="max-w-7xl mx-auto px-6 md:px-14 py-16 relative z-10">
             <div className="flex items-center gap-3 mb-6">
               <Link
-                href="/courses"
+                href="/personal"
                 className="font-mono text-[0.58rem] tracking-[0.2em] uppercase text-grey-dark hover:text-orange-DEFAULT transition-colors"
               >
                 ← Courses
@@ -153,7 +153,7 @@ export default async function CoursePage({ params }: { params: { slug: string } 
                 {/* CTA */}
                 {canAccess ? (
                   <Link
-                    href={`/courses/${course.slug}/${nextLesson?.id}`}
+                    href={`/personal/${course.slug}/${nextLesson?.id}`}
                     className="btn-orange w-full text-center flex items-center justify-center gap-2"
                   >
                     <Play size={13} />
@@ -198,7 +198,7 @@ export default async function CoursePage({ params }: { params: { slug: string } 
                 >
                   <Crown size={13} /> Upgrade — {gateInfo.price}
                 </PersonalUpgradeButton>
-                <Link href="/courses/programming-the-gatekeeper" className="btn-outline">
+                <Link href="/personal/programming-the-gatekeeper" className="btn-outline">
                   Start Free Course →
                 </Link>
               </div>
@@ -247,7 +247,7 @@ export default async function CoursePage({ params }: { params: { slug: string } 
                       </div>
                     ) : (
                       <Link
-                        href={`/courses/${course.slug}/${lesson.id}`}
+                        href={`/personal/${course.slug}/${lesson.id}`}
                         className="flex items-start gap-5 px-7 py-5 group"
                       >
                         <span className={cn(
@@ -311,7 +311,7 @@ export default async function CoursePage({ params }: { params: { slug: string } 
                     <p className="font-body text-lg text-white">{next.title}</p>
                   </div>
                   <Link
-                    href={`/courses/${next.slug}`}
+                    href={`/personal/${next.slug}`}
                     className="btn-outline-orange flex items-center gap-2 text-[0.62rem]"
                   >
                     Preview <ArrowRight size={12} />

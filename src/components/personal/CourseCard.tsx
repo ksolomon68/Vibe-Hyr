@@ -101,7 +101,7 @@ export function CourseCard({ course, userTier = 'free', progress, isLarge, onUpg
         {/* CTA */}
         {hasAccess ? (
           <Link
-            href={`/courses/${course.slug}`}
+            href={`/personal/${course.slug}`}
             className="btn-orange w-full text-center flex items-center justify-center gap-2 text-[0.62rem]"
           >
             <Play size={12} />

@@ -73,9 +73,9 @@ export function LessonPlayerClient({
     await markComplete(lesson.id)
     toast.success('Lesson marked complete ✦', { icon: '✓' })
     if (nextLesson) {
-      router.push(`/courses/${course.slug}/${nextLesson.id}`)
+      router.push(`/personal/${course.slug}/${nextLesson.id}`)
     } else {
-      router.push(`/courses/${course.slug}`)
+      router.push(`/personal/${course.slug}`)
     }
   }
 
@@ -104,7 +104,7 @@ export function LessonPlayerClient({
           </Link>
           <span className="text-white/10 text-xs flex-shrink-0 hidden sm:block">/</span>
           <Link
-            href={`/courses/${course.slug}`}
+            href={`/personal/${course.slug}`}
             className="flex items-center gap-2 text-white/40 hover:text-[#E8621A] transition-colors flex-shrink-0"
           >
             <span className="font-mono text-[0.6rem] tracking-[0.2em] uppercase hidden md:block">
@@ -137,7 +137,7 @@ export function LessonPlayerClient({
         <div className="flex items-center gap-3 flex-shrink-0">
           {prevLesson && (
             <Link
-              href={`/courses/${course.slug}/${prevLesson.id}`}
+              href={`/personal/${course.slug}/${prevLesson.id}`}
               className="text-white/40 hover:text-[#E8621A] transition-colors p-2 hover:bg-white/5 rounded-lg"
               title="Previous lesson"
             >
@@ -146,7 +146,7 @@ export function LessonPlayerClient({
           )}
           {nextLesson && (
             <Link
-              href={`/courses/${course.slug}/${nextLesson.id}`}
+              href={`/personal/${course.slug}/${nextLesson.id}`}
               className={cn(
                 'p-2 transition-colors rounded-lg',
                 canAdvance
@@ -403,7 +403,7 @@ export function LessonPlayerClient({
                 <div>
                   {prevLesson ? (
                     <Link
-                      href={`/courses/${course.slug}/${prevLesson.id}`}
+                      href={`/personal/${course.slug}/${prevLesson.id}`}
                       className="flex items-center gap-2 font-mono text-[0.6rem] tracking-[0.15em] uppercase text-grey-dark hover:text-orange-DEFAULT transition-colors"
                     >
                       <ChevronLeft size={14} />
@@ -411,7 +411,7 @@ export function LessonPlayerClient({
                     </Link>
                   ) : (
                     <Link
-                      href={`/courses/${course.slug}`}
+                      href={`/personal/${course.slug}`}
                       className="flex items-center gap-2 font-mono text-[0.6rem] tracking-[0.15em] uppercase text-grey-dark hover:text-orange-DEFAULT transition-colors"
                     >
                       <ChevronLeft size={14} /> Course Overview
@@ -424,14 +424,14 @@ export function LessonPlayerClient({
                   {isLessonDone ? (
                     nextLesson ? (
                       <Link
-                        href={`/courses/${course.slug}/${nextLesson.id}`}
+                        href={`/personal/${course.slug}/${nextLesson.id}`}
                         className="btn-orange flex items-center gap-2"
                       >
                         Next Lesson <ChevronRight size={14} />
                       </Link>
                     ) : (
                       <Link
-                        href={`/courses/${course.slug}`}
+                        href={`/personal/${course.slug}`}
                         className="btn-orange flex items-center gap-2"
                       >
                         <CheckCircle size={14} /> Course Complete

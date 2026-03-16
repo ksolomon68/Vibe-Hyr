@@ -39,7 +39,7 @@ const NAV_CATEGORIES = [
 
 const STATIC_LINKS = [
   { href: '/',        label: 'Home' },
-  { href: '/courses', label: 'Courses' },
+  { href: '/personal', label: 'Courses' },
   { href: '/pricing', label: 'Membership' },
 ]
 
