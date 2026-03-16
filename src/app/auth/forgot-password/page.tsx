@@ -68,7 +68,7 @@ export default function ForgotPasswordPage() {
             <div className="text-center">
               <div
                 className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6"
-                style={{ background: '#FF7B00', boxShadow: '0 0 30px rgba(255,123,0,0.4)' }}
+                style={{ background: 'var(--orange)', boxShadow: '0 0 30px rgba(255,127,48,0.4)' }}
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                   <path d="M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" fill="#000"/>

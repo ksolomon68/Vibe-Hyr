@@ -5,8 +5,8 @@
 --       tier-cap trigger.
 -- ─────────────────────────────────────────────────────────────────────────────
 
--- ── 1. INSTITUTIONS ──────────────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS institutions (
+-- ── 1. ORGANIZATIONS ──────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS organizations (
   id                 UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name               TEXT NOT NULL,
   type               TEXT NOT NULL CHECK (type IN ('individual','education','business')),
@@ -19,20 +19,20 @@ CREATE TABLE IF NOT EXISTS institutions (
   created_at         TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-ALTER TABLE institutions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE organizations ENABLE ROW LEVEL SECURITY;
 
--- Institution admin can read/update their own institution
-CREATE POLICY "Institution admin read own"
-  ON institutions FOR SELECT
+-- Organization admin can read/update their own organization
+CREATE POLICY "Organization admin read own"
+  ON organizations FOR SELECT
   USING (admin_user_id = auth.uid());
 
-CREATE POLICY "Institution admin update own"
-  ON institutions FOR UPDATE
+CREATE POLICY "Organization admin update own"
+  ON organizations FOR UPDATE
   USING (admin_user_id = auth.uid());
 
--- Regular members can read the institution they belong to
-CREATE POLICY "Members read own institution"
-  ON institutions FOR SELECT
+-- Regular members can read the organization they belong to
+CREATE POLICY "Members read own organization"
+  ON organizations FOR SELECT
   USING (
     id IN (
       SELECT institution_id FROM profiles WHERE id = auth.uid()
@@ -43,7 +43,7 @@ CREATE POLICY "Members read own institution"
 ALTER TABLE profiles
   ADD COLUMN IF NOT EXISTS institution_type TEXT NOT NULL DEFAULT 'individual'
     CHECK (institution_type IN ('individual','education','business')),
-  ADD COLUMN IF NOT EXISTS institution_id UUID REFERENCES institutions(id) ON DELETE SET NULL;
+  ADD COLUMN IF NOT EXISTS institution_id UUID REFERENCES organizations(id) ON DELETE SET NULL;
 
 -- Index for admin queries
 CREATE INDEX IF NOT EXISTS idx_profiles_institution_id ON profiles(institution_id);
@@ -53,7 +53,7 @@ CREATE INDEX IF NOT EXISTS idx_profiles_institution_id ON profiles(institution_i
 CREATE TABLE IF NOT EXISTS course_access (
   id             UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id        UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  institution_id UUID REFERENCES institutions(id) ON DELETE CASCADE,
+  institution_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
   course_slug    TEXT NOT NULL,
   granted_by     UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -72,7 +72,7 @@ CREATE POLICY "Institution admins read org course access"
   ON course_access FOR SELECT
   USING (
     institution_id IN (
-      SELECT id FROM institutions WHERE admin_user_id = auth.uid()
+      SELECT id FROM organizations WHERE admin_user_id = auth.uid()
     )
   );
 
@@ -81,7 +81,7 @@ CREATE POLICY "Institution admins insert course access"
   ON course_access FOR INSERT
   WITH CHECK (
     institution_id IN (
-      SELECT id FROM institutions WHERE admin_user_id = auth.uid()
+      SELECT id FROM organizations WHERE admin_user_id = auth.uid()
     )
   );
 
@@ -90,7 +90,7 @@ CREATE POLICY "Institution admins delete course access"
   ON course_access FOR DELETE
   USING (
     institution_id IN (
-      SELECT id FROM institutions WHERE admin_user_id = auth.uid()
+      SELECT id FROM organizations WHERE admin_user_id = auth.uid()
     )
   );
 
@@ -108,7 +108,7 @@ BEGIN
     RETURN NEW;
   END IF;
 
-  SELECT plan INTO inst_plan FROM institutions WHERE id = NEW.institution_id;
+  SELECT plan INTO inst_plan FROM organizations WHERE id = NEW.institution_id;
   IF inst_plan IS NULL THEN
     RETURN NEW;
   END IF;

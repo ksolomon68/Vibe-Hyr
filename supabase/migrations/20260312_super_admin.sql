@@ -13,8 +13,8 @@ ALTER TABLE profiles
   ADD COLUMN IF NOT EXISTS bypass_notes    TEXT,
   ADD COLUMN IF NOT EXISTS bypass_added_by UUID REFERENCES auth.users(id) ON DELETE SET NULL;
 
--- ── 2. EXTEND INSTITUTIONS ───────────────────────────────────────────────────
-ALTER TABLE institutions
+-- ── 2. EXTEND ORGANIZATIONS ───────────────────────────────────────────────────
+ALTER TABLE organizations
   ADD COLUMN IF NOT EXISTS is_bypassed     BOOLEAN NOT NULL DEFAULT FALSE,
   ADD COLUMN IF NOT EXISTS bypass_reason   TEXT,
   ADD COLUMN IF NOT EXISTS bypass_expiry   TIMESTAMPTZ,

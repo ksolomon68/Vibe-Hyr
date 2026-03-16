@@ -33,7 +33,7 @@ function SignupForm() {
       password,
       options: {
         data: { full_name: name, selected_plan: plan },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: 'https://vibehyr.com/auth/callback',
       },
     })
 

@@ -65,7 +65,7 @@ interface Props {
 const C = {
   dark:'#0A0804', dark2:'#0F0C07', dark3:'#161109', dark4:'#1E160C', dark5:'#251C0F',
   cream:'#F0EAE0', orange:'#E8621A', gold:'#C9A84C',
-  muted:'#6B6055', muted2:'#9A8E80',
+  muted:'#B8A89A', muted2:'#D4C4B7',  // Increased contrast
   border:'rgba(201,168,76,0.12)', border2:'rgba(201,168,76,0.25)', border3:'rgba(201,168,76,0.45)',
   red:'#E57373', green:'#81C784', blue:'#90CAF9',
 }
@@ -86,7 +86,7 @@ const PILLS: Record<PillV, React.CSSProperties> = {
   biz:       { background:'rgba(39,174,96,0.1)',   color:'#A5D6A7', border:`1px solid rgba(39,174,96,0.2)` },
 }
 function Pill({ v, label }: { v: PillV; label: string }) {
-  return <span style={{ display:'inline-flex', alignItems:'center', fontSize:9, fontWeight:700, letterSpacing:1, textTransform:'uppercase', padding:'2px 8px', borderRadius:20, whiteSpace:'nowrap', ...PILLS[v] }}>{label}</span>
+  return <span style={{ display:'inline-flex', alignItems:'center', fontSize:11, fontWeight:700, letterSpacing:1, textTransform:'uppercase', padding:'3px 10px', borderRadius:20, whiteSpace:'nowrap', ...PILLS[v] }}>{label}</span>
 }
 function tierPill(tier: string) {
   if (tier === 'elite')     return <Pill v="master"    label="Reality Master"/>
@@ -148,7 +148,7 @@ function SecHd({ title, sub, action }: { title: string; sub?: string; action?: R
     <div style={{ display:'flex', alignItems:'flex-end', justifyContent:'space-between', marginBottom:14 }}>
       <div>
         <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:18, letterSpacing:2 }}>{title}</div>
-        {sub && <div style={{ fontSize:10, color:C.muted, marginTop:2 }}>{sub}</div>}
+        {sub && <div style={{ fontSize:12, color:C.muted, marginTop:2 }}>{sub}</div>}
       </div>
       {action}
     </div>
@@ -157,27 +157,27 @@ function SecHd({ title, sub, action }: { title: string; sub?: string; action?: R
 
 function Notice({ icon, children }: { icon: string; children: React.ReactNode }) {
   return (
-    <div style={{ background:'linear-gradient(90deg,rgba(201,168,76,0.08),transparent)', border:`1px solid ${C.border2}`, borderRadius:5, padding:'12px 16px', marginBottom:18, display:'flex', alignItems:'center', gap:10, fontSize:11.5, color:C.gold, lineHeight:1.5 }}>
-      <span style={{ fontSize:16, flexShrink:0 }}>{icon}</span>{children}
+    <div style={{ background:'linear-gradient(90deg,rgba(201,168,76,0.08),transparent)', border:`1px solid ${C.border2}`, borderRadius:5, padding:'12px 16px', marginBottom:18, display:'flex', alignItems:'center', gap:10, fontSize:13, color:C.gold, lineHeight:1.5 }}>
+      <span style={{ fontSize:18, flexShrink:0 }}>{icon}</span>{children}
     </div>
   )
 }
 
 function SDivider({ label }: { label: string }) {
-  return <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:13, letterSpacing:3, color:C.muted, margin:'18px 0 12px', paddingBottom:8, borderBottom:`1px solid ${C.border}`, display:'flex', alignItems:'center', gap:8 }}><span style={{ color:C.orange, fontSize:10 }}>✦</span> {label}</div>
+  return <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:15, letterSpacing:3, color:C.muted, margin:'18px 0 12px', paddingBottom:8, borderBottom:`1px solid ${C.border}`, display:'flex', alignItems:'center', gap:8 }}><span style={{ color:C.orange, fontSize:12 }}>✦</span> {label}</div>
 }
 
 function FField({ label, children, span2 }: { label: string; children: React.ReactNode; span2?: boolean }) {
-  return <div style={{ display:'flex', flexDirection:'column', gap:5, gridColumn:span2?'span 2':undefined }}><label style={{ fontSize:9, letterSpacing:2, textTransform:'uppercase', color:C.muted }}>{label}</label>{children}</div>
+  return <div style={{ display:'flex', flexDirection:'column', gap:5, gridColumn:span2?'span 2':undefined }}><label style={{ fontSize:11, letterSpacing:2, textTransform:'uppercase', color:C.muted }}>{label}</label>{children}</div>
 }
 
-const IS: React.CSSProperties = { background:C.dark4, border:`1px solid ${C.border}`, color:C.cream, fontFamily:'inherit', fontSize:12.5, padding:'9px 12px', borderRadius:3, outline:'none' }
+const IS: React.CSSProperties = { background:C.dark4, border:`1px solid ${C.border}`, color:C.cream, fontFamily:'inherit', fontSize:14, padding:'9px 12px', borderRadius:3, outline:'none' }
 
 function Tbl({ cols, children }: { cols: string[]; children: React.ReactNode }) {
   return (
     <div style={{ overflowX:'auto' }}>
       <table style={{ width:'100%', borderCollapse:'collapse' }}>
-        <thead><tr>{cols.map(c => <th key={c} style={{ fontSize:9, letterSpacing:2, textTransform:'uppercase', color:C.muted, padding:'9px 12px', textAlign:'left', borderBottom:`1px solid ${C.border}`, whiteSpace:'nowrap' }}>{c}</th>)}</tr></thead>
+        <thead><tr>{cols.map(c => <th key={c} style={{ fontSize:11, letterSpacing:2, textTransform:'uppercase', color:C.muted, padding:'9px 12px', textAlign:'left', borderBottom:`1px solid ${C.border}`, whiteSpace:'nowrap' }}>{c}</th>)}</tr></thead>
         <tbody>{children}</tbody>
       </table>
     </div>
@@ -187,10 +187,10 @@ function TR({ children }: { children: React.ReactNode }) {
   return <tr style={{ borderBottom:`1px solid rgba(201,168,76,0.05)` }}>{children}</tr>
 }
 function TD({ children, muted }: { children: React.ReactNode; muted?: boolean }) {
-  return <td style={{ padding:'11px 12px', fontSize:12.5, verticalAlign:'middle', color:muted?C.muted:undefined }}>{children}</td>
+  return <td style={{ padding:'11px 12px', fontSize:14, verticalAlign:'middle', color:muted?C.muted:undefined }}>{children}</td>
 }
 function TName({ name, sub }: { name: string; sub: string }) {
-  return <td style={{ padding:'11px 12px', verticalAlign:'middle' }}><div style={{ fontWeight:500, fontSize:13 }}>{name}</div><div style={{ fontSize:11, color:C.muted, marginTop:1 }}>{sub}</div></td>
+  return <td style={{ padding:'11px 12px', verticalAlign:'middle' }}><div style={{ fontWeight:500, fontSize:15 }}>{name}</div><div style={{ fontSize:13, color:C.muted, marginTop:1 }}>{sub}</div></td>
 }
 function ProgBar({ value, max }: { value: number; max: number }) {
   const pct = max ? Math.round((value/max)*100) : 0

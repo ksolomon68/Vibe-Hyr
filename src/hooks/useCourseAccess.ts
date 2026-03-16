@@ -36,6 +36,18 @@ export function useCourseAccess(courseSlug: string, userId: string | null): Acce
     }
 
     async function checkAccess() {
+      // First, check if user is super admin
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_super_admin')
+        .eq('id', userId)
+        .single()
+
+      if (profile?.is_super_admin) {
+        setState({ hasAccess: true, loading: false, tier: 'elite', orgName: null, orgStatus: 'active' })
+        return
+      }
+
       // Check course_access table (enforced by RLS — user can only see their own)
       const { data: access } = await supabase
         .from('course_access')

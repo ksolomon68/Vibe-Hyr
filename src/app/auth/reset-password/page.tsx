@@ -78,7 +78,7 @@ export default function ResetPasswordPage() {
             <div className="text-center">
               <div
                 className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6"
-                style={{ background: '#FF7B00', boxShadow: '0 0 30px rgba(255,123,0,0.4)' }}
+                style={{ background: 'var(--orange)', boxShadow: '0 0 30px rgba(255,127,48,0.4)' }}
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                   <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="#000"/>

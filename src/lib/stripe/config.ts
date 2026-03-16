@@ -28,13 +28,13 @@ export const TIER_CONFIG: Record<Tier, TierConfig> = {
     },
     perSeatPricing: {
       individual:     { monthly: 0,     annual: 0 },
-      corporate:      { monthly: 3.50,  annual: 29 },
+      corporate:      { monthly: 5.65,  annual: 59 },
       university:     { monthly: 2.25,  annual: 19 },
       k12:            { monthly: 1.40,  annual: 12 },
       'small-business': { monthly: 4.20, annual: 35 },
     },
     minSeats: { individual: 1, corporate: 25, university: 50, k12: 30, 'small-business': 5 },
-    annualFloor: { individual: 0, corporate: 725, university: 950, k12: 360, 'small-business': 175 },
+    annualFloor: { individual: 0, corporate: 1475, university: 950, k12: 360, 'small-business': 175 },
     courses: [
       'programming-the-gatekeeper',
       'the-educator-reset',
@@ -60,7 +60,7 @@ export const TIER_CONFIG: Record<Tier, TierConfig> = {
     },
     perSeatPricing: {
       individual:     { monthly: 27,    annual: 270 },
-      corporate:      { monthly: 5.90,  annual: 59 },
+      corporate:      { monthly: 5.65,  annual: 59 },
       university:     { monthly: 3.90,  annual: 39 },
       k12:            { monthly: 2.40,  annual: 24 },
       'small-business': { monthly: 6.50, annual: 65 },
@@ -96,7 +96,7 @@ export const TIER_CONFIG: Record<Tier, TierConfig> = {
     },
     perSeatPricing: {
       individual:     { monthly: 67,    annual: 670 },
-      corporate:      { monthly: 9.90,  annual: 99 },
+      corporate:      { monthly: 9.48,  annual: 99 },
       university:     { monthly: 6.90,  annual: 69 },
       k12:            { monthly: 4.50,  annual: 45 },
       'small-business': { monthly: 11.00, annual: 110 },

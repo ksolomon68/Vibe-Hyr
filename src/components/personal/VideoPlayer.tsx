@@ -22,13 +22,13 @@ const BACKDROP_STYLE: React.CSSProperties = {
 
 // Orange tint over the backdrop image
 const TINT_STYLE: React.CSSProperties = {
-  background: 'radial-gradient(ellipse at 30% 40%, rgba(255,123,0,0.15) 0%, rgba(10,10,10,0.5) 65%)',
+  background: 'radial-gradient(ellipse at 30% 40%, rgba(255,127,48,0.15) 0%, rgba(10,10,10,0.5) 65%)',
 }
 
 // Orange grid overlay
 const GRID_STYLE: React.CSSProperties = {
   backgroundImage:
-    'linear-gradient(rgba(255,123,0,0.25) 1px, transparent 1px), linear-gradient(90deg, rgba(255,123,0,0.25) 1px, transparent 1px)',
+    'linear-gradient(rgba(255,127,48,0.25) 1px, transparent 1px), linear-gradient(90deg, rgba(255,127,48,0.25) 1px, transparent 1px)',
   backgroundSize: '60px 60px',
 }
 
@@ -73,7 +73,7 @@ function ThumbnailOverlay({
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-5">
         {/* Play circle */}
         <div
-          style={{ background: '#FF7B00', boxShadow: '0 0 30px rgba(255,123,0,0.5)' }}
+          style={{ background: 'var(--orange)', boxShadow: '0 0 30px rgba(255,127,48,0.5)' }}
           className={`w-20 h-20 rounded-full flex items-center justify-center ${onClick ? 'group-hover:scale-105 transition-transform' : ''}`}
         >
           <Play size={30} className="ml-1" style={{ color: '#000', fill: '#000' }} />
@@ -89,7 +89,7 @@ function ThumbnailOverlay({
           </p>
           <p
             className="font-mono text-[0.58rem] tracking-[0.2em] uppercase"
-            style={{ color: '#888888', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}
+            style={{ color: 'var(--grey)', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}
           >
             {subtitle}
           </p>
