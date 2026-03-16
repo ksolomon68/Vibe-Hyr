@@ -5,7 +5,7 @@ export const EDUCATOR_COURSES: Course[] = [
     id: 'ed01',
     slug: 'the-educator-reset',
     title: 'The Educator Reset',
-    subtitle: 'Nervous System Health & Self-Mastery for All K–12 Staff',
+    subtitle: 'Nervous System Health & Self-Mastery for All Staff',
     description: 'The foundation of educational transformation. Learn to recognize and regulate your own nervous system so you can create calm classrooms and support student wellness.',
     tier: 'free',
     order_index: 1,

@@ -179,6 +179,10 @@ export default function WorkplaceLessonPlayer({
   const [completedMap, setCompletedMap] = useState<Record<string, string[]>>(externalProgress);
   const [quizPassed, setQuizPassed] = useState<Record<string, boolean>>({});
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  useEffect(() => {
+    if (window.innerWidth < 1024) setSidebarOpen(false);
+  }, []);
   const [activeTab, setActiveTab] = useState<"lesson" | "notes">("lesson");
   const [tab, setTab] = useState<"content" | "quiz">("content");
 
@@ -201,6 +205,7 @@ export default function WorkplaceLessonPlayer({
     setActiveTrackId(trackId);
     setActiveLessonId(lessonId);
     setTab("content");
+    if (window.innerWidth < 1024) setSidebarOpen(false);
     onNavigate?.(trackId, lessonId);
   }
 

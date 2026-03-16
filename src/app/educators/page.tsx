@@ -24,8 +24,13 @@ import { Footer } from '@/components/layout/Footer'
 import { DiscoveryCallModal } from '@/components/business/DiscoveryCallModal'
 import { CartPanel } from '@/components/pricing/CartPanel'
 import type { Tier } from '@/components/pricing/CartPanel'
+import { CourseCard } from '@/components/personal/CourseCard'
+import { COURSES } from '@/lib/data/courses'
+import { PersonalCheckoutModal } from '@/components/pricing/PersonalCheckoutModal'
+import type { PersonalTier } from '@/components/pricing/PersonalCheckoutModal'
 import { createClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
+import type { MembershipTier } from '@/types'
 import { EnergyFieldDiagram } from '@/components/education/EnergyFieldDiagram'
 
 const FADE_UP = {
@@ -49,7 +54,7 @@ const PROBLEMS = [
 ]
 
 const PROGRAMS = [
-  { number: '01', tag: 'Flagship Training', audience: 'All K–12 Staff', name: 'The Educator Reset', desc: 'Vibe Hyr\'s core staff program. Focuses on teacher wellness, nervous system literacy, and the energy of leadership.', pills: ['Nervous System Health', 'Emotional Resilience', 'Self-Mastery'], dark: true },
+  { number: '01', tag: 'Flagship Training', audience: 'All Staff', name: 'The Educator Reset', desc: 'Vibe Hyr\'s core staff program. Focuses on teacher wellness, nervous system literacy, and the energy of leadership.', pills: ['Nervous System Health', 'Emotional Resilience', 'Self-Mastery'], dark: true },
   { number: '02', tag: 'Leadership Track', audience: 'Admin & Principals', name: 'Vibrational Leadership', desc: 'How school leaders set the frequency for an entire building. Frameworks for supporting staff wellness from the top down.', pills: ['Culture Architecture', 'Wellness Advocacy', 'Conscious Leadership'], dark: false },
   { number: '03', tag: 'Co-Regulation', audience: 'Classroom Teachers', name: 'Co-Regulation Mastery', desc: 'The science of meeting a student\'s storm with your calm. Practical tools for de-escalating through presence.', pills: ['De-Escalation', 'Classroom Climate', 'Biology of Calm'], dark: false },
   { number: '04', tag: 'Sustainable Culture', audience: 'Districts & HR', name: 'The Retained Educator', desc: 'Systems-level approaches to reducing teacher turnover through culture-building and self-awareness integration.', pills: ['Staff Retention', 'Systemic Wellness', 'Culture ROI'], dark: false }
@@ -75,16 +80,35 @@ export default function EducationPage() {
   const [user, setUser] = useState<User | null>(null)
   const [panelOpen, setPanelOpen] = useState(false)
   const [panelTier, setPanelTier] = useState<Tier>('architect')
+  const [userTier, setUserTier] = useState<MembershipTier>('free')
+  const [modalOpen, setModalOpen] = useState(false)
+  const [modalTier, setModalTier] = useState<PersonalTier>('architect')
 
   const handleOpenPanel = (tier: Tier) => {
     setPanelTier(tier)
     setPanelOpen(true)
   }
 
+  const handleUpgrade = (tier: string) => {
+    const personalTier: PersonalTier = tier === 'elite' ? 'reality-master' : 'architect'
+    setModalTier(personalTier)
+    setModalOpen(true)
+  }
+
   React.useEffect(() => {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user)
+      if (user) {
+        supabase
+          .from('profiles')
+          .select('membership_tier')
+          .eq('id', user.id)
+          .single()
+          .then(({ data: profile }) => {
+            if (profile?.membership_tier) setUserTier(profile.membership_tier as MembershipTier)
+          })
+      }
     })
   }, [])
 
@@ -550,6 +574,43 @@ export default function EducationPage() {
         </div>
       </section>
 
+      {/* BROWSE COURSES */}
+      <section className="py-24 md:py-32 px-6 md:px-14 bg-zinc-950">
+        <div className="max-w-7xl mx-auto">
+          <motion.div {...FADE_UP} className="mb-10">
+            <span className="text-[0.7rem] uppercase tracking-[0.3em] text-orange-DEFAULT font-bold mb-4 block">For Individuals</span>
+            <h2 className="font-serif text-4xl md:text-5xl text-white leading-tight">
+              Personal development courses<br />
+              <span className="text-orange-bright italic">for every educator.</span>
+            </h2>
+            <p className="text-white/50 text-sm mt-4 max-w-xl">
+              Beyond staff training — these self-paced courses support the individual growth of every educator on your team. Course 1 is always free.
+            </p>
+          </motion.div>
+
+          {/* Tier key */}
+          <div className="py-6 border-y border-white/8 mb-10 flex flex-wrap gap-6 items-center">
+            <span className="font-mono text-[0.58rem] tracking-[0.25em] uppercase text-white/30">Access Key:</span>
+            <div className="flex flex-wrap gap-4">
+              <span className="badge-free">Free — Seeker</span>
+              <span className="badge-architect">Pro — Architect ($27/mo)</span>
+              <span className="badge-elite">Elite — Reality Master ($67/mo)</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-[2px] bg-orange-DEFAULT border-2 border-orange-DEFAULT">
+            {COURSES.map((course) => (
+              <CourseCard
+                key={course.id}
+                course={course}
+                userTier={userTier}
+                onUpgrade={handleUpgrade}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
       <Footer />
       <DiscoveryCallModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
       <CartPanel
@@ -558,6 +619,11 @@ export default function EducationPage() {
         initialTier={panelTier}
         initialSegment="k12"
         initialBilling="annual"
+      />
+      <PersonalCheckoutModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        initialTier={modalTier}
       />
     </main>
   )

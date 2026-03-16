@@ -842,3 +842,77 @@ h4 { font-size: 18px !important; }
 }
 .a11y-statement-link:hover { color: #E8621A; text-decoration: underline; }
 
+/* ══════════════════════════════════════════════
+   MOBILE RESPONSIVENESS
+══════════════════════════════════════════════ */
+
+/* Prevent horizontal scroll on all pages */
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+/* Ensure all interactive elements meet 44×44px minimum touch target */
+button,
+a,
+[role="button"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Override for inline/text links that should stay natural */
+p a,
+.nav-dropdown-item,
+.font-mono a,
+nav a {
+  min-height: unset;
+  min-width: unset;
+}
+
+/* Disable hover transforms on touch devices — prevents "stuck hover" */
+@media (hover: none) {
+  .btn-orange:hover,
+  .btn-outline:hover,
+  .btn-outline-orange:hover,
+  .card-premium:hover,
+  .card-dark:hover,
+  .btn-open-app:hover {
+    transform: none !important;
+  }
+}
+
+/* Mobile: stack buttons full-width in flex column containers */
+@media (max-width: 640px) {
+  .flex.flex-wrap.gap-4 > .btn-orange,
+  .flex.flex-wrap.gap-4 > .btn-outline,
+  .flex.flex-wrap.gap-4 > .btn-open-app,
+  .flex.flex-wrap.justify-center.gap-4 > a,
+  .flex.flex-wrap.justify-center.gap-4 > button {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+}
+
+/* Mobile hamburger button — ensure 44×44 touch target */
+.md\:hidden button[aria-label] {
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Mobile: profile avatar button touch target */
+.nav-item-group > button {
+  min-height: 44px;
+  padding: 8px;
+}
+
+/* Prevent tables from causing horizontal scroll */
+table {
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}

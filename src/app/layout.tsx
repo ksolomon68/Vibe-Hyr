@@ -4,6 +4,7 @@ import './globals.css'
 import { Toaster } from 'react-hot-toast'
 import { AccessibilityWidget } from '@/components/shared/AccessibilityWidget'
 import { ThemeProvider } from '@/app/providers/ThemeProvider'
+import { PWAInstallPrompt } from '@/components/shared/PWAInstallPrompt'
 
 const bebasNeue = Bebas_Neue({
   weight: '400',
@@ -49,6 +50,23 @@ export const metadata: Metadata = {
   },
   description: 'Master your internal state, transform your external world. Courses, quizzes, daily journaling, and a community built on the neuroscience of consciousness and the Law of Assumption.',
   keywords: ['law of assumption', 'neville goddard', 'manifestation', 'SATS', 'subconscious reprogramming', 'reality creation'],
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Vibe Hyr',
+    startupImage: '/apple-touch-icon.png',
+  },
+  icons: {
+    icon: [
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+      { url: '/icons/icon.svg',     sizes: 'any',      type: 'image/svg+xml' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
   openGraph: {
     title: 'Vibe Hyr — Raise Your Reality',
     description: 'The Architecture of Reality — a membership platform where neuroscience meets manifestation.',
@@ -63,6 +81,11 @@ export const metadata: Metadata = {
       },
     ],
     type: 'website',
+  },
+  other: {
+    'mobile-web-app-capable': 'yes',
+    'msapplication-TileColor': '#000000',
+    'msapplication-TileImage': '/icons/icon-192.png',
   },
 }
 
@@ -89,6 +112,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }}
           />
           <AccessibilityWidget />
+          <PWAInstallPrompt />
         </ThemeProvider>
       </body>
     </html>

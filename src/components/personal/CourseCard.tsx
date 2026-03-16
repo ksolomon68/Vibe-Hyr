@@ -37,7 +37,7 @@ export function CourseCard({ course, userTier = 'free', progress, isLarge, onUpg
       )}
     >
       {/* Big background number */}
-      <div className="absolute top-3 right-4 font-display text-[4rem] md:text-[7rem] leading-none text-orange-DEFAULT/6 pointer-events-none select-none overflow-hidden">
+      <div className="absolute top-3 right-4 font-display text-[3rem] md:text-[7rem] leading-none text-orange-DEFAULT opacity-[0.03] md:opacity-[0.06] pointer-events-none select-none overflow-hidden">
         {num}
       </div>
 

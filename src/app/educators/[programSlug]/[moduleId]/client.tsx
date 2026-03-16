@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { PlayerTopbar } from '@/components/shared/PlayerTopbar'
 import { PlayerSidebar } from '@/components/shared/PlayerSidebar'
@@ -29,6 +29,10 @@ export default function EducationPageClient({
 }: EducationPageClientProps) {
   const router      = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(true)
+
+  useEffect(() => {
+    if (window.innerWidth < 1024) setSidebarOpen(false)
+  }, [])
 
   const [completedMap, setCompletedMap] = useState<Record<string, boolean>>(() => {
     const map: Record<string, boolean> = {}

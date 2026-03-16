@@ -36,7 +36,7 @@ export const PROGRAMS: EducationProgram[] = [
     id: "ed01",
     num: "01",
     slug: "the-educator-reset",
-    audience: "All K–12 Staff",
+    audience: "All Staff",
     title: "The Educator Reset",
     subtitle: "Nervous System Health · Emotional Resilience · Self-Mastery",
     description: "Vibe Hyr's core staff program. Focuses on teacher wellness, nervous system literacy, and the energy of leadership. The foundation of everything that follows.",

@@ -351,3 +351,46 @@
   -moz-appearance: textfield;
   appearance: textfield;
 }
+
+/* ── Mobile: tier cards stack vertically ──────────────────── */
+@media (max-width: 767px) {
+  .tier-grid {
+    grid-template-columns: 1fr;
+    padding-top: 0;
+    border-radius: 8px;
+  }
+
+  /* Reset horizontal border/radius overrides */
+  .tier-card:first-child {
+    border-left: 1px solid var(--p-border);
+    border-radius: 8px 8px 0 0;
+    border-right: 1px solid var(--p-border);
+  }
+  .tier-card:last-child {
+    border-right: 1px solid var(--p-border);
+    border-radius: 0 0 8px 8px;
+  }
+
+  /* Featured card: add top margin so popular-badge has room */
+  .tier-card.featured {
+    margin-top: 16px;
+  }
+
+  /* Checkout form: single column on mobile */
+  .checkout-inner {
+    grid-template-columns: 1fr;
+  }
+
+  /* Volume section: full bleed on mobile */
+  .volume-section {
+    padding: 40px 20px;
+  }
+
+  /* Pricing nav: tighten padding */
+  .pricing-nav {
+    padding: 16px 20px;
+  }
+  .pricing-nav .nav-links {
+    display: none;
+  }
+}

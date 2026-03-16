@@ -18,7 +18,7 @@ const COURSES = {
     { title: 'Echo Theory Delay',                   tier: 'Reality Master', href: '/personal/navigating-the-echo-theory-delay/c04-l01' },
   ],
   educators: [
-    { title: 'The Educator Reset',      tier: 'All K–12 staff',       href: '/educators/the-educator-reset/ed01-m01' },
+    { title: 'The Educator Reset',      tier: 'All staff',            href: '/educators/the-educator-reset/ed01-m01' },
     { title: 'Vibrational Leadership',  tier: 'Admin & principals',   href: '/educators/vibrational-leadership/ed02-m01' },
     { title: 'Co-Regulation Mastery',   tier: 'Classroom teachers',   href: '/educators/co-regulation-mastery/ed03-m01' },
     { title: 'The Retained Educator',   tier: 'Districts & HR',       href: '/educators/the-retained-educator/ed04-m01' },
@@ -121,7 +121,7 @@ export function Navbar() {
           </Link>
 
           {/* ── Desktop: Discovery nav ─────────────────────────────────────── */}
-          <ul className="hidden md:flex items-center gap-6 xl:gap-8 flex-1">
+          <ul className="hidden md:flex items-center gap-6 xl:gap-8 flex-1 justify-center">
 
             {/* Static links */}
             {STATIC_LINKS.map(link => (
@@ -304,7 +304,7 @@ export function Navbar() {
       {/* ── Mobile Menu ───────────────────────────────────────────────────── */}
       {open && (
         <div
-          className="fixed inset-0 z-40 bg-black pt-[68px] md:hidden overflow-y-auto"
+          className="fixed inset-0 z-40 bg-black pt-[68px] md:hidden overflow-y-auto overscroll-contain"
           role="dialog"
           aria-label="Mobile navigation"
         >
@@ -319,7 +319,7 @@ export function Navbar() {
                   <button
                     onClick={() => setMobileExpanded(isExpanded ? null : key)}
                     aria-expanded={isExpanded}
-                    className="font-display text-3xl tracking-widest text-white hover:text-[var(--orange)] transition-colors flex items-center justify-between w-full text-left"
+                    className="font-display text-3xl tracking-widest text-white hover:text-[var(--orange)] transition-colors flex items-center justify-between w-full text-left py-2 min-h-[52px]"
                   >
                     {label.toUpperCase()}
                     <ChevronDown
@@ -352,7 +352,7 @@ export function Navbar() {
                 key={link.href}
                 href={link.href}
                 onClick={() => setOpen(false)}
-                className="font-display text-3xl tracking-widest text-white hover:text-[var(--orange)] transition-colors"
+                className="font-display text-3xl tracking-widest text-white hover:text-[var(--orange)] transition-colors py-2 min-h-[52px] flex items-center"
               >
                 {link.label.toUpperCase()}
               </Link>
