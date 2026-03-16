@@ -11,6 +11,7 @@ import type { Profile } from '@/types'
 export default function AccountSettingsPage() {
   const [profile, setProfile]   = useState<Profile | null>(null)
   const [isOrgAdmin, setIsOrgAdmin] = useState(false)
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
   const [loading, setLoading]   = useState(true)
   const [saving, setSaving]     = useState(false)
   const [portalLoading, setPortalLoading] = useState(false)
@@ -50,7 +51,8 @@ export default function AccountSettingsPage() {
             membership_tier: profileData.membership_tier || 'free'
           })
         }
-        setIsOrgAdmin(!!orgData)
+        setIsOrgAdmin(profileData?.role === 'institution_admin')
+        setIsSuperAdmin(!!profileData?.is_super_admin)
         setLoading(false)
       })
     })
@@ -105,6 +107,9 @@ export default function AccountSettingsPage() {
     }
   }
 
+  const isOrgMember = formData.institution_type !== 'individual'
+
+  // Personal pricing is only shown for individual accounts
   const tierLabel = formData.membership_tier === 'free'
     ? 'Seeker (Free)'
     : formData.membership_tier === 'architect'
@@ -187,9 +192,13 @@ export default function AccountSettingsPage() {
               <div>
                 <label className="block text-sm font-medium text-grey-DEFAULT mb-2">Membership Tier</label>
                 <div className="w-full px-4 py-3 bg-black-2 border border-white/10 rounded-lg text-grey-dark">
-                  {tierLabel}
+                  {isOrgMember ? 'Managed by Your Institution' : tierLabel}
                 </div>
-                <p className="text-xs text-grey-dark mt-1">Tier changes are managed through billing.</p>
+                <p className="text-xs text-grey-dark mt-1">
+                  {isOrgMember
+                    ? 'Your access tier is managed by your organization administrator.'
+                    : 'Tier changes are managed through billing.'}
+                </p>
               </div>
             </div>
 
@@ -209,22 +218,69 @@ export default function AccountSettingsPage() {
             <h2 className="font-display text-2xl text-white mb-6">Billing & Subscription</h2>
 
             <div className="space-y-4">
-              {/* Org admin: manage via institutional dashboard */}
+              {/* Org admin: full billing management controls */}
               {isOrgAdmin && (
-                <div className="flex items-center justify-between p-4 bg-black-2 rounded-lg">
-                  <div>
-                    <h3 className="text-white font-medium">Organization Plan</h3>
-                    <p className="text-grey-DEFAULT text-sm">
-                      Upgrade your plan, manage seats, and view billing history for your organization.
-                    </p>
+                <>
+                  <div className="flex items-center justify-between p-4 bg-black-2 rounded-lg">
+                    <div>
+                      <h3 className="text-white font-medium">Institution Plan</h3>
+                      <p className="text-grey-DEFAULT text-sm">
+                        View your organization&apos;s current plan and billing details.
+                      </p>
+                    </div>
+                    <Link
+                      href="/admin/institutional"
+                      className="px-4 py-2 border border-orange text-orange rounded-lg hover:bg-orange hover:text-black transition-colors whitespace-nowrap"
+                    >
+                      View Plan
+                    </Link>
                   </div>
-                  <Link
-                    href="/admin/institutional"
-                    className="px-4 py-2 border border-orange text-orange rounded-lg hover:bg-orange hover:text-black transition-colors whitespace-nowrap"
-                  >
-                    Manage Org
-                  </Link>
-                </div>
+
+                  <div className="flex items-center justify-between p-4 bg-black-2 rounded-lg">
+                    <div>
+                      <h3 className="text-white font-medium">Upgrade / Downgrade Plan</h3>
+                      <p className="text-grey-DEFAULT text-sm">
+                        Change your institution&apos;s access tier for all members.
+                      </p>
+                    </div>
+                    <Link
+                      href="/admin/institutional"
+                      className="px-4 py-2 border border-orange text-orange rounded-lg hover:bg-orange hover:text-black transition-colors whitespace-nowrap"
+                    >
+                      Change Plan
+                    </Link>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-black-2 rounded-lg">
+                    <div>
+                      <h3 className="text-white font-medium">Seat Management</h3>
+                      <p className="text-grey-DEFAULT text-sm">
+                        Add or remove user seats. Invite new members or revoke access.
+                      </p>
+                    </div>
+                    <Link
+                      href="/admin/users"
+                      className="px-4 py-2 border border-white/20 text-white rounded-lg hover:border-white/40 transition-colors whitespace-nowrap"
+                    >
+                      Manage Users
+                    </Link>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-red-950/30 border border-red-500/20 rounded-lg">
+                    <div>
+                      <h3 className="text-red-400 font-medium">Cancel Institution Plan</h3>
+                      <p className="text-grey-DEFAULT text-sm">
+                        Cancel your organization&apos;s subscription. All members retain access until end of billing period.
+                      </p>
+                    </div>
+                    <Link
+                      href="/admin/institutional"
+                      className="px-4 py-2 border border-red-500/40 text-red-400 rounded-lg hover:border-red-500/70 transition-colors whitespace-nowrap"
+                    >
+                      Cancel Plan
+                    </Link>
+                  </div>
+                </>
               )}
 
               {/* Individual paying user: Stripe portal */}
@@ -297,8 +353,8 @@ export default function AccountSettingsPage() {
                 </div>
               )}
 
-              {/* Org member (non-admin): contact admin */}
-              {!isOrgAdmin && formData.institution_type !== 'individual' && (
+              {/* Org member (non-admin, non-super-admin): contact admin */}
+              {!isOrgAdmin && !isSuperAdmin && formData.institution_type !== 'individual' && (
                 <div className="p-4 bg-black-2 rounded-lg">
                   <h3 className="text-white font-medium mb-1">Subscription Managed by Your Organization</h3>
                   <p className="text-grey-DEFAULT text-sm">

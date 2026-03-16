@@ -45,7 +45,7 @@ export interface SAUser {
   id: string; full_name: string | null; email: string
   institution_type: string; org_id: string | null; org_name: string | null
   membership_tier: string; is_bypassed: boolean; bypass_reason: string | null
-  updated_at: string; created_at: string
+  role: string; updated_at: string; created_at: string
 }
 
 export interface AuditEntry {
@@ -189,8 +189,14 @@ function TR({ children }: { children: React.ReactNode }) {
 function TD({ children, muted }: { children: React.ReactNode; muted?: boolean }) {
   return <td style={{ padding:'11px 12px', fontSize:14, verticalAlign:'middle', color:muted?C.muted:undefined }}>{children}</td>
 }
-function TName({ name, sub }: { name: string; sub: string }) {
-  return <td style={{ padding:'11px 12px', verticalAlign:'middle' }}><div style={{ fontWeight:500, fontSize:15 }}>{name}</div><div style={{ fontSize:13, color:C.muted, marginTop:1 }}>{sub}</div></td>
+function TName({ name, sub, badge }: { name: string; sub: string; badge?: string }) {
+  return <td style={{ padding:'11px 12px', verticalAlign:'middle' }}>
+    <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+      <span style={{ fontWeight:500, fontSize:15 }}>{name}</span>
+      {badge && <span style={{ fontSize:10, padding:'2px 6px', borderRadius:3, background:'rgba(232,98,26,0.15)', color:C.orange, border:`1px solid rgba(232,98,26,0.3)`, fontWeight:600, letterSpacing:'0.05em', textTransform:'uppercase' }}>{badge}</span>}
+    </div>
+    <div style={{ fontSize:13, color:C.muted, marginTop:1 }}>{sub}</div>
+  </td>
 }
 function ProgBar({ value, max }: { value: number; max: number }) {
   const pct = max ? Math.round((value/max)*100) : 0
@@ -815,7 +821,7 @@ function UsersPage({ users, onToast, onAddUser, onEdit }: { users:SAUser[]; onTo
             const s = uStatus(u)
             return (
               <TR key={u.id}>
-                <TName name={u.full_name??'—'} sub={u.email}/>
+                <TName name={u.full_name??'—'} sub={u.email} badge={u.role==='institution_admin'?'Org Admin':undefined}/>
                 <TD>{typePill(u.institution_type)}</TD>
                 <TD muted>{u.org_name??'—'}</TD>
                 <TD>{tierPill(u.membership_tier)}</TD>

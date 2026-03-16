@@ -66,7 +66,7 @@ export default async function SuperAdminPage() {
       .order('created_at', { ascending: false }),
     // All users (non super admin)
     admin.from('profiles')
-      .select('id, full_name, email, institution_type, org_id, membership_tier, is_bypassed, bypass_reason, updated_at, created_at')
+      .select('id, full_name, email, institution_type, org_id, membership_tier, is_bypassed, bypass_reason, role, updated_at, created_at')
       .neq('is_super_admin', true)
       .order('created_at', { ascending: false })
       .limit(300),
@@ -164,13 +164,14 @@ export default async function SuperAdminPage() {
   const users: SAUser[] = (rawUsers ?? []).map((u: {
     id: string; full_name: string | null; email: string; institution_type: string;
     org_id: string | null; membership_tier: string; is_bypassed: boolean;
-    bypass_reason: string | null; updated_at: string; created_at: string;
+    bypass_reason: string | null; role: string; updated_at: string; created_at: string;
   }) => ({
     id: u.id, full_name: u.full_name, email: u.email,
     institution_type: u.institution_type, org_id: u.org_id,
     org_name: u.org_id ? orgNameMap[u.org_id] ?? null : null,
     membership_tier: u.membership_tier, is_bypassed: u.is_bypassed,
-    bypass_reason: u.bypass_reason, updated_at: u.updated_at, created_at: u.created_at,
+    bypass_reason: u.bypass_reason, role: u.role,
+    updated_at: u.updated_at, created_at: u.created_at,
   }))
 
   const auditLog: AuditEntry[] = (rawAudit ?? []).map((e: {

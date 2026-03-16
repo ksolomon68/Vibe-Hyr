@@ -7,10 +7,21 @@ import type { AccessDeniedReason } from '@/lib/courseAccess'
 interface Props {
   reason: AccessDeniedReason
   courseSlug: string
+  sectionLabel?: string  // e.g. 'PERSONAL', 'BUSINESS', 'EDUCATION'
+  backHref?: string      // override the secondary "go back" link
+  backLabel?: string     // override the secondary link label
 }
 
-export function CourseLockedScreen({ reason, courseSlug }: Props) {
+export function CourseLockedScreen({
+  reason,
+  courseSlug,
+  sectionLabel = 'PERSONAL',
+  backHref,
+  backLabel,
+}: Props) {
   const isInstitutionBlocked = reason === 'institution_blocked'
+  const resolvedBackHref  = backHref  ?? `/personal/${courseSlug}`
+  const resolvedBackLabel = backLabel ?? 'View Course Details'
 
   return (
     <main
@@ -81,7 +92,7 @@ export function CourseLockedScreen({ reason, courseSlug }: Props) {
         >
           {isInstitutionBlocked
             ? "This course is not included in your institution\u2019s plan. Contact your administrator to request access."
-            : 'This course is available to a higher membership tier. Upgrade your plan to continue your journey.'}
+            : `This course is available to a higher \u201c${sectionLabel}\u201d membership tier. Upgrade your plan to continue your journey.`}
         </p>
 
         {/* Divider */}
@@ -162,7 +173,7 @@ export function CourseLockedScreen({ reason, courseSlug }: Props) {
               Upgrade Plan <ArrowRight size={14} />
             </Link>
             <Link
-              href={`/personal/${courseSlug}`}
+              href={resolvedBackHref}
               style={{
                 fontFamily: 'var(--font-ibm-mono, "IBM Plex Mono", monospace)',
                 fontSize: '0.7rem',
@@ -172,7 +183,7 @@ export function CourseLockedScreen({ reason, courseSlug }: Props) {
                 textDecoration: 'none',
               }}
             >
-              View Course Details
+              {resolvedBackLabel}
             </Link>
           </div>
         )}

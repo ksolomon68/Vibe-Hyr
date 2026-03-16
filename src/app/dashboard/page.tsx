@@ -45,6 +45,7 @@ export default async function DashboardPage() {
   const tier             = profile?.membership_tier ?? 'free'
   const institutionType  = profile?.institution_type ?? 'individual'
   const isSuperAdmin     = profile?.is_super_admin ?? false
+  const isOrgAdmin       = profile?.role === 'institution_admin'
 
   // ── Stats queries (shared across all user types) ───────────────────────────
   const [
@@ -162,15 +163,23 @@ export default async function DashboardPage() {
                 </span>
               </h1>
             </div>
-            <div className="flex items-center gap-3 bg-black-2 border border-orange/40 px-5 py-3">
-              <Crown size={16} className="text-orange" />
-              <div>
-                <span className="font-display text-xl text-orange block leading-none">
-                  {getTierLabel(tier)}
-                </span>
-                <span className="font-mono text-[0.55rem] tracking-widest text-grey-dark uppercase">
-                  Current Tier
-                </span>
+            <div className="flex items-center gap-3 flex-wrap">
+              {isOrgAdmin && (
+                <div className="flex items-center gap-2 bg-orange/10 border border-orange/40 px-4 py-3">
+                  <Users size={15} className="text-orange" />
+                  <span className="font-mono text-[0.6rem] tracking-widest uppercase text-orange">Institution Admin</span>
+                </div>
+              )}
+              <div className="flex items-center gap-3 bg-black-2 border border-orange/40 px-5 py-3">
+                <Crown size={16} className="text-orange" />
+                <div>
+                  <span className="font-display text-xl text-orange block leading-none">
+                    {getTierLabel(tier)}
+                  </span>
+                  <span className="font-mono text-[0.55rem] tracking-widest text-grey-dark uppercase">
+                    Current Tier
+                  </span>
+                </div>
               </div>
             </div>
           </div>

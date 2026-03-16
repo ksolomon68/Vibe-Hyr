@@ -41,13 +41,14 @@ const STATIC_LINKS = [
   { href: '/',        label: 'Home' },
   { href: '/personal', label: 'Courses' },
   { href: '/pricing', label: 'Membership' },
+  { href: '/blog',    label: 'Blog' },
 ]
 
 // ── Role helper ──────────────────────────────────────────────────────────────
 function getUserRole(profile: Profile | null): 'individual' | 'orgAdmin' | 'superAdmin' {
   if (!profile) return 'individual'
-  if (profile.is_super_admin) return 'superAdmin'
-  if (profile.institution_id) return 'orgAdmin'
+  if (profile.role === 'super_admin') return 'superAdmin'
+  if (profile.role === 'institution_admin') return 'orgAdmin'
   return 'individual'
 }
 
@@ -229,9 +230,9 @@ export function Navbar() {
                       <span className="nav-dropdown-label">My Courses</span>
                       <span className="nav-dropdown-desc">Progress &amp; learning</span>
                     </Link>
-                    <Link href="/pricing" className="nav-dropdown-item">
-                      <span className="nav-dropdown-label">Membership</span>
-                      <span className="nav-dropdown-desc">Manage your plan</span>
+                    <Link href="/community" className="nav-dropdown-item">
+                      <span className="nav-dropdown-label">Community</span>
+                      <span className="nav-dropdown-desc">Connect &amp; share wins</span>
                     </Link>
                     <Link href="/account" className="nav-dropdown-item">
                       <span className="nav-dropdown-label">Account Settings</span>
@@ -246,7 +247,7 @@ export function Navbar() {
                           <span className="nav-dropdown-label" style={{ color: 'var(--orange)' }}>Organization Dashboard</span>
                           <span className="nav-dropdown-desc">Team overview &amp; stats</span>
                         </Link>
-                        <Link href="/admin/institutional" className="nav-dropdown-item">
+                        <Link href="/admin/users" className="nav-dropdown-item">
                           <span className="nav-dropdown-label" style={{ color: 'var(--orange)' }}>Manage Users</span>
                           <span className="nav-dropdown-desc">Add, remove &amp; assign seats</span>
                         </Link>
@@ -261,9 +262,9 @@ export function Navbar() {
                           <span className="nav-dropdown-label" style={{ color: 'var(--orange)' }}>Platform Management</span>
                           <span className="nav-dropdown-desc">Users, orgs &amp; settings</span>
                         </Link>
-                        <Link href="/admin/super" className="nav-dropdown-item">
-                          <span className="nav-dropdown-label" style={{ color: 'var(--orange)' }}>Course Editor</span>
-                          <span className="nav-dropdown-desc">Manage curriculum</span>
+                        <Link href="/admin/users" className="nav-dropdown-item">
+                          <span className="nav-dropdown-label" style={{ color: 'var(--orange)' }}>Manage Users</span>
+                          <span className="nav-dropdown-desc">All platform users</span>
                         </Link>
                         <Link href="/admin/super" className="nav-dropdown-item">
                           <span className="nav-dropdown-label" style={{ color: 'var(--orange)' }}>Global Analytics</span>
@@ -375,22 +376,32 @@ export function Navbar() {
                   )}
 
                   {/* Standard */}
-                  <Link href="/dashboard" onClick={() => setOpen(false)} className="btn-orange text-center">My Courses</Link>
-                  <Link href="/pricing"   onClick={() => setOpen(false)} className="btn-outline text-center">Membership</Link>
-                  <Link href="/account"   onClick={() => setOpen(false)} className="btn-outline text-center">Account Settings</Link>
+                  <Link href="/dashboard"  onClick={() => setOpen(false)} className="btn-orange text-center">My Courses</Link>
+                  <Link href="/community"  onClick={() => setOpen(false)} className="btn-outline text-center">Community</Link>
+                  <Link href="/account"    onClick={() => setOpen(false)} className="btn-outline text-center">Account Settings</Link>
 
                   {/* Org Admin */}
                   {userRole === 'orgAdmin' && (
-                    <Link href="/admin/institutional" onClick={() => setOpen(false)} className="btn-outline text-center" style={{ color: 'var(--orange)', borderColor: 'var(--orange)' }}>
-                      Organization Dashboard
-                    </Link>
+                    <>
+                      <Link href="/admin/institutional" onClick={() => setOpen(false)} className="btn-outline text-center" style={{ color: 'var(--orange)', borderColor: 'var(--orange)' }}>
+                        Organization Dashboard
+                      </Link>
+                      <Link href="/admin/users" onClick={() => setOpen(false)} className="btn-outline text-center" style={{ color: 'var(--orange)', borderColor: 'var(--orange)' }}>
+                        Manage Users
+                      </Link>
+                    </>
                   )}
 
                   {/* Super Admin */}
                   {userRole === 'superAdmin' && (
-                    <Link href="/admin/super" onClick={() => setOpen(false)} className="btn-outline text-center" style={{ color: 'var(--orange)', borderColor: 'var(--orange)' }}>
-                      Platform Management
-                    </Link>
+                    <>
+                      <Link href="/admin/super"  onClick={() => setOpen(false)} className="btn-outline text-center" style={{ color: 'var(--orange)', borderColor: 'var(--orange)' }}>
+                        Platform Management
+                      </Link>
+                      <Link href="/admin/users" onClick={() => setOpen(false)} className="btn-outline text-center" style={{ color: 'var(--orange)', borderColor: 'var(--orange)' }}>
+                        Manage Users
+                      </Link>
+                    </>
                   )}
 
                   <button onClick={handleLogout} className="btn-outline text-center opacity-50">Log Out</button>

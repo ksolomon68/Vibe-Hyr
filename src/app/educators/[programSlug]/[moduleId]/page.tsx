@@ -1,86 +1,57 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-import { PROGRAMS } from '@/lib/education/curriculum'
-import EducationPageClient from './client'
+// app/educators/[programSlug]/[moduleId]/page.tsx
+// Access is enforced server-side via course_catalog RLS policies.
+
 import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+import { PROGRAMS } from '@/lib/education/curriculum'
+import { CourseLockedScreen } from '@/components/CourseLockedScreen'
+import EducationPageClient from './client'
 
 export default async function EducationModulePage({
-  params
+  params,
 }: {
   params: { programSlug: string; moduleId: string }
 }) {
-  const cookieStore = cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll() },
-      },
-    }
-  )
+  const supabase = createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect('/auth/login?redirect=/educators/' + params.programSlug + '/' + params.moduleId)
-  }
+  if (!user) redirect('/auth/login?redirect=/educators/' + params.programSlug + '/' + params.moduleId)
 
   const pIdx = PROGRAMS.findIndex(p => p.slug === params.programSlug)
   if (pIdx === -1) redirect('/educators')
-  
+
   const program = PROGRAMS[pIdx]
-  const mIdx = program.modules.findIndex(m => m.id === params.moduleId)
+  const mIdx    = program.modules.findIndex(m => m.id === params.moduleId)
   if (mIdx === -1) redirect(`/educators/${program.slug}/${program.modules[0].id}`)
-  
+
   const module = program.modules[mIdx]
 
-  // --- ACCESS GATING ---
-  const PROGRAM_TIERS: Record<string, string> = {
-    'the-educator-reset': 'free',
-    'vibrational-leadership': 'architect',
-    'co-regulation-mastery': 'architect',
-    'the-retained-educator': 'elite'
-  }
-
-  const [
-    { data: profile },
-    { data: progressData },
-    { data: courseAccessData }
-  ] = await Promise.all([
+  // ── DB-level access gate (RLS enforces membership_type + sub_tier) ──────────
+  const [{ data: catalogEntry }, { data: progressData }] = await Promise.all([
     supabase
-      .from('profiles')
-      .select('membership_tier, is_super_admin')
-      .eq('id', user.id)
-      .single(),
+      .from('course_catalog')
+      .select('id')
+      .eq('slug', params.programSlug)
+      .maybeSingle(),
     supabase
       .from('education_progress')
       .select('module_id')
       .eq('user_id', user.id),
-    supabase
-      .from('course_access')
-      .select('course_slug')
-      .eq('user_id', user.id)
-      .eq('course_slug', params.programSlug)
   ])
 
-  const userTier = (profile?.membership_tier as any) ?? 'free'
-  const requiredTier = PROGRAM_TIERS[params.programSlug] ?? 'free'
-  const hasDirectAccess = (courseAccessData ?? []).length > 0
-
-  // Admin access (architect or elite) or direct grant
-  const hasTierAccess = (userTier === 'architect' || userTier === 'elite' || userTier === 'admin')
-  
-  // Note: hasAccess(userTier, requiredTier) is better if hierarchy is strict
-  // For Educators, seeker(free) gets Reset, Architect gets 1-3, Elite gets all.
-  const TIER_RANK: Record<string, number> = { free: 0, architect: 1, elite: 2 }
-  const canAccess = profile?.is_super_admin || TIER_RANK[userTier] >= TIER_RANK[requiredTier] || hasDirectAccess
-
-  if (!canAccess) {
-    redirect('/educators?error=upgrade_required')
+  if (!catalogEntry) {
+    return (
+      <CourseLockedScreen
+        reason="tier_required"
+        courseSlug={params.programSlug}
+        sectionLabel="EDUCATION"
+        backHref="/educators"
+        backLabel="Back to Programs"
+      />
+    )
   }
 
-  const initialCompleted = progressData?.map(p => p.module_id) || []
+  const initialCompleted = progressData?.map(p => p.module_id) ?? []
 
   return (
     <EducationPageClient

@@ -7,6 +7,10 @@ import { CourseLockedScreen } from '@/components/CourseLockedScreen'
 import { LessonPlayerClient } from '@/components/personal/LessonPlayerClient'
 import type { MembershipTier } from '@/types'
 
+// course_catalog RLS is the authoritative security gate.
+// canAccessCourse() is used only to determine the UX reason (institution vs tier).
+
+
 export async function generateStaticParams() {
   const params: { slug: string; lessonId: string }[] = []
   for (const course of COURSES) {
@@ -57,35 +61,26 @@ export default async function LessonPage({
       { data: profile },
       { data: progress },
       { data: quizAttempts },
-      { data: courseAccessData }
+      { data: courseAccessData },
+      { data: catalogEntry },
     ] = await Promise.all([
-      // Membership tier + institution type
-      supabase
-        .from('profiles')
+      supabase.from('profiles')
         .select('membership_tier, institution_type, is_super_admin')
-        .eq('id', user.id)
-        .single(),
-
-      // Completed lessons
-      supabase
-        .from('course_progress')
+        .eq('id', user.id).single(),
+      supabase.from('course_progress')
         .select('lesson_id')
-        .eq('user_id', user.id)
-        .eq('course_id', course.id),
-
-      // Passed quizzes
-      supabase
-        .from('course_quiz_attempts')
+        .eq('user_id', user.id).eq('course_id', course.id),
+      supabase.from('course_quiz_attempts')
         .select('lesson_id')
-        .eq('user_id', user.id)
-        .eq('passed', true),
-
-      // Direct course access grants (e.g. from seats or manual admin grant)
-      supabase
-        .from('course_access')
+        .eq('user_id', user.id).eq('passed', true),
+      supabase.from('course_access')
         .select('course_slug')
-        .eq('user_id', user.id)
-        .eq('course_slug', course.slug)
+        .eq('user_id', user.id).eq('course_slug', course.slug),
+      // DB-level access gate: RLS returns null if user lacks entitlement
+      supabase.from('course_catalog')
+        .select('id')
+        .eq('slug', course.slug)
+        .maybeSingle(),
     ])
 
     userTier         = (profile?.membership_tier as MembershipTier) ?? 'free'
@@ -98,12 +93,11 @@ export default async function LessonPage({
     if (!profile?.is_super_admin) {
       // Preview lessons are always accessible regardless of tier or institution
       if (!lesson.is_preview && !hasDirectAccess) {
-        const { allowed, reason } = canAccessCourse(course.slug, userTier, institutionType)
-
-        if (!allowed) {
-          return (
-            <CourseLockedScreen reason={reason!} courseSlug={course.slug} />
-          )
+        // Primary gate: DB RLS (authoritative — blocks direct URL access too)
+        if (!catalogEntry) {
+          // Use canAccessCourse only to determine the reason for the locked screen UX
+          const { reason } = canAccessCourse(course.slug, userTier, institutionType)
+          return <CourseLockedScreen reason={reason ?? 'tier_required'} courseSlug={course.slug} sectionLabel="PERSONAL" />
         }
       }
     }

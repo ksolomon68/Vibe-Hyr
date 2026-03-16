@@ -2,6 +2,7 @@
 
 export type MembershipTier = 'free' | 'architect' | 'elite'
 export type InstitutionType = 'individual' | 'education' | 'business'
+export type UserRole = 'super_admin' | 'institution_admin' | 'educator' | 'business' | 'personal'
 
 export interface Profile {
   id: string
@@ -10,7 +11,8 @@ export interface Profile {
   avatar_url: string | null
   membership_tier: MembershipTier
   institution_type: InstitutionType
-  institution_id: string | null
+  org_id: string | null
+  role: UserRole
   stripe_customer_id: string | null
   stripe_subscription_id: string | null
   journal_streak: number
