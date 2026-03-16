@@ -617,7 +617,7 @@ export default function EducationPage() {
         isOpen={panelOpen}
         onClose={() => setPanelOpen(false)}
         initialTier={panelTier}
-        initialSegment="k12"
+        initialSegment="university"
         initialBilling="annual"
       />
       <PersonalCheckoutModal
