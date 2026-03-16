@@ -9,15 +9,15 @@ import { createClient } from '@/lib/supabase/client'
 interface Org {
   id: string
   name: string
-  plan: string
+  tier: string
   segment: string
-  seats_total: number
+  seats_purchased: number
   seats_used: number
   domain?: string | null
   website?: string | null
   industry?: string | null
   billing_email?: string | null
-  admin_user_id: string
+  admin_user_id?: string | null
 }
 
 interface Member {
@@ -90,7 +90,7 @@ function getMemberStatus(m: Member): 'active' | 'pending' | 'inactive' {
 function DashboardPage({ org, members }: { org: Org; members: Member[] }) {
   const active   = members.filter(m => getMemberStatus(m) === 'active').length
   const inactive = members.filter(m => getMemberStatus(m) === 'inactive').length
-  const seatsLeft = org.seats_total - org.seats_used
+  const seatsLeft = org.seats_purchased - org.seats_used
 
   return (
     <div>
@@ -99,8 +99,8 @@ function DashboardPage({ org, members }: { org: Org; members: Member[] }) {
         {[
           { label:'Active Users',          value: active,             change:`${inactive} inactive` },
           { label:'Avg. Course Completion', value:'—',                change:'No data yet' },
-          { label:'Seats Remaining',        value: seatsLeft,         change:`of ${org.seats_total} total` },
-          { label:'Plan',                   value: org.plan ?? '—',   change: org.segment ?? '' },
+          { label:'Seats Remaining',        value: seatsLeft,         change:`of ${org.seats_purchased} total` },
+          { label:'Plan',                   value: org.tier ?? '—',   change: org.segment ?? '' },
         ].map(s => (
           <div key={s.label} style={{ background:C.dark3, border:`1px solid ${C.border}`, borderRadius:8, padding:20, position:'relative', overflow:'hidden' }}>
             <div style={{ fontSize:10, letterSpacing:2, textTransform:'uppercase', color:C.muted, marginBottom:10 }}>{s.label}</div>
@@ -177,7 +177,7 @@ function UsersPage({ org, members, onToast }: { org: Org; members: Member[]; onT
   const filtered = members.filter(m =>
     `${m.full_name ?? ''} ${m.email} ${m.membership_tier}`.toLowerCase().includes(query.toLowerCase())
   )
-  const seatsLeft = org.seats_total - org.seats_used
+  const seatsLeft = org.seats_purchased - org.seats_used
 
   return (
     <div>
@@ -193,7 +193,7 @@ function UsersPage({ org, members, onToast }: { org: Org; members: Member[]; onT
         </div>
         <div style={{ width:1, height:40, background:C.border }} />
         <div>
-          <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:32, color:C.cream }}>{org.seats_total}</div>
+          <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:32, color:C.cream }}>{org.seats_purchased}</div>
           <div style={{ fontSize:11, color:C.muted }}>Total License</div>
         </div>
         <div style={{ flex:1 }} />
@@ -314,7 +314,7 @@ function PaymentsPage({ org, onToast }: { org: Org; onToast: (m: string) => void
     },
   ]
 
-  const current = org.plan?.toLowerCase().includes('elite') ? 'elite' : org.plan?.toLowerCase().includes('architect') ? 'architect' : 'seeker'
+  const current = org.tier?.toLowerCase().includes('elite') ? 'elite' : org.tier?.toLowerCase().includes('architect') ? 'architect' : 'seeker'
 
   return (
     <div>
@@ -367,10 +367,10 @@ function PaymentsPage({ org, onToast }: { org: Org; onToast: (m: string) => void
         <div style={{ fontSize:12, color:C.muted, marginBottom:14 }}>Applied equally to all institution types.</div>
         <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12 }}>
           {[
-            { range:'1–24 Seats',   disc:'Standard', sub:'No discount',      highlight: org.seats_total < 25 },
-            { range:'25–49 Seats',  disc:'10% Off',  sub:'Per seat savings',  highlight: org.seats_total >= 25 && org.seats_total < 50 },
-            { range:'50–99 Seats',  disc:'20% Off',  sub:'Current tier',      highlight: org.seats_total >= 50 && org.seats_total < 100 },
-            { range:'100+ Seats',   disc:'30% Off',  sub:'+ Custom SLA',      highlight: org.seats_total >= 100 },
+            { range:'1–24 Seats',   disc:'Standard', sub:'No discount',      highlight: org.seats_purchased < 25 },
+            { range:'25–49 Seats',  disc:'10% Off',  sub:'Per seat savings',  highlight: org.seats_purchased >= 25 && org.seats_purchased < 50 },
+            { range:'50–99 Seats',  disc:'20% Off',  sub:'Current tier',      highlight: org.seats_purchased >= 50 && org.seats_purchased < 100 },
+            { range:'100+ Seats',   disc:'30% Off',  sub:'+ Custom SLA',      highlight: org.seats_purchased >= 100 },
           ].map(d => (
             <div key={d.range} style={{ textAlign:'center', padding:16, background: d.highlight ? 'rgba(232,98,26,0.06)' : C.dark4, border:`1px solid ${d.highlight ? 'rgba(232,98,26,0.2)' : C.border}`, borderRadius:6 }}>
               <div style={{ fontSize:10, letterSpacing:2, textTransform:'uppercase', color:C.muted, marginBottom:6 }}>
@@ -386,10 +386,10 @@ function PaymentsPage({ org, onToast }: { org: Org; onToast: (m: string) => void
       <div style={{ background:C.dark3, border:`1px solid ${C.border}`, borderRadius:8, padding:24 }}>
         <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:18, letterSpacing:2, marginBottom:16 }}>Billing</div>
         <div style={{ display:'flex', justifyContent:'space-between', padding:'10px 0', borderBottom:`1px solid ${C.border}`, fontSize:13 }}>
-          <span style={{ color:C.muted }}>Plan</span><span>{org.plan ?? '—'}</span>
+          <span style={{ color:C.muted }}>Plan</span><span>{org.tier ?? '—'}</span>
         </div>
         <div style={{ display:'flex', justifyContent:'space-between', padding:'10px 0', borderBottom:`1px solid ${C.border}`, fontSize:13 }}>
-          <span style={{ color:C.muted }}>Seats</span><span>{org.seats_total}</span>
+          <span style={{ color:C.muted }}>Seats</span><span>{org.seats_purchased}</span>
         </div>
         <div style={{ display:'flex', justifyContent:'space-between', padding:'10px 0', borderBottom:`1px solid ${C.border}`, fontSize:13 }}>
           <span style={{ color:C.muted }}>Billing Email</span><span>{org.billing_email ?? '—'}</span>
@@ -579,8 +579,8 @@ export function InstitutionalAdminDashboard({ org, members, adminName }: Props) 
           <div style={{ margin:'20px 16px', background:`linear-gradient(135deg,${C.dark3},${C.dark4})`, border:`1px solid ${C.borderB}`, borderRadius:8, padding:16 }}>
             <div style={{ display:'inline-block', background:C.orange, color:'#fff', fontSize:9, fontWeight:600, letterSpacing:2, textTransform:'uppercase', padding:'3px 8px', borderRadius:3, marginBottom:8 }}>{segmentLabel}</div>
             <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:18, letterSpacing:1, lineHeight:1.2 }}>{org.name}</div>
-            <div style={{ fontSize:11, color:C.gold, marginTop:4 }}>{org.plan ?? 'Institutional Plan'}</div>
-            <div style={{ fontSize:11, color:C.muted, marginTop:2 }}>{org.seats_used} / {org.seats_total} seats active</div>
+            <div style={{ fontSize:11, color:C.gold, marginTop:4 }}>{org.tier ?? 'Institutional Plan'}</div>
+            <div style={{ fontSize:11, color:C.muted, marginTop:2 }}>{org.seats_used} / {org.seats_purchased} seats active</div>
           </div>
 
           {/* Nav */}

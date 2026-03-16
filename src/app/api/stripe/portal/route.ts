@@ -20,20 +20,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get Stripe customer ID
-    const { data: customer, error } = await supabase
-      .from('stripe_customers')
+    // Get Stripe customer ID from profiles table
+    const { data: profile, error } = await supabase
+      .from('profiles')
       .select('stripe_customer_id')
-      .eq('user_id', userId)
+      .eq('id', userId)
       .single()
 
-    if (error || !customer) {
+    if (error || !profile?.stripe_customer_id) {
       return NextResponse.json({ error: 'No billing account found' }, { status: 404 })
     }
 
     const session = await stripe.billingPortal.sessions.create({
-      customer: customer.stripe_customer_id,
-      return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/billing`,
+      customer: profile.stripe_customer_id,
+      return_url: `${process.env.NEXT_PUBLIC_APP_URL}/account`,
     })
 
     return NextResponse.json({ url: session.url })
