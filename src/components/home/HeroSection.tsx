@@ -8,7 +8,7 @@ import { useEffect, useRef } from 'react'
 
 const STATS = [
   { num: '4',   label: 'Core Courses',      desc: 'RAS → SATS → Mastery' },
-  { num: '3',   label: 'Membership Tiers',  desc: 'Free · $27 · $67/mo' },
+  { num: '3',   label: 'Membership Tiers',  desc: 'Free · $19 · $29/mo' },
   { num: '5+',  label: 'Diagnostic Tools',  desc: 'Identity Audit & more' },
   { num: '∞',   label: 'Reality Potential', desc: 'Your consciousness, elevated' },
 ]

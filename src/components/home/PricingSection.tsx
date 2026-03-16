@@ -33,8 +33,8 @@ const PLANS = [
     id:       'architect',
     tier:     'architect' as PersonalTier,
     name:     'ARCHITECT',
-    monthly:  27,
-    annual:   270,
+    monthly:  19,
+    annual:   205,
     period:   'Cancel anytime',
     tagline:  'The serious practitioner. Full curriculum, daily tools, and community.',
     featured: true,
@@ -54,8 +54,8 @@ const PLANS = [
     id:       'elite',
     tier:     'reality-master' as PersonalTier,
     name:     'REALITY MASTER',
-    monthly:  67,
-    annual:   670,
+    monthly:  29,
+    annual:   313,
     period:   'Priority access',
     tagline:  'The complete system. Every course, every tool, every month.',
     featured: false,
@@ -122,7 +122,7 @@ export function PricingSection() {
               'text-[0.5rem] px-2 py-0.5 rounded-full',
               billing === 'annual' ? 'bg-white/20' : 'bg-orange-DEFAULT/20 text-orange-DEFAULT'
             )}>
-              SAVE 15%
+              SAVE 10%
             </span>
           </button>
         </div>
