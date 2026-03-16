@@ -50,7 +50,7 @@ export default async function EducationModulePage({
   ] = await Promise.all([
     supabase
       .from('profiles')
-      .select('membership_tier')
+      .select('membership_tier, is_super_admin')
       .eq('id', user.id)
       .single(),
     supabase
@@ -74,7 +74,7 @@ export default async function EducationModulePage({
   // Note: hasAccess(userTier, requiredTier) is better if hierarchy is strict
   // For Educators, seeker(free) gets Reset, Architect gets 1-3, Elite gets all.
   const TIER_RANK: Record<string, number> = { free: 0, architect: 1, elite: 2 }
-  const canAccess = TIER_RANK[userTier] >= TIER_RANK[requiredTier] || hasDirectAccess
+  const canAccess = profile?.is_super_admin || TIER_RANK[userTier] >= TIER_RANK[requiredTier] || hasDirectAccess
 
   if (!canAccess) {
     redirect('/educators?error=upgrade_required')

@@ -62,7 +62,7 @@ export default async function LessonPage({
       // Membership tier + institution type
       supabase
         .from('profiles')
-        .select('membership_tier, institution_type')
+        .select('membership_tier, institution_type, is_super_admin')
         .eq('id', user.id)
         .single(),
 
@@ -94,14 +94,17 @@ export default async function LessonPage({
     passedQuizzes    = (quizAttempts ?? []).map((r: { lesson_id: string }) => r.lesson_id)
     hasDirectAccess  = (courseAccessData ?? []).length > 0
 
-    // Preview lessons are always accessible regardless of tier or institution
-    if (!lesson.is_preview && !hasDirectAccess) {
-      const { allowed, reason } = canAccessCourse(course.slug, userTier, institutionType)
+    // Super admins bypass all access gates
+    if (!profile?.is_super_admin) {
+      // Preview lessons are always accessible regardless of tier or institution
+      if (!lesson.is_preview && !hasDirectAccess) {
+        const { allowed, reason } = canAccessCourse(course.slug, userTier, institutionType)
 
-      if (!allowed) {
-        return (
-          <CourseLockedScreen reason={reason!} courseSlug={course.slug} />
-        )
+        if (!allowed) {
+          return (
+            <CourseLockedScreen reason={reason!} courseSlug={course.slug} />
+          )
+        }
       }
     }
   } else if (!lesson.is_preview) {

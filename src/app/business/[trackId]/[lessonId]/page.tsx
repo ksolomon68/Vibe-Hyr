@@ -59,7 +59,7 @@ export default async function LessonPage({ params }: PageProps) {
   ] = await Promise.all([
     supabase
       .from('profiles')
-      .select('membership_tier')
+      .select('membership_tier, is_super_admin')
       .eq('id', user.id)
       .single(),
     supabase
@@ -83,7 +83,7 @@ export default async function LessonPage({ params }: PageProps) {
   }
   
   const allowedTracks = TIER_ACCESS[userTier] ?? ["common-sense-in-the-workplace"]
-  const canAccess = allowedTracks.includes(params.trackId) || hasDirectAccess
+  const canAccess = profile?.is_super_admin || allowedTracks.includes(params.trackId) || hasDirectAccess
 
   if (!canAccess) {
     redirect('/business?error=upgrade_required')
