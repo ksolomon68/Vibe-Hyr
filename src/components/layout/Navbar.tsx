@@ -230,6 +230,10 @@ export function Navbar() {
                       <span className="nav-dropdown-label">My Courses</span>
                       <span className="nav-dropdown-desc">Progress &amp; learning</span>
                     </Link>
+                    <Link href="/journal" className="nav-dropdown-item">
+                      <span className="nav-dropdown-label">Nightly Journal</span>
+                      <span className="nav-dropdown-desc">Revise &amp; rewire</span>
+                    </Link>
                     <Link href="/community" className="nav-dropdown-item">
                       <span className="nav-dropdown-label">Community</span>
                       <span className="nav-dropdown-desc">Connect &amp; share wins</span>
@@ -377,6 +381,7 @@ export function Navbar() {
 
                   {/* Standard */}
                   <Link href="/dashboard"  onClick={() => setOpen(false)} className="btn-orange text-center">My Courses</Link>
+                  <Link href="/journal"    onClick={() => setOpen(false)} className="btn-outline text-center">Nightly Journal</Link>
                   <Link href="/community"  onClick={() => setOpen(false)} className="btn-outline text-center">Community</Link>
                   <Link href="/account"    onClick={() => setOpen(false)} className="btn-outline text-center">Account Settings</Link>
 
