@@ -14,13 +14,16 @@ export default function ForgotPasswordPage() {
     e.preventDefault()
     setLoading(true)
     try {
-      const { createClient } = await import('@/lib/supabase/client')
-      const supabase = createClient()
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${appUrl}/reset-password`,
+      // Use the branded Resend email route (generates Supabase recovery link server-side)
+      const res = await fetch('/api/email/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
       })
-      if (error) throw error
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Something went wrong. Please try again.')
+      }
       setSent(true)
     } catch (err: any) {
       toast.error(err.message || 'Something went wrong. Please try again.')
