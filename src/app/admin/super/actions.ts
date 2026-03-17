@@ -380,7 +380,7 @@ export async function sendPasswordResetEmail(
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com'
 
   const { error } = await supabase.auth.resetPasswordForEmail(userEmail, {
-    redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password`,
+    redirectTo: `${appUrl}/reset-password`,
   })
 
   if (error) {
