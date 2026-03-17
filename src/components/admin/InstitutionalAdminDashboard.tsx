@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { editUser, removeUser, inviteUserDirect } from '@/app/admin/users/actions'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -24,6 +25,7 @@ interface Member {
   id: string
   email: string
   full_name: string | null
+  role: string
   membership_tier: string
   updated_at: string
 }
@@ -85,11 +87,196 @@ function getMemberStatus(m: Member): 'active' | 'pending' | 'inactive' {
   return 'active'
 }
 
+// ─── Edit User Modal ──────────────────────────────────────────────────────────
+
+function EditUserModal({
+  member, orgSegment, onClose, onSave,
+}: {
+  member: Member
+  orgSegment: string
+  onClose: () => void
+  onSave: (id: string, updates: { full_name?: string; role?: string; membership_tier?: string }) => Promise<void>
+}) {
+  const [fullName, setFullName] = useState(member.full_name ?? '')
+  const [role, setRole]         = useState(member.role ?? '')
+  const [tier, setTier]         = useState(member.membership_tier)
+  const [saving, setSaving]     = useState(false)
+
+  const roles = orgSegment === 'education'
+    ? ['educator', 'institution_admin']
+    : ['business', 'institution_admin']
+
+  async function handleSave() {
+    setSaving(true)
+    await onSave(member.id, {
+      full_name: fullName.trim() || undefined,
+      role,
+      membership_tier: tier,
+    })
+    setSaving(false)
+  }
+
+  const inputStyle: React.CSSProperties = {
+    background: C.dark4, border: `1px solid ${C.border}`, color: C.cream,
+    fontFamily: 'inherit', fontSize: 13, padding: '10px 14px', borderRadius: 4, outline: 'none', width: '100%',
+  }
+
+  return (
+    <div style={{ display:'flex', position:'fixed', inset:0, background:'rgba(10,8,4,0.85)', zIndex:100, alignItems:'center', justifyContent:'center' }}>
+      <div style={{ background:C.dark3, border:`1px solid ${C.borderB}`, borderRadius:10, width:480, maxWidth:'95vw', padding:32 }}>
+        <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, letterSpacing:2, marginBottom:4 }}>Edit User</div>
+        <div style={{ fontSize:12, color:C.muted, marginBottom:20 }}>{member.email}</div>
+
+        <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+          <div>
+            <label style={{ display:'block', fontSize:10, letterSpacing:2, textTransform:'uppercase', color:C.muted, marginBottom:6 }}>Full Name</label>
+            <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} style={inputStyle} placeholder="Full name" />
+          </div>
+          <div>
+            <label style={{ display:'block', fontSize:10, letterSpacing:2, textTransform:'uppercase', color:C.muted, marginBottom:6 }}>Role</label>
+            <select value={role} onChange={e => setRole(e.target.value)} style={inputStyle}>
+              {roles.map(r => (
+                <option key={r} value={r}>{r === 'institution_admin' ? 'Institution Admin' : r.charAt(0).toUpperCase() + r.slice(1)}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label style={{ display:'block', fontSize:10, letterSpacing:2, textTransform:'uppercase', color:C.muted, marginBottom:6 }}>Membership Tier</label>
+            <select value={tier} onChange={e => setTier(e.target.value)} style={inputStyle}>
+              <option value="free">Seeker (Free)</option>
+              <option value="architect">Architect</option>
+              <option value="elite">Reality Master</option>
+            </select>
+          </div>
+        </div>
+
+        <div style={{ display:'flex', gap:12, justifyContent:'flex-end', marginTop:24 }}>
+          <button onClick={onClose} style={{ background:'transparent', border:`1px solid ${C.border}`, color:C.muted, fontFamily:'inherit', fontSize:12, fontWeight:600, letterSpacing:1, textTransform:'uppercase', padding:'10px 20px', borderRadius:4, cursor:'pointer' }}>
+            Cancel
+          </button>
+          <button onClick={handleSave} disabled={saving} style={{ background:C.orange, border:'none', color:'#fff', fontFamily:'inherit', fontSize:12, fontWeight:600, letterSpacing:1, textTransform:'uppercase', padding:'10px 24px', borderRadius:4, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1 }}>
+            {saving ? 'Saving…' : 'Save Changes'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Delete Confirm Modal ─────────────────────────────────────────────────────
+
+function DeleteConfirmModal({
+  member, onClose, onConfirm, loading,
+}: {
+  member: Member
+  onClose: () => void
+  onConfirm: () => void
+  loading: boolean
+}) {
+  return (
+    <div style={{ display:'flex', position:'fixed', inset:0, background:'rgba(10,8,4,0.85)', zIndex:100, alignItems:'center', justifyContent:'center' }}>
+      <div style={{ background:C.dark3, border:`1px solid rgba(229,115,115,0.4)`, borderRadius:10, width:440, maxWidth:'95vw', padding:32 }}>
+        <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, letterSpacing:2, marginBottom:12 }}>Remove User</div>
+        <p style={{ fontSize:13, color:C.muted, lineHeight:1.6, marginBottom:24 }}>
+          Are you sure you want to remove{' '}
+          <strong style={{ color:C.cream }}>{member.full_name ?? member.email}</strong>{' '}
+          from your organization? They will lose all access immediately.
+        </p>
+        <div style={{ display:'flex', gap:12, justifyContent:'flex-end' }}>
+          <button onClick={onClose} style={{ background:'transparent', border:`1px solid ${C.border}`, color:C.muted, fontFamily:'inherit', fontSize:12, fontWeight:600, letterSpacing:1, textTransform:'uppercase', padding:'10px 20px', borderRadius:4, cursor:'pointer' }}>
+            Cancel
+          </button>
+          <button onClick={onConfirm} disabled={loading} style={{ background:'#C62828', border:'none', color:'#fff', fontFamily:'inherit', fontSize:12, fontWeight:600, letterSpacing:1, textTransform:'uppercase', padding:'10px 24px', borderRadius:4, cursor: loading ? 'default' : 'pointer', opacity: loading ? 0.7 : 1 }}>
+            {loading ? 'Removing…' : 'Remove User'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Invite Modal ─────────────────────────────────────────────────────────────
+
+function InviteModal({
+  orgSegment, onClose, onSuccess, onToast,
+}: {
+  orgSegment: string
+  onClose: () => void
+  onSuccess: () => void
+  onToast: (m: string) => void
+}) {
+  const [emailsText, setEmailsText] = useState('')
+  const [role, setRole]             = useState(orgSegment === 'education' ? 'educator' : 'business')
+  const [sending, setSending]       = useState(false)
+
+  const roles = orgSegment === 'education'
+    ? ['educator', 'institution_admin']
+    : ['business', 'institution_admin']
+
+  const inputStyle: React.CSSProperties = {
+    background: C.dark4, border: `1px solid ${C.border}`, color: C.cream,
+    fontFamily: 'inherit', fontSize: 13, padding: '10px 14px', borderRadius: 4, outline: 'none', width: '100%',
+  }
+
+  async function handleSend() {
+    const emails = emailsText.split('\n').map(e => e.trim()).filter(Boolean)
+    if (!emails.length) { onToast('Enter at least one email address.'); return }
+    setSending(true)
+    let successCount = 0
+    let firstError = ''
+    for (const email of emails) {
+      const res = await inviteUserDirect(email, role)
+      if (res.success) successCount++
+      else if (!firstError) firstError = res.error ?? 'Unknown error'
+    }
+    setSending(false)
+    if (firstError) {
+      onToast(`Error: ${firstError}`)
+    } else {
+      onSuccess()
+    }
+  }
+
+  return (
+    <div style={{ display:'flex', position:'fixed', inset:0, background:'rgba(10,8,4,0.85)', zIndex:100, alignItems:'center', justifyContent:'center' }}>
+      <div style={{ background:C.dark3, border:`1px solid ${C.borderB}`, borderRadius:10, width:480, maxWidth:'95vw', padding:32 }}>
+        <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, letterSpacing:2, marginBottom:20 }}>Invite Users</div>
+        <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+          <div>
+            <label style={{ display:'block', fontSize:10, letterSpacing:2, textTransform:'uppercase', color:C.muted, marginBottom:6 }}>Email Addresses</label>
+            <textarea
+              value={emailsText}
+              onChange={e => setEmailsText(e.target.value)}
+              placeholder={`Enter one email per line\ne.g. jane@company.com`}
+              style={{ ...inputStyle, resize:'vertical', minHeight:100 }}
+            />
+            <div style={{ fontSize:11, color:C.muted, marginTop:4 }}>One email per line. Each will receive an invitation.</div>
+          </div>
+          <div>
+            <label style={{ display:'block', fontSize:10, letterSpacing:2, textTransform:'uppercase', color:C.muted, marginBottom:6 }}>Assign Role</label>
+            <select value={role} onChange={e => setRole(e.target.value)} style={inputStyle}>
+              {roles.map(r => (
+                <option key={r} value={r}>{r === 'institution_admin' ? 'Institution Admin' : r.charAt(0).toUpperCase() + r.slice(1)}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div style={{ display:'flex', gap:12, justifyContent:'flex-end', marginTop:24 }}>
+          <button onClick={onClose} style={{ background:'transparent', border:`1px solid ${C.border}`, color:C.muted, fontFamily:'inherit', fontSize:12, fontWeight:600, letterSpacing:1, textTransform:'uppercase', padding:'10px 20px', borderRadius:4, cursor:'pointer' }}>Cancel</button>
+          <button onClick={handleSend} disabled={sending} style={{ background:C.orange, border:'none', color:'#fff', fontFamily:'inherit', fontSize:12, fontWeight:600, letterSpacing:1, textTransform:'uppercase', padding:'10px 24px', borderRadius:4, cursor: sending ? 'default' : 'pointer', opacity: sending ? 0.7 : 1 }}>
+            {sending ? 'Sending…' : 'Send Invites'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Sub-pages ────────────────────────────────────────────────────────────────
 
 function DashboardPage({ org, members }: { org: Org; members: Member[] }) {
-  const active   = members.filter(m => getMemberStatus(m) === 'active').length
-  const inactive = members.filter(m => getMemberStatus(m) === 'inactive').length
+  const active    = members.filter(m => getMemberStatus(m) === 'active').length
+  const inactive  = members.filter(m => getMemberStatus(m) === 'inactive').length
   const seatsLeft = org.seats_purchased - org.seats_used
 
   return (
@@ -97,10 +284,10 @@ function DashboardPage({ org, members }: { org: Org; members: Member[] }) {
       {/* Stats */}
       <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:16, marginBottom:32 }}>
         {[
-          { label:'Active Users',          value: active,             change:`${inactive} inactive` },
-          { label:'Avg. Course Completion', value:'—',                change:'No data yet' },
-          { label:'Seats Remaining',        value: seatsLeft,         change:`of ${org.seats_purchased} total` },
-          { label:'Plan',                   value: org.tier ?? '—',   change: org.segment ?? '' },
+          { label:'Active Users',          value: active,           change:`${inactive} inactive` },
+          { label:'Avg. Course Completion', value:'—',              change:'No data yet' },
+          { label:'Seats Remaining',        value: seatsLeft,       change:`of ${org.seats_purchased} total` },
+          { label:'Plan',                   value: org.tier ?? '—', change: org.segment ?? '' },
         ].map(s => (
           <div key={s.label} style={{ background:C.dark3, border:`1px solid ${C.border}`, borderRadius:8, padding:20, position:'relative', overflow:'hidden' }}>
             <div style={{ fontSize:10, letterSpacing:2, textTransform:'uppercase', color:C.muted, marginBottom:10 }}>{s.label}</div>
@@ -120,7 +307,7 @@ function DashboardPage({ org, members }: { org: Org; members: Member[] }) {
         </div>
         <MembersTable members={members.slice(0, 5)} />
         {members.length > 5 && (
-          <div style={{ fontSize:12, color:C.orange, marginTop:12, cursor:'pointer' }}>
+          <div style={{ fontSize:12, color:C.orange, marginTop:12 }}>
             +{members.length - 5} more — view all in Users tab →
           </div>
         )}
@@ -129,41 +316,63 @@ function DashboardPage({ org, members }: { org: Org; members: Member[] }) {
   )
 }
 
-function MembersTable({ members, onAction }: { members: Member[]; onAction?: (action: string, m: Member) => void }) {
+function MembersTable({
+  members,
+  onEdit,
+  onDelete,
+}: {
+  members: Member[]
+  onEdit?: (m: Member) => void
+  onDelete?: (m: Member) => void
+}) {
   return (
     <div style={{ overflowX:'auto' }}>
       <table style={{ width:'100%', borderCollapse:'collapse' }}>
         <thead>
           <tr>
-            {['User','Tier','Last Active','Status','Actions'].map(h => (
+            {['User', 'Role', 'Tier', 'Last Active', 'Status', ...(onEdit ? ['Actions'] : [])].map(h => (
               <th key={h} style={{ fontSize:10, letterSpacing:2, textTransform:'uppercase', color:C.muted, padding:'10px 12px', textAlign:'left', borderBottom:`1px solid ${C.border}` }}>{h}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {members.map(m => {
-            const status = getMemberStatus(m)
+            const status  = getMemberStatus(m)
             const daysAgo = Math.floor((Date.now() - new Date(m.updated_at).getTime()) / 86400000)
             const lastActive = daysAgo === 0 ? 'Today' : daysAgo === 1 ? 'Yesterday' : `${daysAgo}d ago`
+            const roleLabel = m.role === 'institution_admin' ? 'Admin' : m.role ? m.role.charAt(0).toUpperCase() + m.role.slice(1) : '—'
             return (
               <tr key={m.id} style={{ borderBottom:`1px solid rgba(201,168,76,0.06)` }}>
                 <td style={{ padding:'12px 12px' }}>
                   <div style={{ fontWeight:500, fontSize:13 }}>{m.full_name ?? '—'}</div>
                   <div style={{ color:C.muted, fontSize:12 }}>{m.email}</div>
                 </td>
+                <td style={{ padding:'12px 12px', fontSize:12, color:C.muted }}>{roleLabel}</td>
                 <td style={{ padding:'12px 12px' }}>{pill(TIER_PILL[m.membership_tier] ?? TIER_PILL.free, TIER_LABEL[m.membership_tier] ?? m.membership_tier)}</td>
                 <td style={{ padding:'12px 12px', fontSize:13, color:C.muted }}>{lastActive}</td>
                 <td style={{ padding:'12px 12px' }}>{pill(STATUS_PILL[status], status)}</td>
-                <td style={{ padding:'12px 12px' }}>
-                  <button onClick={() => onAction?.('nudge', m)} style={{ fontSize:11, color:C.orange, cursor:'pointer', fontWeight:500, letterSpacing:1, textTransform:'uppercase', background:'none', border:'none', marginRight:8 }}>Nudge</button>
-                  <button onClick={() => onAction?.('remove', m)} style={{ fontSize:11, color:'#E57373', cursor:'pointer', fontWeight:500, letterSpacing:1, textTransform:'uppercase', background:'none', border:'none' }}>Remove</button>
-                </td>
+                {onEdit && (
+                  <td style={{ padding:'12px 12px', whiteSpace:'nowrap' }}>
+                    <button
+                      onClick={() => onEdit(m)}
+                      style={{ fontSize:11, color:C.orange, cursor:'pointer', fontWeight:500, letterSpacing:1, textTransform:'uppercase', background:'none', border:'none', marginRight:12 }}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => onDelete?.(m)}
+                      style={{ fontSize:11, color:'#E57373', cursor:'pointer', fontWeight:500, letterSpacing:1, textTransform:'uppercase', background:'none', border:'none' }}
+                    >
+                      Remove
+                    </button>
+                  </td>
+                )}
               </tr>
             )
           })}
           {members.length === 0 && (
             <tr>
-              <td colSpan={5} style={{ padding:'24px 12px', textAlign:'center', color:C.muted, fontSize:13 }}>No members yet. Invite your team to get started.</td>
+              <td colSpan={onEdit ? 6 : 5} style={{ padding:'24px 12px', textAlign:'center', color:C.muted, fontSize:13 }}>No members yet. Invite your team to get started.</td>
             </tr>
           )}
         </tbody>
@@ -172,10 +381,18 @@ function MembersTable({ members, onAction }: { members: Member[]; onAction?: (ac
   )
 }
 
-function UsersPage({ org, members, onToast }: { org: Org; members: Member[]; onToast: (m: string) => void }) {
+function UsersPage({
+  org, members, onToast, onEdit, onDelete,
+}: {
+  org: Org
+  members: Member[]
+  onToast: (m: string) => void
+  onEdit: (m: Member) => void
+  onDelete: (m: Member) => void
+}) {
   const [query, setQuery] = useState('')
   const filtered = members.filter(m =>
-    `${m.full_name ?? ''} ${m.email} ${m.membership_tier}`.toLowerCase().includes(query.toLowerCase())
+    `${m.full_name ?? ''} ${m.email} ${m.membership_tier} ${m.role}`.toLowerCase().includes(query.toLowerCase())
   )
   const seatsLeft = org.seats_purchased - org.seats_used
 
@@ -214,11 +431,11 @@ function UsersPage({ org, members, onToast }: { org: Org; members: Member[]; onT
           <input
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Search by name, email, or tier..."
+            placeholder="Search by name, email, role, or tier..."
             style={{ background:'none', border:'none', color:C.cream, fontFamily:'inherit', fontSize:13, outline:'none', flex:1 }}
           />
         </div>
-        <MembersTable members={filtered} onAction={(action, m) => onToast(`${action === 'nudge' ? 'Nudge sent to' : 'Removed'} ${m.full_name ?? m.email}`)} />
+        <MembersTable members={filtered} onEdit={onEdit} onDelete={onDelete} />
       </div>
     </div>
   )
@@ -374,7 +591,7 @@ function PaymentsPage({ org, onToast }: { org: Org; onToast: (m: string) => void
           ].map(d => (
             <div key={d.range} style={{ textAlign:'center', padding:16, background: d.highlight ? 'rgba(232,98,26,0.06)' : C.dark4, border:`1px solid ${d.highlight ? 'rgba(232,98,26,0.2)' : C.border}`, borderRadius:6 }}>
               <div style={{ fontSize:10, letterSpacing:2, textTransform:'uppercase', color:C.muted, marginBottom:6 }}>
-                {d.range}{d.highlight ? ' ← You' : ''}
+                {d.range}{d.highlight ? ' \u2190 You' : ''}
               </div>
               <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:28, color: d.highlight ? C.orange : C.gold }}>{d.disc}</div>
               <div style={{ fontSize:12, color:C.muted }}>{d.sub}</div>
@@ -417,9 +634,9 @@ function SettingsPage({ org, onToast }: { org: Org; onToast: (m: string) => void
         <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:16, letterSpacing:2, marginBottom:16, paddingBottom:10, borderBottom:`1px solid ${C.border}` }}>Institution Profile</div>
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
           {[
-            { label:'Institution Name', val:name, set:setName, type:'text' },
-            { label:'Billing Email',    val:bEmail, set:setBEmail, type:'email' },
-            { label:'Website',          val:website, set:setWeb, type:'text' },
+            { label:'Institution Name', val:name,    set:setName,   type:'text' },
+            { label:'Billing Email',    val:bEmail,  set:setBEmail, type:'email' },
+            { label:'Website',          val:website, set:setWeb,    type:'text' },
             { label:'Domain',           val:org.domain ?? '', set:()=>{}, type:'text', readonly:true },
           ].map(f => (
             <div key={f.label} style={{ display:'flex', flexDirection:'column', gap:6 }}>
@@ -479,38 +696,6 @@ function SettingsPage({ org, onToast }: { org: Org; onToast: (m: string) => void
   )
 }
 
-// ─── Invite Modal ─────────────────────────────────────────────────────────────
-
-function InviteModal({ onClose, onSend }: { onClose: () => void; onSend: () => void }) {
-  return (
-    <div style={{ display:'flex', position:'fixed', inset:0, background:'rgba(10,8,4,0.85)', zIndex:100, alignItems:'center', justifyContent:'center' }}>
-      <div style={{ background:C.dark3, border:`1px solid ${C.borderB}`, borderRadius:10, width:480, maxWidth:'95vw', padding:32 }}>
-        <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, letterSpacing:2, marginBottom:20 }}>Invite Users</div>
-        <div style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:16 }}>
-          <label style={{ fontSize:10, letterSpacing:2, textTransform:'uppercase', color:C.muted }}>Email Addresses</label>
-          <textarea placeholder={`Enter one email per line\ne.g. jane@company.com`} style={{ background:C.dark4, border:`1px solid ${C.border}`, color:C.cream, fontFamily:'inherit', fontSize:13, padding:'10px 14px', borderRadius:4, outline:'none', resize:'vertical', minHeight:100 }} />
-        </div>
-        <div style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:16 }}>
-          <label style={{ fontSize:10, letterSpacing:2, textTransform:'uppercase', color:C.muted }}>Assign Tier</label>
-          <select style={{ background:C.dark4, border:`1px solid ${C.border}`, color:C.cream, fontFamily:'inherit', fontSize:13, padding:'10px 14px', borderRadius:4, outline:'none' }}>
-            <option>Seeker (Free)</option>
-            <option>Architect ($47/seat/mo)</option>
-            <option>Reality Master Elite ($67/seat/mo)</option>
-          </select>
-        </div>
-        <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-          <label style={{ fontSize:10, letterSpacing:2, textTransform:'uppercase', color:C.muted }}>Department (Optional)</label>
-          <input type="text" placeholder="e.g. Sales, Leadership, HR" style={{ background:C.dark4, border:`1px solid ${C.border}`, color:C.cream, fontFamily:'inherit', fontSize:13, padding:'10px 14px', borderRadius:4, outline:'none' }} />
-        </div>
-        <div style={{ display:'flex', gap:12, justifyContent:'flex-end', marginTop:24 }}>
-          <button onClick={onClose} style={{ background:'transparent', border:`1px solid ${C.border}`, color:C.muted, fontFamily:'inherit', fontSize:12, fontWeight:600, letterSpacing:1, textTransform:'uppercase', padding:'10px 20px', borderRadius:4, cursor:'pointer' }}>Cancel</button>
-          <button onClick={onSend} style={{ background:C.orange, border:'none', color:'#fff', fontFamily:'inherit', fontSize:12, fontWeight:600, letterSpacing:1, textTransform:'uppercase', padding:'10px 24px', borderRadius:4, cursor:'pointer' }}>Send Invites</button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 // ─── Shell / Main export ──────────────────────────────────────────────────────
 
 type Tab = 'dashboard' | 'users' | 'progress' | 'payments' | 'settings'
@@ -524,22 +709,50 @@ const TAB_TITLES: Record<Tab, string> = {
 }
 
 export function InstitutionalAdminDashboard({ org, members, adminName }: Props) {
-  const [tab, setTab]         = useState<Tab>('dashboard')
-  const [toast, setToast]     = useState('')
-  const [toastVis, setToastVis] = useState(false)
-  const [inviteOpen, setInvite] = useState(false)
+  const [tab, setTab]               = useState<Tab>('dashboard')
+  const [toast, setToast]           = useState('')
+  const [toastVis, setToastVis]     = useState(false)
+  const [inviteOpen, setInvite]     = useState(false)
+  const [editTarget, setEditTarget] = useState<Member | null>(null)
+  const [delTarget, setDelTarget]   = useState<Member | null>(null)
+  const [delLoading, setDelLoading] = useState(false)
   const router = useRouter()
 
   function showToast(msg: string) {
     setToast(msg)
     setToastVis(true)
-    setTimeout(() => setToastVis(false), 3000)
+    setTimeout(() => setToastVis(false), 3500)
   }
 
   async function handleLogout() {
     const supabase = createClient()
     await supabase.auth.signOut()
     router.push('/')
+  }
+
+  async function handleSaveEdit(id: string, updates: { full_name?: string; role?: string; membership_tier?: string }) {
+    const res = await editUser(id, updates)
+    if (res.error) {
+      showToast(`Error: ${res.error}`)
+    } else {
+      setEditTarget(null)
+      showToast('✦ User updated.')
+      router.refresh()
+    }
+  }
+
+  async function handleConfirmDelete() {
+    if (!delTarget) return
+    setDelLoading(true)
+    const res = await removeUser(delTarget.id)
+    setDelLoading(false)
+    if (res.error) {
+      showToast(`Error: ${res.error}`)
+    } else {
+      setDelTarget(null)
+      showToast('User removed from organization.')
+      router.refresh()
+    }
   }
 
   const navItems: { id: Tab; icon: string; label: string }[] = [
@@ -550,13 +763,11 @@ export function InstitutionalAdminDashboard({ org, members, adminName }: Props) 
     { id:'settings',  icon:'✦', label:'Institution Settings' },
   ]
 
-  const initials = adminName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
-
+  const initials    = adminName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
   const segmentLabel = org.segment === 'education' ? 'Education' : org.segment === 'smb' ? 'SMB' : 'Corporate'
 
   return (
     <>
-      {/* Google fonts */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
         .inst-nav-item { transition: all 0.2s; }
@@ -567,7 +778,6 @@ export function InstitutionalAdminDashboard({ org, members, adminName }: Props) 
 
         {/* ── SIDEBAR ── */}
         <nav style={{ width:260, minWidth:260, background:C.dark2, borderRight:`1px solid ${C.border}`, display:'flex', flexDirection:'column', position:'sticky', top:0, height:'100vh', overflowY:'auto', paddingBottom:24 }}>
-          {/* Logo */}
           <div style={{ padding:'28px 24px 20px', borderBottom:`1px solid ${C.border}` }}>
             <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:26, letterSpacing:2 }}>
               <span style={{ color:C.orange }}>VIBE</span>HYR
@@ -575,7 +785,6 @@ export function InstitutionalAdminDashboard({ org, members, adminName }: Props) 
             <div style={{ fontSize:10, color:C.gold, letterSpacing:3, textTransform:'uppercase', marginTop:2 }}>Institutional Admin</div>
           </div>
 
-          {/* Org card */}
           <div style={{ margin:'20px 16px', background:`linear-gradient(135deg,${C.dark3},${C.dark4})`, border:`1px solid ${C.borderB}`, borderRadius:8, padding:16 }}>
             <div style={{ display:'inline-block', background:C.orange, color:'#fff', fontSize:9, fontWeight:600, letterSpacing:2, textTransform:'uppercase', padding:'3px 8px', borderRadius:3, marginBottom:8 }}>{segmentLabel}</div>
             <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:18, letterSpacing:1, lineHeight:1.2 }}>{org.name}</div>
@@ -583,7 +792,6 @@ export function InstitutionalAdminDashboard({ org, members, adminName }: Props) 
             <div style={{ fontSize:11, color:C.muted, marginTop:2 }}>{org.seats_used} / {org.seats_purchased} seats active</div>
           </div>
 
-          {/* Nav */}
           <div style={{ padding:'0 12px', marginTop:8 }}>
             <div style={{ fontSize:9, letterSpacing:3, textTransform:'uppercase', color:C.muted, padding:'12px 12px 6px' }}>Overview</div>
             {navItems.slice(0, 3).map(n => (
@@ -591,8 +799,7 @@ export function InstitutionalAdminDashboard({ org, members, adminName }: Props) 
                 display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:6,
                 fontSize:13, fontWeight:400, width:'100%', textAlign:'left', cursor:'pointer', marginBottom:2,
                 background: tab === n.id ? 'linear-gradient(90deg,rgba(232,98,26,0.2),transparent)' : 'transparent',
-                color: tab === n.id ? C.cream : C.muted,
-                border: 'none',
+                color: tab === n.id ? C.cream : C.muted, border: 'none',
                 borderLeft: tab === n.id ? `2px solid ${C.orange}` : '2px solid transparent',
               }}>
                 <span style={{ width:16, textAlign:'center', fontSize:14 }}>{n.icon}</span>
@@ -607,8 +814,7 @@ export function InstitutionalAdminDashboard({ org, members, adminName }: Props) 
                 display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:6,
                 fontSize:13, fontWeight:400, width:'100%', textAlign:'left', cursor:'pointer', marginBottom:2,
                 background: tab === n.id ? 'linear-gradient(90deg,rgba(232,98,26,0.2),transparent)' : 'transparent',
-                color: tab === n.id ? C.cream : C.muted,
-                border: 'none',
+                color: tab === n.id ? C.cream : C.muted, border: 'none',
                 borderLeft: tab === n.id ? `2px solid ${C.orange}` : '2px solid transparent',
               }}>
                 <span style={{ width:16, textAlign:'center', fontSize:14 }}>{n.icon}</span>
@@ -622,7 +828,6 @@ export function InstitutionalAdminDashboard({ org, members, adminName }: Props) 
             </button>
           </div>
 
-          {/* Footer */}
           <div style={{ marginTop:'auto', padding:16, borderTop:`1px solid ${C.border}`, display:'flex', alignItems:'center', gap:10 }}>
             <div style={{ width:34, height:34, borderRadius:'50%', background:`linear-gradient(135deg,${C.orange},${C.gold})`, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:"'Bebas Neue',sans-serif", fontSize:14, color:'#fff', flexShrink:0 }}>{initials}</div>
             <div style={{ flex:1, minWidth:0 }}>
@@ -635,7 +840,6 @@ export function InstitutionalAdminDashboard({ org, members, adminName }: Props) 
 
         {/* ── MAIN ── */}
         <div style={{ flex:1, display:'flex', flexDirection:'column', minWidth:0 }}>
-          {/* Topbar */}
           <div style={{ padding:'18px 32px', borderBottom:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'space-between', background:C.dark2, position:'sticky', top:0, zIndex:10 }}>
             <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, letterSpacing:2 }}>{TAB_TITLES[tab]}</div>
             <div style={{ display:'flex', alignItems:'center', gap:16 }}>
@@ -648,10 +852,17 @@ export function InstitutionalAdminDashboard({ org, members, adminName }: Props) 
             </div>
           </div>
 
-          {/* Content */}
           <div style={{ padding:32, flex:1 }}>
             {tab === 'dashboard' && <DashboardPage org={org} members={members} />}
-            {tab === 'users'     && <UsersPage org={org} members={members} onToast={showToast} />}
+            {tab === 'users'     && (
+              <UsersPage
+                org={org}
+                members={members}
+                onToast={showToast}
+                onEdit={setEditTarget}
+                onDelete={setDelTarget}
+              />
+            )}
             {tab === 'progress'  && <ProgressPage members={members} />}
             {tab === 'payments'  && <PaymentsPage org={org} onToast={showToast} />}
             {tab === 'settings'  && <SettingsPage org={org} onToast={showToast} />}
@@ -662,8 +873,30 @@ export function InstitutionalAdminDashboard({ org, members, adminName }: Props) 
       {/* Invite modal */}
       {inviteOpen && (
         <InviteModal
+          orgSegment={org.segment}
           onClose={() => setInvite(false)}
-          onSend={() => { setInvite(false); showToast('✦ Invites sent successfully!') }}
+          onSuccess={() => { setInvite(false); showToast('✦ Invites sent!'); router.refresh() }}
+          onToast={showToast}
+        />
+      )}
+
+      {/* Edit user modal */}
+      {editTarget && (
+        <EditUserModal
+          member={editTarget}
+          orgSegment={org.segment}
+          onClose={() => setEditTarget(null)}
+          onSave={handleSaveEdit}
+        />
+      )}
+
+      {/* Delete confirm modal */}
+      {delTarget && (
+        <DeleteConfirmModal
+          member={delTarget}
+          onClose={() => setDelTarget(null)}
+          onConfirm={handleConfirmDelete}
+          loading={delLoading}
         />
       )}
 

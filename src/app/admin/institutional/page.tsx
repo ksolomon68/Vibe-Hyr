@@ -25,7 +25,7 @@ export default async function InstitutionalAdminPage() {
   // Fetch org members
   const { data: members } = await supabase
     .from('profiles')
-    .select('id, email, full_name, membership_tier, updated_at')
+    .select('id, email, full_name, role, membership_tier, updated_at')
     .eq('org_id', org.id)
     .order('full_name')
 
