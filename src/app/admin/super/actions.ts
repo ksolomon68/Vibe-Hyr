@@ -368,6 +368,86 @@ export async function adminSetUserPassword(
   return { success: true }
 }
 
+// ── Delete User (Hard Delete) ─────────────────────────────────────────────────
+
+export async function deleteUser(
+  targetId: string,
+  targetName: string,
+): Promise<ActionResult> {
+  const sa = await requireSuperAdmin()
+  if (!sa) return { success: false, error: 'Unauthorized' }
+  if (sa.userId === targetId) return { success: false, error: 'You cannot delete yourself.' }
+
+  const admin = createAdminClient()
+  const { error: deleteErr } = await admin.auth.admin.deleteUser(targetId)
+  if (deleteErr) return { success: false, error: deleteErr.message }
+
+  // Belt-and-suspenders: clean up profile row if cascade didn't fire
+  await admin.from('profiles').delete().eq('id', targetId)
+
+  await logAudit(sa.userId, sa.email, 'USER_DELETED', 'user', targetId, targetName,
+    'Hard deleted user account and all associated data')
+  revalidatePath('/admin/super')
+  return { success: true }
+}
+
+// ── Invite Regular User (non-bypass) ─────────────────────────────────────────
+
+export async function inviteUserBySuperAdmin(data: {
+  email: string
+  role: string
+  institutionType: string
+  orgId: string | null
+  membershipTier: string
+}): Promise<ActionResult> {
+  const sa = await requireSuperAdmin()
+  if (!sa) return { success: false, error: 'Unauthorized' }
+
+  const admin  = createAdminClient()
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com'
+
+  const { data: inviteData, error: inviteError } = await admin.auth.admin.inviteUserByEmail(
+    data.email,
+    {
+      redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password`,
+      data: {
+        org_id:           data.orgId,
+        institution_type: data.institutionType,
+        role:             data.role,
+        membership_tier:  data.membershipTier,
+      },
+    }
+  )
+
+  if (inviteError) {
+    const msg = inviteError.message.toLowerCase()
+    if (msg.includes('already registered') || msg.includes('already been registered'))
+      return { success: false, error: 'This email is already registered on the platform.' }
+    return { success: false, error: inviteError.message }
+  }
+
+  if (inviteData?.user) {
+    await admin.from('profiles').upsert(
+      {
+        id:               inviteData.user.id,
+        email:            data.email,
+        org_id:           data.orgId,
+        institution_type: data.institutionType as 'individual' | 'education' | 'business',
+        role:             data.role,
+        membership_tier:  data.membershipTier,
+        membership_type:  data.institutionType === 'individual' ? 'personal' : data.institutionType,
+      },
+      { onConflict: 'id' }
+    )
+  }
+
+  await logAudit(sa.userId, sa.email, 'USER_INVITED', 'user',
+    inviteData?.user?.id ?? null, data.email,
+    `Invited as ${data.role} (${data.institutionType}), tier: ${data.membershipTier}`)
+  revalidatePath('/admin/super')
+  return { success: true }
+}
+
 // ── Admin: Send Password Reset Email ─────────────────────────────────────────
 
 export async function sendPasswordResetEmail(

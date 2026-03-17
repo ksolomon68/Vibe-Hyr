@@ -8,10 +8,11 @@ import {
   revokeUserBypass, revokeOrgBypass,
   updateBypassDetails,
   overrideUserCourseAccess, overrideOrgCourseAccess,
-  deactivateUser,
+  deactivateUser, deleteUser,
   updateUserProfile,
   adminSetUserPassword,
   sendPasswordResetEmail,
+  inviteUserBySuperAdmin,
 } from '@/app/admin/super/actions'
 
 // ── Exported Types ────────────────────────────────────────────────────────────
@@ -784,7 +785,10 @@ function OrgsPage({ orgs, onToast, onAddOrg, onAddUser }: { orgs:SAOrg[]; onToas
   )
 }
 
-function UsersPage({ users, onToast, onAddUser, onEdit }: { users:SAUser[]; onToast:(m:string)=>void; onAddUser:()=>void; onEdit:(u:EditUser)=>void }) {
+function UsersPage({ users, onToast, onAddUser, onInviteUser, onEdit, onDelete }: {
+  users:SAUser[]; onToast:(m:string)=>void; onAddUser:()=>void; onInviteUser:()=>void
+  onEdit:(u:EditUser)=>void; onDelete:(u:SAUser)=>void
+}) {
   const [query, setQuery] = useState('')
   const [typeF, setTypeF] = useState('All Types')
   const [tierF, setTierF] = useState('All Tiers')
@@ -813,7 +817,8 @@ function UsersPage({ users, onToast, onAddUser, onEdit }: { users:SAUser[]; onTo
         <SearchInput placeholder="Search all users..." value={query} onChange={setQuery}/>
         <FilterSel value={typeF} onChange={setTypeF} options={['All Types','individual','education','business']}/>
         <FilterSel value={tierF} onChange={setTierF} options={['All Tiers','free','architect','elite']}/>
-        <Btn variant="primary" size="sm" onClick={onAddUser}>+ Add User</Btn>
+        <Btn variant="gold" size="sm" onClick={onInviteUser}>+ Invite User</Btn>
+        <Btn variant="primary" size="sm" onClick={onAddUser}>+ Add User (Bypass)</Btn>
       </div>
       <Card>
         <Tbl cols={['User','Type','Organization','Tier','Payment','Status','Actions']}>
@@ -833,6 +838,7 @@ function UsersPage({ users, onToast, onAddUser, onEdit }: { users:SAUser[]; onTo
                     ? <Btn variant="danger" size="sm" onClick={()=>onToast('Use Bypass Manager to revoke.')}>Revoke</Btn>
                     : <Btn variant="danger" size="sm" onClick={()=>handleDeactivate(u)} disabled={isPending}>Deactivate</Btn>
                   }
+                  <Btn variant="danger" size="sm" onClick={()=>onDelete(u)} disabled={isPending}>Delete</Btn>
                 </div></TD>
               </TR>
             )
@@ -961,6 +967,105 @@ function SettingsPage({ onToast }: { onToast:(m:string)=>void }) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+// INVITE USER MODAL (non-bypass — sends email invite)
+// ══════════════════════════════════════════════════════════════════════════════
+
+function InviteUserModal({ open, onClose, onSuccess, orgOptions }: {
+  open: boolean; onClose: ()=>void; onSuccess: (m:string)=>void
+  orgOptions: { id:string; name:string }[]
+}) {
+  const [isPending, startTransition] = useTransition()
+  const [form, setForm] = useState({ email:'', role:'personal', institutionType:'individual', orgId:'', membershipTier:'free' })
+  const set = (k: string, v: string) => setForm(f=>({...f,[k]:v}))
+
+  function submit() {
+    if (!form.email.trim()) return onSuccess('Error: Email is required.')
+    startTransition(async () => {
+      const res = await inviteUserBySuperAdmin({
+        email: form.email.trim().toLowerCase(),
+        role: form.role,
+        institutionType: form.institutionType,
+        orgId: form.orgId || null,
+        membershipTier: form.membershipTier,
+      })
+      if (res.success) { onClose(); onSuccess('Invite sent — user will receive an email to set their password.') }
+      else onSuccess(`Error: ${res.error}`)
+    })
+  }
+
+  return (
+    <Modal open={open} onClose={onClose} title="Invite User" sub="Send an email invitation. The user sets their own password on first login." wide>
+      <SDivider label="User Details"/>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom:14 }}>
+        <FField label="Email Address" span2><input type="email" value={form.email} onChange={e=>set('email',e.target.value)} style={IS} placeholder="user@domain.com"/></FField>
+        <FField label="Institution Type">
+          <select value={form.institutionType} onChange={e=>set('institutionType',e.target.value)} style={IS}>
+            <option value="individual">Individual</option>
+            <option value="education">Education</option>
+            <option value="business">Business</option>
+          </select>
+        </FField>
+        <FField label="Role">
+          <select value={form.role} onChange={e=>set('role',e.target.value)} style={IS}>
+            <option value="personal">Personal</option>
+            <option value="business">Business</option>
+            <option value="educator">Educator</option>
+            <option value="institution_admin">Institution Admin</option>
+          </select>
+        </FField>
+        <FField label="Membership Tier">
+          <select value={form.membershipTier} onChange={e=>set('membershipTier',e.target.value)} style={IS}>
+            <option value="free">Seeker (Free)</option>
+            <option value="architect">Architect</option>
+            <option value="elite">Reality Master</option>
+          </select>
+        </FField>
+        <FField label="Assign to Organization (optional)">
+          <select value={form.orgId} onChange={e=>set('orgId',e.target.value)} style={IS}>
+            <option value="">— None (standalone) —</option>
+            {orgOptions.map(o=><option key={o.id} value={o.id}>{o.name}</option>)}
+          </select>
+        </FField>
+      </div>
+      <MFooter onClose={onClose} onConfirm={submit} label="Send Invite" isPending={isPending}/>
+    </Modal>
+  )
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DELETE USER MODAL (hard delete — irreversible)
+// ══════════════════════════════════════════════════════════════════════════════
+
+function DeleteUserModal({ open, onClose, onSuccess, user }: {
+  open: boolean; onClose: ()=>void; onSuccess: (m:string)=>void; user: SAUser | null
+}) {
+  const [isPending, startTransition] = useTransition()
+  if (!user) return null
+
+  function confirm() {
+    startTransition(async () => {
+      const res = await deleteUser(user.id, user.full_name ?? user.email)
+      if (res.success) { onClose(); onSuccess(`${user.full_name ?? user.email} has been permanently deleted.`) }
+      else onSuccess(`Error: ${res.error}`)
+    })
+  }
+
+  return (
+    <Modal open={open} onClose={onClose} title="Delete User" sub="This is permanent and cannot be undone. The user will lose all access immediately.">
+      <div style={{ background:'rgba(229,115,115,0.07)', border:`1px solid rgba(229,115,115,0.25)`, borderRadius:5, padding:'14px 16px', marginBottom:20, fontSize:13, color:C.red, lineHeight:1.6 }}>
+        ⚠ You are about to permanently delete{' '}
+        <strong style={{ color:C.cream }}>{user.full_name ?? user.email}</strong>
+        {' '}({user.email}). Their profile, course access, and all data will be removed.
+      </div>
+      <div style={{ display:'flex', gap:10, justifyContent:'flex-end', paddingTop:4 }}>
+        <Btn variant="ghost" size="sm" onClick={onClose}>Cancel</Btn>
+        <Btn variant="danger" size="sm" onClick={confirm} disabled={isPending}>{isPending ? 'Deleting...' : 'Delete Permanently'}</Btn>
+      </div>
+    </Modal>
+  )
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 // MAIN SHELL
 // ══════════════════════════════════════════════════════════════════════════════
 
@@ -980,8 +1085,10 @@ export function SuperAdminDashboard({ adminName, stats, bypassUsers, bypassOrgs,
   const [page, setPage]       = useState<PageId>('overview')
   const [toast, setToast]     = useState('')
   const [toastVis, setToastVis] = useState(false)
-  const [modalUser, setModalUser] = useState(false)
-  const [modalOrg, setModalOrg]   = useState(false)
+  const [modalUser, setModalUser]     = useState(false)
+  const [modalOrg, setModalOrg]       = useState(false)
+  const [modalInvite, setModalInvite] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<SAUser | null>(null)
   const [editTarget, setEditTarget] = useState<EditTarget>(null)
   const [editUser, setEditUser]   = useState<EditUser>(null)
   const router = useRouter()
@@ -1083,7 +1190,7 @@ export function SuperAdminDashboard({ adminName, stats, bypassUsers, bypassOrgs,
             {page==='overview' && <OverviewPage stats={stats} bypassUsers={bypassUsers} auditLog={auditLog} orgs={orgs} onNav={setPage} onAddUser={()=>setModalUser(true)} onAddOrg={()=>setModalOrg(true)}/>}
             {page==='bypass'   && <BypassPage bypassUsers={bypassUsers} bypassOrgs={bypassOrgs} onEdit={setEditTarget} onToast={showToast} onAddUser={()=>setModalUser(true)} onAddOrg={()=>setModalOrg(true)}/>}
             {page==='orgs'     && <OrgsPage orgs={orgs} onToast={showToast} onAddOrg={()=>setModalOrg(true)} onAddUser={()=>setModalUser(true)}/>}
-            {page==='users'    && <UsersPage users={users} onToast={showToast} onAddUser={()=>setModalUser(true)} onEdit={setEditUser}/>}
+            {page==='users'    && <UsersPage users={users} onToast={showToast} onAddUser={()=>setModalUser(true)} onInviteUser={()=>setModalInvite(true)} onEdit={setEditUser} onDelete={setDeleteTarget}/>}
             {page==='courses'  && <CoursesPage orgs={orgs} users={users} onToast={showToast}/>}
             {page==='activity' && <ActivityPage auditLog={auditLog} onToast={showToast}/>}
             {page==='settings' && <SettingsPage onToast={showToast}/>}
@@ -1091,10 +1198,12 @@ export function SuperAdminDashboard({ adminName, stats, bypassUsers, bypassOrgs,
         </div>
       </div>
 
-      <AddUserModal open={modalUser} onClose={()=>setModalUser(false)} onSuccess={m=>{showToast(m);router.refresh()}} orgOptions={orgOptions}/>
-      <AddOrgModal  open={modalOrg}  onClose={()=>setModalOrg(false)}  onSuccess={m=>{showToast(m);router.refresh()}}/>
-      <EditBypassModal open={!!editTarget} onClose={()=>setEditTarget(null)} onSuccess={m=>{showToast(m);router.refresh()}} target={editTarget}/>
-      <EditUserModal open={!!editUser} onClose={()=>setEditUser(null)} onSuccess={m=>{showToast(m);router.refresh()}} user={editUser} orgOptions={orgOptions}/>
+      <AddUserModal    open={modalUser}      onClose={()=>setModalUser(false)}      onSuccess={m=>{showToast(m);router.refresh()}} orgOptions={orgOptions}/>
+      <AddOrgModal     open={modalOrg}       onClose={()=>setModalOrg(false)}       onSuccess={m=>{showToast(m);router.refresh()}}/>
+      <InviteUserModal open={modalInvite}    onClose={()=>setModalInvite(false)}    onSuccess={m=>{showToast(m);router.refresh()}} orgOptions={orgOptions}/>
+      <DeleteUserModal open={!!deleteTarget} onClose={()=>setDeleteTarget(null)}    onSuccess={m=>{showToast(m);router.refresh()}} user={deleteTarget}/>
+      <EditBypassModal open={!!editTarget}   onClose={()=>setEditTarget(null)}      onSuccess={m=>{showToast(m);router.refresh()}} target={editTarget}/>
+      <EditUserModal   open={!!editUser}     onClose={()=>setEditUser(null)}        onSuccess={m=>{showToast(m);router.refresh()}} user={editUser} orgOptions={orgOptions}/>
 
       {toastVis && (
         <div style={{ position:'fixed', bottom:28, right:28, background:C.dark3, border:`1px solid ${C.border2}`, borderRadius:5, padding:'12px 18px', fontSize:12.5, display:'flex', alignItems:'center', gap:8, boxShadow:'0 8px 32px rgba(0,0,0,0.5)', zIndex:300, animation:'toastIn 0.25s ease' }}>

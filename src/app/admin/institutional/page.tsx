@@ -13,11 +13,22 @@ export default async function InstitutionalAdminPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login?redirect=/admin/institutional')
 
-  // Fetch the org this user administers
+  // Fetch admin's profile — must have institution_admin role with an org
+  const { data: adminProfile } = await supabase
+    .from('profiles')
+    .select('full_name, email, role, org_id')
+    .eq('id', user.id)
+    .single()
+
+  if (!adminProfile || adminProfile.role !== 'institution_admin' || !adminProfile.org_id) {
+    redirect('/dashboard')
+  }
+
+  // Fetch the org this admin belongs to
   const { data: org } = await supabase
     .from('organizations')
     .select('*')
-    .eq('admin_user_id', user.id)
+    .eq('id', adminProfile.org_id)
     .single()
 
   if (!org) redirect('/dashboard')
@@ -29,18 +40,11 @@ export default async function InstitutionalAdminPage() {
     .eq('org_id', org.id)
     .order('full_name')
 
-  // Fetch admin profile
-  const { data: adminProfile } = await supabase
-    .from('profiles')
-    .select('full_name, email')
-    .eq('id', user.id)
-    .single()
-
   return (
     <InstitutionalAdminDashboard
       org={org}
       members={members ?? []}
-      adminName={adminProfile?.full_name ?? adminProfile?.email ?? 'Admin'}
+      adminName={adminProfile.full_name ?? adminProfile.email ?? 'Admin'}
     />
   )
 }
