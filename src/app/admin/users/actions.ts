@@ -58,10 +58,13 @@ export async function inviteUser(
     }
   }
 
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com'
+
   // Send invite email via Supabase
   const { data: inviteData, error: inviteError } = await adminSupabase.auth.admin.inviteUserByEmail(
     email,
     {
+      redirectTo: `${appUrl}/auth/callback`,
       data: {
         org_id:           orgId,
         institution_type: myProfile.institution_type,

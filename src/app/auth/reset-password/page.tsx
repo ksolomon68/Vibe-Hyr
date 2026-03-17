@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Crown, Eye, EyeOff } from 'lucide-react'
@@ -8,12 +8,27 @@ import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 
 export default function ResetPasswordPage() {
-  const [password,  setPassword]  = useState('')
-  const [confirm,   setConfirm]   = useState('')
-  const [showPw,    setShowPw]    = useState(false)
-  const [loading,   setLoading]   = useState(false)
-  const [done,      setDone]      = useState(false)
+  const [password,     setPassword]     = useState('')
+  const [confirm,      setConfirm]      = useState('')
+  const [showPw,       setShowPw]       = useState(false)
+  const [loading,      setLoading]      = useState(false)
+  const [done,         setDone]         = useState(false)
+  const [sessionReady, setSessionReady] = useState(false)
   const router = useRouter()
+
+  // Guard: a valid recovery session must be present.
+  // /auth/callback calls verifyOtp(type=recovery) before redirecting here.
+  // If no session exists the user arrived without a valid reset link.
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        router.replace('/auth/login')
+      } else {
+        setSessionReady(true)
+      }
+    })
+  }, [router])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -35,6 +50,14 @@ export default function ResetPasswordPage() {
       setDone(true)
       setTimeout(() => router.push('/dashboard'), 2500)
     }
+  }
+
+  if (!sessionReady && !done) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-grey-dark font-mono text-[0.65rem] tracking-widest uppercase">Verifying…</div>
+      </div>
+    )
   }
 
   return (
