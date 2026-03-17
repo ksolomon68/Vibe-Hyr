@@ -11,9 +11,16 @@ export async function GET(req: NextRequest) {
   const code       = searchParams.get('code')
   const token_hash = searchParams.get('token_hash')
   const type       = searchParams.get('type')
-  const next       = searchParams.get('next') ?? '/dashboard'
+
+  // 'next' is our own param; 'redirect_to' may come from Supabase token links.
+  // Sanitize: only allow relative paths (prevents open redirect attacks).
+  const rawDest = searchParams.get('next') ?? searchParams.get('redirect_to') ?? '/dashboard'
+  const next    = rawDest.startsWith('/') ? rawDest : '/dashboard'
+
+  console.log('[auth/callback] code:', !!code, '| token_hash:', !!token_hash, '| type:', type, '| destination:', next)
 
   if (!code && !token_hash) {
+    console.warn('[auth/callback] No code or token_hash — redirecting to error')
     return NextResponse.redirect(`${origin}/auth/error?reason=no_code`)
   }
 

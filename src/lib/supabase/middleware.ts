@@ -37,7 +37,7 @@ export async function updateSession(request: NextRequest) {
 
   // Redirect logged-in users away from auth pages
   // Exception: /auth/reset-password requires an active session (set by the recovery token callback)
-  const AUTH_PASSTHROUGH = ['/auth/reset-password', '/auth/callback']
+  const AUTH_PASSTHROUGH = ['/auth/reset-password', '/auth/callback', '/reset-password']
   const isAuthPassthrough = AUTH_PASSTHROUGH.some(p => request.nextUrl.pathname.startsWith(p))
   if (user && request.nextUrl.pathname.startsWith('/auth/') && !isAuthPassthrough) {
     const url = request.nextUrl.clone()
