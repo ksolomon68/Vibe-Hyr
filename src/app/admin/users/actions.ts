@@ -64,7 +64,8 @@ export async function inviteUser(
   const { data: inviteData, error: inviteError } = await adminSupabase.auth.admin.inviteUserByEmail(
     email,
     {
-      redirectTo: `${appUrl}/auth/callback`,
+      // After invite link is clicked → callback exchanges code → sends to set-password page
+      redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password`,
       data: {
         org_id:           orgId,
         institution_type: myProfile.institution_type,
