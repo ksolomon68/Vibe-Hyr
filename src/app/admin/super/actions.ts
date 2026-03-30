@@ -469,3 +469,142 @@ export async function sendPasswordResetEmail(
     `Reset email triggered to ${userEmail}`)
   return { success: true }
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// COURSE CMS ACTIONS
+// ══════════════════════════════════════════════════════════════════════════════
+
+export type CmsLesson = {
+  id: string
+  course_id: number
+  title: string
+  type: 'video' | 'text' | 'header'
+  youtube_url: string | null
+  content: string | null
+  sort_order: number
+  is_published: boolean
+  is_preview: boolean
+  created_at: string
+  updated_at: string
+}
+
+function extractYoutubeId(url: string): string | null {
+  const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s?#]+)/)
+  return m ? m[1] : null
+}
+
+function isValidYoutubeUrl(url: string): boolean {
+  return /^https?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)/.test(url.trim())
+}
+
+// ── List lessons for a course ─────────────────────────────────────────────────
+
+export async function listCourseLessons(
+  courseId: number
+): Promise<{ success: boolean; lessons: CmsLesson[]; error?: string }> {
+  const sa = await requireSuperAdmin()
+  if (!sa) return { success: false, lessons: [], error: 'Unauthorized' }
+
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from('course_lessons')
+    .select('*')
+    .eq('course_id', courseId)
+    .order('sort_order', { ascending: true })
+
+  if (error) return { success: false, lessons: [], error: error.message }
+  return { success: true, lessons: (data ?? []) as CmsLesson[] }
+}
+
+// ── Upsert a lesson ───────────────────────────────────────────────────────────
+
+export async function upsertLesson(lesson: {
+  id?: string
+  course_id: number
+  title: string
+  type: 'video' | 'text' | 'header'
+  youtube_url?: string | null
+  content?: string | null
+  sort_order: number
+  is_published: boolean
+  is_preview: boolean
+}): Promise<ActionResult & { id?: string }> {
+  const sa = await requireSuperAdmin()
+  if (!sa) return { success: false, error: 'Unauthorized' }
+
+  const title = lesson.title.trim()
+  if (!title) return { success: false, error: 'Title is required.' }
+
+  if (lesson.type === 'video') {
+    const url = lesson.youtube_url?.trim() ?? ''
+    if (!url) return { success: false, error: 'YouTube URL is required for video lessons.' }
+    if (!isValidYoutubeUrl(url)) {
+      return { success: false, error: 'Enter a valid YouTube URL (youtube.com/watch?v=... or youtu.be/...).' }
+    }
+  }
+
+  const admin = createAdminClient()
+  const payload: Record<string, unknown> = {
+    course_id:   lesson.course_id,
+    title,
+    type:        lesson.type,
+    youtube_url: lesson.type === 'video' ? (lesson.youtube_url?.trim() ?? null) : null,
+    content:     lesson.type === 'text'  ? (lesson.content ?? null) : null,
+    sort_order:  lesson.sort_order,
+    is_published: lesson.is_published,
+    is_preview:   lesson.is_preview,
+    updated_at:  new Date().toISOString(),
+  }
+  if (lesson.id) payload.id = lesson.id
+
+  const { data, error } = await admin
+    .from('course_lessons')
+    .upsert(payload, { onConflict: 'id' })
+    .select('id')
+    .single()
+
+  if (error) return { success: false, error: error.message }
+
+  const action = lesson.id ? 'LESSON_UPDATED' : 'LESSON_CREATED'
+  await logAudit(sa.userId, sa.email, action, 'lesson', data?.id ?? '', title,
+    `Course ${lesson.course_id} — ${lesson.type}`)
+
+  revalidatePath('/admin/super')
+  return { success: true, id: data?.id }
+}
+
+// ── Delete a lesson ───────────────────────────────────────────────────────────
+
+export async function deleteCmsLesson(id: string): Promise<ActionResult> {
+  const sa = await requireSuperAdmin()
+  if (!sa) return { success: false, error: 'Unauthorized' }
+
+  const admin = createAdminClient()
+  const { error } = await admin.from('course_lessons').delete().eq('id', id)
+
+  if (error) return { success: false, error: error.message }
+
+  await logAudit(sa.userId, sa.email, 'LESSON_DELETED', 'lesson', id, id, '')
+  revalidatePath('/admin/super')
+  return { success: true }
+}
+
+// ── Reorder lessons (batch sort_order update) ─────────────────────────────────
+
+export async function reorderLessons(
+  items: { id: string; sort_order: number }[]
+): Promise<ActionResult> {
+  const sa = await requireSuperAdmin()
+  if (!sa) return { success: false, error: 'Unauthorized' }
+
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('course_lessons')
+    .upsert(
+      items.map(item => ({ id: item.id, sort_order: item.sort_order, updated_at: new Date().toISOString() })),
+      { onConflict: 'id' }
+    )
+
+  if (error) return { success: false, error: error.message }
+  return { success: true }
+}

@@ -5,6 +5,7 @@ import { Footer } from '@/components/layout/Footer'
 import { createClient } from '@/lib/supabase/server'
 import { COURSES } from '@/lib/data/courses'
 import { getLessonsForCourse } from '@/lib/data/lessons'
+import { getLessonsWithDBFallback } from '@/lib/data/courseContent'
 import { hasAccess, formatDuration, cn } from '@/lib/utils'
 import {
   Lock, Play, CheckCircle, Clock, BookOpen,
@@ -49,7 +50,7 @@ export default async function CoursePage({ params }: { params: { slug: string } 
     completedLessons = progress?.completed_lessons ?? []
   }
 
-  const lessons    = getLessonsForCourse(course.id)
+  const lessons    = await getLessonsWithDBFallback(course.id, course.order_index)
   const canAccess  = hasAccess(userTier, course.tier)
   const totalMins  = lessons.reduce((s, l) => s + Math.ceil(l.duration_seconds / 60), 0)
   const pct        = lessons.length

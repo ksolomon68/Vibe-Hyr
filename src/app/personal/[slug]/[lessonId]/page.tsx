@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { COURSES } from '@/lib/data/courses'
 import { getLessonsForCourse, getLessonQuiz } from '@/lib/data/lessons'
+import { getLessonsWithDBFallback } from '@/lib/data/courseContent'
 import { canAccessCourse } from '@/lib/courseAccess'
 import { CourseLockedScreen } from '@/components/CourseLockedScreen'
 import { LessonPlayerClient } from '@/components/personal/LessonPlayerClient'
@@ -43,7 +44,7 @@ export default async function LessonPage({
   const course = COURSES.find(c => c.slug === params.slug)
   if (!course) notFound()
 
-  const lessons = getLessonsForCourse(course.id)
+  const lessons = await getLessonsWithDBFallback(course.id, course.order_index)
   const lesson  = lessons.find(l => l.id === params.lessonId)
   if (!lesson) notFound()
 

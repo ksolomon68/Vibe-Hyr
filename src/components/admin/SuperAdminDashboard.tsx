@@ -14,6 +14,7 @@ import {
   sendPasswordResetEmail,
   inviteUserBySuperAdmin,
 } from '@/app/admin/super/actions'
+import { CourseManagerPage } from './CourseManagerPage'
 
 // ── Exported Types ────────────────────────────────────────────────────────────
 
@@ -1070,7 +1071,7 @@ function DeleteUserModal({ open, onClose, onSuccess, user }: {
 // MAIN SHELL
 // ══════════════════════════════════════════════════════════════════════════════
 
-type PageId = 'overview'|'bypass'|'orgs'|'users'|'courses'|'activity'|'settings'
+type PageId = 'overview'|'bypass'|'orgs'|'users'|'courses'|'cms'|'activity'|'settings'
 
 const META: Record<PageId,{title:string;crumb:string}> = {
   overview: { title:'Platform Overview',   crumb:'Vibe Hyr Super Admin — Overview' },
@@ -1078,6 +1079,7 @@ const META: Record<PageId,{title:string;crumb:string}> = {
   orgs:     { title:'All Organizations',    crumb:'Super Admin — Organizations' },
   users:    { title:'All Users',            crumb:'Super Admin — Users' },
   courses:  { title:'Course Access Control',crumb:'Super Admin — Course Access' },
+  cms:      { title:'Course Manager',       crumb:'Super Admin — Course Content CMS' },
   activity: { title:'Audit Log',            crumb:'Super Admin — Audit Log' },
   settings: { title:'Platform Settings',    crumb:'Super Admin — Settings' },
 }
@@ -1117,6 +1119,7 @@ export function SuperAdminDashboard({ adminName, stats, bypassUsers, bypassOrgs,
     ]},
     { label:'Platform', items:[
       { id:'courses'  as PageId, icon:'◆', label:'Course Access' },
+      { id:'cms'      as PageId, icon:'✎', label:'Course Manager' },
       { id:'activity' as PageId, icon:'↷', label:'Audit Log' },
       { id:'settings' as PageId, icon:'✦', label:'Platform Settings' },
     ]},
@@ -1193,6 +1196,7 @@ export function SuperAdminDashboard({ adminName, stats, bypassUsers, bypassOrgs,
             {page==='orgs'     && <OrgsPage orgs={orgs} onToast={showToast} onAddOrg={()=>setModalOrg(true)} onAddUser={()=>setModalUser(true)}/>}
             {page==='users'    && <UsersPage users={users} onToast={showToast} onAddUser={()=>setModalUser(true)} onInviteUser={()=>setModalInvite(true)} onEdit={setEditUser} onDelete={setDeleteTarget}/>}
             {page==='courses'  && <CoursesPage orgs={orgs} users={users} onToast={showToast}/>}
+            {page==='cms'      && <CourseManagerPage onToast={showToast}/>}
             {page==='activity' && <ActivityPage auditLog={auditLog} onToast={showToast}/>}
             {page==='settings' && <SettingsPage onToast={showToast}/>}
           </div>
