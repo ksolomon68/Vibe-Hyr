@@ -405,6 +405,28 @@ export default function EducationPageClient({
         completedIds={completedIds}
       />
 
+      {/* ─── SCOPED STYLES for injected HTML content ────────────── */}
+      <style>{`
+        .module-body h2 { font-family: 'Bebas Neue', sans-serif; font-size: 34px; color: #E8621A; letter-spacing: 0.05em; margin: 52px 0 20px; }
+        .module-body h3 { font-family: 'Bebas Neue', sans-serif; font-size: 24px; color: #FFFFFF; letter-spacing: 0.05em; margin: 36px 0 14px; }
+        .module-body p  { margin-bottom: 24px; line-height: 1.8; color: rgba(255, 255, 255, 0.8); font-size: 18px; }
+        .module-body strong { color: #FFFFFF; font-weight: 600; }
+        .module-body em { font-family: 'Cormorant Garamond', serif; font-size: 1.1em; color: #E8621A; }
+        .module-body .bullet-list, .module-body ul { list-style: none; padding: 0; margin-bottom: 28px; }
+        .module-body .bullet-list li, .module-body ul:not([class]) li { position: relative; padding-left: 22px; margin-bottom: 14px; font-size: 18px; color: rgba(255, 255, 255, 0.8); }
+        .module-body .bullet-list li::before, .module-body ul:not([class]) li::before { content: "◆"; position: absolute; left: 0; color: #E8621A; font-size: 8px; top: 8px; }
+        .module-body .callout { background: rgba(232, 98, 26, 0.06); border-left: 4px solid #E8621A; padding: 22px 28px; margin: 32px 0; font-family: 'Cormorant Garamond', serif; font-size: 22px; font-style: italic; color: rgba(255, 255, 255, 0.9); line-height: 1.6; }
+        .module-body .callout cite { color: #E8621A; font-family: 'DM Sans', sans-serif; font-style: normal; font-size: 12px; font-weight: 600; display: block; margin-top: 14px; text-transform: uppercase; letter-spacing: 0.1em; }
+        .module-body .key-concept { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-top: 2px solid #E8621A; border-radius: 0 0 12px 12px; padding: 24px 28px; margin: 32px 0; }
+        .module-body .key-concept-label { color: #E8621A; font-size: 10px; letter-spacing: 0.2em; font-weight: 700; margin-bottom: 12px; text-transform: uppercase; }
+        .module-body .practice-box { background: rgba(232, 98, 26, 0.04); border: 1px solid rgba(232, 98, 26, 0.2); border-radius: 12px; padding: 24px 28px; margin: 32px 0; }
+        .module-body .practice-label { color: #E8621A; font-size: 10px; letter-spacing: 0.2em; font-weight: 700; margin-bottom: 14px; text-transform: uppercase; }
+        .module-body .stat-row { display: flex; gap: 20px; flex-wrap: wrap; margin: 32px 0; }
+        .module-body .stat-card { flex: 1; min-width: 140px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 20px; text-align: center; }
+        .module-body .stat-num { font-size: 42px; font-weight: 700; color: #E8621A; display: block; font-family: 'Bebas Neue', sans-serif; line-height: 1; margin-bottom: 8px; }
+        .module-body .stat-label { font-size: 11px; color: rgba(255, 255, 255, 0.5); letter-spacing: 0.1em; text-transform: uppercase; }
+      `}</style>
+
     </div>
   )
 }
