@@ -548,7 +548,7 @@ export function CourseManagerPage({ onToast }: { onToast: (msg: string) => void 
                     border: 'none',
                   }}
                 >
-                  {cat}
+                  {cat === 'individual' ? 'Personal' : cat}
                 </button>
               )
             })}
