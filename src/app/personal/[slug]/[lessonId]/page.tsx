@@ -8,6 +8,9 @@ import { CourseLockedScreen } from '@/components/CourseLockedScreen'
 import { LessonPlayerClient } from '@/components/personal/LessonPlayerClient'
 import type { MembershipTier } from '@/types'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // course_catalog RLS is the authoritative security gate.
 // canAccessCourse() is used only to determine the UX reason (institution vs tier).
 
