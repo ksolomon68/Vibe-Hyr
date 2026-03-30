@@ -8,7 +8,7 @@ import { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Crown, Eye, EyeOff } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import toast from 'react-hot-toast'
 
 function ResetForm() {
@@ -21,61 +21,31 @@ function ResetForm() {
   const [initError,  setInitError]  = useState<string | null>(null)
 
   const router       = useRouter()
-  const searchParams = useSearchParams()
 
   useEffect(() => {
-    const supabase  = createClient()
-    const tokenHash = searchParams.get('token_hash')
-    const type      = searchParams.get('type')
-    const code      = searchParams.get('code')
-
-    console.log('[reset-password] token_hash:', !!tokenHash, '| type:', type, '| code:', !!code)
-
-    if (tokenHash && type === 'recovery') {
-      // New PKCE-style link: verify the token and establish a session
-      supabase.auth.verifyOtp({ token_hash: tokenHash, type: 'recovery' })
-        .then(({ error }) => {
-          if (error) {
-            console.error('[reset-password] verifyOtp failed:', error.message)
-            setInitError('This reset link has expired or is invalid.')
-            setTimeout(() => router.replace('/auth/login'), 3000)
-          } else {
-            console.log('[reset-password] verifyOtp OK — session ready')
-            setReady(true)
-          }
-        })
-    } else if (code) {
-      // Code-exchange link (OAuth-style)
-      supabase.auth.exchangeCodeForSession(code)
-        .then(({ error }) => {
-          if (error) {
-            console.error('[reset-password] exchangeCodeForSession failed:', error.message)
-            setInitError('This reset link has expired or is invalid.')
-            setTimeout(() => router.replace('/auth/login'), 3000)
-          } else {
-            console.log('[reset-password] code exchange OK — session ready')
-            setReady(true)
-          }
-        })
-    } else {
-      // No token in URL — check for existing session (e.g. arrived via /auth/callback)
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        console.log('[reset-password] No token/code — existing session:', !!session)
-        if (session) {
-          setReady(true)
-        } else {
-          router.replace('/auth/login')
-        }
-      })
-    }
-  }, [router, searchParams])
+    const supabase = createClientComponentClient()
+    supabase.auth.onAuthStateChange(async (event: any, session: any) => {
+      console.log('[reset-password] auth state:', event, !!session)
+      if (session) {
+        setReady(true)
+      } else if (event === 'INITIAL_SESSION' && !session) {
+        // If there's truly no session after init, and no automatic pkce hash exchange, redirect.
+        // But auth helper typically fires SIGNED_IN after parsing the hash.
+        setTimeout(() => {
+          supabase.auth.getSession().then(({ data }: any) => {
+            if (!data.session) router.replace('/auth/login')
+          })
+        }, 1500) // Small delay to allow any pending exchange
+      }
+    })
+  }, [router])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (password !== confirm) { toast.error('Passwords do not match'); return }
     if (password.length < 8)  { toast.error('Password must be at least 8 characters'); return }
     setLoading(true)
-    const supabase  = createClient()
+    const supabase  = createClientComponentClient()
     const { error } = await supabase.auth.updateUser({ password })
     if (error) {
       toast.error(error.message)

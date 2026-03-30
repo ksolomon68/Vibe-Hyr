@@ -2,9 +2,10 @@ import { redirect } from 'next/navigation'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { JournalForm } from '@/components/journal/JournalForm'
+import { RevisionHistory } from '@/components/journal/RevisionHistory'
 import { createClient } from '@/lib/supabase/server'
-import { getStreakMessage, formatDate } from '@/lib/utils'
-import { Flame, BookOpen, Calendar } from 'lucide-react'
+import { getStreakMessage } from '@/lib/utils'
+import { Flame, Calendar } from 'lucide-react'
 
 export const metadata = { title: 'Revision Journal' }
 
@@ -19,12 +20,12 @@ export default async function JournalPage() {
     .eq('id', user.id)
     .single()
 
-  const { data: recentEntries } = await supabase
+  const { data: recentEntries, count: entryTotal } = await supabase
     .from('journal_entries')
-    .select('id, date, event_raw, emotion_before, emotion_after, created_at')
+    .select('id, date, event_raw, event_revised, emotion_before, emotion_after, active_assumption, created_at', { count: 'exact' })
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
-    .limit(7)
+    .limit(10)
 
   const streak = profile?.journal_streak ?? 0
 
@@ -73,37 +74,19 @@ export default async function JournalPage() {
                 <div className="flex items-center gap-2 mb-5">
                   <Calendar size={14} className="text-orange" />
                   <span className="font-mono text-[0.6rem] tracking-[0.25em] uppercase text-grey-DEFAULT">
-                    Recent Revisions
+                    Past Revisions
                   </span>
+                  {(entryTotal ?? 0) > 0 && (
+                    <span className="ml-auto font-mono text-[0.5rem] tracking-widest text-grey-dark">
+                      {entryTotal} total
+                    </span>
+                  )}
                 </div>
 
-                {recentEntries && recentEntries.length > 0 ? (
-                  <div className="flex flex-col gap-3">
-                    {recentEntries.map((entry) => (
-                      <div
-                        key={entry.id}
-                        className="p-3 bg-black-3 border border-white/8 hover:border-orange/30 transition-colors cursor-pointer"
-                      >
-                        <p className="font-mono text-[0.55rem] tracking-[0.15em] text-orange mb-1">
-                          {formatDate(entry.date)}
-                        </p>
-                        <p className="font-body text-xs text-grey-DEFAULT line-clamp-2 leading-relaxed">
-                          {entry.event_raw}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <BookOpen size={24} className="text-grey-dark mx-auto mb-3" />
-                    <p className="font-mono text-[0.6rem] tracking-widest text-grey-dark uppercase">
-                      No entries yet
-                    </p>
-                    <p className="font-body text-xs italic text-grey-dark mt-1">
-                      Your first revision starts tonight.
-                    </p>
-                  </div>
-                )}
+                <RevisionHistory
+                  initialEntries={recentEntries ?? []}
+                  initialTotal={entryTotal ?? 0}
+                />
               </div>
 
               {/* Nightly reminder */}

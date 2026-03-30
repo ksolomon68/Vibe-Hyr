@@ -23,7 +23,7 @@ export function PWAInstallPrompt() {
       return
     }
     // User previously dismissed
-    if (localStorage.getItem(DISMISSED_KEY)) return
+    try { if (localStorage.getItem(DISMISSED_KEY)) return } catch { return }
 
     // Detect iOS (Safari doesn't fire beforeinstallprompt)
     const ios =
@@ -59,7 +59,7 @@ export function PWAInstallPrompt() {
 
   const handleDismiss = () => {
     setShow(false)
-    localStorage.setItem(DISMISSED_KEY, '1')
+    try { localStorage.setItem(DISMISSED_KEY, '1') } catch { /* storage blocked */ }
   }
 
   if (!show || installed) return null

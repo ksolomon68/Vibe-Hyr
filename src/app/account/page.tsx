@@ -174,6 +174,7 @@ export default function AccountSettingsPage() {
                   type="email"
                   value={formData.email}
                   disabled
+                  placeholder="Email address"
                   className="w-full px-4 py-3 bg-black-2 border border-white/10 rounded-lg text-grey-dark cursor-not-allowed"
                 />
                 <p className="text-xs text-grey-dark mt-1">Email cannot be changed here. Contact support if needed.</p>

@@ -4,6 +4,50 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
+// ─── Helper: resolve admin's org ID from either column ───────────────────────
+// The schema has two org-FK columns on profiles: org_id (used by invite flow)
+// and institution_id (added by institution_access migration). Admin profiles
+// created via different paths may have one or the other populated.
+// This helper coalesces both so auth checks never fail due to column mismatch.
+
+async function getAdminOrg(
+  adminSupabase: ReturnType<typeof createAdminClient>,
+  adminUserId: string
+): Promise<{ orgId: string; institutionType: string } | null> {
+  const { data } = await adminSupabase
+    .from('profiles')
+    .select('role, org_id, institution_id, institution_type')
+    .eq('id', adminUserId)
+    .single()
+
+  if (!data || data.role !== 'institution_admin') return null
+
+  const orgId = data.org_id ?? data.institution_id
+  if (!orgId) return null
+
+  return { orgId, institutionType: data.institution_type ?? 'business' }
+}
+
+// ─── Check if a target profile belongs to the given org ──────────────────────
+
+async function isInOrg(
+  adminSupabase: ReturnType<typeof createAdminClient>,
+  targetId: string,
+  orgId: string
+): Promise<boolean> {
+  const { data } = await adminSupabase
+    .from('profiles')
+    .select('org_id, institution_id')
+    .eq('id', targetId)
+    .single()
+
+  if (!data) return false
+  const targetOrgId = data.org_id ?? data.institution_id
+  return targetOrgId === orgId
+}
+
+// ─── Invite a new user ────────────────────────────────────────────────────────
+
 export async function inviteUser(
   _prev: { error?: string; success?: boolean; email?: string } | null,
   formData: FormData
@@ -17,25 +61,18 @@ export async function inviteUser(
   const supabase      = createClient()
   const adminSupabase = createAdminClient()
 
-  // Verify caller
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Unauthorized.' }
 
-  const { data: myProfile } = await adminSupabase
-    .from('profiles')
-    .select('role, org_id, institution_type')
-    .eq('id', user.id)
-    .single()
+  const adminOrg = await getAdminOrg(adminSupabase, user.id)
+  if (!adminOrg) return { error: 'Unauthorized.' }
 
-  if (!myProfile || myProfile.role !== 'institution_admin') return { error: 'Unauthorized.' }
-
-  const orgId = myProfile.org_id
-  if (!orgId) return { error: 'No organization found for your account.' }
+  const { orgId, institutionType } = adminOrg
 
   // Role must be valid for this org type
   const educationRoles = ['educator', 'institution_admin']
   const businessRoles  = ['business', 'institution_admin']
-  const allowedRoles   = myProfile.institution_type === 'education' ? educationRoles : businessRoles
+  const allowedRoles   = institutionType === 'education' ? educationRoles : businessRoles
   if (!allowedRoles.includes(role)) return { error: 'Invalid role for your organization type.' }
 
   // Fetch org plan + check seat limit
@@ -50,7 +87,7 @@ export async function inviteUser(
   const { count: currentCount } = await adminSupabase
     .from('profiles')
     .select('id', { count: 'exact', head: true })
-    .eq('org_id', orgId)
+    .or(`org_id.eq.${orgId},institution_id.eq.${orgId}`)
 
   if ((currentCount ?? 0) >= org.seats_purchased) {
     return {
@@ -60,15 +97,13 @@ export async function inviteUser(
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com'
 
-  // Send invite email via Supabase
   const { data: inviteData, error: inviteError } = await adminSupabase.auth.admin.inviteUserByEmail(
     email,
     {
-      // After invite link is clicked → callback exchanges code → sends to set-password page
       redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password`,
       data: {
         org_id:           orgId,
-        institution_type: myProfile.institution_type,
+        institution_type: institutionType,
         role,
         membership_tier:  org.tier,
       },
@@ -83,17 +118,15 @@ export async function inviteUser(
     return { error: inviteError.message }
   }
 
-  // Pre-create profile so the user has correct org/role from day one
   if (inviteData?.user) {
-    const institutionType = myProfile.institution_type as 'education' | 'business'
-    const membershipType  = institutionType === 'education' ? 'education' : 'business'
-
+    const membershipType = institutionType === 'education' ? 'education' : 'business'
     await adminSupabase.from('profiles').upsert(
       {
         id:               inviteData.user.id,
         email,
         org_id:           orgId,
-        institution_type: institutionType,
+        institution_id:   orgId,
+        institution_type: institutionType as 'education' | 'business',
         role,
         membership_tier:  org.tier,
         membership_type:  membershipType,
@@ -133,21 +166,12 @@ export async function editUser(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Unauthorized.' }
 
-  const { data: myProfile } = await adminSupabase
-    .from('profiles')
-    .select('role, org_id')
-    .eq('id', user.id)
-    .single()
+  const adminOrg = await getAdminOrg(adminSupabase, user.id)
+  if (!adminOrg) return { error: 'Unauthorized.' }
 
-  if (!myProfile || myProfile.role !== 'institution_admin') return { error: 'Unauthorized.' }
-
-  const { data: target } = await adminSupabase
-    .from('profiles')
-    .select('org_id')
-    .eq('id', userId)
-    .single()
-
-  if (!target || target.org_id !== myProfile.org_id) return { error: 'User not found in your organization.' }
+  if (!(await isInOrg(adminSupabase, userId, adminOrg.orgId))) {
+    return { error: 'User not found in your organization.' }
+  }
 
   const { error: updateErr } = await adminSupabase
     .from('profiles')
@@ -173,26 +197,17 @@ export async function removeUser(
 
   if (user.id === targetId) return { error: 'You cannot remove yourself.' }
 
-  const { data: myProfile } = await adminSupabase
-    .from('profiles')
-    .select('role, org_id')
-    .eq('id', user.id)
-    .single()
+  const adminOrg = await getAdminOrg(adminSupabase, user.id)
+  if (!adminOrg) return { error: 'Unauthorized.' }
 
-  if (!myProfile || myProfile.role !== 'institution_admin') return { error: 'Unauthorized.' }
-
-  const { data: target } = await adminSupabase
-    .from('profiles')
-    .select('org_id')
-    .eq('id', targetId)
-    .single()
-
-  if (!target || target.org_id !== myProfile.org_id) return { error: 'User not found in your organization.' }
+  if (!(await isInOrg(adminSupabase, targetId, adminOrg.orgId))) {
+    return { error: 'User not found in your organization.' }
+  }
 
   const { error: deleteErr } = await adminSupabase.auth.admin.deleteUser(targetId)
   if (deleteErr) return { error: deleteErr.message }
 
-  // Belt-and-suspenders: delete profile row if no cascade
+  // Belt-and-suspenders: delete profile row if cascade didn't fire
   await adminSupabase.from('profiles').delete().eq('id', targetId)
 
   revalidatePath('/admin/institutional')

@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(where:*)",
+      "Bash(curl:*)",
+      "Bash(python:*)",
+      "Bash(node -e:*)",
+      "Bash(code:*)",
+      "Bash(\"/c/Users/Keisha/AppData/Local/Programs/Antigravity/bin/antigravity\" --install-extension continue.continue)",
+      "Bash(node ~/.config/antigravity/router.mjs:*)"
+    ]
+  }
+}

@@ -5,7 +5,6 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { sendEmail } from '@/lib/email/resend'
 import { passwordResetTemplate } from '@/lib/email/templates'
-import { createClient as createPublicClient } from '@/lib/supabase/client'
 
 type ActionResult = { success: boolean; error?: string }
 
@@ -456,11 +455,10 @@ export async function sendPasswordResetEmail(
   const sa = await requireSuperAdmin()
   if (!sa) return { success: false, error: 'Unauthorized' }
 
-  const supabase = createPublicClient()
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com'
+  const supabase = createClient()
 
   const { error } = await supabase.auth.resetPasswordForEmail(userEmail, {
-    redirectTo: `${appUrl}/reset-password`,
+    redirectTo: 'https://vibehyr.com/reset-password',
   })
 
   if (error) {

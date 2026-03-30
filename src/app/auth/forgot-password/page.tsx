@@ -16,9 +16,8 @@ export default function ForgotPasswordPage() {
     try {
       const { createClient } = await import('@/lib/supabase/client')
       const supabase = createClient()
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com'
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${appUrl}/reset-password`,
+        redirectTo: 'https://vibehyr.com/reset-password',
       })
       if (error) throw error
       setSent(true)
