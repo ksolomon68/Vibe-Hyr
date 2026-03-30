@@ -315,6 +315,15 @@ export function Navbar() {
         >
           <div className="flex flex-col p-8 gap-6">
 
+            {/* Home Link at Top */}
+            <Link
+              href="/"
+              onClick={() => setOpen(false)}
+              className="font-display text-3xl tracking-widest text-white hover:text-[var(--orange)] transition-colors py-2 min-h-[52px] flex items-center"
+            >
+              HOME
+            </Link>
+
             {/* Category accordions — courses only */}
             {NAV_CATEGORIES.map(({ key, label, href }) => {
               const courses = COURSES[key as keyof typeof COURSES]
@@ -360,8 +369,8 @@ export function Navbar() {
               )
             })}
 
-            {/* Static links */}
-            {STATIC_LINKS.map(link => (
+            {/* Other Static links (excluding Home) */}
+            {STATIC_LINKS.filter(link => link.href !== '/').map(link => (
               <Link
                 key={link.href}
                 href={link.href}
