@@ -28,11 +28,12 @@ export function useCourseProgress(courseId: string, totalLessons: number) {
 
       const { data } = await supabase
         .from('course_progress')
-        .select('lesson_id')
+        .select('completed_lessons')
         .eq('user_id',   user.id)
         .eq('course_id', courseId)
+        .maybeSingle()
 
-      const ids = (data ?? []).map((r: { lesson_id: string }) => r.lesson_id)
+      const ids: string[] = data?.completed_lessons ?? []
       setCompletedSet(new Set(ids))
       setLoading(false)
     }
