@@ -12,22 +12,22 @@ import { cn, getTierLabel } from '@/lib/utils'
 // ── Discovery courses — identical for all users regardless of auth ──────────
 const COURSES = {
   personal: [
-    { title: 'Programming the Gatekeeper',         tier: 'Free',           href: '/personal/programming-the-gatekeeper/c01-l01' },
-    { title: 'Mastery of Assumption',               tier: 'Architect',      href: '/personal/mastery-of-the-law-of-assumption/c02-l01' },
-    { title: 'SATS Reprogramming',                  tier: 'Architect',      href: '/personal/subconscious-reprogramming-sats/c03-l01' },
-    { title: 'Echo Theory Delay',                   tier: 'Reality Master', href: '/personal/navigating-the-echo-theory-delay/c04-l01' },
+    { title: 'Programming the Gatekeeper',         tier: 'Free',           href: '/personal/programming-the-gatekeeper' },
+    { title: 'Mastery of Assumption',               tier: 'Architect',      href: '/personal/mastery-of-the-law-of-assumption' },
+    { title: 'SATS Reprogramming',                  tier: 'Architect',      href: '/personal/subconscious-reprogramming-sats' },
+    { title: 'Echo Theory Delay',                   tier: 'Reality Master', href: '/personal/navigating-the-echo-theory-delay' },
   ],
   educators: [
-    { title: 'The Educator Reset',      tier: 'All staff',            href: '/educators/the-educator-reset/ed01-m01' },
-    { title: 'Vibrational Leadership',  tier: 'Admin & principals',   href: '/educators/vibrational-leadership/ed02-m01' },
-    { title: 'Co-Regulation Mastery',   tier: 'Classroom teachers',   href: '/educators/co-regulation-mastery/ed03-m01' },
-    { title: 'The Retained Educator',   tier: 'Districts & HR',       href: '/educators/the-retained-educator/ed04-m01' },
+    { title: 'The Educator Reset',      tier: 'All staff',            href: '/educators/the-educator-reset' },
+    { title: 'Vibrational Leadership',  tier: 'Admin & principals',   href: '/educators/vibrational-leadership' },
+    { title: 'Co-Regulation Mastery',   tier: 'Classroom teachers',   href: '/educators/co-regulation-mastery' },
+    { title: 'The Retained Educator',   tier: 'Districts & HR',       href: '/educators/the-retained-educator' },
   ],
   business: [
-    { title: 'Common Sense in the Workplace',   tier: 'Foundation',    href: '/business/common-sense-in-the-workplace/the-awareness-gap' },
-    { title: 'From Reaction to Response',       tier: 'De-escalation', href: '/business/from-reaction-to-response/the-reactivity-spectrum' },
-    { title: 'Know Yourself, Lead Yourself',    tier: 'Self mastery',  href: '/business/know-yourself-lead-yourself/identity-architecture' },
-    { title: 'The High-Frequency Team',         tier: 'Team cohesion', href: '/business/the-high-frequency-team/team-frequency-mapping' },
+    { title: 'Common Sense in the Workplace',   tier: 'Foundation',    href: '/business/common-sense-in-the-workplace' },
+    { title: 'From Reaction to Response',       tier: 'De-escalation', href: '/business/from-reaction-to-response' },
+    { title: 'Know Yourself, Lead Yourself',    tier: 'Self mastery',  href: '/business/know-yourself-lead-yourself' },
+    { title: 'The High-Frequency Team',         tier: 'Team cohesion', href: '/business/the-high-frequency-team' },
   ],
 }
 

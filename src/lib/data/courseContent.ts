@@ -57,7 +57,7 @@ function dbRowToLesson(row: DbLessonRow): Lesson {
                         : null,
     duration_seconds: 0,
     is_preview:       row.is_preview,
-    content_md:       row.type === 'text'   ? (row.content ?? '') :
+    content_md:       (row.type === 'text' || row.type === 'video') ? (row.content ?? '') :
                       row.type === 'header' ? `## ${row.title}` : '',
     created_at:       row.created_at,
   }
