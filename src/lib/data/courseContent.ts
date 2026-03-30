@@ -52,9 +52,9 @@ function dbRowToLesson(row: DbLessonRow): Lesson {
     order_index:      row.sort_order,
     title:            row.title,
     description:      '',
-    video_url:        row.type === 'video' && row.youtube_url
-                        ? toEmbedUrl(row.youtube_url)
-                        : undefined,
+    video_url:        row.type === 'video' && (row.youtube_url ?? null)
+                        ? toEmbedUrl(row.youtube_url!)
+                        : null,
     duration_seconds: 0,
     is_preview:       row.is_preview,
     content_md:       row.type === 'text'   ? (row.content ?? '') :
