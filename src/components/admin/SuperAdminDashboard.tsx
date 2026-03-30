@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useCallback, useEffect } from 'react'
+import React, { useState, useTransition, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -1068,10 +1068,225 @@ function DeleteUserModal({ open, onClose, onSuccess, user }: {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+// COURSE PROGRESS PAGE  (read-only)
+// ══════════════════════════════════════════════════════════════════════════════
+
+const COURSE_NAMES: Record<string, string> = {
+  'c1': 'Course 1 — Programming the Gatekeeper',
+  'c2': 'Course 2 — The Art of Assumption',
+  'c3': 'Course 3 — Advanced Manifestation',
+  'c4': 'Course 4 — Navigating the Echo Theory Delay',
+}
+
+interface ProgressRow {
+  email:             string
+  course_id:         string
+  lessons_completed: number
+  total_lessons:     number
+  pct:               number
+  last_activity:     string | null
+}
+
+const PAGE_SIZE = 25
+
+function CourseProgressPage() {
+  const [rows,         setRows]         = useState<ProgressRow[]>([])
+  const [loading,      setLoading]      = useState(true)
+  const [courseFilter, setCourseFilter] = useState('all')
+  const [page,         setPage]         = useState(1)
+  const [totalRows,    setTotalRows]    = useState(0)
+  const [error,        setError]        = useState<string | null>(null)
+
+  const supabase = createClient()
+
+  useEffect(() => {
+    loadProgress()
+  }, [courseFilter, page]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function loadProgress() {
+    setLoading(true)
+    setError(null)
+
+    try {
+      // Aggregate progress: group by (user_id, course_id), count rows
+      let query = supabase
+        .from('course_progress')
+        .select(`
+          course_id,
+          user_id,
+          completed_at,
+          profiles!inner ( email )
+        `, { count: 'exact' })
+        .order('completed_at', { ascending: false })
+
+      if (courseFilter !== 'all') {
+        query = query.eq('course_id', courseFilter)
+      }
+
+      const { data, count, error: qErr } = await query
+
+      if (qErr) throw qErr
+
+      // Build aggregated rows grouped by (user_id + course_id)
+      const map = new Map<string, ProgressRow>()
+      for (const r of (data ?? []) as any[]) {
+        const key = `${r.user_id}::${r.course_id}`
+        const existing = map.get(key)
+        const email = r.profiles?.email ?? '—'
+        if (existing) {
+          existing.lessons_completed += 1
+          if (r.completed_at && (!existing.last_activity || r.completed_at > existing.last_activity)) {
+            existing.last_activity = r.completed_at
+          }
+        } else {
+          map.set(key, {
+            email,
+            course_id:         r.course_id,
+            lessons_completed: 1,
+            total_lessons:     0, // filled below
+            pct:               0,
+            last_activity:     r.completed_at,
+          })
+        }
+      }
+
+      // Set total_lessons (we don't store this in progress table, default to 10 if unknown)
+      const TOTALS: Record<string, number> = { c1: 12, c2: 10, c3: 10, c4: 8 }
+      const aggregated = Array.from(map.values()).map(row => {
+        const total = TOTALS[row.course_id] ?? 10
+        return { ...row, total_lessons: total, pct: Math.round((row.lessons_completed / total) * 100) }
+      })
+
+      // Client-side paginate
+      const start = (page - 1) * PAGE_SIZE
+      setRows(aggregated.slice(start, start + PAGE_SIZE))
+      setTotalRows(aggregated.length)
+    } catch (err: any) {
+      setError(err?.message ?? 'Failed to load progress data')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const totalPages = Math.ceil(totalRows / PAGE_SIZE)
+
+  const fmtDate = (s: string | null) => {
+    if (!s) return '—'
+    return new Date(s).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  }
+
+  return (
+    <div>
+      <div style={{ display:'flex', gap:10, marginBottom:16, alignItems:'center', flexWrap:'wrap' }}>
+        <div style={{ fontSize:11, color:C.muted, letterSpacing:1 }}>Filter by course:</div>
+        {[
+          { val:'all', label:'All Courses' },
+          { val:'c1',  label:'Course 1' },
+          { val:'c2',  label:'Course 2' },
+          { val:'c3',  label:'Course 3' },
+          { val:'c4',  label:'Course 4' },
+        ].map(opt => (
+          <button
+            key={opt.val}
+            onClick={() => { setCourseFilter(opt.val); setPage(1) }}
+            style={{
+              fontSize:10, fontWeight:600, letterSpacing:1, textTransform:'uppercase',
+              padding:'5px 12px', borderRadius:4, cursor:'pointer',
+              background: courseFilter === opt.val ? C.orange : 'transparent',
+              color:       courseFilter === opt.val ? '#000'    : C.muted,
+              border:`1px solid ${courseFilter === opt.val ? C.orange : C.border}`,
+              transition:'all 0.15s',
+            }}
+          >
+            {opt.label}
+          </button>
+        ))}
+        <div style={{ marginLeft:'auto', fontSize:11, color:C.muted }}>
+          {totalRows} user·course combinations
+        </div>
+      </div>
+
+      <div style={{ background:C.dark3, border:`1px solid ${C.border}`, borderRadius:6, overflow:'hidden' }}>
+        {/* Table header */}
+        <div style={{ display:'grid', gridTemplateColumns:'2fr 2fr 1fr 1fr 1fr', borderBottom:`1px solid ${C.border}`, padding:'10px 16px', gap:12 }}>
+          {['User', 'Course', 'Completed', '% Done', 'Last Activity'].map(h => (
+            <div key={h} style={{ fontSize:9, letterSpacing:2, textTransform:'uppercase', color:C.muted }}>
+              {h}
+            </div>
+          ))}
+        </div>
+
+        {/* Rows */}
+        {loading ? (
+          <div style={{ padding:'32px 16px', textAlign:'center', color:C.muted, fontSize:12 }}>
+            Loading progress data…
+          </div>
+        ) : error ? (
+          <div style={{ padding:'32px 16px', textAlign:'center', color:C.red, fontSize:12 }}>
+            {error}
+          </div>
+        ) : rows.length === 0 ? (
+          <div style={{ padding:'32px 16px', textAlign:'center', color:C.muted, fontSize:12 }}>
+            No progress data {courseFilter !== 'all' ? 'for this course' : 'yet'}.
+          </div>
+        ) : rows.map((row, i) => (
+          <div
+            key={i}
+            style={{
+              display:'grid', gridTemplateColumns:'2fr 2fr 1fr 1fr 1fr', gap:12,
+              padding:'10px 16px', borderBottom:`1px solid ${C.border}`,
+              fontSize:12, alignItems:'center',
+            }}
+          >
+            <div style={{ color:C.cream, fontWeight:500, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+              {row.email}
+            </div>
+            <div style={{ color:C.muted, fontSize:11 }}>
+              {COURSE_NAMES[row.course_id] ?? row.course_id}
+            </div>
+            <div style={{ color:C.cream }}>
+              {row.lessons_completed} <span style={{ color:C.muted }}>/ {row.total_lessons}</span>
+            </div>
+            <div>
+              {/* Mini progress bar */}
+              <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                <div style={{ flex:1, height:4, background:C.border, borderRadius:2, overflow:'hidden' }}>
+                  <div style={{ width:`${row.pct}%`, height:'100%', background: row.pct >= 100 ? '#22c55e' : C.orange, borderRadius:2, transition:'width 0.4s' }} />
+                </div>
+                <span style={{ fontSize:10, color: row.pct >= 100 ? '#22c55e' : C.orange, fontWeight:700, minWidth:30 }}>
+                  {row.pct}%
+                </span>
+              </div>
+            </div>
+            <div style={{ color:C.muted, fontSize:11 }}>
+              {fmtDate(row.last_activity)}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8, marginTop:16 }}>
+          <Btn variant="ghost" size="sm" onClick={() => setPage(p => Math.max(1, p-1))} disabled={page <= 1}>
+            ← Prev
+          </Btn>
+          <span style={{ fontSize:11, color:C.muted }}>Page {page} of {totalPages}</span>
+          <Btn variant="ghost" size="sm" onClick={() => setPage(p => Math.min(totalPages, p+1))} disabled={page >= totalPages}>
+            Next →
+          </Btn>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 // MAIN SHELL
 // ══════════════════════════════════════════════════════════════════════════════
 
-type PageId = 'overview'|'bypass'|'orgs'|'users'|'courses'|'cms'|'activity'|'settings'
+type PageId = 'overview'|'bypass'|'orgs'|'users'|'courses'|'cms'|'progress'|'activity'|'settings'
+
 
 const META: Record<PageId,{title:string;crumb:string}> = {
   overview: { title:'Platform Overview',   crumb:'Vibe Hyr Super Admin — Overview' },
@@ -1080,6 +1295,7 @@ const META: Record<PageId,{title:string;crumb:string}> = {
   users:    { title:'All Users',            crumb:'Super Admin — Users' },
   courses:  { title:'Course Access Control',crumb:'Super Admin — Course Access' },
   cms:      { title:'Course Manager',       crumb:'Super Admin — Course Content CMS' },
+  progress: { title:'Course Progress',      crumb:'Super Admin — Course Progress' },
   activity: { title:'Audit Log',            crumb:'Super Admin — Audit Log' },
   settings: { title:'Platform Settings',    crumb:'Super Admin — Settings' },
 }
@@ -1120,6 +1336,7 @@ export function SuperAdminDashboard({ adminName, stats, bypassUsers, bypassOrgs,
     { label:'Platform', items:[
       { id:'courses'  as PageId, icon:'◆', label:'Course Access' },
       { id:'cms'      as PageId, icon:'✎', label:'Course Manager' },
+      { id:'progress' as PageId, icon:'◉', label:'Course Progress' },
       { id:'activity' as PageId, icon:'↷', label:'Audit Log' },
       { id:'settings' as PageId, icon:'✦', label:'Platform Settings' },
     ]},
@@ -1197,6 +1414,7 @@ export function SuperAdminDashboard({ adminName, stats, bypassUsers, bypassOrgs,
             {page==='users'    && <UsersPage users={users} onToast={showToast} onAddUser={()=>setModalUser(true)} onInviteUser={()=>setModalInvite(true)} onEdit={setEditUser} onDelete={setDeleteTarget}/>}
             {page==='courses'  && <CoursesPage orgs={orgs} users={users} onToast={showToast}/>}
             {page==='cms'      && <CourseManagerPage onToast={showToast}/>}
+            {page==='progress' && <CourseProgressPage/>}
             {page==='activity' && <ActivityPage auditLog={auditLog} onToast={showToast}/>}
             {page==='settings' && <SettingsPage onToast={showToast}/>}
           </div>

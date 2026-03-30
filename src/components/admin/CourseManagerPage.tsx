@@ -20,10 +20,23 @@ const C = {
 
 // ── Course definitions ────────────────────────────────────────────────────────
 const COURSES = [
+  // Personal (1-4)
   { id: 1, name: 'Programming the Gatekeeper',          tag: 'RAS Programming',     tier: 'Free' },
   { id: 2, name: 'Mastery of the Law of Assumption',    tag: 'Law of Assumption',   tier: 'Architect' },
   { id: 3, name: 'Subconscious Reprogramming via SATS', tag: 'SATS Reprogramming',  tier: 'Architect' },
   { id: 4, name: 'Navigating the Echo Theory Delay',    tag: 'Echo Theory',         tier: 'Reality Master' },
+  
+  // Business (5-8)
+  { id: 5, name: 'Common Sense in the Workplace',       tag: 'Business',            tier: 'Free' },
+  { id: 6, name: 'From Reaction to Response',           tag: 'Business',            tier: 'Architect' },
+  { id: 7, name: 'Know Yourself, Lead Yourself',        tag: 'Business',            tier: 'Architect' },
+  { id: 8, name: 'The High-Frequency Team',             tag: 'Business',            tier: 'Elite' },
+  
+  // Education (9-12)
+  { id: 9,  name: 'The Educator Reset',                 tag: 'Education',           tier: 'Free' },
+  { id: 10, name: 'Vibrational Leadership',             tag: 'Education',           tier: 'Architect' },
+  { id: 11, name: 'Co-Regulation Mastery',              tag: 'Education',           tier: 'Architect' },
+  { id: 12, name: 'The Retained Educator',              tag: 'Education',           tier: 'Elite' },
 ]
 
 // ── YouTube helpers ───────────────────────────────────────────────────────────

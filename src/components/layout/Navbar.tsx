@@ -26,8 +26,8 @@ const COURSES = {
   business: [
     { title: 'Common Sense in the Workplace',   tier: 'Foundation',    href: '/business/common-sense-in-the-workplace/the-awareness-gap' },
     { title: 'From Reaction to Response',       tier: 'De-escalation', href: '/business/from-reaction-to-response/the-reactivity-spectrum' },
-    { title: 'Know Yourself, Lead Yourself',    tier: 'Self mastery',  href: '/business/know-yourself-lead-yourself/the-sovereign-interrupt' },
-    { title: 'Vibing as a Unit',                tier: 'Team cohesion', href: '/business/the-high-frequency-team/resonant-leadership' },
+    { title: 'Know Yourself, Lead Yourself',    tier: 'Self mastery',  href: '/business/know-yourself-lead-yourself/identity-architecture' },
+    { title: 'The High-Frequency Team',         tier: 'Team cohesion', href: '/business/the-high-frequency-team/team-frequency-mapping' },
   ],
 }
 

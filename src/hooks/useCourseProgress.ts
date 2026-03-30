@@ -2,14 +2,25 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import toast from 'react-hot-toast'
 
+/**
+ * useCourseProgress
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Manages per-lesson completion state for the course player.
+ *
+ * Writes go through API routes (/api/progress/complete & /api/progress/uncomplete)
+ * with optimistic updates — the UI updates instantly, rolling back on failure.
+ *
+ * Reads are done directly from Supabase (no API overhead for reads).
+ */
 export function useCourseProgress(courseId: string, totalLessons: number) {
   const [completedSet, setCompletedSet] = useState<Set<string>>(new Set())
   const [loading, setLoading]           = useState(true)
 
   const supabase = createClient()
 
-  // Load progress on mount — one row per completed lesson
+  // ── Load progress on mount ─────────────────────────────────────────────────
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
@@ -18,7 +29,7 @@ export function useCourseProgress(courseId: string, totalLessons: number) {
       const { data } = await supabase
         .from('course_progress')
         .select('lesson_id')
-        .eq('user_id', user.id)
+        .eq('user_id',   user.id)
         .eq('course_id', courseId)
 
       const ids = (data ?? []).map((r: { lesson_id: string }) => r.lesson_id)
@@ -26,30 +37,69 @@ export function useCourseProgress(courseId: string, totalLessons: number) {
       setLoading(false)
     }
     load()
-  }, [courseId])
+  }, [courseId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Mark a lesson complete — upsert a single row
+  // ── Mark lesson complete ───────────────────────────────────────────────────
   const markComplete = useCallback(async (lessonId: string) => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-    if (completedSet.has(lessonId)) return   // already done
+    if (completedSet.has(lessonId)) return
 
-    await supabase.from('course_progress').upsert(
-      {
-        user_id:      user.id,
-        course_id:    courseId,
-        lesson_id:    lessonId,
-        completed_at: new Date().toISOString(),
-      },
-      { onConflict: 'user_id,course_id,lesson_id' }
-    )
+    // Optimistic update
+    setCompletedSet(prev => new Set([...prev, lessonId]))
 
-    setCompletedSet(prev => new Set(Array.from(prev).concat([lessonId])))
+    try {
+      const res = await fetch('/api/progress/complete', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ lessonId, courseId }),
+      })
+      if (!res.ok) {
+        const { error } = await res.json()
+        throw new Error(error ?? 'Failed to save progress')
+      }
+    } catch (err) {
+      // Roll back on failure
+      setCompletedSet(prev => {
+        const next = new Set(prev)
+        next.delete(lessonId)
+        return next
+      })
+      toast.error(err instanceof Error ? err.message : 'Failed to save progress')
+    }
   }, [completedSet, courseId])
 
-  const isComplete  = (lessonId: string) => completedSet.has(lessonId)
-  const percentDone = totalLessons > 0 ? Math.round((completedSet.size / totalLessons) * 100) : 0
-  const completedIds = Array.from(completedSet)
+  // ── Mark lesson incomplete ─────────────────────────────────────────────────
+  const markIncomplete = useCallback(async (lessonId: string) => {
+    if (!completedSet.has(lessonId)) return
 
-  return { loading, markComplete, isComplete, percentDone, completedIds }
+    // Optimistic update
+    setCompletedSet(prev => {
+      const next = new Set(prev)
+      next.delete(lessonId)
+      return next
+    })
+
+    try {
+      const res = await fetch('/api/progress/uncomplete', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ lessonId, courseId }),
+      })
+      if (!res.ok) {
+        const { error } = await res.json()
+        throw new Error(error ?? 'Failed to update progress')
+      }
+    } catch (err) {
+      // Roll back on failure
+      setCompletedSet(prev => new Set([...prev, lessonId]))
+      toast.error(err instanceof Error ? err.message : 'Failed to update progress')
+    }
+  }, [completedSet, courseId])
+
+  // ── Derived values ─────────────────────────────────────────────────────────
+  const isComplete    = (lessonId: string) => completedSet.has(lessonId)
+  const completedIds  = Array.from(completedSet)
+  const percentDone   = totalLessons > 0 ? Math.round((completedSet.size / totalLessons) * 100) : 0
+  const isAllComplete = totalLessons > 0 && completedSet.size >= totalLessons
+
+  return { loading, markComplete, markIncomplete, isComplete, percentDone, completedIds, isAllComplete }
 }

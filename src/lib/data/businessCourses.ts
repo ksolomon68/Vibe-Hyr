@@ -45,8 +45,8 @@ export const BUSINESS_COURSES: Course[] = [
   },
   {
     id: 'b04',
-    slug: 'vibing-as-a-unit',
-    title: 'Vibing as a Unit',
+    slug: 'the-high-frequency-team',
+    title: 'The High-Frequency Team',
     subtitle: 'Team Frequency Design & Resonant Leadership',
     description: 'Navigate the Echo Theory Delay in organizations. Mental diet practices for teams and how to maintain faith during transformation periods.',
     tier: 'elite',

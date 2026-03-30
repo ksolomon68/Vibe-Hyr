@@ -13,6 +13,7 @@ import { LessonContent } from '@/components/personal/LessonContent'
 import { LessonSidebar } from '@/components/personal/LessonSidebar'
 import { LessonQuiz }   from '@/components/personal/LessonQuiz'
 import { AssumptionLab } from '@/components/shared/AssumptionLab'
+import { CourseCompletionBanner } from '@/components/personal/CourseCompletionBanner'
 
 import { useCourseProgress } from '@/hooks/useCourseProgress'
 import { useLessonNotes } from '@/hooks/useLessonNotes'
@@ -53,7 +54,7 @@ export function LessonPlayerClient({
   const [quizPassed, setQuizPassed] = useState(() => initialPassed.includes(quiz?.id ?? ''))
   const { content: lessonNotes, handleChange: handleNotesChange, saving: notesSaving, saved: notesSaved } = useLessonNotes(lesson.id)
 
-  const { markComplete, isComplete, completedIds, percentDone } =
+  const { loading: progressLoading, markComplete, markIncomplete, isComplete, completedIds, percentDone, isAllComplete } =
     useCourseProgress(course.id, lessons.length)
 
   // Seed from server-side data on first render
@@ -61,6 +62,10 @@ export function LessonPlayerClient({
   const hasQuiz        = !!quiz
   const quizRequired   = hasQuiz && !quizPassed && !isLessonDone
   const canAdvance     = !quizRequired || quizPassed || isLessonDone
+
+  // Show completion banner when all lessons done (include server seed)
+  const mergedCompletedIds = [...new Set([...completedIds, ...initialCompleted])]
+  const allDone = lessons.length > 0 && mergedCompletedIds.length >= lessons.length
 
   // Lesson index for breadcrumb
   const lessonIndex = lessons.findIndex(l => l.id === lesson.id) + 1
@@ -71,12 +76,23 @@ export function LessonPlayerClient({
       return
     }
     await markComplete(lesson.id)
-    toast.success('Lesson marked complete ✦', { icon: '✓' })
+    toast.success('Lesson marked complete ✓', {
+      icon: '✓',
+      style: { background: '#0A0804', color: '#F0EAE0', border: '1px solid #22c55e' },
+    })
     if (nextLesson) {
       router.push(`/personal/${course.slug}/${nextLesson.id}`)
     } else {
       router.push(`/personal/${course.slug}`)
     }
+  }
+
+  async function handleMarkIncomplete(lessonId: string) {
+    if (!isLoggedIn) return
+    await markIncomplete(lessonId)
+    toast('Lesson marked incomplete', {
+      style: { background: '#0A0804', color: '#F0EAE0', border: '1px solid #444' },
+    })
   }
 
   async function handleQuizPass() {
@@ -92,6 +108,9 @@ export function LessonPlayerClient({
       // Don't force the tab — just surface the prompt
     }
   }, [quizRequired])
+
+  // Merged completed IDs: prefer live state, fall back to server seed
+  const effectiveCompletedIds = completedIds.length > 0 ? completedIds : initialCompleted
 
   return (
     <div className="min-h-screen bg-black flex flex-col">
@@ -120,15 +139,16 @@ export function LessonPlayerClient({
           </span>
         </div>
 
-        {/* Center: progress bar (desktop only) */}
+        {/* Center: animated progress bar (desktop only) */}
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden lg:flex items-center gap-4">
           <div className="w-40 h-[2px] bg-white/5 relative rounded-full overflow-hidden">
-            <div
-              className="absolute left-0 top-0 h-full bg-[#E8621A] transition-all duration-700 ease-out"
-              style={{ width: `${percentDone}%` }}
+            <motion.div
+              className="absolute left-0 top-0 h-full bg-[#F97316] rounded-full"
+              animate={{ width: `${percentDone}%` }}
+              transition={{ duration: 0.6, ease: 'easeOut' }}
             />
           </div>
-          <span className="font-mono text-[0.6rem] tracking-[0.2em] text-[#E8621A] font-bold">
+          <span className="font-mono text-[0.6rem] tracking-[0.2em] text-[#F97316] font-bold">
             {percentDone}%
           </span>
         </div>
@@ -173,6 +193,26 @@ export function LessonPlayerClient({
         </div>
       </div>
 
+      {/* ─── PROGRESS SUMMARY BAR (below top bar, full width) ──── */}
+      {isLoggedIn && (
+        <div className="bg-[#0E0C08] border-b border-white/5 px-6 py-2 flex items-center gap-4">
+          {/* Full-width animated bar */}
+          <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
+            <motion.div
+              className="h-full bg-[#F97316] rounded-full"
+              animate={{ width: `${percentDone}%` }}
+              transition={{ duration: 0.6, ease: 'easeOut' }}
+            />
+          </div>
+          <span className="font-mono text-[0.58rem] tracking-widest text-white/50 whitespace-nowrap flex-shrink-0">
+            {effectiveCompletedIds.length} of {lessons.length} lessons complete
+          </span>
+          <span className="font-mono text-[0.58rem] tracking-widest text-[#F97316] font-bold flex-shrink-0">
+            {percentDone}%
+          </span>
+        </div>
+      )}
+
       {/* ─── BODY ───────────────────────────────────────────────── */}
       <div className="flex flex-1 min-h-0 overflow-hidden flex-col lg:flex-row-reverse">
         
@@ -193,8 +233,16 @@ export function LessonPlayerClient({
                   course={course}
                   lessons={lessons}
                   currentLesson={lesson}
-                  completedIds={completedIds.length > 0 ? completedIds : initialCompleted}
+                  completedIds={effectiveCompletedIds}
                   hasAccess={true}
+                  loading={progressLoading}
+                  isLoggedIn={isLoggedIn}
+                  onMarkComplete={isLoggedIn ? (id) => markComplete(id).then(() =>
+                    toast.success('Lesson marked complete ✓', {
+                      style: { background: '#0A0804', color: '#F0EAE0', border: '1px solid #22c55e' }
+                    })
+                  ) : undefined}
+                  onMarkIncomplete={isLoggedIn ? (id) => handleMarkIncomplete(id) : undefined}
                 />
               </div>
             </motion.div>
@@ -234,9 +282,13 @@ export function LessonPlayerClient({
                         </span>
                       )}
                       {isLessonDone && (
-                        <span className="font-mono text-[0.5rem] tracking-widest uppercase px-2 py-0.5 border border-orange-DEFAULT text-orange-DEFAULT flex items-center gap-1">
-                          <CheckCircle size={9} /> Complete
-                        </span>
+                        <motion.span
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          className="font-mono text-[0.5rem] tracking-widest uppercase px-2 py-0.5 border border-[#22c55e] text-[#22c55e] flex items-center gap-1"
+                        >
+                          ✓ Complete
+                        </motion.span>
                       )}
                     </div>
                     <h1 className="font-display text-[clamp(1.8rem,4vw,3.5rem)] leading-[0.95] tracking-[0.02em] text-white">
@@ -396,6 +448,16 @@ export function LessonPlayerClient({
               </div>
             )}
 
+            {/* ── COURSE COMPLETION BANNER ── */}
+            {allDone && (
+              <CourseCompletionBanner
+                courseName={course.title}
+                courseOrderIndex={course.order_index}
+                userTier={userTier}
+                isLoggedIn={isLoggedIn}
+              />
+            )}
+
             {/* ── COMPLETION / NAVIGATION FOOTER ── */}
             <div className="mt-12 pt-8 border-t border-white/8">
               <div className="flex items-center justify-between flex-wrap gap-4">
@@ -422,21 +484,32 @@ export function LessonPlayerClient({
                 {/* Mark complete / next */}
                 <div className="flex items-center gap-3">
                   {isLessonDone ? (
-                    nextLesson ? (
-                      <Link
-                        href={`/personal/${course.slug}/${nextLesson.id}`}
-                        className="btn-orange flex items-center gap-2"
-                      >
-                        Next Lesson <ChevronRight size={14} />
-                      </Link>
-                    ) : (
-                      <Link
-                        href={`/personal/${course.slug}`}
-                        className="btn-orange flex items-center gap-2"
-                      >
-                        <CheckCircle size={14} /> Course Complete
-                      </Link>
-                    )
+                    <>
+                      {nextLesson ? (
+                        <Link
+                          href={`/personal/${course.slug}/${nextLesson.id}`}
+                          className="btn-orange flex items-center gap-2"
+                        >
+                          Next Lesson <ChevronRight size={14} />
+                        </Link>
+                      ) : (
+                        <Link
+                          href={`/personal/${course.slug}`}
+                          className="btn-orange flex items-center gap-2"
+                        >
+                          <CheckCircle size={14} /> Course Complete
+                        </Link>
+                      )}
+                      {/* Mark incomplete — small ghost button */}
+                      {isLoggedIn && (
+                        <button
+                          onClick={() => handleMarkIncomplete(lesson.id)}
+                          className="font-mono text-[0.52rem] tracking-widest uppercase px-3 py-1.5 rounded border border-white/10 text-grey-dark hover:border-white/30 hover:text-white/60 transition-colors"
+                        >
+                          Mark Incomplete
+                        </button>
+                      )}
+                    </>
                   ) : (
                     <button
                       onClick={() => {
@@ -465,24 +538,82 @@ export function LessonPlayerClient({
               </div>
             </div>
 
-            {/* ── NEXT COURSE TEASER (last lesson of course) ── */}
-            {!nextLesson && isLessonDone && (() => {
-              const nextCourse = course.order_index < 4
-              if (!nextCourse) return null
-              return (
-                <div className="mt-10 p-7 bg-black-2 border-2 border-orange-DEFAULT text-center">
-                  <div className="font-mono text-[0.58rem] tracking-[0.25em] uppercase text-orange-DEFAULT mb-3">
-                    Course Complete · Up Next
+            {/* ── COURSE COMPLETION BANNER ── */}
+            <AnimatePresence>
+              {isAllComplete && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5, ease: 'easeOut' }}
+                  className="mt-10 relative overflow-hidden"
+                >
+                  {/* Animated confetti-style particles */}
+                  <motion.div
+                    className="absolute inset-0 pointer-events-none"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    {[...Array(12)].map((_, i) => (
+                      <motion.div
+                        key={i}
+                        className="absolute w-1 h-3 rounded-full"
+                        style={{
+                          background: i % 3 === 0 ? '#F97316' : i % 3 === 1 ? '#C9A84C' : '#22c55e',
+                          left: `${(i / 12) * 100}%`,
+                          top: '-8px',
+                        }}
+                        animate={{ y: [0, 80, 160], opacity: [1, 0.6, 0], rotate: [0, 180, 360] }}
+                        transition={{ duration: 1.8, delay: i * 0.08, ease: 'easeIn' }}
+                      />
+                    ))}
+                  </motion.div>
+
+                  <div className="p-8 bg-black-2 border-2 border-[#F97316] text-center">
+                    <div className="font-mono text-[0.58rem] tracking-[0.3em] uppercase text-[#F97316] mb-3">
+                      Course Complete
+                    </div>
+                    <h2 className="font-display text-[clamp(2.2rem,5vw,4rem)] leading-none tracking-[0.04em] text-white mb-3">
+                      COURSE COMPLETE
+                    </h2>
+                    <p className="font-body text-base italic text-grey-DEFAULT mb-6 max-w-md mx-auto leading-relaxed">
+                      You&apos;ve completed <span className="text-white not-italic">{course.title}</span>. Your reality is being architected.
+                    </p>
+
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                      {course.order_index < 4 ? (
+                        <Link href="/personal" className="btn-orange flex items-center gap-2">
+                          Explore Next Course <ArrowRight size={14} />
+                        </Link>
+                      ) : (
+                        <Link href="/personal" className="btn-orange flex items-center gap-2">
+                          <Sparkles size={14} /> View All Courses
+                        </Link>
+                      )}
+
+                      {/* Architect → Course 4 upsell */}
+                      {course.order_index === 3 && userTier === 'architect' && (
+                        <div className="flex items-center gap-3 p-4 bg-black-3 border border-orange-DEFAULT/30 text-left max-w-sm">
+                          <Crown size={16} className="text-orange-DEFAULT flex-shrink-0" />
+                          <div className="flex-1">
+                            <p className="font-mono text-[0.55rem] tracking-widest uppercase text-orange-DEFAULT mb-0.5">
+                              Unlock Course 4
+                            </p>
+                            <p className="font-body text-xs text-grey-DEFAULT italic leading-snug">
+                              Navigating the Echo Theory Delay
+                            </p>
+                          </div>
+                          <Link href="/personal/echo-theory-delay" className="btn-orange text-[0.58rem] px-3 py-1.5 flex-shrink-0">
+                            Unlock
+                          </Link>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="font-display text-2xl text-white mb-4">
-                    Course {String(course.order_index + 1).padStart(2,'0')} awaits
-                  </div>
-                  <Link href="/personal" className="btn-orange flex items-center gap-2 justify-center">
-                    Explore Next Course <ArrowRight size={14} />
-                  </Link>
-                </div>
-              )
-            })()}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* ── LOGIN NUDGE (guest) ── */}
             {!isLoggedIn && (
@@ -517,10 +648,14 @@ export function LessonPlayerClient({
         course={course}
         lessons={lessons}
         currentLesson={lesson}
-        completedIds={completedIds.length > 0 ? completedIds : initialCompleted}
+        completedIds={effectiveCompletedIds}
+        onMarkComplete={isLoggedIn ? (id) => markComplete(id).then(() =>
+          toast.success('Lesson marked complete ✓', {
+            style: { background: '#0A0804', color: '#F0EAE0', border: '1px solid #22c55e' }
+          })
+        ) : undefined}
+        onMarkIncomplete={isLoggedIn ? (id) => handleMarkIncomplete(id) : undefined}
       />
-
-      {/* Accessibility widget */}
 
     </div>
   )
@@ -533,11 +668,15 @@ function MobileSidebar({
   lessons,
   currentLesson,
   completedIds,
+  onMarkComplete,
+  onMarkIncomplete,
 }: {
   course: Course
   lessons: Lesson[]
   currentLesson: Lesson
   completedIds: string[]
+  onMarkComplete?:   (lessonId: string) => void
+  onMarkIncomplete?: (lessonId: string) => void
 }) {
   const [open, setOpen] = useState(false)
 
@@ -571,6 +710,8 @@ function MobileSidebar({
                 currentLesson={currentLesson}
                 completedIds={completedIds}
                 hasAccess={true}
+                onMarkComplete={onMarkComplete}
+                onMarkIncomplete={onMarkIncomplete}
               />
             </motion.div>
           </>
