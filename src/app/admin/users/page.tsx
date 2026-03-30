@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { InviteUserForm } from './InviteUserForm'
+import { RemoveUserButton } from './RemoveUserButton'
 import type { UserRole, MembershipTier, InstitutionType } from '@/types'
 
 type UserRow = {
@@ -141,6 +142,9 @@ export default async function ManageUsersPage() {
                     )}
                     <th className="text-left px-6 py-4 font-mono text-[0.6rem] tracking-[0.2em] uppercase text-grey-dark">Type</th>
                     <th className="text-left px-6 py-4 font-mono text-[0.6rem] tracking-[0.2em] uppercase text-grey-dark">Joined</th>
+                    {isOrgAdmin && (
+                      <th className="px-6 py-4" />
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -182,6 +186,14 @@ export default async function ManageUsersPage() {
                         <td className="px-6 py-4">
                           <span className="text-grey-dark text-xs">{joinDate}</span>
                         </td>
+                        {isOrgAdmin && (
+                          <td className="px-6 py-4 text-right">
+                            <RemoveUserButton
+                              userId={u.id}
+                              userName={u.full_name || u.email}
+                            />
+                          </td>
+                        )}
                       </tr>
                     )
                   })}
