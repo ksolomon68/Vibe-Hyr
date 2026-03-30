@@ -316,22 +316,31 @@ export function Navbar() {
           <div className="flex flex-col p-8 gap-6">
 
             {/* Category accordions — courses only */}
-            {NAV_CATEGORIES.map(({ key, label }) => {
+            {NAV_CATEGORIES.map(({ key, label, href }) => {
               const courses = COURSES[key as keyof typeof COURSES]
               const isExpanded = mobileExpanded === key
               return (
                 <div key={key}>
-                  <button
-                    onClick={() => setMobileExpanded(isExpanded ? null : key)}
-                    aria-expanded={isExpanded}
-                    className="font-display text-3xl tracking-widest text-white hover:text-[var(--orange)] transition-colors flex items-center justify-between w-full text-left py-2 min-h-[52px]"
-                  >
-                    {label.toUpperCase()}
-                    <ChevronDown
-                      size={20}
-                      className={cn('transition-transform duration-200 text-[var(--orange)]', isExpanded ? 'rotate-180' : '')}
-                    />
-                  </button>
+                  <div className="flex items-center justify-between py-2 min-h-[52px]">
+                    <Link
+                      href={href}
+                      onClick={() => setOpen(false)}
+                      className="font-display text-3xl tracking-widest text-white hover:text-[var(--orange)] transition-colors text-left"
+                    >
+                      {label.toUpperCase()}
+                    </Link>
+                    <button
+                      onClick={() => setMobileExpanded(isExpanded ? null : key)}
+                      aria-expanded={isExpanded}
+                      aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${label} courses`}
+                      className="p-2 -mr-2"
+                    >
+                      <ChevronDown
+                        size={20}
+                        className={cn('transition-transform duration-200 text-[var(--orange)]', isExpanded ? 'rotate-180' : '')}
+                      />
+                    </button>
+                  </div>
                   {isExpanded && (
                     <div className="mt-3 pl-4 flex flex-col gap-4 border-l-2 border-[var(--orange)]">
                       {courses.map(course => (
