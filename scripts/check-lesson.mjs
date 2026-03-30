@@ -1,3 +1,7 @@
+/**
+ * check-lesson-data.mjs
+ * Checks the database for a specific lesson and associated quiz.
+ */
 import { createClient } from '@supabase/supabase-js'
 
 const SUPABASE_URL = 'https://dwpmujyycpgibpsculfd.supabase.co'
@@ -5,22 +9,28 @@ const SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
-async function check() {
-  const { data, error } = await supabase
+async function main() {
+  const lessonId = 'e5ddef38-f69e-4e34-8138-c2a1f746e8ee'
+  
+  console.log(`\n🔍 Checking Lesson: ${lessonId}\n`)
+  
+  const { data: lesson, error: lessonError } = await supabase
     .from('course_lessons')
-    .select('id, title, type, content')
-    .eq('id', 'e5ddef38-f69e-4e34-8138-c2a1f746e8ee')
-
-  if (data && data.length > 0) {
-    const row = data[0]
-    console.log(`ID: ${row.id}`)
-    console.log(`Title: ${row.title}`)
-    console.log(`Type: ${row.type}`)
-    console.log(`Content length: ${row.content ? row.content.length : 0}`)
-    console.log(`Content start: ${row.content ? row.content.substring(0, 50) : 'null'}`)
+    .select('*')
+    .eq('id', lessonId)
+    .single()
+    
+  if (lessonError) {
+    console.error('Error fetching lesson:', lessonError.message)
   } else {
-    console.log('No data found for UUID')
+    console.log('Lesson Found:')
+    console.log(' - Title:', lesson.title)
+    console.log(' - Type:', lesson.type)
+    console.log(' - Content length:', lesson.content?.length ?? 0)
+    console.log(' - Content (first 100 chars):', lesson.content?.substring(0, 100))
   }
+  
+  console.log('\n🔍 Checking for Quizzes associated with this lesson ID in code vs DB\n')
 }
 
-check()
+main()
