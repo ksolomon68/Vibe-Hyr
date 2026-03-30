@@ -8,7 +8,7 @@ import { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Crown, Eye, EyeOff } from 'lucide-react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 
 function ResetForm() {
@@ -23,7 +23,7 @@ function ResetForm() {
   const router       = useRouter()
 
   useEffect(() => {
-    const supabase = createClientComponentClient()
+    const supabase = createClient()
     supabase.auth.onAuthStateChange(async (event: any, session: any) => {
       console.log('[reset-password] auth state:', event, !!session)
       if (session) {
@@ -45,7 +45,7 @@ function ResetForm() {
     if (password !== confirm) { toast.error('Passwords do not match'); return }
     if (password.length < 8)  { toast.error('Password must be at least 8 characters'); return }
     setLoading(true)
-    const supabase  = createClientComponentClient()
+    const supabase = createClient()
     const { error } = await supabase.auth.updateUser({ password })
     if (error) {
       toast.error(error.message)

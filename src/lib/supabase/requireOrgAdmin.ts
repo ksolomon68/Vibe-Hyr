@@ -106,7 +106,7 @@ export async function requireOrgAdmin(): Promise<OrgAdminResult> {
       orgName:   org.name,
       orgType:   org.type as 'education' | 'business',
       orgPlan:   org.plan,
-      seatLimit: org.seat_limit ?? org.seats_purchased ?? 50,
+      seatLimit: org.seat_limit ?? 50,
       seatsUsed: org.seats_used ?? 0,
     },
     error: null,

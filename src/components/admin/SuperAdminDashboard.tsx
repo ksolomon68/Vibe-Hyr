@@ -1043,6 +1043,7 @@ function DeleteUserModal({ open, onClose, onSuccess, user }: {
   if (!user) return null
 
   function confirm() {
+    if (!user) return
     startTransition(async () => {
       const res = await deleteUser(user.id, user.full_name ?? user.email)
       if (res.success) { onClose(); onSuccess(`${user.full_name ?? user.email} has been permanently deleted.`) }

@@ -31,13 +31,14 @@ interface MemberProfile {
 interface Member {
   id:         string
   email:      string
+  user_id?:   string | null
   full_name:  string | null
   role:       'admin' | 'member'
   status:     'active' | 'invited' | 'inactive'
   invited_at: string
   joined_at:  string | null
   created_at: string
-  profiles:   MemberProfile | null
+  profiles:   MemberProfile | MemberProfile[] | null
 }
 
 interface OrgMeta {
@@ -362,7 +363,7 @@ function EditMemberModal({
     <Modal title="Edit Member" onClose={onClose}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="flex items-center gap-3 pb-2 border-b border-[#2E2416]">
-          <Avatar name={member.full_name} url={member.profiles?.avatar_url ?? null} />
+          <Avatar name={member.full_name} url={Array.isArray(member.profiles) ? member.profiles[0]?.avatar_url : member.profiles?.avatar_url ?? null} />
           <div>
             <p className="text-sm font-barlow font-semibold text-[#F7F2EA]">
               {member.full_name ?? member.email}
@@ -760,7 +761,7 @@ export default function ManageMembersPanel({
                         <div className="flex items-center gap-3">
                           <Avatar
                             name={m.full_name}
-                            url={m.profiles?.avatar_url ?? null}
+                            url={Array.isArray(m.profiles) ? m.profiles[0]?.avatar_url : m.profiles?.avatar_url ?? null}
                           />
                           <div>
                             <p className="text-sm font-barlow font-medium text-[#F7F2EA]">

@@ -53,7 +53,7 @@ export default async function ManageMembersPage() {
   const { data: members, count } = await admin
     .from('organization_members')
     .select(
-      `id, email, full_name, role, status, invited_at, joined_at, created_at,
+      `id, user_id, email, full_name, role, status, invited_at, joined_at, created_at,
        profiles:user_id ( id, avatar_url, membership_tier )`,
       { count: 'exact' }
     )
