@@ -20,23 +20,23 @@ const C = {
 
 // ── Course definitions ────────────────────────────────────────────────────────
 const COURSES = [
-  // Personal (1-4)
-  { id: 1, name: 'Programming the Gatekeeper',          tag: 'RAS Programming',     tier: 'Free' },
-  { id: 2, name: 'Mastery of the Law of Assumption',    tag: 'Law of Assumption',   tier: 'Architect' },
-  { id: 3, name: 'Subconscious Reprogramming via SATS', tag: 'SATS Reprogramming',  tier: 'Architect' },
-  { id: 4, name: 'Navigating the Echo Theory Delay',    tag: 'Echo Theory',         tier: 'Reality Master' },
+  // Personal (Individual)
+  { id: 1, name: 'Programming the Gatekeeper',          category: 'individual', tag: 'RAS Programming',     tier: 'Free' },
+  { id: 2, name: 'Mastery of the Law of Assumption',    category: 'individual', tag: 'Law of Assumption',   tier: 'Architect' },
+  { id: 3, name: 'Subconscious Reprogramming via SATS', category: 'individual', tag: 'SATS Reprogramming',  tier: 'Architect' },
+  { id: 4, name: 'Navigating the Echo Theory Delay',    category: 'individual', tag: 'Echo Theory',         tier: 'Reality Master' },
   
-  // Business (5-8)
-  { id: 5, name: 'Common Sense in the Workplace',       tag: 'Business',            tier: 'Free' },
-  { id: 6, name: 'From Reaction to Response',           tag: 'Business',            tier: 'Architect' },
-  { id: 7, name: 'Know Yourself, Lead Yourself',        tag: 'Business',            tier: 'Architect' },
-  { id: 8, name: 'The High-Frequency Team',             tag: 'Business',            tier: 'Elite' },
+  // Business
+  { id: 5, name: 'Common Sense in the Workplace',       category: 'business',   tag: 'Business',            tier: 'Free' },
+  { id: 6, name: 'From Reaction to Response',           category: 'business',   tag: 'Business',            tier: 'Architect' },
+  { id: 7, name: 'Know Yourself, Lead Yourself',        category: 'business',   tag: 'Business',            tier: 'Architect' },
+  { id: 8, name: 'The High-Frequency Team',             category: 'business',   tag: 'Business',            tier: 'Elite' },
   
-  // Education (9-12)
-  { id: 9,  name: 'The Educator Reset',                 tag: 'Education',           tier: 'Free' },
-  { id: 10, name: 'Vibrational Leadership',             tag: 'Education',           tier: 'Architect' },
-  { id: 11, name: 'Co-Regulation Mastery',              tag: 'Education',           tier: 'Architect' },
-  { id: 12, name: 'The Retained Educator',              tag: 'Education',           tier: 'Elite' },
+  // Education
+  { id: 9,  name: 'The Educator Reset',                 category: 'education',  tag: 'Education',           tier: 'Free' },
+  { id: 10, name: 'Vibrational Leadership',             category: 'education',  tag: 'Education',           tier: 'Architect' },
+  { id: 11, name: 'Co-Regulation Mastery',              category: 'education',  tag: 'Education',           tier: 'Architect' },
+  { id: 12, name: 'The Retained Educator',              category: 'education',  tag: 'Education',           tier: 'Elite' },
 ]
 
 // ── YouTube helpers ───────────────────────────────────────────────────────────
@@ -269,8 +269,15 @@ function LessonEditorModal({
         <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, letterSpacing: 2, marginBottom: 6 }}>
           {isNew ? 'Add Lesson' : 'Edit Lesson'}
         </div>
-        <div style={{ fontSize: 11, color: C.muted, marginBottom: 24, letterSpacing: 1 }}>
+        <div style={{ fontSize: 11, color: C.muted, marginBottom: 24, letterSpacing: 1, display: 'flex', gap: 6, alignItems: 'center' }}>
           Course {courseId} — {COURSES.find(c => c.id === courseId)?.name}
+          <span style={{ 
+            fontSize: 9, padding: '2px 6px', borderRadius: 2, 
+            background: 'rgba(232,98,26,0.1)', color: C.orange, 
+            border: '1px solid rgba(232,98,26,0.2)', textTransform: 'uppercase', fontWeight: 700 
+          }}>
+            {COURSES.find(c => c.id === courseId)?.category}
+          </span>
         </div>
 
         {/* Type selector */}
@@ -456,6 +463,7 @@ function LessonEditorModal({
 // ══════════════════════════════════════════════════════════════════════════════
 
 export function CourseManagerPage({ onToast }: { onToast: (msg: string) => void }) {
+  const [activeCategory, setActiveCategory] = useState<'individual' | 'business' | 'education'>('individual')
   const [selectedCourse, setSelectedCourse] = useState(1)
   const [lessons, setLessons]               = useState<CmsLesson[]>([])
   const [loading, setLoading]               = useState(false)
@@ -518,14 +526,42 @@ export function CourseManagerPage({ onToast }: { onToast: (msg: string) => void 
 
         {/* ── Left panel: course selector ─────────────────────────────────── */}
         <div style={{ width: 220, flexShrink: 0 }}>
+          {/* Category Tabs */}
+          <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: C.dark2, padding: 4, borderRadius: 4 }}>
+            {(['individual', 'business', 'education'] as const).map(cat => {
+              const active = activeCategory === cat
+              return (
+                <button
+                  key={cat}
+                  onClick={() => {
+                    setActiveCategory(cat)
+                    // Auto-select first course in category
+                    const first = COURSES.find(c => c.category === cat)
+                    if (first) setSelectedCourse(first.id)
+                  }}
+                  style={{
+                    flex: 1, padding: '8px 0', borderRadius: 2, cursor: 'pointer',
+                    fontFamily: "'Bebas Neue',sans-serif", fontSize: 11, letterSpacing: 1.5,
+                    textTransform: 'uppercase', transition: '0.15s',
+                    background: active ? C.orange : 'transparent',
+                    color: active ? '#fff' : C.muted,
+                    border: 'none',
+                  }}
+                >
+                  {cat}
+                </button>
+              )
+            })}
+          </div>
+
           <div style={{
             fontFamily: "'Bebas Neue',sans-serif", fontSize: 13, letterSpacing: 3,
-            color: C.muted, marginBottom: 10,
+            color: C.muted, marginBottom: 10, paddingLeft: 4
           }}>
             Courses
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {COURSES.map(course => {
+            {COURSES.filter(c => c.category === activeCategory).map(course => {
               const active = selectedCourse === course.id
               return (
                 <button
@@ -694,10 +730,12 @@ export function CourseManagerPage({ onToast }: { onToast: (msg: string) => void 
                                   setLessons(updated)
                                   startTransition(async () => {
                                     await upsertLesson({
-                                      id: lesson.id, course_id: lesson.course_id,
-                                      title: lesson.title, type: lesson.type,
-                                      youtube_url: lesson.youtube_url,
-                                      content: lesson.content,
+                                      id: lesson.id, 
+                                      course_id: lesson.course_id,
+                                      title: lesson.title, 
+                                      type: lesson.type,
+                                      youtube_url: lesson.type === 'video' ? (lesson.youtube_url ?? null) : null,
+                                      content: lesson.type === 'text' ? (lesson.content ?? null) : null,
                                       sort_order: lesson.sort_order,
                                       is_published: !lesson.is_published,
                                       is_preview: lesson.is_preview,

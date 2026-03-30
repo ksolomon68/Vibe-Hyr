@@ -45,6 +45,15 @@ type DbLessonRow = {
   created_at: string
 }
 
+// Calculate approximate duration: 15min for video, otherwise ~1min per 1000 chars of text (min 5min)
+function getApproxDurationSeconds(type: string, content: string | null): number {
+  if (type === 'video') return 15 * 60; // 15 mins for video
+  if (!content) return 5 * 60;          // 5 mins default
+  const chars = content.length;
+  const mins = Math.max(5, Math.ceil(chars / 1000));
+  return mins * 60;
+}
+
 function dbRowToLesson(row: DbLessonRow): Lesson {
   return {
     id:               row.id,
@@ -55,7 +64,7 @@ function dbRowToLesson(row: DbLessonRow): Lesson {
     video_url:        row.type === 'video' && (row.youtube_url ?? null)
                         ? toEmbedUrl(row.youtube_url!)
                         : null,
-    duration_seconds: 0,
+    duration_seconds: getApproxDurationSeconds(row.type, row.content),
     is_preview:       row.is_preview,
     content_md:       (row.type === 'text' || row.type === 'video') ? (row.content ?? '') :
                       row.type === 'header' ? `## ${row.title}` : '',

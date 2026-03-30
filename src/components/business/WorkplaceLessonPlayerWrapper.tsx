@@ -12,6 +12,7 @@ import { useEffect, useState, useCallback, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import WorkplaceLessonPlayer from "./WorkplaceLessonPlayer";
+import { PageLoader } from "@/components/shared/PageLoader";
 
 interface WrapperProps {
   initialTrackId?: string;
@@ -125,22 +126,7 @@ export function WorkplaceLessonPlayerWrapper({
   }, [router]);
 
   if (loading) {
-    return (
-      <div style={{
-        height: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-        background: "#0E0C08",
-      }}>
-        <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 28, fontWeight: 800, color: "#E8621A",
-            fontFamily: "'Bebas Neue', sans-serif", letterSpacing: "0.1em", marginBottom: 12 }}>
-            VIBE HYR
-          </div>
-          <div style={{ fontSize: 12, color: "#5A4A34", letterSpacing: "0.14em" }}>
-            LOADING YOUR PROGRESS...
-          </div>
-        </div>
-      </div>
-    );
+    return <PageLoader text="LOADING YOUR PROGRESS..." />;
   }
 
   const allowedTracks = TIER_ACCESS[userTier] ?? ["common-sense-in-the-workplace"];

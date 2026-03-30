@@ -18,16 +18,16 @@ const COURSES = {
     { title: 'Echo Theory Delay',                   tier: 'Reality Master', href: '/personal/navigating-the-echo-theory-delay' },
   ],
   educators: [
-    { title: 'The Educator Reset',      tier: 'All staff',            href: '/educators/the-educator-reset/ed01-m01' },
-    { title: 'Vibrational Leadership',  tier: 'Admin & principals',   href: '/educators/vibrational-leadership/ed02-m01' },
-    { title: 'Co-Regulation Mastery',   tier: 'Classroom teachers',   href: '/educators/co-regulation-mastery/ed03-m01' },
-    { title: 'The Retained Educator',   tier: 'Districts & HR',       href: '/educators/the-retained-educator/ed04-m01' },
+    { title: 'The Educator Reset',      tier: 'All staff',            href: '/educators/the-educator-reset' },
+    { title: 'Vibrational Leadership',  tier: 'Admin & principals',   href: '/educators/vibrational-leadership' },
+    { title: 'Co-Regulation Mastery',   tier: 'Classroom teachers',   href: '/educators/co-regulation-mastery' },
+    { title: 'The Retained Educator',   tier: 'Districts & HR',       href: '/educators/the-retained-educator' },
   ],
   business: [
-    { title: 'Common Sense in the Workplace',   tier: 'Foundation',    href: '/business/common-sense-in-the-workplace/the-awareness-gap' },
-    { title: 'From Reaction to Response',       tier: 'De-escalation', href: '/business/from-reaction-to-response/the-reactivity-spectrum' },
-    { title: 'Know Yourself, Lead Yourself',    tier: 'Self mastery',  href: '/business/know-yourself-lead-yourself/identity-architecture' },
-    { title: 'The High-Frequency Team',         tier: 'Team cohesion', href: '/business/the-high-frequency-team/team-frequency-mapping' },
+    { title: 'Common Sense in the Workplace',   tier: 'Foundation',    href: '/business/common-sense-in-the-workplace' },
+    { title: 'From Reaction to Response',       tier: 'De-escalation', href: '/business/from-reaction-to-response' },
+    { title: 'Know Yourself, Lead Yourself',    tier: 'Self mastery',  href: '/business/know-yourself-lead-yourself' },
+    { title: 'The High-Frequency Team',         tier: 'Team cohesion', href: '/business/the-high-frequency-team' },
   ],
 }
 

@@ -275,13 +275,15 @@ export default function WorkplaceLessonPlayer({
                   )}
 
                   {/* Content blocks */}
-                  <div className="space-y-5 mb-10">
+                  <div className="space-y-7 mb-10 pb-8 border-b border-white/5">
                     {lesson.content.map((block, i) => (
                       <p
                         key={i}
                         className={cn(
-                          'font-body text-lg leading-relaxed text-grey-DEFAULT',
-                          i === 0 && 'italic border-l-2 border-orange-DEFAULT pl-5'
+                          'font-body leading-[1.8] tracking-[0.015em]',
+                          i === 0 
+                            ? 'text-xl md:text-2xl text-white italic border-l-4 border-[#E8621A] pl-6 py-2 bg-[#E8621A]/5' 
+                            : 'text-lg text-white/80'
                         )}
                       >
                         {block}
