@@ -18,7 +18,7 @@ import { CourseCompletionBanner } from '@/components/personal/CourseCompletionBa
 import { useCourseProgress } from '@/hooks/useCourseProgress'
 import { useLessonNotes } from '@/hooks/useLessonNotes'
 import { cn, formatDuration, getTierLabel } from '@/lib/utils'
-import type { Course, Lesson, Quiz, MembershipTier } from '@/types'
+import type { Course, Lesson, Quiz, MembershipTier, AssumptionLab as AssumptionLabType } from '@/types'
 import toast from 'react-hot-toast'
 
 interface LessonPlayerClientProps {
@@ -32,9 +32,10 @@ interface LessonPlayerClientProps {
   nextLesson:       Lesson | null
   userTier:         MembershipTier
   isLoggedIn:       boolean
+  assumptionLab:    AssumptionLabType | null
 }
 
-type Tab = 'lesson' | 'quiz' | 'notes'
+type Tab = 'lesson' | 'interact' | 'notes'
 
 export function LessonPlayerClient({
   course,
@@ -47,6 +48,7 @@ export function LessonPlayerClient({
   nextLesson,
   userTier,
   isLoggedIn,
+  assumptionLab,
 }: LessonPlayerClientProps) {
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -60,6 +62,7 @@ export function LessonPlayerClient({
   // Seed from server-side data on first render
   const isLessonDone   = isComplete(lesson.id) || initialCompleted.includes(lesson.id)
   const hasQuiz        = !!quiz
+  const hasLab         = !!assumptionLab
   const quizRequired   = hasQuiz && !quizPassed && !isLessonDone
   const canAdvance     = !quizRequired || quizPassed || isLessonDone
 
@@ -303,26 +306,6 @@ export function LessonPlayerClient({
               )}
             </div>
 
-            {/* ── ASSUMPTION LABS ── */}
-            {activeTab === 'lesson' && lesson.id === 'c01-l01' && (
-              <AssumptionLab 
-                title="The 11 Million Bit Filter"
-                subtitle="Exposing the Invisible Ceiling"
-                scenario="Usually, you see 'closed stores' or 'sold out' signs in your neighborhood. Your RAS is programmed to protect you by finding evidence of lack."
-                prompt="What one opportunity has your RAS been filtering out because it didn't fit your old story of 'not enough'?"
-                accentColor="#E8621A"
-              />
-            )}
-
-            {activeTab === 'lesson' && lesson.id === 'c02-l02' && (
-              <AssumptionLab 
-                title="Thinking From vs. Of"
-                subtitle="The Tactile Shift"
-                scenario="You are currently 'thinking of' a beach (distance/wanting). Shift to 'thinking from' the beach (possession), while remembering the old desk as a distant dream."
-                prompt="Describe the tactile feeling of the sand under your feet while remembering the old 'office self' as a distant, separate character."
-                accentColor="#C9A84C"
-              />
-            )}
 
             {/* ── TABS ── */}
             <div className="flex items-center gap-8 border-b border-white/5 mb-8">
@@ -339,16 +322,16 @@ export function LessonPlayerClient({
                 )}
               </button>
 
-              {hasQuiz && (
+              {(hasQuiz || hasLab) && (
                 <button
-                  onClick={() => setActiveTab('quiz')}
+                  onClick={() => setActiveTab('interact')}
                   className={cn(
                     'pb-4 text-[0.65rem] tracking-[0.2em] uppercase font-mono transition-all relative',
-                    activeTab === 'quiz' ? 'text-[#E8621A]' : 'text-white/30 hover:text-white/60'
+                    activeTab === 'interact' ? 'text-[#E8621A]' : 'text-white/30 hover:text-white/60'
                   )}
                 >
-                  02. Quiz
-                  {activeTab === 'quiz' && (
+                  02. {hasQuiz ? 'Quiz' : 'Assumption Lab'}
+                  {activeTab === 'interact' && (
                     <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#E8621A]" />
                   )}
                 </button>
@@ -361,7 +344,7 @@ export function LessonPlayerClient({
                   activeTab === 'notes' ? 'text-[#E8621A]' : 'text-white/30 hover:text-white/60'
                 )}
               >
-                03. My Notes
+                {(hasQuiz || hasLab) ? '03. My Notes' : '02. My Notes'}
                 {activeTab === 'notes' && (
                   <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#E8621A]" />
                 )}
@@ -382,19 +365,30 @@ export function LessonPlayerClient({
                 </motion.div>
               )}
 
-              {activeTab === 'quiz' && quiz && (
+              {activeTab === 'interact' && (
                 <motion.div
-                  key="quiz"
+                  key="interact"
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <LessonQuiz
-                    quiz={quiz}
-                    onPass={handleQuizPass}
-                    alreadyPassed={quizPassed}
-                  />
+                  {quiz && (
+                    <LessonQuiz
+                      quiz={quiz}
+                      onPass={handleQuizPass}
+                      alreadyPassed={quizPassed}
+                    />
+                  )}
+                  {assumptionLab && (
+                    <AssumptionLab 
+                      title={assumptionLab.title}
+                      subtitle={assumptionLab.subtitle}
+                      scenario={assumptionLab.scenario}
+                      prompt={assumptionLab.prompt}
+                      accentColor={assumptionLab.accentColor}
+                    />
+                  )}
                 </motion.div>
               )}
 
@@ -440,7 +434,7 @@ export function LessonPlayerClient({
                   </p>
                 </div>
                 <button
-                  onClick={() => setActiveTab('quiz')}
+                  onClick={() => setActiveTab('interact')}
                   className="btn-orange text-[0.62rem] px-5 py-2.5 flex-shrink-0 flex items-center gap-2"
                 >
                   Take Quiz <ArrowRight size={12} />
@@ -518,7 +512,7 @@ export function LessonPlayerClient({
                           return
                         }
                         if (quizRequired) {
-                          setActiveTab('quiz')
+                          setActiveTab('interact')
                           toast('Complete the quiz first ↑', { icon: '↑' })
                           return
                         }

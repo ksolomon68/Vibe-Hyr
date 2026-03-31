@@ -61,10 +61,10 @@ export const TRACKS: Track[] = [
           "Identify your default awareness level under stress",
         ],
         content: [
-          "The Awareness Gap is the distance between who you think you're being and who others actually experience. Most workplace dysfunction lives in this gap — not in malice, but in unawareness.",
-          "We operate from intention ('I was just being honest') while others receive behavior ('that comment felt dismissive'). Neither is wrong — both are real. The professional who closes this gap becomes someone others want to work with.",
-          "Neuroscience tells us that under stress, the prefrontal cortex — responsible for self-monitoring — goes offline first. Emotional intelligence is the skill of keeping it online when it matters most.",
-          "Your Awareness Inventory: For the next 48 hours, practice a single question after every meaningful interaction — 'What did they experience from me?' Not what you intended. What they received.",
+          "The Awareness Gap is the distance between who you think you're being and who others actually experience. Most workplace friction isn't caused by bad people—it's caused by unawareness.",
+          "We operate from intention ('I was just being honest') while others receive behavior ('that comment felt dismissive'). Neither is wrong—both are real. The professional who closes this gap becomes someone others want to work with.",
+          "Neuroscience tells us that under stress, the prefrontal cortex—responsible for self-monitoring—goes offline first. Emotional intelligence is the skill of keeping it online when it matters most.",
+          "Your Awareness Inventory: For the next 48 hours, practice a single question after every meaningful interaction—'What did they experience from me?' Not what you intended. What they received.",
         ],
         tool: "Awareness Inventory Log",
         quiz: [
@@ -108,8 +108,9 @@ export const TRACKS: Track[] = [
           "Develop a personal emotion vocabulary that increases precision",
         ],
         content: [
-          "Emotions are not problems to eliminate — they are your nervous system's real-time assessment of your environment.",
-          "The four primary emotion families: Fear, Anger, Sadness, and Shame.",
+          "Emotions are not problems to eliminate—they are your nervous system's real-time assessment of your environment. They are data, not drama.",
+          "The four primary emotion families (Fear, Anger, Sadness, Shame) each provide specific information about boundaries, values, or safety.",
+          "When you identify a signal early, you can respond. When you ignore it, the signal increases in volume until it becomes behavior you regret.",
         ],
         tool: "Emotion Signal Map",
         quiz: [
@@ -133,7 +134,8 @@ export const TRACKS: Track[] = [
           "Practice the Clarity Frame: Observation — Impact — Request",
         ],
         content: [
-          "Every workplace communication operates on three simultaneous layers: Content, Context, and Subtext.",
+          "Every workplace communication operates on three simultaneous layers: Content (what is said), Context (why it's being said), and Subtext (the emotional frequency it's said with).",
+          "Most friction occurs when we ignore Context and Subtext. The 'Clarity Frame' ensures all three layers are aligned.",
         ],
         tool: "Clarity Frame Worksheet",
         quiz: [
@@ -157,7 +159,8 @@ export const TRACKS: Track[] = [
           "Build a Trigger Map",
         ],
         content: [
-          "A trigger is not a feeling — it's a threat signal sent to your amygdala that hijacks your prefrontal cortex.",
+          "A trigger is not a feeling—it's a threat signal sent to your amygdala that hijacks your prefrontal cortex. It happens in under 200 milliseconds.",
+          "By mapping your recurring triggers, you move them from the unconscious 'blind spot' to the conscious 'observed environment,' allowing for a pause.",
         ],
         tool: "Personal Trigger Map",
         quiz: [
@@ -181,7 +184,8 @@ export const TRACKS: Track[] = [
           "Apply Evening Revision",
         ],
         content: [
-          "Nervous systems are contagious — mirror neurons mean your colleagues' brains are literally affected by your physiological state.",
+          "Nervous systems are contagious—mirror neurons mean your colleagues' brains are literally affected by your physiological state. This is known as co-regulation.",
+          "If you are leaking stress, you are creating a threat environment for your team. Vibe Hygiene is the practice of intentional regulation for the sake of the collective.",
         ],
         tool: "Vibe Hygiene Daily Stack",
         quiz: [

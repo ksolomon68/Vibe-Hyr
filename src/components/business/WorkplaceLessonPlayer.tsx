@@ -26,7 +26,7 @@ export interface WorkplaceLessonPlayerProps {
   userTier?:         string
 }
 
-type Tab = 'lesson' | 'quiz' | 'notes'
+type Tab = 'lesson' | 'interact' | 'notes'
 
 // ─── Main player ──────────────────────────────────────────────────────────────
 
@@ -236,14 +236,22 @@ export default function WorkplaceLessonPlayer({
             {/* Tabs */}
             <div className="flex items-center gap-8 border-b border-white/5 mb-8">
               <BizTab id="lesson" active={activeTab} setActive={setActiveTab} label="01. Lesson" />
-              {hasQuiz && (
-                <BizTab id="quiz" active={activeTab} setActive={setActiveTab} label="02. Quiz" />
+              
+              {/* Tab 02: Dynamic Quiz or Lab */}
+              {(hasQuiz || lesson.id === 'the-awareness-gap' || lesson.id === 'the-reactivity-spectrum') && (
+                <BizTab 
+                  id="interact" 
+                  active={activeTab} 
+                  setActive={setActiveTab} 
+                  label={hasQuiz ? "02. Quiz" : "02. Lab"} 
+                />
               )}
+
               <BizTab
                 id="notes"
                 active={activeTab}
                 setActive={setActiveTab}
-                label={hasQuiz ? '03. My Notes' : '02. My Notes'}
+                label={(hasQuiz || lesson.id === 'the-awareness-gap' || lesson.id === 'the-reactivity-spectrum') ? '03. My Notes' : '02. My Notes'}
               />
             </div>
 
@@ -360,19 +368,46 @@ export default function WorkplaceLessonPlayer({
                 </motion.div>
               )}
 
-              {activeTab === 'quiz' && hasQuiz && (
+              {activeTab === 'interact' && (
                 <motion.div
-                  key="quiz"
+                  key="interact"
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <BizQuiz
-                    questions={lesson.quiz}
-                    onPass={handleQuizPass}
-                    alreadyPassed={isLessonDone || isQuizPassed}
-                  />
+                  {hasQuiz && (
+                    <BizQuiz
+                      questions={lesson.quiz}
+                      onPass={handleQuizPass}
+                      alreadyPassed={isLessonDone || isQuizPassed}
+                    />
+                  )}
+
+                  {/* Labs are shown below quiz or as main content of interact tab */}
+                  {lesson.id === 'the-awareness-gap' && (
+                    <div className={cn(hasQuiz && "mt-12")}>
+                      <AssumptionLab
+                        title="Awareness Gap Audit"
+                        subtitle="Impact vs. Intent"
+                        scenario="You gave 'direct feedback' to a subordinate, intending to be helpful. The subordinate seems crushed and has withdrawn for the rest of the day."
+                        prompt="What 'threat signal' were you potentially broadcasting (tone, pace, posture) that you weren't aware of in the moment?"
+                        accentColor="#E8621A"
+                      />
+                    </div>
+                  )}
+
+                  {lesson.id === 'the-reactivity-spectrum' && (
+                    <div className={cn(hasQuiz && "mt-12")}>
+                      <AssumptionLab
+                        title="Reactivity Spectrum"
+                        subtitle="The Sovereign Interrupt"
+                        scenario="A disrespectful or accusatory email from a client or peer just arrived in your inbox. You feel your face heat up and your jaw tighten."
+                        prompt="What is your pre-programmed (reactive) response sequence, and what is the 'Sovereign' interrupt you will apply right now?"
+                        accentColor="#C9A84C"
+                      />
+                    </div>
+                  )}
                 </motion.div>
               )}
 
@@ -422,7 +457,7 @@ export default function WorkplaceLessonPlayer({
                   </p>
                 </div>
                 <button
-                  onClick={() => setActiveTab('quiz')}
+                  onClick={() => setActiveTab('interact')}
                   className="btn-orange text-[0.62rem] px-5 py-2.5 flex-shrink-0 flex items-center gap-2"
                 >
                   Take Quiz <ArrowRight size={12} />
@@ -474,7 +509,7 @@ export default function WorkplaceLessonPlayer({
                     <button
                       onClick={() => {
                         if (hasQuiz && !isQuizPassed) {
-                          setActiveTab('quiz')
+                          setActiveTab('interact')
                           return
                         }
                         handleComplete()

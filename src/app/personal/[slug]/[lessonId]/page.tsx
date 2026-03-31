@@ -1,7 +1,7 @@
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { COURSES } from '@/lib/data/courses'
-import { getLessonsForCourse, getLessonQuiz } from '@/lib/data/lessons'
+import { getLessonsForCourse, getLessonQuiz, getLessonLab } from '@/lib/data/lessons'
 import { getLessonsWithDBFallback } from '@/lib/data/courseContent'
 import { canAccessCourse } from '@/lib/courseAccess'
 import { CourseLockedScreen } from '@/components/CourseLockedScreen'
@@ -110,7 +110,8 @@ export default async function LessonPage({
     redirect(`/auth/login?redirect=/personal/${course.slug}/${lesson.id}`)
   }
 
-  const quiz = getLessonQuiz(lesson.id)
+  const quiz = getLessonQuiz(lesson)
+  const lab  = getLessonLab(lesson)
 
   // Build prev/next navigation
   const idx        = lessons.findIndex(l => l.id === lesson.id)
@@ -123,6 +124,7 @@ export default async function LessonPage({
       lesson={lesson}
       lessons={lessons}
       quiz={quiz}
+      assumptionLab={lab}
       completedLessons={completedLessons}
       passedQuizzes={passedQuizzes}
       prevLesson={prevLesson}

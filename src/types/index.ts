@@ -80,6 +80,16 @@ export interface Lesson {
   created_at: string
 }
 
+export interface AssumptionLab {
+  id: string
+  lesson_id: string
+  title: string
+  subtitle: string
+  scenario: string
+  prompt: string
+  accentColor: string
+}
+
 export interface CourseProgress {
   id: string
   user_id: string

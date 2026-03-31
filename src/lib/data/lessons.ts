@@ -1,4 +1,5 @@
-import type { Lesson, Quiz } from '@/types'
+import type { Lesson, Quiz, AssumptionLab } from '@/types'
+import { COURSE_B01_LESSONS, BUSINESS_QUIZZES, BUSINESS_LABS } from './businessLessons'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // COURSE 1 — Programming the Gatekeeper
@@ -1464,6 +1465,31 @@ export const LESSON_QUIZZES: Record<string, Quiz> = {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// ASSUMPTION LABS (Scenario-based training)
+// ─────────────────────────────────────────────────────────────────────────────
+export const ASSUMPTION_LABS: Record<string, AssumptionLab> = {
+  'c01-l01': {
+    id: 'lab-c01-01',
+    lesson_id: 'c01-l01',
+    title: "The 11 Million Bit Filter",
+    subtitle: "Exposing the Invisible Ceiling",
+    scenario: "Usually, you see 'closed stores' or 'sold out' signs in your neighborhood. Your RAS is programmed to protect you by finding evidence of lack.",
+    prompt: "What one opportunity has your RAS been filtering out because it didn't fit your old story of 'not enough'?",
+    accentColor: "#E8621A"
+  },
+  'c02-l02': {
+    id: 'lab-c02-02',
+    lesson_id: 'c02-l02',
+    title: "Thinking From vs. Of",
+    subtitle: "The Tactile Shift",
+    scenario: "You are currently 'thinking of' a beach (distance/wanting). Shift to 'thinking from' the beach (possession), while remembering the old desk as a distant dream.",
+    prompt: "Describe the tactile feeling of the sand under your feet while remembering the old 'office self' as a distant, separate character.",
+    accentColor: "#C9A84C"
+  },
+  ...BUSINESS_LABS
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // HELPER: get all lessons for a course
 // ─────────────────────────────────────────────────────────────────────────────
 export const ALL_LESSONS: Record<string, Lesson[]> = {
@@ -1471,12 +1497,45 @@ export const ALL_LESSONS: Record<string, Lesson[]> = {
   'c02': COURSE_02_LESSONS,
   'c03': COURSE_03_LESSONS,
   'c04': COURSE_04_LESSONS,
+  'b01': COURSE_B01_LESSONS,
 }
 
 export function getLessonsForCourse(courseId: string): Lesson[] {
   return ALL_LESSONS[courseId] ?? []
 }
 
-export function getLessonQuiz(lessonId: string): Quiz | null {
-  return LESSON_QUIZZES[lessonId] ?? null
+/**
+ * Robust quiz/lab lookup that handles UUIDs from DB by falling back to 
+ * course_id + order_index matching.
+ */
+export function getLessonQuiz(lesson: Lesson): Quiz | null {
+  // 1. Direct ID match
+  if (LESSON_QUIZZES[lesson.id]) return LESSON_QUIZZES[lesson.id];
+  if (BUSINESS_QUIZZES[lesson.id]) return BUSINESS_QUIZZES[lesson.id];
+
+  // 2. Structural fallback (for DB-synced lessons with new UUIDs)
+  const allQuizzes = { ...LESSON_QUIZZES, ...BUSINESS_QUIZZES };
+  const fallback = Object.values(allQuizzes).find(q => 
+    q.course_id === lesson.course_id && 
+    // We assume the static quizzes have a mapping to the lesson sequence
+    // Static quizzes are indexed by lessonId like 'c01-l05'
+    // But we can check the quiz object itself if it has correct course/lesson mapping
+    (q.lesson_id?.endsWith(`l${lesson.order_index.toString().padStart(2, '0')}`))
+  );
+
+  return fallback || null;
+}
+
+export function getLessonLab(lesson: Lesson): AssumptionLab | null {
+  // 1. Direct ID match
+  if (ASSUMPTION_LABS[lesson.id]) return ASSUMPTION_LABS[lesson.id];
+
+  // 2. Structural fallback
+  const fallback = Object.values(ASSUMPTION_LABS).find(lab => 
+    // Match based on course pattern and order index
+    // e.g. lesson.course_id 'c01' and order_index 1 matches 'c01-l01'
+    lab.lesson_id === `${lesson.course_id}-l${lesson.order_index.toString().padStart(2, '0')}`
+  );
+
+  return fallback || null;
 }
