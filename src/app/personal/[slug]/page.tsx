@@ -72,8 +72,8 @@ export default async function CoursePage({ params }: { params: { slug: string } 
         <section className="relative border-b-2 border-orange-DEFAULT/20 overflow-hidden">
           <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-DEFAULT" />
           {/* Big background number */}
-          <div className="absolute right-0 top-1/2 -translate-y-1/2 font-display text-[22rem] leading-none
-                          text-orange-DEFAULT/5 select-none pointer-events-none pr-8">
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 font-display text-[14rem] md:text-[22rem] leading-none
+                          text-white select-none pointer-events-none pr-8 opacity-10 md:opacity-5">
             {String(course.order_index).padStart(2, '0')}
           </div>
 
