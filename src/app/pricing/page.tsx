@@ -87,7 +87,7 @@ const PERSONAL_PLANS = [
   },
 ]
 
-type Track = 'individuals' | 'education' | 'business'
+type Track = 'individuals' | 'education' | 'business' | 'leadership'
 
 export default function PricingPage() {
   const [track, setTrack] = useState<Track>('individuals')
@@ -138,6 +138,9 @@ export default function PricingPage() {
   const orgPricingKey = track === 'education' ? 'university' : 'corporate'
   const curPricing = ORG_PRICING[orgPricingKey]
 
+  // Leadership uses same pricing/volume structure as corporate
+  const leaderPricing = ORG_PRICING.corporate
+
   return (
     <>
       <Navbar />
@@ -171,6 +174,13 @@ export default function PricingPage() {
               style={getTrackButtonStyle(track === 'business')}
             >
               Business
+            </button>
+            <button
+              onClick={() => setTrack('leadership')}
+              className="transition-all"
+              style={getTrackButtonStyle(track === 'leadership')}
+            >
+              Leadership
             </button>
           </div>
         </div>
@@ -309,6 +319,7 @@ export default function PricingPage() {
               <div className="eyebrow">✦ {track === 'education' ? 'Education' : 'Business'} Institutional Pricing</div>
               <p>The Architecture of Reality — where cognitive neuroscience meets peak {track === 'education' ? 'educational' : 'organizational'} performance.</p>
 
+
               <div className="billing-toggle">
                 <button
                   className={`toggle-opt ${billing === 'annual' ? 'active' : ''}`}
@@ -430,6 +441,160 @@ export default function PricingPage() {
                           <th>Discount</th>
                           <th>Architect / {trackLabel} (effective)</th>
                           <th>Reality Master / {trackLabel}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {TIERS.map(({ range, discount, mult }) => (
+                          <tr key={range}>
+                            <td>{range}</td>
+                            <td>{discount ? <span className="discount-pill">{discount} off</span> : '—'}</td>
+                            <td>${(archBase * mult).toFixed(2)} / {label}</td>
+                            <td>${(rmBase   * mult).toFixed(2)} / {label}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )
+                })()}
+              </div>
+            </div>
+
+            <div className="pb-12 text-center px-6">
+              <p style={{ fontSize: '0.75rem', color: 'rgba(247,242,234,0.45)', fontFamily: 'var(--font-dm, "DM Sans", sans-serif)' }}>
+                Individual subscriber?{' '}
+                <button
+                  onClick={() => setTrack('individuals')}
+                  style={{ color: '#E8621A', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit' }}
+                >
+                  View personal plans →
+                </button>
+              </p>
+            </div>
+          </>
+        )}
+
+        {/* ════════════════════════════════════════════════════════════════════
+            LEADERSHIP TRACK
+        ════════════════════════════════════════════════════════════════════ */}
+        {track === 'leadership' && (
+          <>
+            <div className="pricing-hero fade-up" style={{ paddingTop: 0 }}>
+              <div className="eyebrow">✦ Leadership Institutional Pricing</div>
+              <p>The Architecture of Impact — community leadership programs built on identity-level neuroscience.</p>
+
+              <div className="billing-toggle">
+                <button
+                  className={`toggle-opt ${billing === 'annual' ? 'active' : ''}`}
+                  onClick={() => setBilling('annual')}
+                >
+                  ANNUAL <span className="toggle-badge">SAVE 15%</span>
+                </button>
+                <button
+                  className={`toggle-opt ${billing === 'monthly' ? 'active' : ''}`}
+                  onClick={() => setBilling('monthly')}
+                >
+                  MONTHLY
+                </button>
+              </div>
+            </div>
+
+            {/* Leadership tier cards */}
+            <div className="px-6 md:px-16">
+              <div className="tier-grid fade-up delay-2 max-w-[1000px] mx-auto w-full grid-cols-1 md:grid-cols-3">
+
+                {/* SEEKER */}
+                <div className="tier-card border-b md:border-b-0 md:border-r border-white/10">
+                  <div className="tier-name">SEEKER</div>
+                  <div className="tier-sub">Internal Authority</div>
+                  <div className="price-display mt-4">
+                    <div className="price-amount">${leaderPricing.seeker.prices[billIdx]}</div>
+                  </div>
+                  <div className="price-unit">per seat / {cycleLabel} · min {leaderPricing.seeker.minSeats} seats</div>
+                  <div className="price-floor">{billing === 'annual' ? 'Annual' : 'Monthly'} floor ${(billing === 'annual' ? leaderPricing.seeker.floor : Math.round(leaderPricing.seeker.minSeats * leaderPricing.seeker.prices[1])).toLocaleString()}</div>
+                  <hr className="tier-divider my-6" />
+                  <ul className="feature-list">
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Course 1: The Internal Authority (RAS)</li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />The Responsibility Formula</li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Ownership Audit Quiz</li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Community Blueprint Lab</li>
+                  </ul>
+                  <button className="btn-outline-orange w-full text-center mt-6" onClick={() => handleOpenPanel('seeker', 'corporate')}>
+                    GET STARTED
+                  </button>
+                </div>
+
+                {/* ARCHITECT */}
+                <div className="tier-card featured">
+                  <div className="popular-badge">MOST POPULAR</div>
+                  <div className="tier-name">ARCHITECT</div>
+                  <div className="tier-sub">Visionary Leader</div>
+                  <div className="price-display mt-4">
+                    <div className="price-amount">${leaderPricing.architect.prices[billIdx]}</div>
+                  </div>
+                  <div className="price-unit">per seat / {cycleLabel} · min {leaderPricing.architect.minSeats} seats</div>
+                  <div className="price-floor">{billing === 'annual' ? 'Annual' : 'Monthly'} floor ${(billing === 'annual' ? leaderPricing.architect.floor : Math.round(leaderPricing.architect.minSeats * leaderPricing.architect.prices[1])).toLocaleString()}</div>
+                  <hr className="tier-divider my-6" />
+                  <ul className="feature-list">
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Courses 1–3 (RAS, SATS, Bridge of Incidents)</li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Hypnagogic Scripting Lab</li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Synchronicity Tracker</li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Private Consistency Protocol</li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Bridge Forum — Leadership Cohort</li>
+                  </ul>
+                  <button className="btn-orange w-full text-center mt-6" onClick={() => handleOpenPanel('architect', 'corporate')}>
+                    GET STARTED
+                  </button>
+                </div>
+
+                {/* REALITY MASTER */}
+                <div className="tier-card border-t md:border-t-0 md:border-l border-white/10">
+                  <div className="tier-name">REALITY MASTER</div>
+                  <div className="tier-sub">Echo Theory Mastery</div>
+                  <div className="price-display mt-4">
+                    <div className="price-amount">${leaderPricing['reality-master'].prices[billIdx]}</div>
+                  </div>
+                  <div className="price-unit">per seat / {cycleLabel} · min {leaderPricing['reality-master'].minSeats} seats</div>
+                  <div className="price-floor">{billing === 'annual' ? 'Annual' : 'Monthly'} floor ${(billing === 'annual' ? leaderPricing['reality-master'].floor : Math.round(leaderPricing['reality-master'].minSeats * leaderPricing['reality-master'].prices[1])).toLocaleString()}</div>
+                  <hr className="tier-divider my-6" />
+                  <ul className="feature-list">
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />All 4 Courses incl. Echo Theory Mastery</li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Identity Audit 2.0 (25-question deep dive)</li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Custom Neural Script (nightly Revision Journal)</li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />30-Day Private Consistency Protocol</li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Dedicated Reality Architect</li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Custom Institutional Onboarding</li>
+                  </ul>
+                  <button className="btn-outline-orange w-full text-center mt-6" onClick={() => handleOpenPanel('reality-master', 'corporate')}>
+                    GET STARTED
+                  </button>
+                </div>
+
+              </div>
+            </div>
+
+            {/* Volume Discounts */}
+            <div className="volume-section">
+              <div className="section-eyebrow">Volume Pricing</div>
+              <div className="section-title">The more leaders trained, the greater the multiplier</div>
+
+              <div className="overflow-x-auto">
+                {(() => {
+                  const archBase = leaderPricing.architect.prices[billIdx]
+                  const rmBase   = leaderPricing['reality-master'].prices[billIdx]
+                  const label    = billing === 'annual' ? 'seat / yr' : 'seat / mo'
+                  const TIERS = [
+                    { range: '25–99 seats',   discount: null,   mult: 1      },
+                    { range: '100–499 seats', discount: '5%',   mult: 0.95   },
+                    { range: '500+ seats',    discount: '~10%', mult: 0.9025 },
+                  ]
+                  return (
+                    <table className="volume-table min-w-[700px]">
+                      <thead>
+                        <tr>
+                          <th>Seat Range</th>
+                          <th>Discount</th>
+                          <th>Architect / Leadership (effective)</th>
+                          <th>Reality Master / Leadership</th>
                         </tr>
                       </thead>
                       <tbody>
