@@ -238,10 +238,14 @@ function MFooter({ onClose, onConfirm, label, isPending }: { onClose:()=>void; o
 // ── Course checkboxes ─────────────────────────────────────────────────────────
 
 const COURSES = [
-  { slug:'programming-the-gatekeeper', name:'Programming the Gatekeeper', num:'Course 1' },
-  { slug:'law-of-assumption',           name:'Law of Assumption',           num:'Course 2' },
-  { slug:'sats-reprogramming',          name:'SATS Reprogramming',          num:'Course 3' },
-  { slug:'echo-theory-delay',           name:'Echo Theory Delay',           num:'Course 4' },
+  { slug:'programming-the-gatekeeper',  name:'Programming the Gatekeeper',  num:'Personal · Course 1' },
+  { slug:'law-of-assumption',            name:'Law of Assumption',            num:'Personal · Course 2' },
+  { slug:'sats-reprogramming',           name:'SATS Reprogramming',           num:'Personal · Course 3' },
+  { slug:'echo-theory-delay',            name:'Echo Theory Delay',            num:'Personal · Course 4' },
+  { slug:'leadership_course_1',          name:'The Internal Authority',       num:'Leadership · Course 1' },
+  { slug:'leadership_course_2',          name:'Visionary Architecture',       num:'Leadership · Course 2' },
+  { slug:'leadership_course_3',          name:'The Bridge of Incidents',      num:'Leadership · Course 3' },
+  { slug:'leadership_course_4',          name:'Echo Theory Mastery',          num:'Leadership · Course 4' },
 ]
 
 function CourseChecks({ selected, onChange }: { selected: string[]; onChange: (s: string[]) => void }) {
@@ -1072,10 +1076,14 @@ function DeleteUserModal({ open, onClose, onSuccess, user }: {
 // ══════════════════════════════════════════════════════════════════════════════
 
 const COURSE_NAMES: Record<string, string> = {
-  'c1': 'Course 1 — Programming the Gatekeeper',
-  'c2': 'Course 2 — The Art of Assumption',
-  'c3': 'Course 3 — Advanced Manifestation',
-  'c4': 'Course 4 — Navigating the Echo Theory Delay',
+  'c1': 'Personal · Course 1 — Programming the Gatekeeper',
+  'c2': 'Personal · Course 2 — The Art of Assumption',
+  'c3': 'Personal · Course 3 — Advanced Manifestation',
+  'c4': 'Personal · Course 4 — Navigating the Echo Theory Delay',
+  'leadership_course_1': 'Leadership · Course 1 — The Internal Authority',
+  'leadership_course_2': 'Leadership · Course 2 — Visionary Architecture',
+  'leadership_course_3': 'Leadership · Course 3 — The Bridge of Incidents',
+  'leadership_course_4': 'Leadership · Course 4 — Echo Theory Mastery',
 }
 
 interface ProgressRow {
@@ -1180,11 +1188,15 @@ function CourseProgressPage() {
       <div style={{ display:'flex', gap:10, marginBottom:16, alignItems:'center', flexWrap:'wrap' }}>
         <div style={{ fontSize:11, color:C.muted, letterSpacing:1 }}>Filter by course:</div>
         {[
-          { val:'all', label:'All Courses' },
-          { val:'c1',  label:'Course 1' },
-          { val:'c2',  label:'Course 2' },
-          { val:'c3',  label:'Course 3' },
-          { val:'c4',  label:'Course 4' },
+          { val:'all',              label:'All Courses' },
+          { val:'c1',              label:'Personal C1' },
+          { val:'c2',              label:'Personal C2' },
+          { val:'c3',              label:'Personal C3' },
+          { val:'c4',              label:'Personal C4' },
+          { val:'leadership_course_1', label:'Leadership C1' },
+          { val:'leadership_course_2', label:'Leadership C2' },
+          { val:'leadership_course_3', label:'Leadership C3' },
+          { val:'leadership_course_4', label:'Leadership C4' },
         ].map(opt => (
           <button
             key={opt.val}
