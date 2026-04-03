@@ -29,12 +29,19 @@ const COURSES = {
     { title: 'Know Yourself, Lead Yourself',    tier: 'Self mastery',  href: '/business/know-yourself-lead-yourself' },
     { title: 'The High-Frequency Team',         tier: 'Team cohesion', href: '/business/the-high-frequency-team' },
   ],
+  leadership: [
+    { title: 'The Internal Authority',   tier: 'Seeker',         href: '/leadership/leadership_course_1' },
+    { title: 'Visionary Architecture',   tier: 'Architect',      href: '/leadership/leadership_course_2' },
+    { title: 'The Bridge of Incidents',  tier: 'Architect',      href: '/leadership/leadership_course_3' },
+    { title: 'Echo Theory Mastery',      tier: 'Reality Master', href: '/leadership/leadership_course_4' },
+  ],
 }
 
 const NAV_CATEGORIES = [
-  { key: 'personal',  label: 'Personal',  href: '/personal' },
-  { key: 'educators', label: 'Educators', href: '/educators' },
-  { key: 'business',  label: 'Business',  href: '/business' },
+  { key: 'personal',   label: 'Personal',   href: '/personal'   },
+  { key: 'educators',  label: 'Educators',  href: '/educators'  },
+  { key: 'business',   label: 'Business',   href: '/business'   },
+  { key: 'leadership', label: 'Leadership', href: '/leadership' },
 ]
 
 const STATIC_LINKS = [

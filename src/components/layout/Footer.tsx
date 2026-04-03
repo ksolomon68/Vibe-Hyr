@@ -14,10 +14,11 @@ const SOCIAL = [
 
 const PLATFORM_LINKS = [
   { label: 'Personal',   href: '/personal'   },
-  { label: 'Educators', href: '/educators' },
-  { label: 'Business', href: '/business' },
-  { label: 'Journal',   href: '/journal'   },
-  { label: 'Community', href: '/community' },
+  { label: 'Educators',  href: '/educators'  },
+  { label: 'Business',   href: '/business'   },
+  { label: 'Leadership', href: '/leadership' },
+  { label: 'Journal',    href: '/journal'    },
+  { label: 'Community',  href: '/community'  },
 ]
 
 const LEARN_LINKS = [
