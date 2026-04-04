@@ -172,7 +172,12 @@ async function provisionAccess(session: Stripe.Checkout.Session) {
   if (recipientEmail) {
     const { data: profile } = await supabase
       .from('profiles').select('full_name').eq('id', userId).single()
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL!
+    let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
+    // Bulletproof sanitization: remove quotes, remove ALL existing protocol prefixes, and trailing slashes
+    appUrl = appUrl.replace(/["]/g, '').replace(/https?:\/+/gi, '').replace(/\/+$/, '')
+    if (appUrl.includes('0.0.0.0')) appUrl = appUrl.replace('0.0.0.0', 'localhost')
+    // Re-apply protocol
+    appUrl = appUrl.startsWith('localhost') || appUrl.startsWith('127.0.0.1') ? `http://${appUrl}` : `https://${appUrl}`
     try {
       await sendEmail({
         to: recipientEmail,
@@ -243,7 +248,12 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
         .eq('id', adminMember.user_id)
         .single()
       if (profile?.email) {
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL!
+        let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
+        // Bulletproof sanitization: remove quotes, remove ALL existing protocol prefixes, and trailing slashes
+        appUrl = appUrl.replace(/["]/g, '').replace(/https?:\/+/gi, '').replace(/\/+$/, '')
+        if (appUrl.includes('0.0.0.0')) appUrl = appUrl.replace('0.0.0.0', 'localhost')
+        // Re-apply protocol
+        appUrl = appUrl.startsWith('localhost') || appUrl.startsWith('127.0.0.1') ? `http://${appUrl}` : `https://${appUrl}`
         const tierConfig = TIER_CONFIG[org.tier as Tier]
         try {
           await sendEmail({
@@ -311,7 +321,12 @@ async function revokeAccess(sub: Stripe.Subscription) {
       .eq('id', adminMember.user_id)
       .single()
     if (profile?.email) {
-      const appUrl    = process.env.NEXT_PUBLIC_APP_URL!
+      let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
+      // Bulletproof sanitization: remove quotes, remove ALL existing protocol prefixes, and trailing slashes
+      appUrl = appUrl.replace(/["]/g, '').replace(/https?:\/+/gi, '').replace(/\/+$/, '')
+      if (appUrl.includes('0.0.0.0')) appUrl = appUrl.replace('0.0.0.0', 'localhost')
+      // Re-apply protocol
+      appUrl = appUrl.startsWith('localhost') || appUrl.startsWith('127.0.0.1') ? `http://${appUrl}` : `https://${appUrl}`
       const tierConfig = TIER_CONFIG[org.tier as Tier]
       try {
         await sendEmail({
