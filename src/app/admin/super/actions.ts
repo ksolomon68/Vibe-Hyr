@@ -185,6 +185,27 @@ export async function addBypassOrg(data: {
       })
       // Update org seats_used
       await admin.from('organizations').update({ seats_used: 1 }).eq('id', org.id)
+      
+      if (data.sendOnboarding) {
+        try {
+          const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com'
+          const { data: linkData } = await admin.auth.admin.generateLink({
+            type: 'recovery',
+            email: data.adminEmail,
+            options: { redirectTo: `${appUrl}/auth/reset-password` },
+          })
+          const setupUrl = linkData?.properties?.action_link ?? `${appUrl}/auth/login`
+          const fullName = `${data.adminFirstName} ${data.adminLastName}`
+          
+          await sendEmail({
+            to: data.adminEmail,
+            subject: `Welcome to ${data.name} on Vibe Hyr`,
+            html: bypassWelcomeTemplate(fullName, data.tier, setupUrl),
+          })
+        } catch (emailErr) {
+          console.error('[addBypassOrg] Welcome email failed:', emailErr)
+        }
+      }
     }
   }
 
