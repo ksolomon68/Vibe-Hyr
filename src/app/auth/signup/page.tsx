@@ -34,7 +34,13 @@ function SignupForm() {
       password,
       options: {
         data: { full_name: name, selected_plan: plan },
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com'}/auth/callback`,
+        emailRedirectTo: (() => {
+          let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
+          appUrl = appUrl.replace(/["]/g, '').replace(/https?:\/+/gi, '').replace(/\/+$/, '')
+          if (appUrl.includes('0.0.0.0')) appUrl = appUrl.replace('0.0.0.0', 'localhost')
+          const protocol = appUrl.startsWith('localhost') || appUrl.startsWith('127.0.0.1') ? 'http://' : 'https://'
+          return `${protocol}${appUrl}/auth/callback`
+        })(),
       },
     })
 
