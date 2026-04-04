@@ -17,25 +17,32 @@ export default function ResetPasswordPage() {
   const router = useRouter()
 
   // Guard: a valid recovery session must be present.
-  // All recovery links route through /auth/callback which exchanges the code
-  // server-side and writes the session to cookies before redirecting here.
-  // A missing session means the user arrived without a valid reset link.
+  // Two flows arrive here:
+  //   PKCE (resetPasswordForEmail) → session already in cookies via /auth/callback
+  //   Implicit (admin.generateLink) → session in URL hash, SDK fires onAuthStateChange
   useEffect(() => {
     const supabase = createClient()
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setSessionReady(true)
-      } else {
-        router.replace('/auth/login')
-      }
-    })
-
-    // Keep session fresh if the user lingers on this page
+    // onAuthStateChange fires first for implicit/hash flow
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
         setSessionReady(true)
       } else if (event === 'SIGNED_OUT') {
+        router.replace('/auth/login')
+      }
+    })
+
+    // For PKCE flow the session is already in cookies — getSession() is immediate
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setSessionReady(true)
+        return
+      }
+      // No cookie session — if the hash has a token, wait for onAuthStateChange above.
+      // If there's no hash either, this is a direct invalid access → redirect.
+      const hasHashToken = typeof window !== 'undefined' &&
+        window.location.hash.includes('access_token')
+      if (!hasHashToken) {
         router.replace('/auth/login')
       }
     })

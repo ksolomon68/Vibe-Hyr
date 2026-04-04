@@ -19,16 +19,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 })
     }
 
-    const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').replace(/\/$/, '')
+    // admin.generateLink uses implicit flow — Supabase puts the session in the
+    // URL hash fragment, which server-side route handlers cannot see. The
+    // redirectTo must be a client-side page that lets the browser SDK process
+    // the hash and establish the session via onAuthStateChange.
+    let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').replace(/\/$/, '')
+    if (appUrl.includes('0.0.0.0')) appUrl = appUrl.replace('0.0.0.0', 'localhost')
+    if (!appUrl.startsWith('http')) appUrl = `https://${appUrl}`
 
-    // Generate the Supabase recovery link server-side.
-    // redirectTo must point to /auth/callback so the PKCE code is exchanged
-    // server-side and the session lands in cookies before the page renders.
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
       type: 'recovery',
       email,
       options: {
-        redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password`,
+        redirectTo: `${appUrl}/auth/reset-password`,
       },
     })
 
