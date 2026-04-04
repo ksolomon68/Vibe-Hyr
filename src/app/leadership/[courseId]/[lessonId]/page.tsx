@@ -45,7 +45,7 @@ export default async function LessonPage({ params }: PageProps) {
   if (!profile?.is_super_admin) {
     const tier = profile?.membership_tier ?? 'free'
 
-    // DB tier values: free = Seeker, architect = Architect, elite = Reality Master
+    // DB tier values: free, architect, elite
     const TIER_ACCESS: Record<string, string[]> = {
       free:      ['leadership_course_1'],
       architect: ['leadership_course_1', 'leadership_course_2', 'leadership_course_3'],

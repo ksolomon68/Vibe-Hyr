@@ -26,10 +26,17 @@ export default function CourseDetailPage({ params }: PageProps) {
   const course = COURSES.find(c => c.id === params.courseId)
   if (!course) return notFound()
 
+  // DB tier values: free, architect, elite
+  const TIER_ACCESS: Record<string, string[]> = {
+    free:      ['leadership_course_1'],
+    architect: ['leadership_course_1', 'leadership_course_2', 'leadership_course_3'],
+    elite:     ['leadership_course_1', 'leadership_course_2', 'leadership_course_3', 'leadership_course_4'],
+  }
+
   const tierLabels: Record<string, string> = {
-    seeker:        'Seeker',
+    free:          'Seeker',
     architect:     'Architect',
-    reality_master:'Reality Master',
+    elite:         'Reality Master',
   }
 
   return (

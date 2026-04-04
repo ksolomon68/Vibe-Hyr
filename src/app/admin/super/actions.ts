@@ -123,8 +123,8 @@ export async function addBypassUser(data: {
       if (lErr) console.warn('[addBypassUser] generateLink error:', lErr)
 
       let setupUrl = `${appUrl}/auth/login`
-      if (linkData?.properties?.action_link) {
-        setupUrl = linkData.properties.action_link
+      if (linkData?.properties?.hashed_token) {
+        setupUrl = `${appUrl}/auth/callback?token_hash=${linkData.properties.hashed_token}&type=recovery&next=/reset-password`
       }
       
       const fullName = `${data.firstName} ${data.lastName}`
@@ -237,8 +237,8 @@ export async function addBypassOrg(data: {
           if (lErr) console.warn('[addBypassOrg] generateLink error:', lErr)
 
           let setupUrl = `${appUrl}/auth/login`
-          if (linkData?.properties?.action_link) {
-            setupUrl = linkData.properties.action_link
+          if (linkData?.properties?.hashed_token) {
+            setupUrl = `${appUrl}/auth/callback?token_hash=${linkData.properties.hashed_token}&type=recovery&next=/reset-password`
           }
           const fullName = `${data.adminFirstName} ${data.adminLastName}`
           
