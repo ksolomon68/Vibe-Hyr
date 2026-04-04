@@ -110,16 +110,17 @@ export async function addBypassUser(data: {
   if (data.sendWelcomeEmail) {
     try {
       let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
-      // Fix malformed URLs: remove quotes, ensure protocol, and fix dev hostname 0.0.0.0
-      appUrl = appUrl.replace(/["]/g, '').replace(/\/$/, '')
+      // Bulletproof sanitization: remove quotes, remove ALL existing protocol prefixes, and trailing slashes
+      appUrl = appUrl.replace(/["]/g, '').replace(/https?:\/+/gi, '').replace(/\/+$/, '')
       if (appUrl.includes('0.0.0.0')) appUrl = appUrl.replace('0.0.0.0', 'localhost')
-      if (!appUrl.startsWith('http')) appUrl = `https://${appUrl}`
+      // Re-apply protocol
+      appUrl = appUrl.startsWith('localhost') || appUrl.startsWith('127.0.0.1') ? `http://${appUrl}` : `https://${appUrl}`
       
       const { data: linkData, error: lErr } = await admin.auth.admin.generateLink({
         type: 'recovery',
         email: data.email,
         // implicit flow — hash fragment goes to client-side page, not server callback
-        options: { redirectTo: `${appUrl}/auth/reset-password` },
+        options: { redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password` },
       })
 
       if (lErr) console.warn('[addBypassUser] generateLink error:', lErr)
@@ -227,14 +228,16 @@ export async function addBypassOrg(data: {
       if (data.sendOnboarding) {
         try {
           let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
-          appUrl = appUrl.replace(/["]/g, '').replace(/\/$/, '')
+          // Bulletproof sanitization: remove quotes, remove ALL existing protocol prefixes, and trailing slashes
+          appUrl = appUrl.replace(/["]/g, '').replace(/https?:\/+/gi, '').replace(/\/+$/, '')
           if (appUrl.includes('0.0.0.0')) appUrl = appUrl.replace('0.0.0.0', 'localhost')
-          if (!appUrl.startsWith('http')) appUrl = `https://${appUrl}`
+          // Re-apply protocol
+          appUrl = appUrl.startsWith('localhost') || appUrl.startsWith('127.0.0.1') ? `http://${appUrl}` : `https://${appUrl}`
 
           const { data: linkData, error: lErr } = await admin.auth.admin.generateLink({
             type: 'recovery',
             email: data.adminEmail,
-            options: { redirectTo: `${appUrl}/auth/reset-password` },
+            options: { redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password` },
           })
           
           if (lErr) console.warn('[addBypassOrg] generateLink error:', lErr)
@@ -542,10 +545,11 @@ export async function inviteUserBySuperAdmin(data: {
 
   const admin  = createAdminClient()
   let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
-  // Fix malformed URLs
-  appUrl = appUrl.replace(/["]/g, '').replace(/\/$/, '')
+  // Bulletproof sanitization: remove quotes, remove ALL existing protocol prefixes, and trailing slashes
+  appUrl = appUrl.replace(/["]/g, '').replace(/https?:\/+/gi, '').replace(/\/+$/, '')
   if (appUrl.includes('0.0.0.0')) appUrl = appUrl.replace('0.0.0.0', 'localhost')
-  if (!appUrl.startsWith('http')) appUrl = `https://${appUrl}`
+  // Re-apply protocol
+  appUrl = appUrl.startsWith('localhost') || appUrl.startsWith('127.0.0.1') ? `http://${appUrl}` : `https://${appUrl}`
 
   const { data: inviteData, error: inviteError } = await admin.auth.admin.inviteUserByEmail(
     data.email,
@@ -587,7 +591,7 @@ export async function inviteUserBySuperAdmin(data: {
     const { data: linkData } = await admin.auth.admin.generateLink({
       type: 'recovery',
       email: data.email,
-      options: { redirectTo: `${appUrl}/auth/reset-password` },
+      options: { redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password` },
     })
     let setupUrl = `${appUrl}/auth/login`
     if (linkData?.properties?.action_link) {
