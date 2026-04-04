@@ -124,7 +124,7 @@ export async function addBypassUser(data: {
 
       let setupUrl = `${appUrl}/auth/login`
       if (linkData?.properties?.action_link) {
-        setupUrl = `${appUrl}/auth/setup?link=${encodeURIComponent(linkData.properties.action_link)}`
+        setupUrl = linkData.properties.action_link
       }
       
       const fullName = `${data.firstName} ${data.lastName}`
@@ -238,7 +238,7 @@ export async function addBypassOrg(data: {
 
           let setupUrl = `${appUrl}/auth/login`
           if (linkData?.properties?.action_link) {
-            setupUrl = `${appUrl}/auth/setup?link=${encodeURIComponent(linkData.properties.action_link)}`
+            setupUrl = linkData.properties.action_link
           }
           const fullName = `${data.adminFirstName} ${data.adminLastName}`
           

@@ -15,7 +15,14 @@ import { COURSES as LEADERSHIP_COURSES } from '@/lib/leadership/curriculum'
 export const metadata = { title: 'Dashboard' }
 
 // Tier rank helper
-const TIER_RANK: Record<string, number> = { free: 0, architect: 1, elite: 2 }
+const TIER_RANK: Record<string, number> = {
+  free:           0,
+  seeker:         0,
+  architect:      1,
+  elite:          2,
+  reality_master: 2,
+  'reality-master': 2
+}
 
 // Business tier access (matches business/[trackId]/[lessonId]/page.tsx)
 const BUSINESS_TIER_ACCESS: Record<string, string[]> = {
@@ -32,12 +39,6 @@ const PROGRAM_TIERS: Record<string, string> = {
   'the-retained-educator': 'elite',
 }
 
-// Leadership tier mapping
-const LEADERSHIP_TIERS: Record<string, string> = {
-  seeker:         'free',
-  architect:      'architect',
-  reality_master: 'elite',
-}
 
 export default async function DashboardPage() {
   const supabase = createClient()
@@ -147,7 +148,7 @@ export default async function DashboardPage() {
     const hasAccess = isSuperAdmin || allowedTracks.includes(track.id) || grantedSlugs.has(track.id)
     // Find first incomplete lesson for "Continue" link
     const nextLesson = track.lessons.find(l => !completedLessons.includes(l.id)) ?? track.lessons[0]
-    const href = `/business/${track.id}/${nextLesson.id}`
+    const href = nextLesson ? `/business/${track.id}/${nextLesson.id}` : `/business/${track.id}`
     return { ...track, hasAccess, progress: pct, href }
   })
 
@@ -163,7 +164,7 @@ export default async function DashboardPage() {
     const hasAccess = isSuperAdmin || TIER_RANK[tier] >= TIER_RANK[programTier] || grantedSlugs.has(program.slug)
     // Find first incomplete module
     const nextModule = program.modules.find(m => !completedModules.includes(m.id)) ?? program.modules[0]
-    const href = `/educators/${program.slug}/${nextModule.id}`
+    const href = nextModule ? `/educators/${program.slug}?module=${nextModule.id}` : `/educators/${program.slug}`
     return { ...program, hasAccess, progress: pct, href }
   })
 
@@ -175,11 +176,12 @@ export default async function DashboardPage() {
     const total     = course.lessons.length
     const done      = completedLessons.length
     const pct       = total ? Math.round((done / total) * 100) : 0
-    const mappedTier = LEADERSHIP_TIERS[course.tierRequired] ?? 'free'
-    const hasAccess  = isSuperAdmin || TIER_RANK[tier] >= TIER_RANK[mappedTier] || grantedSlugs.has(course.id)
+    const hasAccess  = isSuperAdmin || TIER_RANK[tier] >= TIER_RANK[course.tierRequired] || grantedSlugs.has(course.id)
+    // Find first incomplete lesson for "Continue" link
     const nextLesson = course.lessons.find(l => !completedLessons.includes(l.id)) ?? course.lessons[0]
-    const href = `/leadership/${course.id}?lesson=${nextLesson.id}`
-    return { ...course, hasAccess, progress: pct, href }
+    const href = nextLesson ? `/leadership/${course.id}?lesson=${nextLesson.id}` : `/leadership/${course.id}`
+    const courseTier: PersonalTier = course.tierRequired === 'elite' ? 'reality-master' : 'architect'
+    return { ...course, hasAccess, progress: pct, href, courseTier }
   })
 
   return (

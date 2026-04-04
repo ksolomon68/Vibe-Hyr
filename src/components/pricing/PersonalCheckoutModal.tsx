@@ -87,7 +87,7 @@ export function PersonalCheckoutModal({
     return () => { document.body.style.overflow = '' }
   }, [isOpen])
 
-  const plan       = PERSONAL_PRICING[initialTier]
+  const plan       = PERSONAL_PRICING[initialTier] || PERSONAL_PRICING['architect']
   const price      = billing === 'monthly' ? plan.monthly : plan.annual
   const cycleLabel = billing === 'monthly' ? 'month' : 'year'
   const annualSavings = plan.monthly * 12 - plan.annual

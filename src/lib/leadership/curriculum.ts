@@ -37,7 +37,7 @@ export interface Course {
   subtitle:         string;
   description:      string;
   durationEstimate: string;
-  tierRequired:     string;
+  tierRequired:     'free' | 'architect' | 'elite';
   color:            string;
   lessons:          Lesson[];
   quiz: {
@@ -68,7 +68,7 @@ export const COURSES: Course[] = [
     subtitle:         "RAS Programming for Community Leaders",
     description:      "Shift from Community Member to Community Architect by retraining your brain's filter. Leadership is not a title—it is a neurological pattern of assumption. This course rewires the filter from the inside out.",
     durationEstimate: "75–90 min",
-    tierRequired:     "seeker",
+    tierRequired:     "free",
     color:            C.orange,
     lessons: [
       {
@@ -623,7 +623,7 @@ export const COURSES: Course[] = [
     subtitle:         "The Elite Identity and the Multiplier Effect",
     description:      "The final course. This is where the leader and the community vision become one. The internal state is no longer something the leader manages—it is who the leader is. At this level, the stabilized frequency automatically elevates the entire group without deliberate effort.",
     durationEstimate: "90–105 min",
-    tierRequired:     "reality_master",
+    tierRequired:     "elite",
     color:            C.teal,
     lessons: [
       {
@@ -802,9 +802,9 @@ export const COURSES: Course[] = [
 
 // ─── Tier access map ──────────────────────────────────────────────────────────
 export const TIER_ACCESS: Record<string, string[]> = {
-  seeker:         ["leadership_course_1"],
+  free:           ["leadership_course_1"],
   architect:      ["leadership_course_1", "leadership_course_2", "leadership_course_3"],
-  reality_master: ["leadership_course_1", "leadership_course_2", "leadership_course_3", "leadership_course_4"],
+  elite:          ["leadership_course_1", "leadership_course_2", "leadership_course_3", "leadership_course_4"],
 };
 
 // ─── Lesson counts per course (for completion tracking) ───────────────────────
