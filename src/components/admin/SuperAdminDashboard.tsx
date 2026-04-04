@@ -74,7 +74,7 @@ const C = {
 
 // ── Tier / type display ───────────────────────────────────────────────────────
 
-type PillV = 'seeker'|'architect'|'master'|'active'|'inactive'|'pending'|'bypassed'|'ind'|'edu'|'biz'
+type PillV = 'seeker'|'architect'|'master'|'active'|'inactive'|'pending'|'bypassed'|'ind'|'edu'|'biz'|'gold'
 const PILLS: Record<PillV, React.CSSProperties> = {
   seeker:    { background:'rgba(154,142,128,0.15)', color:C.muted2, border:`1px solid rgba(154,142,128,0.25)` },
   architect: { background:'rgba(232,98,26,0.1)',   color:'#FF8A50', border:`1px solid rgba(232,98,26,0.25)` },
@@ -86,6 +86,7 @@ const PILLS: Record<PillV, React.CSSProperties> = {
   ind:       { background:'rgba(154,142,128,0.12)',color:C.muted2,  border:`1px solid rgba(154,142,128,0.2)` },
   edu:       { background:'rgba(41,128,185,0.12)', color:C.blue,    border:`1px solid rgba(41,128,185,0.25)` },
   biz:       { background:'rgba(39,174,96,0.1)',   color:'#A5D6A7', border:`1px solid rgba(39,174,96,0.2)` },
+  gold:      { background:'rgba(201,168,76,0.12)', color:C.gold,    border:`1px solid rgba(201,168,76,0.3)` },
 }
 function Pill({ v, label }: { v: PillV; label: string }) {
   return <span style={{ display:'inline-flex', alignItems:'center', fontSize:11, fontWeight:700, letterSpacing:1, textTransform:'uppercase', padding:'3px 10px', borderRadius:20, whiteSpace:'nowrap', ...PILLS[v] }}>{label}</span>
