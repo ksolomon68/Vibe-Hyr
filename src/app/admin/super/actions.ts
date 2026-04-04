@@ -151,6 +151,9 @@ export async function addBypassOrg(data: {
     domain: data.domain || null,
     website: data.website || null,
     industry: data.industry || null,
+    billing_cycle: null,            // bypass orgs are not billed
+    stripe_customer_id: null,
+    stripe_subscription_id: null,
     is_bypassed: true,
     bypass_reason: data.bypassReason,
     bypass_expiry: expiryVal,

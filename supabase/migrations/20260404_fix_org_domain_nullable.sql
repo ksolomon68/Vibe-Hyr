@@ -6,9 +6,17 @@
 
 -- 1. Make domain nullable (UI allows it to be optional)
 ALTER TABLE organizations 
-  ALTER COLUMN domain DROP NOT NULL,
+  ALTER COLUMN domain DROP NOT NULL;
+
+-- 2. Make other optional fields nullable
+ALTER TABLE organizations 
   ALTER COLUMN website DROP NOT NULL,
   ALTER COLUMN industry DROP NOT NULL;
+
+-- 3. Bypass orgs are not billed — make billing fields nullable
+ALTER TABLE organizations 
+  ALTER COLUMN billing_cycle DROP NOT NULL,
+  ALTER COLUMN billing_cycle SET DEFAULT NULL;
 
 -- 2. Update status constraint if it's too restrictive (Super Admin allows 'active', 'pending', 'inactive')
 ALTER TABLE organizations 
