@@ -252,6 +252,23 @@ export async function revokeOrgBypass(orgId: string, orgName: string): Promise<A
   return { success: true }
 }
 
+// ── Delete Organization (Hard Delete) ───────────────────────────────────────────
+
+export async function deleteOrganization(
+  orgId: string, orgName: string
+): Promise<ActionResult> {
+  const sa = await requireSuperAdmin()
+  if (!sa) return { success: false, error: 'Unauthorized' }
+
+  const admin = createAdminClient()
+  const { error } = await admin.from('organizations').delete().eq('id', orgId)
+  if (error) return { success: false, error: error.message }
+
+  await logAudit(sa.userId, sa.email, 'ORGANIZATION_DELETED', 'organization', orgId, orgName, null)
+  revalidatePath('/admin/super')
+  return { success: true }
+}
+
 // ── Update Bypass Details ─────────────────────────────────────────────────────
 
 export async function updateBypassDetails(

@@ -8,7 +8,7 @@ import {
   revokeUserBypass, revokeOrgBypass,
   updateBypassDetails,
   overrideUserCourseAccess, overrideOrgCourseAccess,
-  deactivateUser, deleteUser,
+  deactivateUser, deleteUser, deleteOrganization,
   updateUserProfile,
   adminSetUserPassword,
   sendPasswordResetEmail,
@@ -757,7 +757,7 @@ function BypassPage({ bypassUsers, bypassOrgs, onEdit, onToast, onAddUser, onAdd
   )
 }
 
-function OrgsPage({ orgs, onToast, onAddOrg, onAddUser }: { orgs:SAOrg[]; onToast:(m:string)=>void; onAddOrg:()=>void; onAddUser:()=>void }) {
+function OrgsPage({ orgs, onToast, onAddOrg, onAddUser, onDeleteOrg }: { orgs:SAOrg[]; onToast:(m:string)=>void; onAddOrg:()=>void; onAddUser:()=>void; onDeleteOrg:(o:SAOrg)=>void }) {
   const [query, setQuery] = useState('')
   const [segF, setSegF]   = useState('All Segments')
   const [tierF, setTierF] = useState('All Tiers')
@@ -793,7 +793,7 @@ function OrgsPage({ orgs, onToast, onAddOrg, onAddUser }: { orgs:SAOrg[]; onToas
               <TD><div style={{ display:'flex', gap:6 }}>
                 <Btn variant="ghost" size="sm" onClick={()=>onToast(`Managing ${o.name}...`)}>Manage</Btn>
                 <Btn variant="ghost" size="sm" onClick={onAddUser}>+ User</Btn>
-                {o.is_bypassed && <Btn variant="success" size="sm" onClick={()=>onToast('Invoice sent!')}>Convert</Btn>}
+                <Btn variant="danger" size="sm" onClick={()=>onDeleteOrg(o)}>Delete</Btn>
               </div></TD>
             </TR>
           ))}
@@ -1325,6 +1325,28 @@ function CourseProgressPage() {
   )
 }
 
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DELETE ORG MODAL
+// ══════════════════════════════════════════════════════════════════════════════
+
+function DeleteOrgModal({ open, onClose, onSuccess, org }: { open:boolean; onClose:()=>void; onSuccess:(m:string)=>void; org: SAOrg | null }) {
+  const [isPending, startTrans] = useTransition()
+  if (!org) return null
+  function del() {
+    startTrans(async () => {
+      const res = await deleteOrganization(org!.id, org!.name)
+      if (res.success) { onClose(); onSuccess(`Organization ${org!.name} deleted.`) } else onSuccess(`Error: ${res.error}`)
+    })
+  }
+  return (
+    <Modal open={open} onClose={onClose} title="Delete Organization" sub={`Are you sure you want to permanently delete ${org.name}? This cannot be undone and will delete all associated members.`}>
+      <Notice icon="⚠">This is a hard delete and will remove all access permanently.</Notice>
+      <MFooter onClose={onClose} onConfirm={del} label="Permanently Delete" isPending={isPending}/>
+    </Modal>
+  )
+}
+
 // ══════════════════════════════════════════════════════════════════════════════
 // MAIN SHELL
 // ══════════════════════════════════════════════════════════════════════════════
@@ -1352,6 +1374,7 @@ export function SuperAdminDashboard({ adminName, stats, bypassUsers, bypassOrgs,
   const [modalOrg, setModalOrg]       = useState(false)
   const [modalInvite, setModalInvite] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<SAUser | null>(null)
+  const [deleteOrgTarget, setDeleteOrgTarget] = useState<SAOrg | null>(null)
   const [editTarget, setEditTarget] = useState<EditTarget>(null)
   const [editUser, setEditUser]   = useState<EditUser>(null)
   const router = useRouter()
@@ -1454,7 +1477,7 @@ export function SuperAdminDashboard({ adminName, stats, bypassUsers, bypassOrgs,
           <div style={{ padding:28, flex:1 }}>
             {page==='overview' && <OverviewPage stats={stats} bypassUsers={bypassUsers} auditLog={auditLog} orgs={orgs} onNav={setPage} onAddUser={()=>setModalUser(true)} onAddOrg={()=>setModalOrg(true)}/>}
             {page==='bypass'   && <BypassPage bypassUsers={bypassUsers} bypassOrgs={bypassOrgs} onEdit={setEditTarget} onToast={showToast} onAddUser={()=>setModalUser(true)} onAddOrg={()=>setModalOrg(true)}/>}
-            {page==='orgs'     && <OrgsPage orgs={orgs} onToast={showToast} onAddOrg={()=>setModalOrg(true)} onAddUser={()=>setModalUser(true)}/>}
+            {page==='orgs'     && <OrgsPage orgs={orgs} onToast={showToast} onAddOrg={()=>setModalOrg(true)} onAddUser={()=>setModalUser(true)} onDeleteOrg={setDeleteOrgTarget}/>}
             {page==='users'    && <UsersPage users={users} onToast={showToast} onAddUser={()=>setModalUser(true)} onInviteUser={()=>setModalInvite(true)} onEdit={setEditUser} onDelete={setDeleteTarget}/>}
             {page==='courses'  && <CoursesPage orgs={orgs} users={users} onToast={showToast}/>}
             {page==='cms'      && <CourseManagerPage onToast={showToast}/>}
@@ -1469,6 +1492,7 @@ export function SuperAdminDashboard({ adminName, stats, bypassUsers, bypassOrgs,
       <AddOrgModal     open={modalOrg}       onClose={()=>setModalOrg(false)}       onSuccess={m=>{showToast(m);router.refresh()}}/>
       <InviteUserModal open={modalInvite}    onClose={()=>setModalInvite(false)}    onSuccess={m=>{showToast(m);router.refresh()}} orgOptions={orgOptions}/>
       <DeleteUserModal open={!!deleteTarget} onClose={()=>setDeleteTarget(null)}    onSuccess={m=>{showToast(m);router.refresh()}} user={deleteTarget}/>
+      <DeleteOrgModal  open={!!deleteOrgTarget} onClose={()=>setDeleteOrgTarget(null)}    onSuccess={m=>{showToast(m);router.refresh()}} org={deleteOrgTarget}/>
       <EditBypassModal open={!!editTarget}   onClose={()=>setEditTarget(null)}      onSuccess={m=>{showToast(m);router.refresh()}} target={editTarget}/>
       <EditUserModal   open={!!editUser}     onClose={()=>setEditUser(null)}        onSuccess={m=>{showToast(m);router.refresh()}} user={editUser} orgOptions={orgOptions}/>
 
