@@ -19,12 +19,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 })
     }
 
-    // Generate the Supabase recovery link server-side
+    const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').replace(/\/$/, '')
+
+    // Generate the Supabase recovery link server-side.
+    // redirectTo must point to /auth/callback so the PKCE code is exchanged
+    // server-side and the session lands in cookies before the page renders.
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
       type: 'recovery',
       email,
       options: {
-        redirectTo: 'https://vibehyr.com/reset-password',
+        redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password`,
       },
     })
 

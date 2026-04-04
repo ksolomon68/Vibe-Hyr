@@ -3,7 +3,7 @@
 import { Suspense, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Crown, Check } from 'lucide-react'
+import { Crown, Check, Eye, EyeOff } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 
@@ -17,6 +17,7 @@ function SignupForm() {
   const [name,     setName]     = useState('')
   const [email,    setEmail]    = useState('')
   const [password, setPassword] = useState('')
+  const [showPw,   setShowPw]   = useState(false)
   const [loading,  setLoading]  = useState(false)
   const router      = useRouter()
   const searchParams = useSearchParams()
@@ -126,7 +127,25 @@ function SignupForm() {
             </div>
             <div>
               <label className="font-mono text-[0.58rem] tracking-[0.2em] uppercase text-grey-DEFAULT block mb-2">Password</label>
-              <input type="password" required minLength={8} value={password} onChange={e => setPassword(e.target.value)} className="input-dark" placeholder="Min 8 characters" />
+              <div className="relative">
+                <input
+                  type={showPw ? 'text' : 'password'}
+                  required
+                  minLength={8}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  className="input-dark pr-12"
+                  placeholder="Min 8 characters"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPw(!showPw)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-grey-dark hover:text-grey-DEFAULT transition-colors"
+                  aria-label={showPw ? 'Hide password' : 'Show password'}
+                >
+                  {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
             </div>
             <button type="submit" disabled={loading} className="btn-orange mt-2">
               {loading ? 'Creating account…' : plan === 'free' ? 'Create Free Account' : `Join as ${planInfo.label}`}

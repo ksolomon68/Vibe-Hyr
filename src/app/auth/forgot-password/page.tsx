@@ -14,12 +14,16 @@ export default function ForgotPasswordPage() {
     e.preventDefault()
     setLoading(true)
     try {
-      const { createClient } = await import('@/lib/supabase/client')
-      const supabase = createClient()
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: 'https://vibehyr.com/reset-password',
+      const res = await fetch('/api/email/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
       })
-      if (error) throw error
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body.error || 'Something went wrong. Please try again.')
+      }
+      // Always show success — we never reveal whether the email exists
       setSent(true)
     } catch (err: any) {
       toast.error(err.message || 'Something went wrong. Please try again.')
@@ -76,11 +80,14 @@ export default function ForgotPasswordPage() {
               </div>
               <h1 className="font-display text-3xl tracking-widest text-white mb-3">CHECK YOUR EMAIL</h1>
               <p className="font-body italic text-grey-DEFAULT mb-2">
-                A password reset link has been sent to
+                If an account exists for
               </p>
-              <p className="font-mono text-[0.7rem] tracking-widest text-orange-DEFAULT mb-6">{email}</p>
+              <p className="font-mono text-[0.7rem] tracking-widest text-orange-DEFAULT mb-2">{email}</p>
+              <p className="font-body italic text-grey-DEFAULT mb-6">
+                a password reset link has been sent.
+              </p>
               <p className="font-body text-sm text-grey-dark mb-8">
-                Click the link in that email to choose a new password. Check your spam folder if you don't see it within a few minutes.
+                Click the link to choose a new password. Check your spam folder if you don't see it within a few minutes.
               </p>
               <Link href="/auth/login" className="btn-outline-orange">
                 ← Back to Log In

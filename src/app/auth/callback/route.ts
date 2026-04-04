@@ -13,9 +13,20 @@ export async function GET(req: NextRequest) {
   const type       = searchParams.get('type')
 
   // 'next' is our own param; 'redirect_to' may come from Supabase token links.
-  // Sanitize: only allow relative paths (prevents open redirect attacks).
-  const rawDest = searchParams.get('next') ?? searchParams.get('redirect_to') ?? '/dashboard'
-  const next    = rawDest.startsWith('/') ? rawDest : '/dashboard'
+  // Accept relative paths OR absolute URLs scoped to our own domain.
+  function getSafeRedirect(raw: string | null, fallback = '/dashboard'): string {
+    if (!raw) return fallback
+    if (raw.startsWith('/')) return raw
+    try {
+      const u = new URL(raw)
+      const allowed = ['vibehyr.com', 'localhost']
+      if (allowed.some(h => u.hostname === h || u.hostname.endsWith('.' + h))) {
+        return u.pathname + u.search + u.hash
+      }
+    } catch {}
+    return fallback
+  }
+  const next = getSafeRedirect(searchParams.get('next') ?? searchParams.get('redirect_to'))
 
   console.log('[auth/callback] code:', !!code, '| token_hash:', !!token_hash, '| type:', type, '| destination:', next)
 
@@ -60,12 +71,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(`${origin}${next}`)
   }
 
-  // Exchange code for session (OAuth / magic link)
+  // Exchange code for session (OAuth / magic link / PKCE recovery)
   const { data, error } = await supabase.auth.exchangeCodeForSession(code!)
   if (error || !data.user) {
     console.error('[auth/callback] Session exchange failed:', error)
     return NextResponse.redirect(`${origin}/auth/error?reason=session_failed`)
   }
+
+  // For recovery codes, always land on reset-password unless caller specified a different next
+  const defaultForType = type === 'recovery' ? '/auth/reset-password' : '/dashboard'
+  const destination = next === '/dashboard' ? defaultForType : next
 
   const user = data.user
   const email = user.email!
@@ -97,6 +112,6 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // Successful login — redirect to dashboard or intended page
-  return NextResponse.redirect(`${origin}${next}`)
+  // Successful login — redirect to intended page (recovery → reset-password by default)
+  return NextResponse.redirect(`${origin}${destination}`)
 }

@@ -3,13 +3,14 @@
 import { Suspense, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Crown } from 'lucide-react'
+import { Crown, Eye, EyeOff } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 
 function LoginForm() {
   const [email,    setEmail]    = useState('')
   const [password, setPassword] = useState('')
+  const [showPw,   setShowPw]   = useState(false)
   const [loading,  setLoading]  = useState(false)
   const router      = useRouter()
   const searchParams = useSearchParams()
@@ -98,14 +99,24 @@ function LoginForm() {
                   Forgot?
                 </Link>
               </div>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                className="input-dark"
-                placeholder="••••••••"
-              />
+              <div className="relative">
+                <input
+                  type={showPw ? 'text' : 'password'}
+                  required
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  className="input-dark pr-12"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPw(!showPw)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-grey-dark hover:text-grey-DEFAULT transition-colors"
+                  aria-label={showPw ? 'Hide password' : 'Show password'}
+                >
+                  {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
             </div>
 
             <button type="submit" disabled={loading} className="btn-orange mt-2">

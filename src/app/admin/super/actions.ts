@@ -118,7 +118,7 @@ export async function addBypassUser(data: {
       const { data: linkData, error: lErr } = await admin.auth.admin.generateLink({
         type: 'recovery',
         email: data.email,
-        options: { redirectTo: `${appUrl}/auth/reset-password` },
+        options: { redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password` },
       })
 
       if (lErr) console.warn('[addBypassUser] generateLink error:', lErr)
@@ -233,7 +233,7 @@ export async function addBypassOrg(data: {
           const { data: linkData, error: lErr } = await admin.auth.admin.generateLink({
             type: 'recovery',
             email: data.adminEmail,
-            options: { redirectTo: `${appUrl}/auth/reset-password` },
+            options: { redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password` },
           })
           
           if (lErr) console.warn('[addBypassOrg] generateLink error:', lErr)
@@ -582,7 +582,7 @@ export async function inviteUserBySuperAdmin(data: {
     const { data: linkData } = await admin.auth.admin.generateLink({
       type: 'recovery',
       email: data.email,
-      options: { redirectTo: `${appUrl}/auth/reset-password` },
+      options: { redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password` },
     })
     const setupUrl = linkData?.properties?.action_link ?? `${appUrl}/auth/login`
     await sendEmail({
@@ -611,8 +611,9 @@ export async function sendPasswordResetEmail(
 
   const supabase = createClient()
 
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').replace(/\/$/, '')
   const { error } = await supabase.auth.resetPasswordForEmail(userEmail, {
-    redirectTo: 'https://vibehyr.com/reset-password',
+    redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password`,
   })
 
   if (error) {
