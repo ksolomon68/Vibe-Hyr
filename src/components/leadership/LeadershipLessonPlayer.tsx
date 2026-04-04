@@ -23,7 +23,7 @@ export interface LeadershipLessonPlayerProps {
   allowedCourses?:   string[]
   onLessonComplete?: (courseId: string, lessonId: string) => void
   onNavigate?:       (courseId: string, lessonId: string) => void
-  userTier?:         string
+  userTier?:         string // reserved for future tier-gating UI
 }
 
 type Tab = 'lesson' | 'interact' | 'notes'
@@ -37,7 +37,7 @@ export default function LeadershipLessonPlayer({
   allowedCourses   = ['leadership_course_1'],
   onLessonComplete,
   onNavigate,
-  userTier = 'seeker',
+  userTier: _userTier = 'seeker',
 }: LeadershipLessonPlayerProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [activeTab, setActiveTab]     = useState<Tab>('lesson')
@@ -343,6 +343,48 @@ export default function LeadershipLessonPlayer({
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
                 >
+                  {/* Course Assumption Lab — full interactive version */}
+                  {course.assumptionLab && (
+                    <div className="mb-12">
+                      <div className="mb-2">
+                        <p className="font-mono text-[0.55rem] tracking-[0.2em] uppercase text-[#C9A84C]">
+                          Course Lab · {course.assumptionLab.title}
+                        </p>
+                      </div>
+                      <AssumptionLab
+                        title={course.assumptionLab.title}
+                        subtitle={course.assumptionLab.processDescription}
+                        prompt={course.assumptionLab.prompt}
+                        placeholder={course.assumptionLab.inputPlaceholder}
+                        buttonText="Generate My Blueprint ✦"
+                        accentColor={course.color}
+                      />
+                      {/* Output format preview */}
+                      <div className="mt-4 p-4 bg-white/[0.02] border border-white/5 rounded-lg">
+                        <p className="font-mono text-[0.5rem] tracking-[0.2em] uppercase text-[#C9A84C] mb-3">
+                          Lab Output Includes
+                        </p>
+                        <ul className="space-y-1.5">
+                          {course.assumptionLab.outputFormat.map((item, i) => (
+                            <li key={i} className="flex items-start gap-2">
+                              <span className="text-[#C9A84C] text-xs mt-0.5 flex-shrink-0">◈</span>
+                              <span className="font-body text-xs text-white/50 leading-relaxed">{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Divider */}
+                  <div className="flex items-center gap-4 mb-10">
+                    <div className="flex-1 h-px bg-white/5" />
+                    <span className="font-mono text-[0.5rem] tracking-[0.2em] uppercase text-white/20">
+                      Course Quiz Gate
+                    </span>
+                    <div className="flex-1 h-px bg-white/5" />
+                  </div>
+
                   <LeaderQuiz
                     title={course.quiz.title}
                     questions={course.quiz.questions}
@@ -395,7 +437,7 @@ export default function LeadershipLessonPlayer({
                     Course Quiz — {course.quiz.title}
                   </p>
                   <p className="font-body text-sm text-white/50 italic">
-                    Pass the knowledge check (80%+) to complete this course and unlock the next.
+                    Pass the knowledge check ({course.quiz.passingScore}%+) to complete this course and unlock the next.
                   </p>
                 </div>
                 <button

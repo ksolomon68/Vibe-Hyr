@@ -526,11 +526,6 @@ export type CmsLesson = {
   updated_at: string
 }
 
-function extractYoutubeId(url: string): string | null {
-  const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s?#]+)/)
-  return m ? m[1] : null
-}
-
 function isValidYoutubeUrl(url: string): boolean {
   return /^https?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)/.test(url.trim())
 }
@@ -670,14 +665,6 @@ export async function syncLeadershipCourses(): Promise<ActionResult & { seeded: 
     const courseId = COURSE_ID_MAP[course.id]
     if (!courseId) continue
 
-    // Only seed if the course has no lessons yet
-    const { count } = await admin
-      .from('course_lessons')
-      .select('id', { count: 'exact', head: true })
-      .eq('course_id', courseId)
-
-    if ((count ?? 0) > 0) continue
-
     const lessons = course.lessons.map((lesson, index) => {
       const content = [
         lesson.description,
@@ -705,6 +692,19 @@ export async function syncLeadershipCourses(): Promise<ActionResult & { seeded: 
         updated_at:   new Date().toISOString(),
       }
     })
+
+    // Seed if empty; re-seed if count is below the current curriculum lesson count
+    const { count } = await admin
+      .from('course_lessons')
+      .select('id', { count: 'exact', head: true })
+      .eq('course_id', courseId)
+
+    if ((count ?? 0) >= lessons.length) continue
+
+    // Clear stale lessons before re-seeding (handles curriculum expansions)
+    if ((count ?? 0) > 0) {
+      await admin.from('course_lessons').delete().eq('course_id', courseId)
+    }
 
     const { error } = await admin.from('course_lessons').insert(lessons)
     if (error) {
