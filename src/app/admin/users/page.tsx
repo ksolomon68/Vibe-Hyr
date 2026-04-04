@@ -31,6 +31,7 @@ const ROLE_BADGE: Record<UserRole, { label: string; color: string }> = {
   educator:          { label: 'Educator',          color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
   business:          { label: 'Team Member',       color: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
   personal:          { label: 'Personal',          color: 'bg-white/10 text-grey-DEFAULT border-white/10' },
+  leader:            { label: 'Leader',            color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' },
 }
 
 const TIER_LABEL: Record<MembershipTier, string> = {
