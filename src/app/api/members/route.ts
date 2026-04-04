@@ -264,7 +264,7 @@ export async function POST(req: NextRequest) {
     const { data: linkData } = await admin.auth.admin.generateLink({
       type: 'recovery',
       email: emailNorm,
-      options: { redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password` },
+      options: { redirectTo: `${appUrl}/auth/reset-password` },
     })
 
     let setupUrl = `${appUrl}/auth/login`

@@ -152,7 +152,7 @@ export async function inviteUser(
     const { data: linkData } = await adminSupabase.auth.admin.generateLink({
       type: 'recovery',
       email,
-      options: { redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password` },
+      options: { redirectTo: `${appUrl}/auth/reset-password` },
     })
     let setupUrl = `${appUrl}/auth/login`
     if (linkData?.properties?.action_link) {

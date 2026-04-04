@@ -120,7 +120,7 @@ export async function addBypassUser(data: {
         type: 'recovery',
         email: data.email,
         // implicit flow — hash fragment goes to client-side page, not server callback
-        options: { redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password` },
+        options: { redirectTo: `${appUrl}/auth/reset-password` },
       })
 
       if (lErr) console.warn('[addBypassUser] generateLink error:', lErr)
@@ -237,7 +237,7 @@ export async function addBypassOrg(data: {
           const { data: linkData, error: lErr } = await admin.auth.admin.generateLink({
             type: 'recovery',
             email: data.adminEmail,
-            options: { redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password` },
+            options: { redirectTo: `${appUrl}/auth/reset-password` },
           })
           
           if (lErr) console.warn('[addBypassOrg] generateLink error:', lErr)
@@ -591,7 +591,7 @@ export async function inviteUserBySuperAdmin(data: {
     const { data: linkData } = await admin.auth.admin.generateLink({
       type: 'recovery',
       email: data.email,
-      options: { redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password` },
+      options: { redirectTo: `${appUrl}/auth/reset-password` },
     })
     let setupUrl = `${appUrl}/auth/login`
     if (linkData?.properties?.action_link) {
@@ -633,7 +633,7 @@ export async function sendPasswordResetEmail(
     type: 'recovery',
     email: userEmail,
     options: {
-      redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password`,
+      redirectTo: `${appUrl}/auth/reset-password`,
     },
   })
 
