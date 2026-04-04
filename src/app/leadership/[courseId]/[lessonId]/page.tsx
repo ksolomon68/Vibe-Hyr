@@ -37,30 +37,34 @@ export default async function LessonPage({ params }: PageProps) {
   // ── Tier gate: check profile membership tier ────────────────────────────────
   const { data: profile } = await supabase
     .from('profiles')
-    .select('membership_tier')
+    .select('membership_tier, is_super_admin')
     .eq('id', user.id)
     .single()
 
-  const tier = profile?.membership_tier ?? 'seeker'
+  // Super admins bypass all access gates
+  if (!profile?.is_super_admin) {
+    const tier = profile?.membership_tier ?? 'free'
 
-  const TIER_ACCESS: Record<string, string[]> = {
-    seeker:         ['leadership_course_1'],
-    architect:      ['leadership_course_1', 'leadership_course_2', 'leadership_course_3'],
-    reality_master: ['leadership_course_1', 'leadership_course_2', 'leadership_course_3', 'leadership_course_4'],
-  }
+    // DB tier values: free = Seeker, architect = Architect, elite = Reality Master
+    const TIER_ACCESS: Record<string, string[]> = {
+      free:      ['leadership_course_1'],
+      architect: ['leadership_course_1', 'leadership_course_2', 'leadership_course_3'],
+      elite:     ['leadership_course_1', 'leadership_course_2', 'leadership_course_3', 'leadership_course_4'],
+    }
 
-  const allowed = TIER_ACCESS[tier] ?? ['leadership_course_1']
+    const allowed = TIER_ACCESS[tier] ?? ['leadership_course_1']
 
-  if (!allowed.includes(params.courseId)) {
-    return (
-      <CourseLockedScreen
-        reason="tier_required"
-        courseSlug={params.courseId}
-        sectionLabel="LEADERSHIP"
-        backHref="/leadership"
-        backLabel="Back to Leadership"
-      />
-    )
+    if (!allowed.includes(params.courseId)) {
+      return (
+        <CourseLockedScreen
+          reason="tier_required"
+          courseSlug={params.courseId}
+          sectionLabel="LEADERSHIP"
+          backHref="/leadership"
+          backLabel="Back to Leadership"
+        />
+      )
+    }
   }
 
   return (
