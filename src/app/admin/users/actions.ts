@@ -97,7 +97,11 @@ export async function inviteUser(
     }
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com'
+  let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
+  // Fix malformed URLs: remove quotes, ensure protocol, and handle 0.0.0.0
+  appUrl = appUrl.replace(/["]/g, '').replace(/\/$/, '')
+  if (appUrl.includes('0.0.0.0')) appUrl = appUrl.replace('0.0.0.0', 'localhost')
+  if (!appUrl.startsWith('http')) appUrl = `https://${appUrl}`
 
   const { data: inviteData, error: inviteError } = await adminSupabase.auth.admin.inviteUserByEmail(
     email,
@@ -139,13 +143,20 @@ export async function inviteUser(
 
   // Send branded invite email
   try {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com'
+    let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
+    appUrl = appUrl.replace(/["]/g, '').replace(/\/$/, '')
+    if (appUrl.includes('0.0.0.0')) appUrl = appUrl.replace('0.0.0.0', 'localhost')
+    if (!appUrl.startsWith('http')) appUrl = `https://${appUrl}`
     const { data: linkData } = await adminSupabase.auth.admin.generateLink({
       type: 'recovery',
       email,
       options: { redirectTo: `${appUrl}/auth/reset-password` },
     })
-    const setupUrl = linkData?.properties?.action_link ?? `${appUrl}/auth/login`
+    let setupUrl = `${appUrl}/auth/login`
+    if (linkData?.properties?.action_link) {
+      // Wrap in branded enrollment link for consistency
+      setupUrl = `${appUrl}/auth/enroll?link=${encodeURIComponent(linkData.properties.action_link)}`
+    }
     await sendEmail({
       to: email,
       subject: `You've been invited to join ${org.name} on Vibe Hyr`,

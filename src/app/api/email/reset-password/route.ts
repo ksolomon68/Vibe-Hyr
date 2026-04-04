@@ -23,7 +23,9 @@ export async function POST(req: NextRequest) {
     // URL hash fragment, which server-side route handlers cannot see. The
     // redirectTo must be a client-side page that lets the browser SDK process
     // the hash and establish the session via onAuthStateChange.
-    let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').replace(/\/$/, '')
+    let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
+    // Fix malformed URLs: remove quotes, ensure protocol, and handle 0.0.0.0
+    appUrl = appUrl.replace(/["]/g, '').replace(/\/$/, '')
     if (appUrl.includes('0.0.0.0')) appUrl = appUrl.replace('0.0.0.0', 'localhost')
     if (!appUrl.startsWith('http')) appUrl = `https://${appUrl}`
 
@@ -41,7 +43,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true })
     }
 
-    const resetLink = data.properties?.action_link
+    let resetLink = data.properties?.action_link
+    if (resetLink) {
+      // Wrap in branded enrollment link for consistency
+      resetLink = `${appUrl}/auth/enroll?link=${encodeURIComponent(resetLink)}`
+    }
     if (!resetLink) {
       console.error('[reset-password] No action_link returned')
       return NextResponse.json({ ok: true })

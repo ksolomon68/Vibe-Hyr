@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { sendEmail } from '@/lib/email/resend'
-import { bypassWelcomeTemplate, institutionInviteTemplate } from '@/lib/email/templates'
+import { bypassWelcomeTemplate, institutionInviteTemplate, passwordResetTemplate } from '@/lib/email/templates'
 
 type ActionResult = { success: boolean; error?: string }
 
@@ -617,15 +617,40 @@ export async function sendPasswordResetEmail(
   const sa = await requireSuperAdmin()
   if (!sa) return { success: false, error: 'Unauthorized' }
 
-  const supabase = createClient()
+  const admin = createAdminClient()
+  let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
+  // Fix malformed URLs: remove quotes, ensure protocol, and handle 0.0.0.0
+  appUrl = appUrl.replace(/["]/g, '').replace(/\/$/, '')
+  if (appUrl.includes('0.0.0.0')) appUrl = appUrl.replace('0.0.0.0', 'localhost')
+  if (!appUrl.startsWith('http')) appUrl = `https://${appUrl}`
 
-  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').replace(/\/$/, '')
-  const { error } = await supabase.auth.resetPasswordForEmail(userEmail, {
-    redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password`,
+  const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
+    type: 'recovery',
+    email: userEmail,
+    options: {
+      redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password`,
+    },
   })
 
-  if (error) {
-    return { success: false, error: error.message ?? 'Could not send reset email' }
+  if (linkError) {
+    return { success: false, error: linkError.message ?? 'Could not generate reset link' }
+  }
+
+  let resetLink = linkData.properties?.action_link
+  if (resetLink) {
+    // Wrap in branded enrollment link for consistency
+    resetLink = `${appUrl}/auth/enroll?link=${encodeURIComponent(resetLink)}`
+  }
+
+  try {
+    await sendEmail({
+      to: userEmail,
+      subject: 'Reset your Vibe Hyr password',
+      html: passwordResetTemplate(resetLink || ''),
+    })
+  } catch (emailErr: any) {
+    console.error('[sendPasswordResetEmail] Branding failed:', emailErr)
+    return { success: false, error: 'Failed to send branded reset email' }
   }
 
   await logAudit(sa.userId, sa.email, 'PASSWORD_RESET_EMAIL_SENT', 'user', userId, userName,

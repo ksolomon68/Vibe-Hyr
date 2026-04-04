@@ -145,7 +145,11 @@ export async function POST(req: NextRequest) {
   }
 
   // ── Send Supabase invite email ─────────────────────────────────────────────
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com'
+  let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
+  // Fix malformed URLs: remove quotes, ensure protocol, and handle 0.0.0.0
+  appUrl = appUrl.replace(/["]/g, '').replace(/\/$/, '')
+  if (appUrl.includes('0.0.0.0')) appUrl = appUrl.replace('0.0.0.0', 'localhost')
+  if (!appUrl.startsWith('http')) appUrl = `https://${appUrl}`
 
   const { data: inviteData, error: inviteErr } =
     await admin.auth.admin.inviteUserByEmail(emailNorm, {
