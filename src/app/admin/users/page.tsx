@@ -148,7 +148,7 @@ export default async function ManageUsersPage() {
           {/* Invite form — institution admins only */}
           {isOrgAdmin && myOrg && (
             <InviteUserForm
-              orgType={(myProfile.institution_type === 'education' ? 'education' : 'business') as 'education' | 'business'}
+              orgType={(myProfile?.institution_type === 'education' ? 'education' : 'business') as 'education' | 'business'}
               seatsUsed={users.length}
               seatsPurchased={myOrg.seats_purchased}
             />
