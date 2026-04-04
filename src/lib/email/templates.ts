@@ -266,3 +266,61 @@ export function trackCompleteTemplate(name: string, trackName: string, trackNumb
     ${para('"The world is yourself pushed out. Change yourself and the world changes accordingly." Keep building.', true)}
   `)
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 8. INSTITUTION INVITE
+// ─────────────────────────────────────────────────────────────────────────────
+export function institutionInviteTemplate(
+  name: string,
+  orgName: string,
+  role: string,
+  setupUrl: string
+): string {
+  const first     = name?.split(' ')[0] || 'Member'
+  const roleLabel = role === 'educator' ? 'Educator' : role === 'leader' ? 'Leader' : 'Team Member'
+  return wrap(`
+    ${eyebrow(`${orgName} · Vibe Hyr`)}
+    ${heading(`You've Been<br/><span style="color:${ORANGE};">Invited.</span>`)}
+    ${divider}
+    ${para(`Hi ${first}, you've been invited to join <strong style="color:${INK};">${orgName}</strong> on the Vibe Hyr platform as a <strong style="color:${INK};">${roleLabel}</strong>.`)}
+    ${para('Vibe Hyr is a professional development platform built on identity-level transformation — helping individuals and teams govern their external results from the inside out.')}
+    ${para('Click the button below to set your password and access your account:')}
+    ${ctaButton('Accept Invitation', setupUrl)}
+    ${divider}
+    <p style="margin:0 0 12px;font-size:12px;color:#B0A090;line-height:1.6;">
+      If the button doesn't work, copy and paste this link into your browser:<br/>
+      <span style="font-family:monospace;font-size:11px;color:${ORANGE};word-break:break-all;">${setupUrl}</span>
+    </p>
+    <p style="margin:0;font-size:12px;color:#B0A090;font-style:italic;">
+      "Assume the feeling of your wish fulfilled." — Neville Goddard
+    </p>
+  `)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 9. BYPASS / ADMIN-CREATED USER WELCOME
+// ─────────────────────────────────────────────────────────────────────────────
+export function bypassWelcomeTemplate(
+  name: string,
+  tier: string,
+  setupUrl: string
+): string {
+  const first     = name?.split(' ')[0] || 'Member'
+  const tierLabel = tier === 'elite' ? 'Reality Master' : tier === 'architect' ? 'Architect' : 'Seeker'
+  return wrap(`
+    ${eyebrow('Welcome to Vibe Hyr')}
+    ${heading(`Your Account<br/><span style="color:${ORANGE};">Is Ready.</span>`)}
+    ${divider}
+    ${para(`Hi ${first}, your Vibe Hyr account has been created with <strong style="color:${INK};">${tierLabel}</strong> access.`)}
+    ${para('Your account is active and waiting for you. Click below to set your password and begin:')}
+    ${ctaButton('Set Password & Log In', setupUrl)}
+    ${divider}
+    <p style="margin:0 0 12px;font-size:12px;color:#B0A090;line-height:1.6;">
+      If the button doesn't work, copy and paste this link into your browser:<br/>
+      <span style="font-family:monospace;font-size:11px;color:${ORANGE};word-break:break-all;">${setupUrl}</span>
+    </p>
+    <p style="margin:0;font-size:12px;color:#B0A090;font-style:italic;">
+      "You have free will to choose the state you will occupy." — Neville Goddard
+    </p>
+  `)
+}

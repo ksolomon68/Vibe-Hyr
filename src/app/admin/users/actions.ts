@@ -3,6 +3,8 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { sendEmail } from '@/lib/email/resend'
+import { institutionInviteTemplate } from '@/lib/email/templates'
 
 // ─── Helper: resolve admin's org ID from either column ───────────────────────
 // The schema has two org-FK columns on profiles: org_id (used by invite flow)
@@ -133,6 +135,24 @@ export async function inviteUser(
       },
       { onConflict: 'id' }
     )
+  }
+
+  // Send branded invite email
+  try {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com'
+    const { data: linkData } = await adminSupabase.auth.admin.generateLink({
+      type: 'recovery',
+      email,
+      options: { redirectTo: `${appUrl}/auth/reset-password` },
+    })
+    const setupUrl = linkData?.properties?.action_link ?? `${appUrl}/auth/login`
+    await sendEmail({
+      to: email,
+      subject: `You've been invited to join ${org.name} on Vibe Hyr`,
+      html: institutionInviteTemplate(email, org.name, role, setupUrl),
+    })
+  } catch (emailErr) {
+    console.error('[inviteUser] Invite email failed:', emailErr)
   }
 
   revalidatePath('/admin/users')

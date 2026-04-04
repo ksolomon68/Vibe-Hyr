@@ -43,6 +43,13 @@ function SignupForm() {
       return
     }
 
+    // Send branded welcome email (fire-and-forget)
+    fetch('/api/email/welcome', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, plan }),
+    }).catch(() => {})
+
     if (plan !== 'free' && data.user) {
       // Redirect to Stripe checkout (handled via API route)
       const res = await fetch('/api/stripe/checkout', {

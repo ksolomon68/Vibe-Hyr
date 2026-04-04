@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { sendEmail } from '@/lib/email/resend'
-import { passwordResetTemplate } from '@/lib/email/templates'
+import { bypassWelcomeTemplate, institutionInviteTemplate } from '@/lib/email/templates'
 
 type ActionResult = { success: boolean; error?: string }
 
@@ -94,6 +94,27 @@ export async function addBypassUser(data: {
       granted_by: sa.userId,
     }))
     await admin.from('course_access').upsert(grants, { onConflict: 'user_id,course_slug' })
+  }
+
+  // Send welcome email with password-setup link if requested
+  if (data.sendWelcomeEmail) {
+    try {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com'
+      const { data: linkData } = await admin.auth.admin.generateLink({
+        type: 'recovery',
+        email: data.email,
+        options: { redirectTo: `${appUrl}/auth/reset-password` },
+      })
+      const setupUrl = linkData?.properties?.action_link ?? `${appUrl}/auth/login`
+      const fullName = `${data.firstName} ${data.lastName}`
+      await sendEmail({
+        to: data.email,
+        subject: 'Your Vibe Hyr account is ready',
+        html: bypassWelcomeTemplate(fullName, data.membershipTier, setupUrl),
+      })
+    } catch (emailErr) {
+      console.error('[addBypassUser] Welcome email failed:', emailErr)
+    }
   }
 
   await logAudit(sa.userId, sa.email, 'BYPASS_USER_ADDED', 'user', userId,
@@ -438,6 +459,23 @@ export async function inviteUserBySuperAdmin(data: {
       },
       { onConflict: 'id' }
     )
+  }
+
+  // Send branded invite email
+  try {
+    const { data: linkData } = await admin.auth.admin.generateLink({
+      type: 'recovery',
+      email: data.email,
+      options: { redirectTo: `${appUrl}/auth/reset-password` },
+    })
+    const setupUrl = linkData?.properties?.action_link ?? `${appUrl}/auth/login`
+    await sendEmail({
+      to: data.email,
+      subject: "You've been invited to Vibe Hyr",
+      html: institutionInviteTemplate(data.email, 'Vibe Hyr', data.role, setupUrl),
+    })
+  } catch (emailErr) {
+    console.error('[inviteUserBySuperAdmin] Invite email failed:', emailErr)
   }
 
   await logAudit(sa.userId, sa.email, 'USER_INVITED', 'user',
