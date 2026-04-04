@@ -146,10 +146,11 @@ export async function POST(req: NextRequest) {
 
   // ── Send Supabase invite email ─────────────────────────────────────────────
   let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
-  // Fix malformed URLs: remove quotes, ensure protocol, and handle 0.0.0.0
-  appUrl = appUrl.replace(/["]/g, '').replace(/\/$/, '')
+  // Bulletproof sanitization: remove quotes, remove ALL existing protocol prefixes, and trailing slashes
+  appUrl = appUrl.replace(/["]/g, '').replace(/^https?:\/+/i, '').replace(/\/+$/, '')
   if (appUrl.includes('0.0.0.0')) appUrl = appUrl.replace('0.0.0.0', 'localhost')
-  if (!appUrl.startsWith('http')) appUrl = `https://${appUrl}`
+  // Re-apply protocol
+  appUrl = appUrl.startsWith('localhost') || appUrl.startsWith('127.0.0.1') ? `http://${appUrl}` : `https://${appUrl}`
 
   const { data: inviteData, error: inviteErr } =
     await admin.auth.admin.inviteUserByEmail(emailNorm, {
@@ -254,15 +255,16 @@ export async function POST(req: NextRequest) {
   // ── Send branded onboarding email via Resend ────────────────────────────
   try {
     let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
-    // Fix malformed URLs: replace " with :, ensure protocol, and handle 0.0.0.0
-    appUrl = appUrl.replace(/["]/g, '').replace(/\/$/, '')
+    // Bulletproof sanitization: remove quotes, remove ALL existing protocol prefixes, and trailing slashes
+    appUrl = appUrl.replace(/["]/g, '').replace(/^https?:\/+/i, '').replace(/\/+$/, '')
     if (appUrl.includes('0.0.0.0')) appUrl = appUrl.replace('0.0.0.0', 'localhost')
-    if (!appUrl.startsWith('http')) appUrl = `https://${appUrl}`
+    // Re-apply protocol
+    appUrl = appUrl.startsWith('localhost') || appUrl.startsWith('127.0.0.1') ? `http://${appUrl}` : `https://${appUrl}`
 
     const { data: linkData } = await admin.auth.admin.generateLink({
       type: 'recovery',
       email: emailNorm,
-      options: { redirectTo: `${appUrl}/auth/reset-password` },
+      options: { redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password` },
     })
 
     let setupUrl = `${appUrl}/auth/login`

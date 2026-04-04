@@ -98,10 +98,11 @@ export async function inviteUser(
   }
 
   let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
-  // Fix malformed URLs: remove quotes, ensure protocol, and handle 0.0.0.0
-  appUrl = appUrl.replace(/["]/g, '').replace(/\/$/, '')
+  // Bulletproof sanitization: remove quotes, remove ALL existing protocol prefixes, and trailing slashes
+  appUrl = appUrl.replace(/["]/g, '').replace(/^https?:\/+/i, '').replace(/\/+$/, '')
   if (appUrl.includes('0.0.0.0')) appUrl = appUrl.replace('0.0.0.0', 'localhost')
-  if (!appUrl.startsWith('http')) appUrl = `https://${appUrl}`
+  // Re-apply protocol
+  appUrl = appUrl.startsWith('localhost') || appUrl.startsWith('127.0.0.1') ? `http://${appUrl}` : `https://${appUrl}`
 
   const { data: inviteData, error: inviteError } = await adminSupabase.auth.admin.inviteUserByEmail(
     email,
@@ -150,7 +151,7 @@ export async function inviteUser(
     const { data: linkData } = await adminSupabase.auth.admin.generateLink({
       type: 'recovery',
       email,
-      options: { redirectTo: `${appUrl}/auth/reset-password` },
+      options: { redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password` },
     })
     let setupUrl = `${appUrl}/auth/login`
     if (linkData?.properties?.action_link) {
