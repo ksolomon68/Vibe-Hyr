@@ -117,7 +117,7 @@ export async function addBypassUser(data: {
       const { data: linkData, error: lErr } = await admin.auth.admin.generateLink({
         type: 'recovery',
         email: data.email,
-        options: { redirectTo: `${appUrl}/reset-password` },
+        options: { redirectTo: `${appUrl}/auth/callback?next=/reset-password` },
       })
 
       if (lErr) console.warn('[addBypassUser] generateLink error:', lErr)
@@ -231,7 +231,7 @@ export async function addBypassOrg(data: {
           const { data: linkData, error: lErr } = await admin.auth.admin.generateLink({
             type: 'recovery',
             email: data.adminEmail,
-            options: { redirectTo: `${appUrl}/reset-password` },
+            options: { redirectTo: `${appUrl}/auth/callback?next=/reset-password` },
           })
           
           if (lErr) console.warn('[addBypassOrg] generateLink error:', lErr)
