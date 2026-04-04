@@ -98,10 +98,11 @@ function tierPill(tier: string) {
   return                           <Pill v="seeker"    label="Seeker"/>
 }
 function segPill(seg: string) {
-  if (seg === 'education') return <Pill v="edu" label="Education"/>
+  if (seg === 'education' || seg === 'educator') return <Pill v="edu" label="Educator"/>
   if (seg === 'business' || seg === 'corporate' || seg === 'smb') return <Pill v="biz" label="Business"/>
   if (seg === 'leadership') return <Pill v="gold" label="Leadership"/>
-  return                         <Pill v="ind" label="Individual"/>
+  if (seg === 'personal') return <Pill v="ind" label="Personal"/>
+  return                         <Pill v="ind" label={seg}/>
 }
 function typePill(type: string) {
   if (type === 'education') return <Pill v="edu" label="Education"/>
@@ -355,7 +356,7 @@ function AddUserModal({ open, onClose, onSuccess, orgOptions }: {
 
 function AddOrgModal({ open, onClose, onSuccess }: { open: boolean; onClose: ()=>void; onSuccess: (m:string)=>void }) {
   const [isPending, startTransition] = useTransition()
-  const [form, setForm] = useState({ name:'', segment:'corporate', industry:'Financial Services', website:'', domain:'', adminFirst:'', adminLast:'', adminEmail:'', tier:'elite', seats:25, bypassReason:'Pilot Program', bypassExpiry:'', bypassNotes:'' })
+  const [form, setForm] = useState({ name:'', segment:'business', industry:'', website:'', domain:'', adminFirst:'', adminLast:'', adminEmail:'', tier:'elite', seats:25, bypassReason:'Pilot Program', bypassExpiry:'', bypassNotes:'' })
   const [courses, setCourses] = useState(COURSES.map(c=>c.slug))
   const set = (k: string, v: string|number) => setForm(f=>({...f,[k]:v}))
 
@@ -374,11 +375,10 @@ function AddOrgModal({ open, onClose, onSuccess }: { open: boolean; onClose: ()=
         <FField label="Organization Name" span2><input value={form.name} onChange={e=>set('name',e.target.value)} style={IS} placeholder="e.g. Horizon Leadership Academy"/></FField>
         <FField label="Segment">
           <select value={form.segment} onChange={e=>set('segment',e.target.value)} style={IS}>
-            <option value="corporate">Business / Corporate</option>
-            <option value="smb">Small Business</option>
-            <option value="education">Education</option>
+            <option value="personal">Personal</option>
+            <option value="educator">Educator</option>
+            <option value="business">Business</option>
             <option value="leadership">Leadership</option>
-            <option value="nonprofit">Non-Profit</option>
           </select>
         </FField>
         <FField label="Industry">
@@ -824,7 +824,7 @@ function OrgsPage({ orgs, onToast, onAddOrg, onAddUser, onDeleteOrg, onEditAdmin
     <div>
       <div style={{ display:'flex', gap:10, marginBottom:14 }}>
         <SearchInput placeholder="Search organizations..." value={query} onChange={setQuery}/>
-        <FilterSel value={segF} onChange={setSegF} options={['All Segments','corporate','smb','education','nonprofit']}/>
+        <FilterSel value={segF} onChange={setSegF} options={['All Segments','personal','educator','business','leadership']}/>
         <FilterSel value={tierF} onChange={setTierF} options={['All Tiers','free','architect','elite']}/>
         <Btn variant="gold" size="sm" onClick={()=>onToast('Exporting...')}>Export</Btn>
         <Btn variant="primary" size="sm" onClick={onAddOrg}>+ Add Organization</Btn>

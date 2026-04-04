@@ -29,7 +29,7 @@ export type OrgAdminContext = {
   /** Organization the admin manages */
   orgId:      string
   orgName:    string
-  orgType:    'education' | 'business'
+  orgType:    'education' | 'business' | 'leadership'
   orgPlan:    string
   seatLimit:  number
   seatsUsed:  number
@@ -89,17 +89,18 @@ export async function requireOrgAdmin(): Promise<OrgAdminResult> {
     }
   }
 
-  // Map the segment column (education | corporate | smb | nonprofit | leadership | ...)
-  // to the binary education / business type used throughout the app.
-  const orgType: 'education' | 'business' =
-    org.segment === 'education' ? 'education' : 'business'
+  // Map the segment column to the org type used for course assignment.
+  const orgType: 'education' | 'business' | 'leadership' =
+    (org.segment === 'education' || org.segment === 'educator') ? 'education'
+    : org.segment === 'leadership' ? 'leadership'
+    : 'business'
 
   return {
     ctx: {
       userId:    user.id,
       orgId:     org.id,
       orgName:   org.name,
-      orgType,
+      orgType: orgType,
       orgPlan:   org.tier,
       seatLimit: org.seats_purchased ?? 50,
       seatsUsed: org.seats_used ?? 0,

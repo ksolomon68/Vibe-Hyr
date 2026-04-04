@@ -216,7 +216,10 @@ export async function addBypassOrg(data: {
         id: adminUserId, email: data.adminEmail,
         full_name: `${data.adminFirstName} ${data.adminLastName}`,
         membership_tier: data.tier, org_id: org.id,
-        institution_type: data.segment === 'education' ? 'education' : data.segment === 'leadership' ? 'leadership' : 'business',
+        institution_type: (data.segment === 'education' || data.segment === 'educator') ? 'education'
+          : data.segment === 'leadership' ? 'leadership'
+          : data.segment === 'personal' ? 'individual'
+          : 'business',
         role: 'institution_admin',
       })
       await admin.from('organization_members').upsert({
