@@ -53,13 +53,28 @@ export default async function ManageUsersPage() {
     .eq('id', user.id)
     .single()
 
-  if (!myProfile || (myProfile.role !== 'super_admin' && myProfile.role !== 'institution_admin')) {
-    redirect('/dashboard')
+  const isSuperAdmin = myProfile?.role === 'super_admin'
+
+  // isOrgAdmin: legacy check (profiles.role) OR new-flow check (organization_members.role='admin')
+  let isOrgAdmin = myProfile?.role === 'institution_admin'
+  let myOrgId    = myProfile?.org_id as string | null
+
+  if (!isSuperAdmin && !isOrgAdmin) {
+    const { data: membership } = await adminSupabase
+      .from('organization_members')
+      .select('org_id')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .eq('status', 'active')
+      .limit(1)
+      .single()
+    if (membership) {
+      isOrgAdmin = true
+      myOrgId    = membership.org_id
+    }
   }
 
-  const isSuperAdmin  = myProfile.role === 'super_admin'
-  const isOrgAdmin    = myProfile.role === 'institution_admin'
-  const myOrgId       = myProfile.org_id as string | null
+  if (!isSuperAdmin && !isOrgAdmin) redirect('/dashboard')
 
   let users: UserRow[]  = []
   let orgs:  OrgRow[]   = []
@@ -80,10 +95,10 @@ export default async function ManageUsersPage() {
   } else {
     if (!myOrgId) redirect('/dashboard')
 
-    const [{ data: orgUsers }, { data: orgData }] = await Promise.all([
+    const [{ data: orgMembers }, { data: orgData }] = await Promise.all([
       adminSupabase
-        .from('profiles')
-        .select('id, email, full_name, role, membership_tier, institution_type, org_id, created_at')
+        .from('organization_members')
+        .select('user_id, email, full_name, role, status, created_at, profiles(membership_tier, institution_type, org_id)')
         .eq('org_id', myOrgId)
         .order('email'),
       adminSupabase
@@ -92,6 +107,16 @@ export default async function ManageUsersPage() {
         .eq('id', myOrgId)
         .single(),
     ])
+    const orgUsers = (orgMembers ?? []).map((m: any) => ({
+      id:               m.user_id,
+      email:            m.email,
+      full_name:        m.full_name,
+      role:             m.role === 'admin' ? 'institution_admin' : (m.profiles?.role ?? m.role),
+      membership_tier:  m.profiles?.membership_tier ?? 'free',
+      institution_type: m.profiles?.institution_type ?? null,
+      org_id:           myOrgId,
+      created_at:       m.created_at,
+    }))
     users  = (orgUsers ?? []) as UserRow[]
     myOrg  = orgData as OrgRow | null
     if (myOrg) orgs = [myOrg]

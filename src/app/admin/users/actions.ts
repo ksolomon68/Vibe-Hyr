@@ -16,18 +16,32 @@ async function getAdminOrg(
   adminSupabase: ReturnType<typeof createAdminClient>,
   adminUserId: string
 ): Promise<{ orgId: string; institutionType: string } | null> {
-  const { data } = await adminSupabase
+  // Check profiles first (legacy institution_admin role)
+  const { data: profile } = await adminSupabase
     .from('profiles')
     .select('role, org_id, institution_id, institution_type')
     .eq('id', adminUserId)
     .single()
 
-  if (!data || data.role !== 'institution_admin') return null
+  if (profile?.role === 'institution_admin') {
+    const orgId = profile.org_id ?? profile.institution_id
+    if (orgId) return { orgId, institutionType: profile.institution_type ?? 'business' }
+  }
 
-  const orgId = data.org_id ?? data.institution_id
-  if (!orgId) return null
+  // Fallback: check organization_members for admin role (new invite flow)
+  const { data: membership } = await adminSupabase
+    .from('organization_members')
+    .select('org_id, organizations(type)')
+    .eq('user_id', adminUserId)
+    .eq('role', 'admin')
+    .eq('status', 'active')
+    .limit(1)
+    .single()
 
-  return { orgId, institutionType: data.institution_type ?? 'business' }
+  if (!membership) return null
+
+  const orgType = (membership.organizations as any)?.type ?? 'business'
+  return { orgId: membership.org_id, institutionType: orgType }
 }
 
 // ─── Check if a target profile belongs to the given org ──────────────────────
