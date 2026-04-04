@@ -53,16 +53,26 @@ export async function addBypassUser(data: {
 
   const admin = createAdminClient()
 
-  // Create auth user (auto-confirm email)
+  // Create user in Supabase Auth
+  let userId: string
   const { data: authData, error: authErr } = await admin.auth.admin.createUser({
     email: data.email,
     email_confirm: true,
     user_metadata: { full_name: `${data.firstName} ${data.lastName}` },
   })
-  if (authErr || !authData.user) return { success: false, error: authErr?.message ?? 'Failed to create user' }
 
-  const userId = authData.user.id
-  const expiryVal = data.bypassExpiry ? new Date(data.bypassExpiry).toISOString() : null
+  if (authErr) {
+    if (authErr.message.includes('already registered')) {
+      // User exists — fetch their ID
+      const { data: existing } = await admin.from('profiles').select('id').eq('email', data.email).single()
+      if (!existing) return { success: false, error: 'User exists in Auth but no profile found.' }
+      userId = existing.id
+    } else {
+      return { success: false, error: authErr.message }
+    }
+  } else {
+    userId = authData.user!.id
+  }
 
   // Upsert profile with bypass flags
   await admin.from('profiles').upsert({
@@ -73,7 +83,7 @@ export async function addBypassUser(data: {
     org_id: data.orgId || null,
     is_bypassed: true,
     bypass_reason: data.bypassReason,
-    bypass_expiry: expiryVal,
+    bypass_expiry: data.bypassExpiry ? new Date(data.bypassExpiry).toISOString() : null,
     bypass_notes: data.bypassNotes || null,
     bypass_added_by: sa.userId,
   })
@@ -99,31 +109,33 @@ export async function addBypassUser(data: {
   // Send welcome email with password-setup link if requested
   if (data.sendWelcomeEmail) {
     try {
-      let appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com'
-      // Cleanup: remove any accidental quotes or trailing slashes
-      appUrl = appUrl.replace(/["]/g, '').replace(/\/$/, '')
+      let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
+      // Fix malformed URLs: replace " with : and ensure protocol
+      appUrl = appUrl.replace(/["]/g, ':').replace(/\/$/, '')
+      if (!appUrl.startsWith('http')) appUrl = `https://${appUrl}`
       
-      const { data: linkData } = await admin.auth.admin.generateLink({
+      const { data: linkData, error: lErr } = await admin.auth.admin.generateLink({
         type: 'recovery',
         email: data.email,
         options: { redirectTo: `${appUrl}/reset-password` },
       })
 
+      if (lErr) console.warn('[addBypassUser] generateLink error:', lErr)
+
       let setupUrl = `${appUrl}/auth/login`
       if (linkData?.properties?.action_link) {
-        // Construct the branded setup URL safely using the URL object
-        const setupBase = new URL(`${appUrl}/auth/setup`)
-        setupBase.searchParams.set('link', linkData.properties.action_link)
-        setupUrl = setupBase.toString()
+        setupUrl = `${appUrl}/auth/setup?link=${encodeURIComponent(linkData.properties.action_link)}`
       }
+      
       const fullName = `${data.firstName} ${data.lastName}`
       await sendEmail({
         to: data.email,
         subject: 'Your Vibe Hyr account is ready',
         html: bypassWelcomeTemplate(fullName, data.membershipTier, setupUrl),
       })
-    } catch (emailErr) {
-      console.error('[addBypassUser] Welcome email failed:', emailErr)
+      console.log('[addBypassUser] Welcome email sent to:', data.email)
+    } catch (err: any) {
+      console.error('[addBypassUser] email failure:', err.message)
     }
   }
 
@@ -177,43 +189,56 @@ export async function addBypassOrg(data: {
 
   // Create admin user if email provided
   if (data.adminEmail) {
-    const { data: authData } = await admin.auth.admin.createUser({
+    let authDataFinal: any = null
+    const { data: authData, error: authErr } = await admin.auth.admin.createUser({
       email: data.adminEmail,
       email_confirm: true,
       user_metadata: { full_name: `${data.adminFirstName} ${data.adminLastName}` },
     })
-    if (authData?.user) {
-      const adminUserId = authData.user.id
+    
+    if (authErr) {
+      if (authErr.message.includes('already registered')) {
+        const { data: existing } = await admin.from('profiles').select('id').eq('email', data.adminEmail).single()
+        authDataFinal = { user: existing }
+      } else {
+        console.error('[addBypassOrg] admin creation failed:', authErr.message)
+      }
+    } else {
+      authDataFinal = authData
+    }
+
+    if (authDataFinal?.user) {
+      const adminUserId = authDataFinal.user.id
       await admin.from('profiles').upsert({
         id: adminUserId, email: data.adminEmail,
         full_name: `${data.adminFirstName} ${data.adminLastName}`,
         membership_tier: data.tier, org_id: org.id,
         institution_type: data.segment === 'education' ? 'education' : data.segment === 'leadership' ? 'leadership' : 'business',
       })
-      await admin.from('organization_members').insert({
+      await admin.from('organization_members').upsert({
         org_id: org.id, user_id: adminUserId, role: 'admin', is_active: true,
-      })
+      }, { onConflict: 'org_id,user_id' })
+
       // Update org seats_used
       await admin.from('organizations').update({ seats_used: 1 }).eq('id', org.id)
       
       if (data.sendOnboarding) {
         try {
-          let appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com'
-          // Cleanup: remove any accidental quotes or trailing slashes
-          appUrl = appUrl.replace(/["]/g, '').replace(/\/$/, '')
+          let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
+          appUrl = appUrl.replace(/["]/g, ':').replace(/\/$/, '')
+          if (!appUrl.startsWith('http')) appUrl = `https://${appUrl}`
 
-          const { data: linkData } = await admin.auth.admin.generateLink({
+          const { data: linkData, error: lErr } = await admin.auth.admin.generateLink({
             type: 'recovery',
             email: data.adminEmail,
             options: { redirectTo: `${appUrl}/reset-password` },
           })
           
+          if (lErr) console.warn('[addBypassOrg] generateLink error:', lErr)
+
           let setupUrl = `${appUrl}/auth/login`
           if (linkData?.properties?.action_link) {
-            // Construct the branded setup URL safely using the URL object
-            const setupBase = new URL(`${appUrl}/auth/setup`)
-            setupBase.searchParams.set('link', linkData.properties.action_link)
-            setupUrl = setupBase.toString()
+            setupUrl = `${appUrl}/auth/setup?link=${encodeURIComponent(linkData.properties.action_link)}`
           }
           const fullName = `${data.adminFirstName} ${data.adminLastName}`
           
@@ -222,8 +247,9 @@ export async function addBypassOrg(data: {
             subject: `Welcome to ${data.name} on Vibe Hyr`,
             html: bypassWelcomeTemplate(fullName, data.tier, setupUrl),
           })
-        } catch (emailErr) {
-          console.error('[addBypassOrg] Welcome email failed:', emailErr)
+          console.log('[addBypassOrg] Welcome email sent to:', data.adminEmail)
+        } catch (err: any) {
+          console.error('[addBypassOrg] email failure:', err.message)
         }
       }
     }
