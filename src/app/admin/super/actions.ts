@@ -307,10 +307,37 @@ export async function deleteOrganization(
   if (!sa) return { success: false, error: 'Unauthorized' }
 
   const admin = createAdminClient()
-  const { error } = await admin.from('organizations').delete().eq('id', orgId)
-  if (error) return { success: false, error: error.message }
 
-  await logAudit(sa.userId, sa.email, 'ORGANIZATION_DELETED', 'organization', orgId, orgName, null)
+  // 1. Fetch all associated user IDs to perform a clean sweep from Auth
+  // (Profiles will cascade delete automatically once the Auth user is gone)
+  const { data: members } = await admin.from('organization_members').select('user_id').eq('org_id', orgId)
+  const { data: profiles } = await admin.from('profiles').select('id').eq('org_id', orgId)
+  
+  const userIds = new Set<string>()
+  members?.forEach(m => { if (m.user_id) userIds.add(m.user_id) })
+  profiles?.forEach(p => userIds.add(p.id))
+
+  // 2. Delete each user account from Supabase Auth (Hard delete)
+  const deletionResults = await Promise.allSettled(
+    Array.from(userIds).map(async (uid) => {
+      if (uid === sa.userId) return // Safety: never delete the super admin performing the action
+      const { error } = await admin.auth.admin.deleteUser(uid)
+      if (error) throw error
+    })
+  )
+
+  const failedCount = deletionResults.filter(r => r.status === 'rejected').length
+  if (failedCount > 0) {
+    console.warn(`[deleteOrganization] Cleanup partially failed: ${failedCount} users could not be deleted from Auth.`)
+  }
+
+  // 3. Delete the organization record (triggers DB cascades for metadata)
+  const { error: orgDelErr } = await admin.from('organizations').delete().eq('id', orgId)
+  if (orgDelErr) return { success: false, error: orgDelErr.message }
+
+  await logAudit(sa.userId, sa.email, 'ORGANIZATION_DELETED', 'organization', orgId, orgName, 
+    `Permanent deletion: Organization and all associated user accounts wiped.`)
+  
   revalidatePath('/admin/super')
   return { success: true }
 }
