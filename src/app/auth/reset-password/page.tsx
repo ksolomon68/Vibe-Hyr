@@ -43,8 +43,15 @@ export default function ResetPasswordPage() {
     setLoading(true)
     const supabase  = createClient()
     const { error } = await supabase.auth.updateUser({ password })
+    
     if (error) {
-      toast.error(error.message)
+      if (error.message.includes('sub claim') || error.message.includes('does not exist')) {
+        toast.error('Session expired or user deleted. Signing out...')
+        await supabase.auth.signOut()
+        setTimeout(() => router.push('/auth/login'), 2000)
+      } else {
+        toast.error(error.message)
+      }
       setLoading(false)
     } else {
       setDone(true)
