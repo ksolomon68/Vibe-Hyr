@@ -105,7 +105,12 @@ export async function addBypassUser(data: {
         email: data.email,
         options: { redirectTo: `${appUrl}/auth/reset-password` },
       })
-      const setupUrl = linkData?.properties?.action_link ?? `${appUrl}/auth/login`
+
+      let setupUrl = `${appUrl}/auth/login`
+      if (linkData?.properties?.action_link) {
+        // Mask the supabase URL with our own branded redirect
+        setupUrl = `${appUrl}/auth/setup?link=${encodeURIComponent(linkData.properties.action_link)}`
+      }
       const fullName = `${data.firstName} ${data.lastName}`
       await sendEmail({
         to: data.email,
@@ -194,7 +199,12 @@ export async function addBypassOrg(data: {
             email: data.adminEmail,
             options: { redirectTo: `${appUrl}/auth/reset-password` },
           })
-          const setupUrl = linkData?.properties?.action_link ?? `${appUrl}/auth/login`
+          
+          let setupUrl = `${appUrl}/auth/login`
+          if (linkData?.properties?.action_link) {
+            // Mask the supabase URL with our own branded redirect
+            setupUrl = `${appUrl}/auth/setup?link=${encodeURIComponent(linkData.properties.action_link)}`
+          }
           const fullName = `${data.adminFirstName} ${data.adminLastName}`
           
           await sendEmail({
