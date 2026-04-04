@@ -21,13 +21,37 @@ export default function ResetPasswordPage() {
   // If no session exists the user arrived without a valid reset link.
   useEffect(() => {
     const supabase = createClient()
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        router.replace('/auth/login')
-      } else {
+    
+    // 1. Listen for the INITIAL session (consumes the hash)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
         setSessionReady(true)
+      } else if (event === 'SIGNED_OUT') {
+        const hasHash = window.location.hash.includes('access_token')
+        if (!hasHash) router.replace('/auth/login')
       }
     })
+
+    // 2. Fallback: check if we already have a session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setSessionReady(true)
+      } else {
+        // If there's a hash, the SDK is likely still processing it.
+        // If NO hash and NO session, then it's a truly invalid access.
+        const hasHash = window.location.hash.includes('access_token')
+        if (!hasHash) {
+          // Small delay for the SDK just in case
+          setTimeout(() => {
+            supabase.auth.getSession().then(({ data: { session: s2 } }) => {
+              if (!s2) router.replace('/auth/login')
+            })
+          }, 1500)
+        }
+      }
+    })
+
+    return () => subscription.unsubscribe()
   }, [router])
 
   async function handleSubmit(e: React.FormEvent) {
