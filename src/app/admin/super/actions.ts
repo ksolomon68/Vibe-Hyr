@@ -646,3 +646,77 @@ export async function reorderLessons(
   if (error) return { success: false, error: error.message }
   return { success: true }
 }
+
+// ── Sync Leadership courses from curriculum into course_lessons ───────────────
+
+export async function syncLeadershipCourses(): Promise<ActionResult & { seeded: number }> {
+  const sa = await requireSuperAdmin()
+  if (!sa) return { success: false, error: 'Unauthorized', seeded: 0 }
+
+  const { COURSES } = await import('@/lib/leadership/curriculum')
+  const admin = createAdminClient()
+
+  // course_id mapping: leadership_course_N → integer 12 + N
+  const COURSE_ID_MAP: Record<string, number> = {
+    leadership_course_1: 13,
+    leadership_course_2: 14,
+    leadership_course_3: 15,
+    leadership_course_4: 16,
+  }
+
+  let seeded = 0
+
+  for (const course of COURSES) {
+    const courseId = COURSE_ID_MAP[course.id]
+    if (!courseId) continue
+
+    // Only seed if the course has no lessons yet
+    const { count } = await admin
+      .from('course_lessons')
+      .select('id', { count: 'exact', head: true })
+      .eq('course_id', courseId)
+
+    if ((count ?? 0) > 0) continue
+
+    const lessons = course.lessons.map((lesson, index) => {
+      const content = [
+        lesson.description,
+        '',
+        'KEY CONCEPTS',
+        ...lesson.keyConcepts.map(c => `• ${c}`),
+        '',
+        'NEUROSCIENCE ANCHOR',
+        lesson.neuroscienceAnchor,
+        '',
+        'LAW ANCHOR',
+        lesson.lawAnchor,
+      ].join('\n')
+
+      return {
+        course_id:    courseId,
+        title:        lesson.title,
+        type:         'text' as const,
+        youtube_url:  null,
+        content,
+        sort_order:   index + 1,
+        is_published: false,
+        is_preview:   index === 0,
+        created_at:   new Date().toISOString(),
+        updated_at:   new Date().toISOString(),
+      }
+    })
+
+    const { error } = await admin.from('course_lessons').insert(lessons)
+    if (error) {
+      console.error(`[syncLeadershipCourses] Failed for course ${courseId}:`, error)
+      continue
+    }
+    seeded += lessons.length
+  }
+
+  await logAudit(sa.userId, sa.email, 'LEADERSHIP_COURSES_SYNCED', 'course', null, null,
+    `Seeded ${seeded} lessons across leadership courses`)
+
+  revalidatePath('/admin/super')
+  return { success: true, seeded }
+}

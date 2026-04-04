@@ -3,7 +3,7 @@
 import { useState, useEffect, useTransition, useCallback } from 'react'
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
 import {
-  listCourseLessons, upsertLesson, deleteCmsLesson, reorderLessons,
+  listCourseLessons, upsertLesson, deleteCmsLesson, reorderLessons, syncLeadershipCourses,
   type CmsLesson,
 } from '@/app/admin/super/actions'
 
@@ -476,6 +476,7 @@ export function CourseManagerPage({ onToast }: { onToast: (msg: string) => void 
   const [editLesson, setEditLesson]         = useState<CmsLesson | null>(null)
   const [showEditor, setShowEditor]         = useState(false)
   const [isPending, startTransition]        = useTransition()
+  const [syncing, setSyncing]               = useState(false)
 
   const fetchLessons = useCallback(async (courseId: number) => {
     setLoading(true)
@@ -495,6 +496,18 @@ export function CourseManagerPage({ onToast }: { onToast: (msg: string) => void 
   function openEdit(lesson: CmsLesson) {
     setEditLesson(lesson)
     setShowEditor(true)
+  }
+
+  async function handleSyncLeadership() {
+    setSyncing(true)
+    const res = await syncLeadershipCourses()
+    setSyncing(false)
+    if (res.success) {
+      onToast(res.seeded > 0 ? `Synced ${res.seeded} leadership lessons from curriculum.` : 'Leadership lessons already seeded — nothing to sync.')
+      fetchLessons(selectedCourse)
+    } else {
+      onToast(`Sync failed: ${res.error}`)
+    }
   }
 
   function handleSaved(msg: string) {
@@ -616,7 +629,14 @@ export function CourseManagerPage({ onToast }: { onToast: (msg: string) => void 
                 {isPending && <span style={{ marginLeft: 8, color: C.gold }}>· Saving order…</span>}
               </div>
             </div>
-            <Btn variant="primary" size="md" onClick={openNew}>+ Add Lesson</Btn>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {activeCategory === 'leadership' && (
+                <Btn variant="gold" size="md" onClick={handleSyncLeadership} disabled={syncing}>
+                  {syncing ? 'Syncing…' : '⟳ Sync from Curriculum'}
+                </Btn>
+              )}
+              <Btn variant="primary" size="md" onClick={openNew}>+ Add Lesson</Btn>
+            </div>
           </div>
 
           {/* Empty state */}
