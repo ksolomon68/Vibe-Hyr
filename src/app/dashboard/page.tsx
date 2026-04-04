@@ -10,6 +10,7 @@ import type { PersonalTier } from '@/components/pricing/PersonalCheckoutModal'
 import { COURSES } from '@/lib/data/courses'
 import { TRACKS } from '@/lib/business/curriculum'
 import { PROGRAMS } from '@/lib/education/curriculum'
+import { COURSES as LEADERSHIP_COURSES } from '@/lib/leadership/curriculum'
 
 export const metadata = { title: 'Dashboard' }
 
@@ -29,6 +30,13 @@ const PROGRAM_TIERS: Record<string, string> = {
   'vibrational-leadership': 'architect',
   'co-regulation-mastery': 'architect',
   'the-retained-educator': 'elite',
+}
+
+// Leadership tier mapping
+const LEADERSHIP_TIERS: Record<string, string> = {
+  seeker:         'free',
+  architect:      'architect',
+  reality_master: 'elite',
 }
 
 export default async function DashboardPage() {
@@ -66,6 +74,7 @@ export default async function DashboardPage() {
   let personalProgress:  Array<{ course_id: string; progress_percent: number }> = []
   let educationProgress: Array<{ program_id: string; module_id: string }> = []
   let workplaceProgress: Array<{ track_id: string; lesson_id: string }> = []
+  let leadershipProgress: Array<{ course_id: string; lesson_id: string }> = []
 
   if (institutionType === 'education') {
     const { data } = await supabase
@@ -79,6 +88,12 @@ export default async function DashboardPage() {
       .select('track_id, lesson_id')
       .eq('user_id', user.id)
     workplaceProgress = data ?? []
+  } else if (institutionType === 'leadership') {
+    const { data } = await supabase
+      .from('leadership_progress')
+      .select('course_id, lesson_id')
+      .eq('user_id', user.id)
+    leadershipProgress = data ?? []
   } else {
     // individual (or super admin)
     const { data } = await supabase
@@ -98,7 +113,7 @@ export default async function DashboardPage() {
   const QUICK_LINKS = [
     { href: '/journal',   icon: BookOpen, label: "Tonight's Revision", desc: 'Open the nightly journal' },
     {
-      href: institutionType === 'education' ? '/educators' : institutionType === 'business' ? '/business' : '/personal',
+      href: institutionType === 'education' ? '/educators' : institutionType === 'business' ? '/business' : institutionType === 'leadership' ? '/leadership' : '/personal',
       icon: Target,
       label: 'Continue Course',
       desc: 'Pick up where you left off',
@@ -150,6 +165,21 @@ export default async function DashboardPage() {
     const nextModule = program.modules.find(m => !completedModules.includes(m.id)) ?? program.modules[0]
     const href = `/educators/${program.slug}/${nextModule.id}`
     return { ...program, hasAccess, progress: pct, href }
+  })
+
+  // Leadership courses
+  const leadershipCourses = LEADERSHIP_COURSES.map(course => {
+    const completedLessons = leadershipProgress
+      .filter(p => p.course_id === course.id)
+      .map(p => p.lesson_id)
+    const total     = course.lessons.length
+    const done      = completedLessons.length
+    const pct       = total ? Math.round((done / total) * 100) : 0
+    const mappedTier = LEADERSHIP_TIERS[course.tierRequired] ?? 'free'
+    const hasAccess  = isSuperAdmin || TIER_RANK[tier] >= TIER_RANK[mappedTier] || grantedSlugs.has(course.id)
+    const nextLesson = course.lessons.find(l => !completedLessons.includes(l.id)) ?? course.lessons[0]
+    const href = `/leadership/${course.id}?lesson=${nextLesson.id}`
+    return { ...course, hasAccess, progress: pct, href }
   })
 
   return (
@@ -285,7 +315,7 @@ export default async function DashboardPage() {
                       {personalCourses.map((course, i) => (
                         <div
                           key={i}
-                          className="flex items-center gap-5 p-5 bg-black-2 border border-white/8 hover:border-orange/30 transition-all"
+                          className="flex items-center gap-5 p-5 bg-black-2 border border-white/8 hover:border-orange/30 transition-all font-sans"
                         >
                           <div className="font-display text-3xl text-orange/20 leading-none w-12 flex-shrink-0">
                             {String(course.order_index).padStart(2, '0')}
@@ -328,7 +358,7 @@ export default async function DashboardPage() {
 
                 {/* ── BUSINESS TRACKS ── */}
                 {(institutionType === 'business' || isSuperAdmin) && (
-                  <div className={institutionType === 'individual' ? 'mt-10' : ''}>
+                  <div className={(institutionType === 'individual' || isSuperAdmin) ? 'mt-10' : ''}>
                     <h2 className="font-display text-2xl tracking-widest text-white mb-5">
                       WORKPLACE TRAINING
                     </h2>
@@ -336,7 +366,7 @@ export default async function DashboardPage() {
                       {businessTracks.map((track, i) => (
                         <div
                           key={i}
-                          className="flex items-center gap-5 p-5 bg-black-2 border border-white/8 hover:border-orange/30 transition-all"
+                          className="flex items-center gap-5 p-5 bg-black-2 border border-white/8 hover:border-orange/30 transition-all font-sans"
                         >
                           <div className="font-display text-3xl text-orange/20 leading-none w-12 flex-shrink-0">
                             {track.num}
@@ -376,7 +406,7 @@ export default async function DashboardPage() {
 
                 {/* ── EDUCATION PROGRAMS ── */}
                 {(institutionType === 'education' || isSuperAdmin) && (
-                  <div className={institutionType === 'individual' ? 'mt-10' : ''}>
+                  <div className={(institutionType === 'individual' || isSuperAdmin) ? 'mt-10' : ''}>
                     <h2 className="font-display text-2xl tracking-widest text-white mb-5">
                       EDUCATOR PROGRAMS
                     </h2>
@@ -384,7 +414,7 @@ export default async function DashboardPage() {
                       {educationPrograms.map((program, i) => (
                         <div
                           key={i}
-                          className="flex items-center gap-5 p-5 bg-black-2 border border-white/8 hover:border-orange/30 transition-all"
+                          className="flex items-center gap-5 p-5 bg-black-2 border border-white/8 hover:border-orange/30 transition-all font-sans"
                         >
                           <div className="font-display text-3xl text-orange/20 leading-none w-12 flex-shrink-0">
                             {program.num}
@@ -409,6 +439,54 @@ export default async function DashboardPage() {
                                 className="font-mono text-[0.58rem] tracking-widest uppercase text-orange hover:text-orange-light transition-colors flex items-center gap-1"
                               >
                                 {program.progress > 0 ? 'Continue' : 'Start'} <ArrowRight size={10} />
+                              </Link>
+                            ) : (
+                              <span className="font-mono text-[0.58rem] tracking-widest uppercase text-grey-dark">
+                                Locked
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── LEADERSHIP ARCHITECTURE ── */}
+                {(institutionType === 'leadership' || isSuperAdmin) && (
+                  <div className={(institutionType === 'individual' || isSuperAdmin) ? 'mt-10' : ''}>
+                    <h2 className="font-display text-2xl tracking-widest text-white mb-5">
+                      THE ARCHITECTURE OF IMPACT
+                    </h2>
+                    <div className="flex flex-col gap-3">
+                      {leadershipCourses.map((course, i) => (
+                        <div
+                          key={i}
+                          className="flex items-center gap-5 p-5 bg-black-2 border border-white/8 hover:border-orange/30 transition-all font-sans"
+                        >
+                          <div className="font-display text-3xl text-orange/20 leading-none w-12 flex-shrink-0">
+                            {String(course.num).padStart(2, '0')}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-display text-base tracking-[0.04em] text-white leading-tight mb-0.5 truncate">
+                              {course.title}
+                            </p>
+                            <p className="font-body text-xs italic text-grey-dark truncate">
+                              {course.subtitle}
+                            </p>
+                            {course.hasAccess && (
+                              <div className="mt-2 h-px bg-black-4">
+                                <div className="h-px bg-orange" style={{ width: `${course.progress}%` }} />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-shrink-0">
+                            {course.hasAccess ? (
+                              <Link
+                                href={course.href}
+                                className="font-mono text-[0.58rem] tracking-widest uppercase text-orange hover:text-orange-light transition-colors flex items-center gap-1"
+                              >
+                                {course.progress > 0 ? 'Continue' : 'Start'} <ArrowRight size={10} />
                               </Link>
                             ) : (
                               <span className="font-mono text-[0.58rem] tracking-widest uppercase text-grey-dark">
