@@ -584,8 +584,10 @@ export async function upsertLesson(lesson: {
     course_id:   lesson.course_id,
     title,
     type:        lesson.type,
-    youtube_url: lesson.type === 'video' ? (lesson.youtube_url?.trim() ?? null) : null,
-    content:     lesson.type === 'text'  ? (lesson.content ?? null) : null,
+    // Preserve both fields independently — don't null one when switching types.
+    // The lesson type controls which field the player renders, not which is stored.
+    youtube_url: lesson.youtube_url?.trim() ?? null,
+    content:     lesson.content ?? null,
     sort_order:  lesson.sort_order,
     is_published: lesson.is_published,
     is_preview:   lesson.is_preview,
