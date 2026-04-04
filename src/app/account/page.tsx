@@ -22,7 +22,7 @@ export default function AccountSettingsPage() {
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
-    institution_type: 'individual' as 'individual' | 'education' | 'business',
+    institution_type: 'individual' as 'individual' | 'education' | 'business' | 'leadership',
     membership_tier: 'free' as 'free' | 'architect' | 'elite'
   })
 

@@ -2,7 +2,7 @@
 // Server-side course access matrix — checks BOTH membership tier AND institution type.
 // All access logic must run server-side only. Never trust client-side tier checks.
 
-export type InstitutionType = 'individual' | 'education' | 'business'
+export type InstitutionType = 'individual' | 'education' | 'business' | 'leadership'
 export type AccessDeniedReason = 'institution_blocked' | 'tier_required'
 
 interface AccessRule {
@@ -27,19 +27,19 @@ interface AccessRule {
 const COURSE_ACCESS_MATRIX: Record<string, AccessRule> = {
   'programming-the-gatekeeper': {
     tiers: ['free', 'architect', 'elite'],
-    institutionTypes: ['individual', 'education', 'business'],
+    institutionTypes: ['individual', 'education', 'business', 'leadership'],
   },
   'mastery-of-the-law-of-assumption': {
     tiers: ['architect', 'elite'],
-    institutionTypes: ['individual', 'education', 'business'],
+    institutionTypes: ['individual', 'education', 'business', 'leadership'],
   },
   'subconscious-reprogramming-sats': {
     tiers: ['architect', 'elite'],
-    institutionTypes: ['individual', 'business'],
+    institutionTypes: ['individual', 'business', 'leadership'],
   },
   'navigating-the-echo-theory-delay': {
     tiers: ['elite'],
-    institutionTypes: ['individual', 'education', 'business'],
+    institutionTypes: ['individual', 'education', 'business', 'leadership'],
   },
 }
 

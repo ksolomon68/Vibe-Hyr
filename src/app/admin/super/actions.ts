@@ -154,7 +154,7 @@ export async function addBypassOrg(data: {
         id: adminUserId, email: data.adminEmail,
         full_name: `${data.adminFirstName} ${data.adminLastName}`,
         membership_tier: data.tier, org_id: org.id,
-        institution_type: data.segment === 'education' ? 'education' : 'business',
+        institution_type: data.segment === 'education' ? 'education' : data.segment === 'leadership' ? 'leadership' : 'business',
       })
       await admin.from('organization_members').insert({
         org_id: org.id, user_id: adminUserId, role: 'admin', is_active: true,
@@ -431,7 +431,7 @@ export async function inviteUserBySuperAdmin(data: {
         id:               inviteData.user.id,
         email:            data.email,
         org_id:           data.orgId,
-        institution_type: data.institutionType as 'individual' | 'education' | 'business',
+        institution_type: data.institutionType as 'individual' | 'education' | 'business' | 'leadership',
         role:             data.role,
         membership_tier:  data.membershipTier,
         membership_type:  data.institutionType === 'individual' ? 'personal' : data.institutionType,

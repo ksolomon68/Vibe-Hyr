@@ -37,6 +37,12 @@ const COURSES = [
   { id: 10, name: 'Vibrational Leadership',             category: 'education',  tag: 'Education',           tier: 'Architect' },
   { id: 11, name: 'Co-Regulation Mastery',              category: 'education',  tag: 'Education',           tier: 'Architect' },
   { id: 12, name: 'The Retained Educator',              category: 'education',  tag: 'Education',           tier: 'Elite' },
+
+  // Leadership
+  { id: 13, name: 'The Internal Authority',             category: 'leadership', tag: 'Leadership',          tier: 'Free' },
+  { id: 14, name: 'Visionary Architecture',             category: 'leadership', tag: 'Leadership',          tier: 'Architect' },
+  { id: 15, name: 'The Bridge of Incidents',            category: 'leadership', tag: 'Leadership',          tier: 'Architect' },
+  { id: 16, name: 'Echo Theory Mastery',                category: 'leadership', tag: 'Leadership',          tier: 'Elite' },
 ]
 
 // ── YouTube helpers ───────────────────────────────────────────────────────────
@@ -463,7 +469,7 @@ function LessonEditorModal({
 // ══════════════════════════════════════════════════════════════════════════════
 
 export function CourseManagerPage({ onToast }: { onToast: (msg: string) => void }) {
-  const [activeCategory, setActiveCategory] = useState<'individual' | 'business' | 'education'>('individual')
+  const [activeCategory, setActiveCategory] = useState<'individual' | 'business' | 'education' | 'leadership'>('individual')
   const [selectedCourse, setSelectedCourse] = useState(1)
   const [lessons, setLessons]               = useState<CmsLesson[]>([])
   const [loading, setLoading]               = useState(false)
@@ -528,7 +534,7 @@ export function CourseManagerPage({ onToast }: { onToast: (msg: string) => void 
         <div style={{ width: 220, flexShrink: 0 }}>
           {/* Category Tabs */}
           <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: C.dark2, padding: 4, borderRadius: 4 }}>
-            {(['individual', 'business', 'education'] as const).map(cat => {
+            {(['individual', 'business', 'education', 'leadership'] as const).map(cat => {
               const active = activeCategory === cat
               return (
                 <button
@@ -548,7 +554,7 @@ export function CourseManagerPage({ onToast }: { onToast: (msg: string) => void 
                     border: 'none',
                   }}
                 >
-                  {cat === 'individual' ? 'Personal' : cat}
+                  {cat === 'individual' ? 'Personal' : cat === 'education' ? 'Educators' : cat === 'leadership' ? 'Leadership' : cat}
                 </button>
               )
             })}

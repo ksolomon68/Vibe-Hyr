@@ -104,6 +104,8 @@ function EditUserModal({
 
   const roles = orgSegment === 'education'
     ? ['educator', 'institution_admin']
+    : orgSegment === 'leadership'
+    ? ['leader', 'institution_admin']
     : ['business', 'institution_admin']
 
   async function handleSave() {
@@ -206,11 +208,13 @@ function InviteModal({
   onToast: (m: string) => void
 }) {
   const [emailsText, setEmailsText] = useState('')
-  const [role, setRole]             = useState(orgSegment === 'education' ? 'educator' : 'business')
+  const [role, setRole]             = useState(orgSegment === 'education' ? 'educator' : orgSegment === 'leadership' ? 'leader' : 'business')
   const [sending, setSending]       = useState(false)
 
   const roles = orgSegment === 'education'
     ? ['educator', 'institution_admin']
+    : orgSegment === 'leadership'
+    ? ['leader', 'institution_admin']
     : ['business', 'institution_admin']
 
   const inputStyle: React.CSSProperties = {
@@ -764,7 +768,7 @@ export function InstitutionalAdminDashboard({ org, members, adminName }: Props) 
   ]
 
   const initials    = adminName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
-  const segmentLabel = org.segment === 'education' ? 'Education' : org.segment === 'smb' ? 'SMB' : 'Corporate'
+  const segmentLabel = org.segment === 'education' ? 'Education' : org.segment === 'leadership' ? 'Leadership' : org.segment === 'smb' ? 'SMB' : 'Corporate'
 
   return (
     <>

@@ -1,8 +1,8 @@
 // ── USER & AUTH ──────────────────────────────────────────────────────────────
 
 export type MembershipTier = 'free' | 'architect' | 'elite'
-export type InstitutionType = 'individual' | 'education' | 'business'
-export type UserRole = 'super_admin' | 'institution_admin' | 'educator' | 'business' | 'personal'
+export type InstitutionType = 'individual' | 'education' | 'business' | 'leadership'
+export type UserRole = 'super_admin' | 'institution_admin' | 'educator' | 'business' | 'personal' | 'leader'
 
 export interface Profile {
   id: string

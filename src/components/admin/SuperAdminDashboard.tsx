@@ -98,11 +98,13 @@ function tierPill(tier: string) {
 function segPill(seg: string) {
   if (seg === 'education') return <Pill v="edu" label="Education"/>
   if (seg === 'business' || seg === 'corporate' || seg === 'smb') return <Pill v="biz" label="Business"/>
+  if (seg === 'leadership') return <Pill v="gold" label="Leadership"/>
   return                         <Pill v="ind" label="Individual"/>
 }
 function typePill(type: string) {
   if (type === 'education') return <Pill v="edu" label="Education"/>
   if (type === 'business')  return <Pill v="biz" label="Business"/>
+  if (type === 'leadership') return <Pill v="gold" label="Leadership"/>
   return                           <Pill v="ind" label="Individual"/>
 }
 
@@ -305,6 +307,7 @@ function AddUserModal({ open, onClose, onSuccess, orgOptions }: {
             <option value="individual">Individual</option>
             <option value="education">Education</option>
             <option value="business">Business</option>
+            <option value="leadership">Leadership</option>
           </select>
         </FField>
         <FField label="Assign to Organization (optional)">
@@ -364,6 +367,7 @@ function AddOrgModal({ open, onClose, onSuccess }: { open: boolean; onClose: ()=
             <option value="corporate">Business / Corporate</option>
             <option value="smb">Small Business</option>
             <option value="education">Education</option>
+            <option value="leadership">Leadership</option>
             <option value="nonprofit">Non-Profit</option>
           </select>
         </FField>
@@ -524,6 +528,7 @@ function EditUserModal({ open, onClose, onSuccess, user, orgOptions }: {
                 <option value="individual">Individual</option>
                 <option value="education">Education</option>
                 <option value="business">Business</option>
+                <option value="leadership">Leadership</option>
               </select>
             </FField>
             <FField label="Organization (optional)" span2>
@@ -820,7 +825,7 @@ function UsersPage({ users, onToast, onAddUser, onInviteUser, onEdit, onDelete }
     <div>
       <div style={{ display:'flex', gap:10, marginBottom:14 }}>
         <SearchInput placeholder="Search all users..." value={query} onChange={setQuery}/>
-        <FilterSel value={typeF} onChange={setTypeF} options={['All Types','individual','education','business']}/>
+        <FilterSel value={typeF} onChange={setTypeF} options={['All Types','individual','education','business','leadership']}/>
         <FilterSel value={tierF} onChange={setTierF} options={['All Tiers','free','architect','elite']}/>
         <Btn variant="gold" size="sm" onClick={onInviteUser}>+ Invite User</Btn>
         <Btn variant="primary" size="sm" onClick={onAddUser}>+ Add User (Bypass)</Btn>
@@ -1008,6 +1013,7 @@ function InviteUserModal({ open, onClose, onSuccess, orgOptions }: {
             <option value="individual">Individual</option>
             <option value="education">Education</option>
             <option value="business">Business</option>
+            <option value="leadership">Leadership</option>
           </select>
         </FField>
         <FField label="Role">
@@ -1015,6 +1021,7 @@ function InviteUserModal({ open, onClose, onSuccess, orgOptions }: {
             <option value="personal">Personal</option>
             <option value="business">Business</option>
             <option value="educator">Educator</option>
+            <option value="leader">Leadership</option>
             <option value="institution_admin">Institution Admin</option>
           </select>
         </FField>
