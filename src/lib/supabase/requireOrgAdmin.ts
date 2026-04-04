@@ -78,7 +78,7 @@ export async function requireOrgAdmin(): Promise<OrgAdminResult> {
   // 3. Verify organization type (education | business only)
   const { data: org, error: orgErr } = await admin
     .from('organizations')
-    .select('id, name, type, plan, seat_limit, seats_used')
+    .select('id, name, segment, tier, seats_purchased, seats_used')
     .eq('id', membership.org_id)
     .single()
 
@@ -89,24 +89,19 @@ export async function requireOrgAdmin(): Promise<OrgAdminResult> {
     }
   }
 
-  if (!['education', 'business'].includes(org.type)) {
-    return {
-      ctx:   null,
-      error: NextResponse.json(
-        { error: 'Forbidden: member management is only available for education and business accounts' },
-        { status: 403 }
-      ),
-    }
-  }
+  // Map the segment column (education | corporate | smb | nonprofit | leadership | ...)
+  // to the binary education / business type used throughout the app.
+  const orgType: 'education' | 'business' =
+    org.segment === 'education' ? 'education' : 'business'
 
   return {
     ctx: {
       userId:    user.id,
       orgId:     org.id,
       orgName:   org.name,
-      orgType:   org.type as 'education' | 'business',
-      orgPlan:   org.plan,
-      seatLimit: org.seat_limit ?? 50,
+      orgType,
+      orgPlan:   org.tier,
+      seatLimit: org.seats_purchased ?? 50,
       seatsUsed: org.seats_used ?? 0,
     },
     error: null,
