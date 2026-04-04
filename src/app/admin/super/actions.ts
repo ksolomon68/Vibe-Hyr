@@ -99,17 +99,22 @@ export async function addBypassUser(data: {
   // Send welcome email with password-setup link if requested
   if (data.sendWelcomeEmail) {
     try {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com'
+      let appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com'
+      // Cleanup: remove any accidental quotes or trailing slashes
+      appUrl = appUrl.replace(/["]/g, '').replace(/\/$/, '')
+      
       const { data: linkData } = await admin.auth.admin.generateLink({
         type: 'recovery',
         email: data.email,
-        options: { redirectTo: `${appUrl}/auth/reset-password` },
+        options: { redirectTo: `${appUrl}/reset-password` },
       })
 
       let setupUrl = `${appUrl}/auth/login`
       if (linkData?.properties?.action_link) {
-        // Mask the supabase URL with our own branded redirect
-        setupUrl = `${appUrl}/auth/setup?link=${encodeURIComponent(linkData.properties.action_link)}`
+        // Construct the branded setup URL safely using the URL object
+        const setupBase = new URL(`${appUrl}/auth/setup`)
+        setupBase.searchParams.set('link', linkData.properties.action_link)
+        setupUrl = setupBase.toString()
       }
       const fullName = `${data.firstName} ${data.lastName}`
       await sendEmail({
@@ -193,17 +198,22 @@ export async function addBypassOrg(data: {
       
       if (data.sendOnboarding) {
         try {
-          const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com'
+          let appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com'
+          // Cleanup: remove any accidental quotes or trailing slashes
+          appUrl = appUrl.replace(/["]/g, '').replace(/\/$/, '')
+
           const { data: linkData } = await admin.auth.admin.generateLink({
             type: 'recovery',
             email: data.adminEmail,
-            options: { redirectTo: `${appUrl}/auth/reset-password` },
+            options: { redirectTo: `${appUrl}/reset-password` },
           })
           
           let setupUrl = `${appUrl}/auth/login`
           if (linkData?.properties?.action_link) {
-            // Mask the supabase URL with our own branded redirect
-            setupUrl = `${appUrl}/auth/setup?link=${encodeURIComponent(linkData.properties.action_link)}`
+            // Construct the branded setup URL safely using the URL object
+            const setupBase = new URL(`${appUrl}/auth/setup`)
+            setupBase.searchParams.set('link', linkData.properties.action_link)
+            setupUrl = setupBase.toString()
           }
           const fullName = `${data.adminFirstName} ${data.adminLastName}`
           
