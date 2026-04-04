@@ -251,7 +251,7 @@ export async function POST(req: NextRequest) {
   try {
     let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
     // Fix malformed URLs: replace " with :, ensure protocol, and handle 0.0.0.0
-    appUrl = appUrl.replace(/["]/g, ':').replace(/\/$/, '')
+    appUrl = appUrl.replace(/["]/g, '').replace(/\/$/, '')
     if (appUrl.includes('0.0.0.0')) appUrl = appUrl.replace('0.0.0.0', 'localhost')
     if (!appUrl.startsWith('http')) appUrl = `https://${appUrl}`
 

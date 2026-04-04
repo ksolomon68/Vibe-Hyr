@@ -110,8 +110,8 @@ export async function addBypassUser(data: {
   if (data.sendWelcomeEmail) {
     try {
       let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
-      // Fix malformed URLs: replace " with :, ensure protocol, and fix dev hostname 0.0.0.0
-      appUrl = appUrl.replace(/["]/g, ':').replace(/\/$/, '')
+      // Fix malformed URLs: remove quotes, ensure protocol, and fix dev hostname 0.0.0.0
+      appUrl = appUrl.replace(/["]/g, '').replace(/\/$/, '')
       if (appUrl.includes('0.0.0.0')) appUrl = appUrl.replace('0.0.0.0', 'localhost')
       if (!appUrl.startsWith('http')) appUrl = `https://${appUrl}`
       
@@ -227,7 +227,7 @@ export async function addBypassOrg(data: {
       if (data.sendOnboarding) {
         try {
           let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
-          appUrl = appUrl.replace(/["]/g, ':').replace(/\/$/, '')
+          appUrl = appUrl.replace(/["]/g, '').replace(/\/$/, '')
           if (appUrl.includes('0.0.0.0')) appUrl = appUrl.replace('0.0.0.0', 'localhost')
           if (!appUrl.startsWith('http')) appUrl = `https://${appUrl}`
 
@@ -541,7 +541,11 @@ export async function inviteUserBySuperAdmin(data: {
   if (!sa) return { success: false, error: 'Unauthorized' }
 
   const admin  = createAdminClient()
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com'
+  let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
+  // Fix malformed URLs
+  appUrl = appUrl.replace(/["]/g, '').replace(/\/$/, '')
+  if (appUrl.includes('0.0.0.0')) appUrl = appUrl.replace('0.0.0.0', 'localhost')
+  if (!appUrl.startsWith('http')) appUrl = `https://${appUrl}`
 
   const { data: inviteData, error: inviteError } = await admin.auth.admin.inviteUserByEmail(
     data.email,
@@ -585,7 +589,10 @@ export async function inviteUserBySuperAdmin(data: {
       email: data.email,
       options: { redirectTo: `${appUrl}/auth/reset-password` },
     })
-    const setupUrl = linkData?.properties?.action_link ?? `${appUrl}/auth/login`
+    let setupUrl = `${appUrl}/auth/login`
+    if (linkData?.properties?.action_link) {
+      setupUrl = `${appUrl}/auth/enroll?link=${encodeURIComponent(linkData.properties.action_link)}`
+    }
     await sendEmail({
       to: data.email,
       subject: "You've been invited to Vibe Hyr",
