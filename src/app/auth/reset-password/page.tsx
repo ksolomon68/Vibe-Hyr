@@ -18,33 +18,51 @@ export default function ResetPasswordPage() {
 
   // Guard: a valid recovery session must be present.
   // Two flows arrive here:
-  //   PKCE (resetPasswordForEmail) → session already in cookies via /auth/callback
-  //   Implicit (admin.generateLink) → session in URL hash, SDK fires onAuthStateChange
+  //   PKCE (resetPasswordForEmail via /auth/callback) → session in cookies
+  //   Implicit (admin.generateLink)                  → tokens in URL hash
+  //
+  // @supabase/ssr's createBrowserClient is cookie-first and does NOT
+  // auto-detect hash tokens. For the implicit flow we parse the hash manually
+  // and call setSession() to write the tokens to cookies before rendering.
   useEffect(() => {
     const supabase = createClient()
 
-    // onAuthStateChange fires first for implicit/hash flow
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
-        setSessionReady(true)
-      } else if (event === 'SIGNED_OUT') {
-        router.replace('/auth/login')
-      }
-    })
-
-    // For PKCE flow the session is already in cookies — getSession() is immediate
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    async function bootstrap() {
+      // 1. Cookie-based session (PKCE flow via /auth/callback)
+      const { data: { session } } = await supabase.auth.getSession()
       if (session) {
         setSessionReady(true)
         return
       }
-      // No cookie session — if the hash has a token, wait for onAuthStateChange above.
-      // If there's no hash either, this is a direct invalid access → redirect.
-      const hasHashToken = typeof window !== 'undefined' &&
-        window.location.hash.includes('access_token')
-      if (!hasHashToken) {
-        router.replace('/auth/login')
+
+      // 2. Hash-based tokens (implicit flow from admin.generateLink)
+      const hash   = window.location.hash.slice(1)
+      const params = new URLSearchParams(hash)
+      const accessToken  = params.get('access_token')
+      const refreshToken = params.get('refresh_token')
+
+      if (accessToken && refreshToken) {
+        const { data, error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
+        if (data.session) {
+          // Clean the tokens out of the URL bar
+          window.history.replaceState(null, '', window.location.pathname)
+          setSessionReady(true)
+        } else {
+          console.error('[reset-password] setSession failed:', error)
+          router.replace('/auth/login')
+        }
+        return
       }
+
+      // 3. No session and no hash — invalid/expired link
+      router.replace('/auth/login')
+    }
+
+    bootstrap()
+
+    // Handle sign-out while lingering on this page
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') router.replace('/auth/login')
     })
 
     return () => subscription.unsubscribe()
