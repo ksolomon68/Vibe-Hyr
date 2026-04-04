@@ -217,9 +217,13 @@ export async function addBypassOrg(data: {
         full_name: `${data.adminFirstName} ${data.adminLastName}`,
         membership_tier: data.tier, org_id: org.id,
         institution_type: data.segment === 'education' ? 'education' : data.segment === 'leadership' ? 'leadership' : 'business',
+        role: 'institution_admin',
       })
       await admin.from('organization_members').upsert({
-        org_id: org.id, user_id: adminUserId, role: 'admin', is_active: true,
+        org_id: org.id, user_id: adminUserId,
+        email: data.adminEmail,
+        full_name: `${data.adminFirstName} ${data.adminLastName}`,
+        role: 'admin', status: 'active', is_active: true,
       }, { onConflict: 'org_id,user_id' })
 
       // Update org seats_used
@@ -660,6 +664,63 @@ export async function sendPasswordResetEmail(
 
   await logAudit(sa.userId, sa.email, 'PASSWORD_RESET_EMAIL_SENT', 'user', userId, userName,
     `Reset email triggered to ${userEmail}`)
+  return { success: true }
+}
+
+// ── Update Org Admin (email / name) ──────────────────────────────────────────
+
+export async function updateOrgAdmin(
+  orgId: string,
+  orgName: string,
+  data: { email: string; fullName: string }
+): Promise<ActionResult> {
+  const sa = await requireSuperAdmin()
+  if (!sa) return { success: false, error: 'Unauthorized' }
+
+  const emailNorm = data.email.toLowerCase().trim()
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNorm)) {
+    return { success: false, error: 'Invalid email address.' }
+  }
+
+  const admin = createAdminClient()
+
+  // Find the current org admin
+  const { data: adminMember } = await admin
+    .from('organization_members')
+    .select('user_id, email')
+    .eq('org_id', orgId)
+    .eq('role', 'admin')
+    .or('status.eq.active,is_active.eq.true')
+    .limit(1)
+    .single()
+
+  if (!adminMember?.user_id) {
+    return { success: false, error: 'No admin found for this organization.' }
+  }
+
+  const nameNorm = data.fullName.trim()
+
+  // Update Supabase Auth record
+  const authPayload: Record<string, unknown> = { email: emailNorm }
+  if (nameNorm) authPayload.user_metadata = { full_name: nameNorm }
+  const { error: authErr } = await admin.auth.admin.updateUserById(adminMember.user_id, authPayload)
+  if (authErr) return { success: false, error: authErr.message }
+
+  // Update profile row
+  const profileUpdates: Record<string, unknown> = { email: emailNorm }
+  if (nameNorm) profileUpdates.full_name = nameNorm
+  await admin.from('profiles').update(profileUpdates).eq('id', adminMember.user_id)
+
+  // Update organization_members row
+  const memberUpdates: Record<string, unknown> = { email: emailNorm }
+  if (nameNorm) memberUpdates.full_name = nameNorm
+  await admin.from('organization_members').update(memberUpdates)
+    .eq('org_id', orgId).eq('user_id', adminMember.user_id)
+
+  await logAudit(sa.userId, sa.email, 'ORG_ADMIN_UPDATED', 'organization', orgId, orgName,
+    `Admin updated: email=${emailNorm}${nameNorm ? ` · name=${nameNorm}` : ''}`)
+
+  revalidatePath('/admin/super')
   return { success: true }
 }
 
