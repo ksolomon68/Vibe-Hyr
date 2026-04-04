@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
   }
 
   const { email, full_name, role = 'member', course_slugs = [] } =
-    body as { email?: unknown; full_name?: unknown; role?: unknown; course_slugs?: unknown }
+    body as { email?: unknown; full_name?: unknown; role?: string; course_slugs?: unknown }
 
   if (!email || typeof email !== 'string') {
     return NextResponse.json({ error: 'email is required' }, { status: 400 })
@@ -100,8 +100,8 @@ export async function POST(req: NextRequest) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNorm)) {
     return NextResponse.json({ error: 'Invalid email format' }, { status: 400 })
   }
-  if (!['admin', 'member'].includes(String(role))) {
-    return NextResponse.json({ error: 'role must be "admin" or "member"' }, { status: 400 })
+  if (!['admin', 'member', 'educator', 'leader'].includes(String(role))) {
+    return NextResponse.json({ error: 'invalid role: must be admin, member, educator, or leader' }, { status: 400 })
   }
   const nameNorm = typeof full_name === 'string' ? full_name.trim() : null
 
@@ -247,35 +247,43 @@ export async function POST(req: NextRequest) {
       )
   }
 
-  // Send branded onboarding email via Resend (fire-and-forget)
-  ;(async () => {
-    try {
-      const appUrl   = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').replace(/\/$/, '')
-      const { data: linkData } = await admin.auth.admin.generateLink({
-        type: 'recovery',
-        email: emailNorm,
-        options: { redirectTo: `${appUrl}/auth/reset-password` },
-      })
-      const setupUrl    = linkData?.properties?.action_link ?? `${appUrl}/auth/login`
-      const courseNames = getCoursesForOrgType(ctx.orgType)
-        .filter(c => slugArr.includes(c.slug))
-        .map(c => c.name)
+  // ── Send branded onboarding email via Resend ────────────────────────────
+  try {
+    let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
+    // Fix malformed URLs: replace " with :, ensure protocol, and handle 0.0.0.0
+    appUrl = appUrl.replace(/["]/g, ':').replace(/\/$/, '')
+    if (appUrl.includes('0.0.0.0')) appUrl = appUrl.replace('0.0.0.0', 'localhost')
+    if (!appUrl.startsWith('http')) appUrl = `https://${appUrl}`
 
-      await sendEmail({
-        to:      emailNorm,
-        subject: `You've been invited to join ${ctx.orgName} on Vibe Hyr`,
-        html:    institutionInviteTemplate(
-          nameNorm ?? emailNorm,
-          ctx.orgName,
-          role,
-          setupUrl,
-          courseNames
-        ),
-      })
-    } catch (emailErr) {
-      console.error('[api/members POST] Onboarding email failed:', emailErr)
+    const { data: linkData } = await admin.auth.admin.generateLink({
+      type: 'recovery',
+      email: emailNorm,
+      options: { redirectTo: `${appUrl}/auth/reset-password` },
+    })
+
+    let setupUrl = `${appUrl}/auth/login`
+    if (linkData?.properties?.action_link) {
+      setupUrl = `${appUrl}/auth/enroll?link=${encodeURIComponent(linkData.properties.action_link)}`
     }
-  })()
+
+    const courseNames = getCoursesForOrgType(ctx.orgType)
+      .filter(c => slugArr.includes(c.slug))
+      .map(c => c.name)
+
+    await sendEmail({
+      to:      emailNorm,
+      subject: `You've been invited to join ${ctx.orgName} on Vibe Hyr`,
+      html:    institutionInviteTemplate(
+        nameNorm ?? emailNorm,
+        ctx.orgName,
+        role,
+        setupUrl,
+        courseNames
+      ),
+    })
+  } catch (emailErr) {
+    console.error('[api/members POST] Onboarding email failed:', emailErr)
+  }
 
   // Audit log
   await admin.from('admin_audit_log').insert({
