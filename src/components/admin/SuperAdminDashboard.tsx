@@ -240,14 +240,22 @@ function MFooter({ onClose, onConfirm, label, isPending }: { onClose:()=>void; o
 // ── Course checkboxes ─────────────────────────────────────────────────────────
 
 const COURSES = [
-  { slug:'programming-the-gatekeeper',  name:'Programming the Gatekeeper',  num:'Personal · Course 1' },
-  { slug:'law-of-assumption',            name:'Law of Assumption',            num:'Personal · Course 2' },
-  { slug:'sats-reprogramming',           name:'SATS Reprogramming',           num:'Personal · Course 3' },
-  { slug:'echo-theory-delay',            name:'Echo Theory Delay',            num:'Personal · Course 4' },
-  { slug:'leadership_course_1',          name:'The Internal Authority',       num:'Leadership · Course 1' },
-  { slug:'leadership_course_2',          name:'Visionary Architecture',       num:'Leadership · Course 2' },
-  { slug:'leadership_course_3',          name:'The Bridge of Incidents',      num:'Leadership · Course 3' },
-  { slug:'leadership_course_4',          name:'Echo Theory Mastery',          num:'Leadership · Course 4' },
+  { slug:'programming-the-gatekeeper',        name:'Programming the Gatekeeper',        num:'Personal · Course 1' },
+  { slug:'law-of-assumption',                  name:'Law of Assumption',                  num:'Personal · Course 2' },
+  { slug:'sats-reprogramming',                 name:'SATS Reprogramming',                 num:'Personal · Course 3' },
+  { slug:'echo-theory-delay',                  name:'Echo Theory Delay',                  num:'Personal · Course 4' },
+  { slug:'common-sense-in-the-workplace',      name:'Common Sense in the Workplace',      num:'Business · Course 1' },
+  { slug:'from-reaction-to-response',          name:'From Reaction to Response',          num:'Business · Course 2' },
+  { slug:'know-yourself-lead-yourself',        name:'Know Yourself, Lead Yourself',       num:'Business · Course 3' },
+  { slug:'the-high-frequency-team',            name:'The High-Frequency Team',            num:'Business · Course 4' },
+  { slug:'ed01',                               name:'The Educator Reset',                 num:'Educators · Course 1' },
+  { slug:'ed02',                               name:'Vibrational Leadership',             num:'Educators · Course 2' },
+  { slug:'ed03',                               name:'Co-Regulation Mastery',              num:'Educators · Course 3' },
+  { slug:'ed04',                               name:'The Retained Educator',              num:'Educators · Course 4' },
+  { slug:'leadership_course_1',                name:'The Internal Authority',             num:'Leadership · Course 1' },
+  { slug:'leadership_course_2',                name:'Visionary Architecture',             num:'Leadership · Course 2' },
+  { slug:'leadership_course_3',                name:'The Bridge of Incidents',            num:'Leadership · Course 3' },
+  { slug:'leadership_course_4',                name:'Echo Theory Mastery',                num:'Leadership · Course 4' },
 ]
 
 function CourseChecks({ selected, onChange }: { selected: string[]; onChange: (s: string[]) => void }) {
@@ -1083,14 +1091,22 @@ function DeleteUserModal({ open, onClose, onSuccess, user }: {
 // ══════════════════════════════════════════════════════════════════════════════
 
 const COURSE_NAMES: Record<string, string> = {
-  'c1': 'Personal · Course 1 — Programming the Gatekeeper',
-  'c2': 'Personal · Course 2 — The Art of Assumption',
-  'c3': 'Personal · Course 3 — Advanced Manifestation',
-  'c4': 'Personal · Course 4 — Navigating the Echo Theory Delay',
-  'leadership_course_1': 'Leadership · Course 1 — The Internal Authority',
-  'leadership_course_2': 'Leadership · Course 2 — Visionary Architecture',
-  'leadership_course_3': 'Leadership · Course 3 — The Bridge of Incidents',
-  'leadership_course_4': 'Leadership · Course 4 — Echo Theory Mastery',
+  'c1':                          'Personal · Course 1 — Programming the Gatekeeper',
+  'c2':                          'Personal · Course 2 — The Art of Assumption',
+  'c3':                          'Personal · Course 3 — Advanced Manifestation',
+  'c4':                          'Personal · Course 4 — Navigating the Echo Theory Delay',
+  'common-sense-in-the-workplace': 'Business · Course 1 — Common Sense in the Workplace',
+  'from-reaction-to-response':     'Business · Course 2 — From Reaction to Response',
+  'know-yourself-lead-yourself':   'Business · Course 3 — Know Yourself, Lead Yourself',
+  'the-high-frequency-team':       'Business · Course 4 — The High-Frequency Team',
+  'ed01':                          'Educators · Course 1 — The Educator Reset',
+  'ed02':                          'Educators · Course 2 — Vibrational Leadership',
+  'ed03':                          'Educators · Course 3 — Co-Regulation Mastery',
+  'ed04':                          'Educators · Course 4 — The Retained Educator',
+  'leadership_course_1':           'Leadership · Course 1 — The Internal Authority',
+  'leadership_course_2':           'Leadership · Course 2 — Visionary Architecture',
+  'leadership_course_3':           'Leadership · Course 3 — The Bridge of Incidents',
+  'leadership_course_4':           'Leadership · Course 4 — Echo Theory Mastery',
 }
 
 interface ProgressRow {
@@ -1195,15 +1211,23 @@ function CourseProgressPage() {
       <div style={{ display:'flex', gap:10, marginBottom:16, alignItems:'center', flexWrap:'wrap' }}>
         <div style={{ fontSize:11, color:C.muted, letterSpacing:1 }}>Filter by course:</div>
         {[
-          { val:'all',              label:'All Courses' },
-          { val:'c1',              label:'Personal C1' },
-          { val:'c2',              label:'Personal C2' },
-          { val:'c3',              label:'Personal C3' },
-          { val:'c4',              label:'Personal C4' },
-          { val:'leadership_course_1', label:'Leadership C1' },
-          { val:'leadership_course_2', label:'Leadership C2' },
-          { val:'leadership_course_3', label:'Leadership C3' },
-          { val:'leadership_course_4', label:'Leadership C4' },
+          { val:'all',                          label:'All Courses' },
+          { val:'c1',                           label:'Personal C1' },
+          { val:'c2',                           label:'Personal C2' },
+          { val:'c3',                           label:'Personal C3' },
+          { val:'c4',                           label:'Personal C4' },
+          { val:'common-sense-in-the-workplace', label:'Business C1' },
+          { val:'from-reaction-to-response',     label:'Business C2' },
+          { val:'know-yourself-lead-yourself',   label:'Business C3' },
+          { val:'the-high-frequency-team',       label:'Business C4' },
+          { val:'ed01',                          label:'Educators C1' },
+          { val:'ed02',                          label:'Educators C2' },
+          { val:'ed03',                          label:'Educators C3' },
+          { val:'ed04',                          label:'Educators C4' },
+          { val:'leadership_course_1',           label:'Leadership C1' },
+          { val:'leadership_course_2',           label:'Leadership C2' },
+          { val:'leadership_course_3',           label:'Leadership C3' },
+          { val:'leadership_course_4',           label:'Leadership C4' },
         ].map(opt => (
           <button
             key={opt.val}
