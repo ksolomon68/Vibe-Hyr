@@ -110,8 +110,9 @@ export async function addBypassUser(data: {
   if (data.sendWelcomeEmail) {
     try {
       let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
-      // Fix malformed URLs: replace " with : and ensure protocol
+      // Fix malformed URLs: replace " with :, ensure protocol, and fix dev hostname 0.0.0.0
       appUrl = appUrl.replace(/["]/g, ':').replace(/\/$/, '')
+      if (appUrl.includes('0.0.0.0')) appUrl = appUrl.replace('0.0.0.0', 'localhost')
       if (!appUrl.startsWith('http')) appUrl = `https://${appUrl}`
       
       const { data: linkData, error: lErr } = await admin.auth.admin.generateLink({
@@ -123,8 +124,8 @@ export async function addBypassUser(data: {
       if (lErr) console.warn('[addBypassUser] generateLink error:', lErr)
 
       let setupUrl = `${appUrl}/auth/login`
-      if (linkData?.properties?.hashed_token) {
-        setupUrl = `${appUrl}/auth/callback?token_hash=${linkData.properties.hashed_token}&type=recovery&next=/reset-password`
+      if (linkData?.properties?.action_link) {
+        setupUrl = `${appUrl}/auth/enroll?link=${encodeURIComponent(linkData.properties.action_link)}`
       }
       
       const fullName = `${data.firstName} ${data.lastName}`
@@ -226,6 +227,7 @@ export async function addBypassOrg(data: {
         try {
           let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
           appUrl = appUrl.replace(/["]/g, ':').replace(/\/$/, '')
+          if (appUrl.includes('0.0.0.0')) appUrl = appUrl.replace('0.0.0.0', 'localhost')
           if (!appUrl.startsWith('http')) appUrl = `https://${appUrl}`
 
           const { data: linkData, error: lErr } = await admin.auth.admin.generateLink({
@@ -237,8 +239,8 @@ export async function addBypassOrg(data: {
           if (lErr) console.warn('[addBypassOrg] generateLink error:', lErr)
 
           let setupUrl = `${appUrl}/auth/login`
-          if (linkData?.properties?.hashed_token) {
-            setupUrl = `${appUrl}/auth/callback?token_hash=${linkData.properties.hashed_token}&type=recovery&next=/reset-password`
+          if (linkData?.properties?.action_link) {
+            setupUrl = `${appUrl}/auth/enroll?link=${encodeURIComponent(linkData.properties.action_link)}`
           }
           const fullName = `${data.adminFirstName} ${data.adminLastName}`
           
