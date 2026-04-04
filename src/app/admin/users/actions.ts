@@ -99,7 +99,7 @@ export async function inviteUser(
 
   let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
   // Bulletproof sanitization: remove quotes, remove ALL existing protocol prefixes, and trailing slashes
-  appUrl = appUrl.replace(/["]/g, '').replace(/^https?:\/+/i, '').replace(/\/+$/, '')
+  appUrl = appUrl.replace(/["]/g, '').replace(/https?:\/+/gi, '').replace(/\/+$/, '')
   if (appUrl.includes('0.0.0.0')) appUrl = appUrl.replace('0.0.0.0', 'localhost')
   // Re-apply protocol
   appUrl = appUrl.startsWith('localhost') || appUrl.startsWith('127.0.0.1') ? `http://${appUrl}` : `https://${appUrl}`
