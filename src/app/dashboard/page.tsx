@@ -10,7 +10,7 @@ import type { PersonalTier } from '@/components/pricing/PersonalCheckoutModal'
 import { COURSES } from '@/lib/data/courses'
 import { TRACKS } from '@/lib/business/curriculum'
 import { PROGRAMS } from '@/lib/education/curriculum'
-import { COURSES as LEADERSHIP_COURSES } from '@/lib/leadership/curriculum'
+import { LEADERSHIP_COURSES_SUMMARY } from '@/lib/leadership/curriculum-summary'
 
 export const metadata = { title: 'Dashboard' }
 
@@ -58,9 +58,9 @@ export default async function DashboardPage() {
 
   // ── Stats queries (shared across all user types) ───────────────────────────
   const [
-    { data: journalEntries },
-    { data: assumptions },
-    { data: grants },
+    { data: journalEntries, error: jErr },
+    { data: assumptions,    error: aErr },
+    { data: grants,         error: gErr },
   ] = await Promise.all([
     supabase.from('journal_entries').select('id').eq('user_id', user.id),
     supabase.from('assumptions').select('*').eq('user_id', user.id).eq('status', 'active'),
@@ -68,6 +68,10 @@ export default async function DashboardPage() {
       .select('course_slug')
       .or(`user_id.eq.${user.id}${profile?.org_id ? `,org_id.eq.${profile.org_id}` : ''}`),
   ])
+
+  if (jErr) console.warn('[dashboard] journalEntries error:', jErr)
+  if (aErr) console.warn('[dashboard] assumptions error:', aErr)
+  if (gErr) console.warn('[dashboard] grants error:', gErr)
 
   const grantedSlugs = new Set((grants ?? []).map(g => g.course_slug))
 
@@ -168,20 +172,28 @@ export default async function DashboardPage() {
     return { ...program, hasAccess, progress: pct, href }
   })
 
-  // Leadership courses
-  const leadershipCourses = LEADERSHIP_COURSES.map(course => {
+  // Leadership courses (Optimized using summary)
+  const leadershipCourses = LEADERSHIP_COURSES_SUMMARY.map(course => {
     const completedLessons = leadershipProgress
       .filter(p => p.course_id === course.id)
       .map(p => p.lesson_id)
-    const total     = course.lessons.length
+    const total     = course.lessonCount
     const done      = completedLessons.length
     const pct       = total ? Math.round((done / total) * 100) : 0
     const hasAccess  = isSuperAdmin || TIER_RANK[tier] >= TIER_RANK[course.tierRequired] || grantedSlugs.has(course.id)
-    // Find first incomplete lesson for "Continue" link
-    const nextLesson = course.lessons.find(l => !completedLessons.includes(l.id)) ?? course.lessons[0]
-    const href = nextLesson ? `/leadership/${course.id}?lesson=${nextLesson.id}` : `/leadership/${course.id}`
+    const href = `/leadership/${course.id}`
     const courseTier: PersonalTier = course.tierRequired === 'elite' ? 'reality-master' : 'architect'
-    return { ...course, hasAccess, progress: pct, href, courseTier }
+    return { 
+      id: course.id, 
+      num: course.num, 
+      title: course.title, 
+      hasAccess, 
+      progress: pct, 
+      href, 
+      courseTier,
+      color: course.color,
+      subtitle: course.title // Simplified for dashboard
+    }
   })
 
   return (
