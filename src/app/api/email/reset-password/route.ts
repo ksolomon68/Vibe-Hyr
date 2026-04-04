@@ -19,12 +19,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 })
     }
 
+    let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
+    // Bulletproof sanitization: remove quotes, remove ALL existing protocol prefixes, and trailing slashes
+    appUrl = appUrl.replace(/["]/g, '').replace(/https?:\/+/gi, '').replace(/\/+$/, '')
+    if (appUrl.includes('0.0.0.0')) appUrl = appUrl.replace('0.0.0.0', 'localhost')
+    // Re-apply protocol
+    appUrl = appUrl.startsWith('localhost') || appUrl.startsWith('127.0.0.1') ? `http://${appUrl}` : `https://${appUrl}`
+
     // Generate the Supabase recovery link server-side
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
       type: 'recovery',
       email,
       options: {
-        redirectTo: 'https://vibehyr.com/reset-password',
+        redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password`,
       },
     })
 
@@ -34,10 +41,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true })
     }
 
-    const resetLink = data.properties?.action_link
-    if (!resetLink) {
-      console.error('[reset-password] No action_link returned')
-      return NextResponse.json({ ok: true })
+    let resetLink = data.properties?.action_link
+    if (resetLink) {
+      // Wrap in branded enrollment link for consistency
+      resetLink = `${appUrl}/auth/enroll?link=${encodeURIComponent(resetLink)}`
     }
 
     await sendEmail({

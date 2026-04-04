@@ -403,7 +403,12 @@ export async function inviteUserBySuperAdmin(data: {
   if (!sa) return { success: false, error: 'Unauthorized' }
 
   const admin  = createAdminClient()
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com'
+  let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
+  // Bulletproof sanitization: remove quotes, remove ALL existing protocol prefixes, and trailing slashes
+  appUrl = appUrl.replace(/["]/g, '').replace(/https?:\/+/gi, '').replace(/\/+$/, '')
+  if (appUrl.includes('0.0.0.0')) appUrl = appUrl.replace('0.0.0.0', 'localhost')
+  // Re-apply protocol
+  appUrl = appUrl.startsWith('localhost') || appUrl.startsWith('127.0.0.1') ? `http://${appUrl}` : `https://${appUrl}`
 
   const { data: inviteData, error: inviteError } = await admin.auth.admin.inviteUserByEmail(
     data.email,
@@ -455,15 +460,37 @@ export async function sendPasswordResetEmail(
   const sa = await requireSuperAdmin()
   if (!sa) return { success: false, error: 'Unauthorized' }
 
-  const supabase = createClient()
+  const admin = createAdminClient()
+  let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
+  // Bulletproof sanitization: remove quotes, remove ALL existing protocol prefixes, and trailing slashes
+  appUrl = appUrl.replace(/["]/g, '').replace(/https?:\/+/gi, '').replace(/\/+$/, '')
+  if (appUrl.includes('0.0.0.0')) appUrl = appUrl.replace('0.0.0.0', 'localhost')
+  // Re-apply protocol
+  appUrl = appUrl.startsWith('localhost') || appUrl.startsWith('127.0.0.1') ? `http://${appUrl}` : `https://${appUrl}`
 
-  const { error } = await supabase.auth.resetPasswordForEmail(userEmail, {
-    redirectTo: 'https://vibehyr.com/reset-password',
+  const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
+    type: 'recovery',
+    email: userEmail,
+    options: {
+      redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password`,
+    },
   })
 
-  if (error) {
-    return { success: false, error: error.message ?? 'Could not send reset email' }
+  if (linkError) {
+    return { success: false, error: linkError.message ?? 'Could not generate reset link' }
   }
+
+  let resetLink = linkData.properties?.action_link
+  if (resetLink) {
+    // Wrap in branded enrollment link for consistency
+    resetLink = `${appUrl}/auth/enroll?link=${encodeURIComponent(resetLink)}`
+  }
+
+  await sendEmail({
+    to: userEmail,
+    subject: 'Reset your Vibe Hyr password',
+    html: passwordResetTemplate(resetLink!),
+  })
 
   await logAudit(sa.userId, sa.email, 'PASSWORD_RESET_EMAIL_SENT', 'user', userId, userName,
     `Reset email triggered to ${userEmail}`)
