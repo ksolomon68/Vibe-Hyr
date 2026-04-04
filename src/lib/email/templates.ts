@@ -274,18 +274,35 @@ export function institutionInviteTemplate(
   name: string,
   orgName: string,
   role: string,
-  setupUrl: string
+  setupUrl: string,
+  courses: string[] = []
 ): string {
   const first     = name?.split(' ')[0] || 'Member'
   const roleLabel = role === 'educator' ? 'Educator' : role === 'leader' ? 'Leader' : 'Team Member'
+
+  const courseBlock = courses.length > 0
+    ? `${divider}
+      <p style="margin:0 0 8px;font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:${ORANGE};font-family:monospace;">Your Enrolled Courses</p>
+      <table cellpadding="0" cellspacing="0" style="margin:0 0 4px;width:100%;">
+        ${courses.map(c => `
+        <tr>
+          <td style="padding:6px 0;vertical-align:top;">
+            <span style="display:inline-block;width:8px;height:8px;background:${ORANGE};border-radius:50%;margin-right:10px;margin-top:4px;vertical-align:middle;"></span>
+            <span style="font-size:14px;color:${GREY};">${c}</span>
+          </td>
+        </tr>`).join('')}
+      </table>`
+    : ''
+
   return wrap(`
     ${eyebrow(`${orgName} · Vibe Hyr`)}
     ${heading(`You've Been<br/><span style="color:${ORANGE};">Invited.</span>`)}
     ${divider}
     ${para(`Hi ${first}, you've been invited to join <strong style="color:${INK};">${orgName}</strong> on the Vibe Hyr platform as a <strong style="color:${INK};">${roleLabel}</strong>.`)}
     ${para('Vibe Hyr is a professional development platform built on identity-level transformation — helping individuals and teams govern their external results from the inside out.')}
-    ${para('Click the button below to set your password and access your account:')}
-    ${ctaButton('Accept Invitation', setupUrl)}
+    ${para('Click the button below to set your password and access your assigned courses:')}
+    ${courseBlock}
+    ${ctaButton('Set Up Your Account', setupUrl)}
     ${divider}
     <p style="margin:0 0 12px;font-size:12px;color:#B0A090;line-height:1.6;">
       If the button doesn't work, copy and paste this link into your browser:<br/>

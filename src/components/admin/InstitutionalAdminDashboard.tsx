@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { editUser, removeUser, inviteUserDirect } from '@/app/admin/users/actions'
+import { OrgUserManagement } from '@/components/admin/OrgUserManagement'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -858,15 +859,7 @@ export function InstitutionalAdminDashboard({ org, members, adminName }: Props) 
 
           <div style={{ padding:32, flex:1 }}>
             {tab === 'dashboard' && <DashboardPage org={org} members={members} />}
-            {tab === 'users'     && (
-              <UsersPage
-                org={org}
-                members={members}
-                onToast={showToast}
-                onEdit={setEditTarget}
-                onDelete={setDelTarget}
-              />
-            )}
+            {tab === 'users'     && <OrgUserManagement />}
             {tab === 'progress'  && <ProgressPage members={members} />}
             {tab === 'payments'  && <PaymentsPage org={org} onToast={showToast} />}
             {tab === 'settings'  && <SettingsPage org={org} onToast={showToast} />}

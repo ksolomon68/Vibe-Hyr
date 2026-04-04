@@ -9,9 +9,12 @@
  * server side — the RLS policies still protect direct client access.
  */
 
-import { NextRequest, NextResponse } from 'next/server'
-import { createAdminClient }         from '@/lib/supabase/admin'
-import { requireOrgAdmin }           from '@/lib/supabase/requireOrgAdmin'
+import { NextRequest, NextResponse }    from 'next/server'
+import { createAdminClient }           from '@/lib/supabase/admin'
+import { requireOrgAdmin }             from '@/lib/supabase/requireOrgAdmin'
+import { sendEmail }                   from '@/lib/email/resend'
+import { institutionInviteTemplate }   from '@/lib/email/templates'
+import { getCoursesForOrgType }        from '@/lib/data/orgCourses'
 
 // ── GET /api/members ──────────────────────────────────────────────────────────
 
@@ -87,8 +90,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Request body required' }, { status: 400 })
   }
 
-  const { email, full_name, role = 'member' } =
-    body as { email?: unknown; full_name?: unknown; role?: unknown }
+  const { email, full_name, role = 'member', course_slugs = [] } =
+    body as { email?: unknown; full_name?: unknown; role?: unknown; course_slugs?: unknown }
 
   if (!email || typeof email !== 'string') {
     return NextResponse.json({ error: 'email is required' }, { status: 400 })
@@ -101,6 +104,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'role must be "admin" or "member"' }, { status: 400 })
   }
   const nameNorm = typeof full_name === 'string' ? full_name.trim() : null
+
+  // Validate course slugs — must belong to this org's type
+  const slugArr: string[] = Array.isArray(course_slugs)
+    ? course_slugs.filter((s): s is string => typeof s === 'string')
+    : []
+  const validSlugs = new Set(getCoursesForOrgType(ctx.orgType).map(c => c.slug))
+  const badSlugs = slugArr.filter(s => !validSlugs.has(s))
+  if (badSlugs.length) {
+    return NextResponse.json({ error: `Invalid course slugs: ${badSlugs.join(', ')}` }, { status: 400 })
+  }
 
   // ── Seat-limit check ──────────────────────────────────────────────────────
   if (ctx.seatsUsed >= ctx.seatLimit) {
@@ -219,15 +232,60 @@ export async function POST(req: NextRequest) {
       .eq('id', userId)
   }
 
+  // Grant course access
+  if (slugArr.length > 0 && userId) {
+    await admin
+      .from('course_access')
+      .upsert(
+        slugArr.map(slug => ({
+          user_id:        userId,
+          institution_id: ctx.orgId,
+          course_slug:    slug,
+          granted_by:     ctx.userId,
+        })),
+        { onConflict: 'user_id,course_slug' }
+      )
+  }
+
+  // Send branded onboarding email via Resend (fire-and-forget)
+  ;(async () => {
+    try {
+      const appUrl   = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').replace(/\/$/, '')
+      const { data: linkData } = await admin.auth.admin.generateLink({
+        type: 'recovery',
+        email: emailNorm,
+        options: { redirectTo: `${appUrl}/auth/reset-password` },
+      })
+      const setupUrl    = linkData?.properties?.action_link ?? `${appUrl}/auth/login`
+      const courseNames = getCoursesForOrgType(ctx.orgType)
+        .filter(c => slugArr.includes(c.slug))
+        .map(c => c.name)
+
+      await sendEmail({
+        to:      emailNorm,
+        subject: `You've been invited to join ${ctx.orgName} on Vibe Hyr`,
+        html:    institutionInviteTemplate(
+          nameNorm ?? emailNorm,
+          ctx.orgName,
+          role,
+          setupUrl,
+          courseNames
+        ),
+      })
+    } catch (emailErr) {
+      console.error('[api/members POST] Onboarding email failed:', emailErr)
+    }
+  })()
+
   // Audit log
   await admin.from('admin_audit_log').insert({
     admin_id:    ctx.userId,
-    admin_email: '', // fetched lazily — don't block the response
+    admin_email: '',
     action:      'MEMBER_INVITED',
     target_type: 'user',
     target_id:   userId,
     target_name: emailNorm,
-    details:     `Invited as ${role} (${ctx.orgType}) to org ${ctx.orgName}`,
+    details:     `Invited as ${role} (${ctx.orgType}) to org ${ctx.orgName}; courses: ${slugArr.join(', ') || 'none'}`,
   })
 
   return NextResponse.json({ member }, { status: 201 })
