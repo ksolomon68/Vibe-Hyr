@@ -51,10 +51,16 @@ export default async function DashboardPage() {
   const [
     { data: journalEntries },
     { data: assumptions },
+    { data: grants },
   ] = await Promise.all([
     supabase.from('journal_entries').select('id').eq('user_id', user.id),
     supabase.from('assumptions').select('*').eq('user_id', user.id).eq('status', 'active'),
+    supabase.from('course_access')
+      .select('course_slug')
+      .or(`user_id.eq.${user.id}${profile?.org_id ? `,org_id.eq.${profile.org_id}` : ''}`),
   ])
+
+  const grantedSlugs = new Set((grants ?? []).map(g => g.course_slug))
 
   // ── Progress queries (type-specific) ──────────────────────────────────────
   let personalProgress:  Array<{ course_id: string; progress_percent: number }> = []
@@ -105,7 +111,7 @@ export default async function DashboardPage() {
 
   // Personal courses
   const personalCourses = COURSES.map(course => {
-    const hasAccess = isSuperAdmin || TIER_RANK[tier] >= TIER_RANK[course.tier]
+    const hasAccess = isSuperAdmin || TIER_RANK[tier] >= TIER_RANK[course.tier] || grantedSlugs.has(course.slug)
     const progress  = personalProgress.find(p => p.course_id === course.id)?.progress_percent ?? 0
     const courseTier: PersonalTier = course.tier === 'elite' ? 'reality-master' : 'architect'
     return { ...course, hasAccess, progress, courseTier }
@@ -123,7 +129,7 @@ export default async function DashboardPage() {
     const total    = track.lessons.length
     const done     = completedLessons.length
     const pct      = total ? Math.round((done / total) * 100) : 0
-    const hasAccess = allowedTracks.includes(track.id)
+    const hasAccess = isSuperAdmin || allowedTracks.includes(track.id) || grantedSlugs.has(track.id)
     // Find first incomplete lesson for "Continue" link
     const nextLesson = track.lessons.find(l => !completedLessons.includes(l.id)) ?? track.lessons[0]
     const href = `/business/${track.id}/${nextLesson.id}`
@@ -139,7 +145,7 @@ export default async function DashboardPage() {
     const done     = completedModules.length
     const pct      = total ? Math.round((done / total) * 100) : 0
     const programTier = PROGRAM_TIERS[program.slug] ?? 'free'
-    const hasAccess = isSuperAdmin || TIER_RANK[tier] >= TIER_RANK[programTier]
+    const hasAccess = isSuperAdmin || TIER_RANK[tier] >= TIER_RANK[programTier] || grantedSlugs.has(program.slug)
     // Find first incomplete module
     const nextModule = program.modules.find(m => !completedModules.includes(m.id)) ?? program.modules[0]
     const href = `/educators/${program.slug}/${nextModule.id}`
