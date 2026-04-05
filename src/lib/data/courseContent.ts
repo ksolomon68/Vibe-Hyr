@@ -65,7 +65,7 @@ function dbRowToLesson(row: DbLessonRow): Lesson {
     order_index:      row.sort_order,
     title:            row.title,
     description:      '',
-    video_url:        row.type === 'video' && (row.youtube_url ?? null)
+    video_url:        (row.youtube_url ?? null)
                         ? toEmbedUrl(row.youtube_url!)
                         : null,
     duration_seconds: getApproxDurationSeconds(row.type, row.content),

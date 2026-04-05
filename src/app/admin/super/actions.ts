@@ -765,7 +765,14 @@ export type CmsLesson = {
 }
 
 function isValidYoutubeUrl(url: string): boolean {
-  return /^https?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)/.test(url.trim())
+  if (!url) return false
+  const trimmed = url.trim()
+  // If it's a full URL, check for youtube domain
+  if (trimmed.startsWith('http')) {
+    return /^https?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)/.test(trimmed)
+  }
+  // If it's just an ID (Cloudflare or YouTube ID), we'll allow it as it's common for "uploads"
+  return trimmed.length > 0
 }
 
 // ── List lessons for a course ─────────────────────────────────────────────────
@@ -818,10 +825,8 @@ export async function upsertLesson(lesson: {
 
   if (lesson.type === 'video') {
     const url = lesson.youtube_url?.trim() ?? ''
-    if (!url) return { success: false, error: 'YouTube URL is required for video lessons.' }
-    if (!isValidYoutubeUrl(url)) {
-      return { success: false, error: 'Enter a valid YouTube URL (youtube.com/watch?v=... or youtu.be/...).' }
-    }
+    if (!url) return { success: false, error: 'Video URL or ID is required for video lessons.' }
+    // We now allow IDs or non-YT URLs for Cloudflare Stream support
   }
 
   const admin = createAdminClient()

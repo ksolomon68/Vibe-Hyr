@@ -51,7 +51,12 @@ function extractYoutubeId(url: string): string | null {
   return m ? m[1] : null
 }
 function isValidYoutubeUrl(url: string): boolean {
-  return /^https?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)/.test(url.trim())
+  if (!url) return false
+  const trimmed = url.trim()
+  if (trimmed.startsWith('http')) {
+    return /^https?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)/.test(trimmed)
+  }
+  return trimmed.length > 0
 }
 
 // ── Small reusable components ─────────────────────────────────────────────────
