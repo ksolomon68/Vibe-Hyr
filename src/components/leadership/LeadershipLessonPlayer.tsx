@@ -853,7 +853,7 @@ function LeaderQuiz({
       </div>
 
       <h3 className="font-display text-2xl text-white mb-8 leading-tight">
-        {q.question}
+        {q.q}
       </h3>
 
       <div className="space-y-3 mb-10">
