@@ -79,7 +79,7 @@ export default async function SuperAdminPage() {
     admin.from('organization_members')
       .select('org_id, user_id, role')
       .eq('role', 'admin')
-      .eq('is_active', true),
+      .eq('status', 'active'),
   ])
 
   // Compute MRR

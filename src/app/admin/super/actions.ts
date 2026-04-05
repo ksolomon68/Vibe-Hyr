@@ -91,8 +91,11 @@ export async function addBypassUser(data: {
   // Add to organization_members if org specified
   if (data.orgId) {
     await admin.from('organization_members').upsert({
-      org_id: data.orgId, user_id: userId, role: 'member', is_active: true,
-    }, { onConflict: 'org_id,user_id' })
+      org_id: data.orgId, user_id: userId,
+      email: data.email,
+      full_name: `${data.firstName} ${data.lastName}`,
+      role: 'member', status: 'active',
+    }, { onConflict: 'org_id,email' })
   }
 
   // Insert explicit course access grants
@@ -226,8 +229,8 @@ export async function addBypassOrg(data: {
         org_id: org.id, user_id: adminUserId,
         email: data.adminEmail,
         full_name: `${data.adminFirstName} ${data.adminLastName}`,
-        role: 'admin', status: 'active', is_active: true,
-      }, { onConflict: 'org_id,user_id' })
+        role: 'admin', status: 'active',
+      }, { onConflict: 'org_id,email' })
 
       // Update org seats_used
       await admin.from('organizations').update({ seats_used: 1 }).eq('id', org.id)
@@ -687,17 +690,33 @@ export async function updateOrgAdmin(
 
   const admin = createAdminClient()
 
-  // Find the current org admin
+  // Find the current org admin — check organization_members first, then profiles fallback
+  let adminUserId: string | null = null
+
   const { data: adminMember } = await admin
     .from('organization_members')
-    .select('user_id, email')
+    .select('user_id')
     .eq('org_id', orgId)
     .eq('role', 'admin')
-    .or('status.eq.active,is_active.eq.true')
+    .eq('status', 'active')
     .limit(1)
-    .single()
+    .maybeSingle()
 
-  if (!adminMember?.user_id) {
+  if (adminMember?.user_id) {
+    adminUserId = adminMember.user_id
+  } else {
+    // Legacy: admin created before organization_members was populated — look in profiles
+    const { data: profileAdmin } = await admin
+      .from('profiles')
+      .select('id')
+      .eq('org_id', orgId)
+      .eq('role', 'institution_admin')
+      .limit(1)
+      .maybeSingle()
+    if (profileAdmin) adminUserId = profileAdmin.id
+  }
+
+  if (!adminUserId) {
     return { success: false, error: 'No admin found for this organization.' }
   }
 
@@ -706,19 +725,19 @@ export async function updateOrgAdmin(
   // Update Supabase Auth record
   const authPayload: Record<string, unknown> = { email: emailNorm }
   if (nameNorm) authPayload.user_metadata = { full_name: nameNorm }
-  const { error: authErr } = await admin.auth.admin.updateUserById(adminMember.user_id, authPayload)
+  const { error: authErr } = await admin.auth.admin.updateUserById(adminUserId, authPayload)
   if (authErr) return { success: false, error: authErr.message }
 
   // Update profile row
   const profileUpdates: Record<string, unknown> = { email: emailNorm }
   if (nameNorm) profileUpdates.full_name = nameNorm
-  await admin.from('profiles').update(profileUpdates).eq('id', adminMember.user_id)
+  await admin.from('profiles').update(profileUpdates).eq('id', adminUserId)
 
   // Update organization_members row
   const memberUpdates: Record<string, unknown> = { email: emailNorm }
   if (nameNorm) memberUpdates.full_name = nameNorm
   await admin.from('organization_members').update(memberUpdates)
-    .eq('org_id', orgId).eq('user_id', adminMember.user_id)
+    .eq('org_id', orgId).eq('user_id', adminUserId)
 
   await logAudit(sa.userId, sa.email, 'ORG_ADMIN_UPDATED', 'organization', orgId, orgName,
     `Admin updated: email=${emailNorm}${nameNorm ? ` · name=${nameNorm}` : ''}`)
