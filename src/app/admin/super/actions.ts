@@ -916,18 +916,21 @@ export async function syncLeadershipCourses(): Promise<ActionResult & { seeded: 
     if (!courseId) continue
 
     const lessons = course.lessons.map((lesson, index) => {
-      const content = [
-        lesson.description,
-        '',
-        'KEY CONCEPTS',
-        ...lesson.keyConcepts.map(c => `• ${c}`),
-        '',
-        'NEUROSCIENCE ANCHOR',
-        lesson.neuroscienceAnchor,
-        '',
-        'LAW ANCHOR',
-        lesson.lawAnchor,
-      ].join('\n')
+      const content = `
+        <p>${lesson.description}</p>
+        <h2>Key Concepts</h2>
+        <ul>
+          ${lesson.keyConcepts.map(c => `<li>${c}</li>`).join('')}
+        </ul>
+        <div class="callout">
+          <h2>Neuroscience Anchor</h2>
+          <p>${lesson.neuroscienceAnchor}</p>
+        </div>
+        <div class="callout">
+          <h2>Law Anchor</h2>
+          <p>${lesson.lawAnchor}</p>
+        </div>
+      `.trim()
 
       return {
         course_id:    courseId,
@@ -936,25 +939,21 @@ export async function syncLeadershipCourses(): Promise<ActionResult & { seeded: 
         youtube_url:  null,
         content,
         sort_order:   index + 1,
-        is_published: false,
+        is_published: true,
         is_preview:   index === 0,
         created_at:   new Date().toISOString(),
         updated_at:   new Date().toISOString(),
       }
     })
 
-    // Seed if empty; re-seed if count is below the current curriculum lesson count
+    // Seed if empty; or if we want to force-update (but we'll be careful here)
     const { count } = await admin
       .from('course_lessons')
       .select('id', { count: 'exact', head: true })
       .eq('course_id', courseId)
 
-    if ((count ?? 0) >= lessons.length) continue
-
-    // Clear stale lessons before re-seeding (handles curriculum expansions)
-    if ((count ?? 0) > 0) {
-      await admin.from('course_lessons').delete().eq('course_id', courseId)
-    }
+    // Only seed if the course is empty to avoid overwriting user edits
+    if ((count ?? 0) > 0) continue
 
     const { error } = await admin.from('course_lessons').insert(lessons)
     if (error) {

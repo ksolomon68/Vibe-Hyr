@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server'
 import { LeadershipLessonPlayerWrapper } from '@/components/leadership/LeadershipLessonPlayerWrapper'
 import { CourseLockedScreen } from '@/components/CourseLockedScreen'
 import { COURSES } from '@/lib/leadership/curriculum'
+import { getLessonsWithDBFallback } from '@/lib/data/courseContent'
 
 interface PageProps {
   params: { courseId: string; lessonId: string }
@@ -67,10 +68,21 @@ export default async function LessonPage({ params }: PageProps) {
     }
   }
 
+  // course_id mapping: leadership_course_N → integer 13 + N-1
+  const COURSE_ID_MAP: Record<string, number> = {
+    leadership_course_1: 13,
+    leadership_course_2: 14,
+    leadership_course_3: 15,
+    leadership_course_4: 16,
+  }
+  const numericId = COURSE_ID_MAP[params.courseId] ?? 0
+  const dbLessons = await getLessonsWithDBFallback(params.courseId, numericId)
+
   return (
     <LeadershipLessonPlayerWrapper
       initialCourseId={params.courseId}
       initialLessonId={params.lessonId}
+      initialLessons={dbLessons}
     />
   )
 }

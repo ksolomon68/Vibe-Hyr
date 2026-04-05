@@ -8,17 +8,20 @@ import {
   Menu, X, Loader2, ArrowRight,
 } from 'lucide-react'
 import { VideoPlayer } from '@/components/personal/VideoPlayer'
+import { LessonContent } from '@/components/personal/LessonContent'
 import { AssumptionLab } from '@/components/shared/AssumptionLab'
 import { useLessonNotes } from '@/hooks/useLessonNotes'
 import { cn } from '@/lib/utils'
 import { COURSES } from '@/lib/leadership/curriculum'
 import type { QuizQuestion } from '@/lib/leadership/curriculum'
+import type { Lesson as DbLesson } from '@/types'
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 export interface LeadershipLessonPlayerProps {
   initialCourseId?:  string
   initialLessonId?:  string
+  initialLessons?:   DbLesson[]
   externalProgress?: Record<string, string[]>
   allowedCourses?:   string[]
   onLessonComplete?: (courseId: string, lessonId: string) => void
@@ -33,6 +36,7 @@ type Tab = 'lesson' | 'interact' | 'notes'
 export default function LeadershipLessonPlayer({
   initialCourseId  = 'leadership_course_1',
   initialLessonId  = 'the-responsibility-formula',
+  initialLessons   = [],
   externalProgress = {},
   allowedCourses   = ['leadership_course_1'],
   onLessonComplete,
@@ -47,23 +51,28 @@ export default function LeadershipLessonPlayer({
 
   useEffect(() => { setCompletedMap(externalProgress) }, [externalProgress])
 
-  const course  = COURSES.find(c => c.id === initialCourseId) ?? COURSES[0]
-  const lesson  = course.lessons.find(l => l.id === initialLessonId) ?? course.lessons[0]
+  // Prefer initialLessons (from DB) if they belong to this course
+  const lessons = (initialLessons && initialLessons.length > 0 && initialLessons[0].course_id === initialCourseId)
+    ? initialLessons
+    : (COURSES.find(c => c.id === initialCourseId) ?? COURSES[0]).lessons as unknown as DbLesson[]
 
-  const lessonIdx  = course.lessons.findIndex(l => l.id === lesson.id)
-  const prevLesson = lessonIdx > 0 ? course.lessons[lessonIdx - 1] : null
-  const nextLesson = lessonIdx < course.lessons.length - 1 ? course.lessons[lessonIdx + 1] : null
+  const course  = COURSES.find(c => c.id === initialCourseId) ?? COURSES[0]
+  const lesson  = lessons.find(l => l.id === initialLessonId) ?? lessons[0]
+
+  const lessonIdx  = lessons.findIndex(l => l.id === lesson.id)
+  const prevLesson = lessonIdx > 0 ? lessons[lessonIdx - 1] : null
+  const nextLesson = lessonIdx < lessons.length - 1 ? lessons[lessonIdx + 1] : null
 
   const isLessonDone = completedMap[course.id]?.includes(lesson.id) ?? false
   const isQuizPassed = quizPassed[lesson.id] ?? false
 
   // Quiz belongs to the course, shown on the last lesson
-  const isLastLesson = lessonIdx === course.lessons.length - 1
+  const isLastLesson = lessonIdx === lessons.length - 1
   const hasQuiz      = isLastLesson && course.quiz.questions.length > 0
 
   const trackCompleted = completedMap[course.id]?.length ?? 0
-  const percentDone    = course.lessons.length
-    ? Math.round((trackCompleted / course.lessons.length) * 100)
+  const percentDone    = lessons.length
+    ? Math.round((trackCompleted / lessons.length) * 100)
     : 0
 
   const { content: lessonNotes, handleChange: handleNotesChange, saving: notesSaving, saved: notesSaved } =
@@ -112,7 +121,7 @@ export default function LeadershipLessonPlayer({
           </Link>
           <span className="text-white/10 text-xs flex-shrink-0">/</span>
           <span className="font-mono text-[0.65rem] tracking-[0.15em] text-white/90 truncate max-w-[200px] md:max-w-none uppercase">
-            {lesson.num} — {lesson.title}
+             {lesson.title}
           </span>
         </div>
 
@@ -191,6 +200,8 @@ export default function LeadershipLessonPlayer({
                   currentLessonId={lesson.id}
                   completedIds={completedMap[course.id] ?? []}
                   allowedCourses={allowedCourses}
+                  lessons={lessons}
+                  onNavigate={onNavigate}
                 />
               </div>
             </motion.div>
@@ -200,16 +211,16 @@ export default function LeadershipLessonPlayer({
         {/* MAIN CONTENT */}
         <div className="flex-1 flex flex-col overflow-y-auto min-w-0 bg-[#0E0C08]">
 
-          {/* Video placeholder */}
+          {/* Video Player */}
           <VideoPlayer
-            videoUrl={null}
+            videoUrl={lesson.video_url}
             lessonId={lesson.id}
             title={lesson.title}
           />
 
           <div className="flex-1 max-w-3xl w-full mx-auto px-6 md:px-10 py-10 lg:py-16">
 
-            {/* Lesson header */}
+            {/* Lesson Header */}
             <div className="mb-10">
               <div className="flex items-center gap-4 mb-4">
                 <div
@@ -217,13 +228,13 @@ export default function LeadershipLessonPlayer({
                   style={{ borderColor: course.color }}
                 >
                   <span className="text-[10px] font-bold uppercase tracking-tighter" style={{ color: course.color }}>
-                    {lesson.num}
+                    {lessonIdx + 1}
                   </span>
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-mono text-[0.55rem] tracking-[0.2em] uppercase text-white/40">
-                      Lesson {lesson.num} · Course {course.num}
+                      Lesson {lessonIdx + 1} · Course {course.num}
                     </span>
                     {isLessonDone && (
                       <span className="font-mono text-[0.5rem] tracking-widest uppercase px-2 py-0.5 border border-[#E8621A] text-[#E8621A] flex items-center gap-1">
@@ -265,50 +276,43 @@ export default function LeadershipLessonPlayer({
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  {/* Key concepts */}
-                  {lesson.keyConcepts.length > 0 && (
-                    <div className="mb-8 p-5 bg-white/[0.03] border border-white/8">
-                      <p className="font-mono text-[0.55rem] tracking-[0.2em] uppercase text-[#E8621A] mb-3">
-                        Key Concepts
-                      </p>
-                      <ul className="space-y-2">
-                        {lesson.keyConcepts.map((concept, i) => (
-                          <li key={i} className="flex items-start gap-3">
-                            <span className="text-[#E8621A] text-xs mt-0.5 flex-shrink-0">◈</span>
-                            <span className="font-body text-sm text-white/70 leading-relaxed">{concept}</span>
-                          </li>
-                        ))}
-                      </ul>
+                  {/* Main lesson content (HTML preferred) */}
+                  <div className="mb-12">
+                    <LessonContent content={lesson.content_md || ''} />
+                  </div>
+
+                  {/* Legacy Neuroscience/Law anchors only if using static data fallback */}
+                  {(!initialLessons || initialLessons.length === 0) && (
+                    <div className="mb-8 space-y-6">
+                      {(lesson as any).neuroscienceAnchor && (
+                        <div className="border-l-4 border-[#E8621A] pl-6 py-2 bg-[#E8621A]/5">
+                          <p className="font-mono text-[0.5rem] tracking-[0.25em] uppercase text-[#E8621A] mb-2">
+                            Neuroscience Anchor
+                          </p>
+                          <p className="font-body text-lg text-white italic leading-[1.8]">
+                            {(lesson as any).neuroscienceAnchor}
+                          </p>
+                        </div>
+                      )}
+                      {(lesson as any).lawAnchor && (
+                        <div className="border-l-4 border-[#C9A84C] pl-6 py-2 bg-[#C9A84C]/5">
+                          <p className="font-mono text-[0.5rem] tracking-[0.25em] uppercase text-[#C9A84C] mb-2">
+                            Law of Assumption
+                          </p>
+                          <p className="font-body text-lg text-white italic leading-[1.8]">
+                            {(lesson as any).lawAnchor}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
-
-                  {/* Neuroscience anchor */}
-                  <div className="mb-8 space-y-6">
-                    <div className="border-l-4 border-[#E8621A] pl-6 py-2 bg-[#E8621A]/5">
-                      <p className="font-mono text-[0.5rem] tracking-[0.25em] uppercase text-[#E8621A] mb-2">
-                        Neuroscience Anchor
-                      </p>
-                      <p className="font-body text-lg text-white italic leading-[1.8]">
-                        {lesson.neuroscienceAnchor}
-                      </p>
-                    </div>
-
-                    <div className="border-l-4 border-[#C9A84C] pl-6 py-2 bg-[#C9A84C]/5">
-                      <p className="font-mono text-[0.5rem] tracking-[0.25em] uppercase text-[#C9A84C] mb-2">
-                        Law of Assumption
-                      </p>
-                      <p className="font-body text-lg text-white italic leading-[1.8]">
-                        {lesson.lawAnchor}
-                      </p>
-                    </div>
-                  </div>
 
                   {/* Assumption Lab — per lesson */}
                   <div className="my-10">
                     <AssumptionLab
                       title={`${lesson.title} — Reflection`}
                       subtitle="Internal Authority Practice"
-                      prompt={`In the context of "${lesson.title}", examine your current assumption: "${lesson.keyConcepts[0]}". How would your leadership behavior shift if you assumed this were already true about you?`}
+                      prompt={`In the context of "${lesson.title}", examine your current assumption: "${(lesson as any).keyConcepts?.[0] || 'your core leadership identity'}". How would your leadership behavior shift if you assumed this were already true about you?`}
                       accentColor={course.color}
                     />
                   </div>
@@ -419,7 +423,7 @@ export default function LeadershipLessonPlayer({
                   </div>
                   <textarea
                     className="flex-1 w-full bg-white/5 border border-white/5 rounded-xl p-6 text-white font-body text-lg leading-relaxed
-                               focus:bg-white/[0.08] focus:border-[#E8621A]/30 outline-none transition-all resize-none min-h-[400px]"
+                                focus:bg-white/[0.08] focus:border-[#E8621A]/30 outline-none transition-all resize-none min-h-[400px]"
                     placeholder="Capture your insights here…"
                     value={lessonNotes || ''}
                     onChange={e => handleNotesChange(e.target.value)}
@@ -539,6 +543,8 @@ export default function LeadershipLessonPlayer({
               currentLessonId={lesson.id}
               completedIds={completedMap[course.id] ?? []}
               allowedCourses={allowedCourses}
+              lessons={lessons}
+              onNavigate={onNavigate}
             />
           </motion.div>
         )}
@@ -584,14 +590,18 @@ function LeaderSidebar({
   currentLessonId,
   completedIds,
   allowedCourses,
+  lessons,
+  onNavigate,
 }: {
   course:          typeof COURSES[0]
   currentLessonId: string
   completedIds:    string[]
   allowedCourses:  string[]
+  lessons:         DbLesson[]
+  onNavigate?:     (courseId: string, lessonId: string) => void
 }) {
-  const pct = course.lessons.length
-    ? Math.round((completedIds.length / course.lessons.length) * 100)
+  const pct = lessons.length
+    ? Math.round((completedIds.length / lessons.length) * 100)
     : 0
 
   return (
@@ -612,7 +622,7 @@ function LeaderSidebar({
           />
         </div>
         <p className="font-mono text-[0.52rem] tracking-widest text-white/30 mt-1">
-          {completedIds.length}/{course.lessons.length} lessons · {pct}%
+          {completedIds.length}/{lessons.length} lessons · {pct}%
         </p>
       </div>
 
@@ -632,6 +642,7 @@ function LeaderSidebar({
                 {isAllowed ? (
                   <Link
                     href={`/leadership/${c.id}/${c.lessons[0].id}`}
+                    onClick={() => onNavigate?.(c.id, c.lessons[0].id)}
                     className={cn(
                       'flex items-center gap-3 px-5 py-3 transition-colors group',
                       isActive ? 'bg-[#E8621A]/10 border-r-2 border-[#E8621A]' : 'hover:bg-white/5'
@@ -639,7 +650,7 @@ function LeaderSidebar({
                   >
                     <div
                       className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-[9px] font-bold"
-                      style={{ backgroundColor: `${c.color}20`, color: c.color, border: `1px solid ${c.color}40` }}
+                      style={{ backgroundColor: `${isActive ? '#E8621A' : c.color}20`, color: isActive ? '#E8621A' : c.color, border: `1px solid ${isActive ? '#E8621A' : c.color}40` }}
                     >
                       {c.num}
                     </div>
@@ -670,13 +681,14 @@ function LeaderSidebar({
           </span>
         </div>
         <ul className="py-1">
-          {course.lessons.map((les, idx) => {
+          {lessons.map((les, idx) => {
             const done    = completedIds.includes(les.id)
             const current = les.id === currentLessonId
             return (
               <li key={les.id}>
                 <Link
                   href={`/leadership/${course.id}/${les.id}`}
+                  onClick={() => onNavigate?.(course.id, les.id)}
                   className={cn(
                     'flex items-start gap-3 px-5 py-3 transition-colors group',
                     current
@@ -717,7 +729,7 @@ function LeaderSidebar({
 
 // ─── Quiz component ───────────────────────────────────────────────────────────
 
-type QuizPhase = 'intro' | 'taking' | 'reviewing' | 'passed' | 'failed'
+type QuizPhase = 'intro' | 'taking' | 'passed' | 'failed'
 
 function LeaderQuiz({
   title,
@@ -826,71 +838,67 @@ function LeaderQuiz({
     )
   }
 
-  const isCorrect = confirmed && selected === q.correct
-
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between mb-2">
-        <p className="font-mono text-[0.55rem] tracking-[0.2em] uppercase text-white/40">
+    <div className="max-w-xl mx-auto py-6">
+      <div className="flex items-center justify-between mb-8">
+        <span className="font-mono text-[0.55rem] tracking-[0.25em] uppercase text-white/30">
           Question {current + 1} of {questions.length}
-        </p>
-        <div className="w-32 h-[2px] bg-white/5">
+        </span>
+        <div className="w-24 h-1 bg-white/5 rounded-full overflow-hidden">
           <div
-            className="h-full bg-[#E8621A] transition-all"
+            className="h-full bg-[#E8621A] transition-all duration-300"
             style={{ width: `${((current + 1) / questions.length) * 100}%` }}
           />
         </div>
       </div>
 
-      <p className="font-body text-xl text-white leading-[1.6]">{q.q}</p>
+      <h3 className="font-display text-2xl text-white mb-8 leading-tight">
+        {q.question}
+      </h3>
 
-      <ul className="space-y-3">
+      <div className="space-y-3 mb-10">
         {q.options.map((opt, i) => {
-          let style = 'border-white/10 text-white/70 hover:border-white/30 hover:bg-white/5'
-          if (confirmed) {
-            if (i === q.correct)      style = 'border-[#E8621A] bg-[#E8621A]/10 text-white'
-            else if (i === selected)  style = 'border-red-500/60 bg-red-500/10 text-white/50'
-            else                      style = 'border-white/5 text-white/30'
-          } else if (selected === i)  style = 'border-[#E8621A] bg-[#E8621A]/10 text-white'
+          const isSelected = selected === i
+          const isCorrect  = confirmed && i === q.correct
+          const isWrong    = confirmed && isSelected && i !== q.correct
 
           return (
-            <li key={i}>
-              <button
-                disabled={confirmed}
-                onClick={() => setSelected(i)}
-                className={cn(
-                  'w-full text-left px-4 py-3 border font-body text-sm transition-all',
-                  style
-                )}
-              >
-                {opt}
-              </button>
-            </li>
+            <button
+              key={i}
+              disabled={confirmed}
+              onClick={() => setSelected(i)}
+              className={cn(
+                'w-full text-left p-5 transition-all border font-body text-sm leading-relaxed',
+                isSelected && !confirmed && 'bg-[#E8621A]/10 border-[#E8621A] text-white',
+                !isSelected && !confirmed && 'bg-white/[0.02] border-white/5 text-white/70 hover:bg-white/[0.05]',
+                isCorrect && 'bg-green-500/10 border-green-500 text-green-400',
+                isWrong && 'bg-red-500/10 border-red-500 text-red-400',
+                confirmed && !isSelected && !isCorrect && 'opacity-20'
+              )}
+            >
+              <div className="flex items-center justify-between">
+                <span>{opt}</span>
+                {isCorrect && <CheckCircle size={14} />}
+                {isWrong && <X size={14} />}
+              </div>
+            </button>
           )
         })}
-      </ul>
+      </div>
 
-      {confirmed && (
-        <p className={cn(
-          'font-body text-sm italic',
-          isCorrect ? 'text-[#E8621A]' : 'text-red-400'
-        )}>
-          {isCorrect ? '✓ Correct.' : `✗ The correct answer is: ${q.options[q.correct]}`}
-        </p>
-      )}
-
-      <div className="flex gap-3 pt-2">
+      <div className="flex justify-end">
         {!confirmed ? (
           <button
             disabled={selected === null}
             onClick={confirmAnswer}
-            className={cn('btn-orange', selected === null && 'opacity-40 cursor-not-allowed')}
+            className="btn-orange disabled:opacity-30"
           >
-            Confirm
+            Confirm Answer
           </button>
         ) : (
-          <button onClick={nextQuestion} className="btn-orange">
-            {current < questions.length - 1 ? 'Next Question' : 'See Results'}
+          <button onClick={nextQuestion} className="btn-orange flex items-center gap-2">
+            {current < questions.length - 1 ? 'Next Question' : 'Finish Quiz'}
+            <ArrowRight size={14} />
           </button>
         )}
       </div>

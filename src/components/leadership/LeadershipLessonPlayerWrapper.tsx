@@ -14,15 +14,18 @@ import { createClient } from "@/lib/supabase/client";
 import LeadershipLessonPlayer from "./LeadershipLessonPlayer";
 import { PageLoader } from "@/components/shared/PageLoader";
 import { TIER_ACCESS, COURSE_LESSON_COUNTS } from "@/lib/leadership/curriculum";
+import type { Lesson } from "@/types";
 
 interface WrapperProps {
   initialCourseId?: string;
   initialLessonId?: string;
+  initialLessons?:  Lesson[];
 }
 
 export function LeadershipLessonPlayerWrapper({
   initialCourseId = "leadership_course_1",
   initialLessonId = "the-responsibility-formula",
+  initialLessons = [],
 }: WrapperProps) {
   const supabase = createClient();
   const router   = useRouter();
@@ -133,11 +136,12 @@ export function LeadershipLessonPlayerWrapper({
     <LeadershipLessonPlayer
       initialCourseId={initialCourseId}
       initialLessonId={initialLessonId}
+      initialLessons={initialLessons}
       externalProgress={progress}
       allowedCourses={allowedCourses}
       onLessonComplete={handleComplete}
       onNavigate={handleNavigate}
       userTier={userTier}
     />
-  );
+  )
 }

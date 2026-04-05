@@ -29,6 +29,7 @@ function toEmbedUrl(youtubeUrl: string): string {
 
 // ── course_id integer → course string id ─────────────────────────────────────
 function numToStringId(n: number): string {
+  if (n >= 13 && n <= 16) return `leadership_course_${n - 12}`
   return `c0${n}`
 }
 
@@ -49,7 +50,10 @@ type DbLessonRow = {
 function getApproxDurationSeconds(type: string, content: string | null): number {
   if (type === 'video') return 15 * 60; // 15 mins for video
   if (!content) return 5 * 60;          // 5 mins default
-  const chars = content.length;
+  
+  // If HTML, strip tags for a better character count estimate
+  const text = content.replace(/<[^>]*>/g, '');
+  const chars = text.length;
   const mins = Math.max(5, Math.ceil(chars / 1000));
   return mins * 60;
 }
