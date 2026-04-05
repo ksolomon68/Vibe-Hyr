@@ -789,6 +789,16 @@ export async function listCourseLessons(
 
 // ── Upsert a lesson ───────────────────────────────────────────────────────────
 
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function sanitizeHtml(html: string): string {
+  if (!html) return ''
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Strip <script> tags
+    .replace(/on\w+="[^"]*"/gi, '') // Strip onmouseover="..." etc
+    .replace(/on\w+='[^']*'/gi, '') // Strip onmouseover='...' etc
+    .replace(/javascript:/gi, '')   // Strip javascript: protocols
+}
+
 export async function upsertLesson(lesson: {
   id?: string
   course_id: number
@@ -822,7 +832,7 @@ export async function upsertLesson(lesson: {
     // Preserve both fields independently — don't null one when switching types.
     // The lesson type controls which field the player renders, not which is stored.
     youtube_url: lesson.youtube_url?.trim() ?? null,
-    content:     lesson.content ?? null,
+    content:     lesson.content ? sanitizeHtml(lesson.content) : null,
     sort_order:  lesson.sort_order,
     is_published: lesson.is_published,
     is_preview:   lesson.is_preview,

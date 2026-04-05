@@ -1429,7 +1429,14 @@ export function SuperAdminDashboard({ adminName, stats, bypassUsers, bypassOrgs,
   const [editTarget, setEditTarget] = useState<EditTarget>(null)
   const [editUser, setEditUser]   = useState<EditUser>(null)
   const [editOrgAdmin, setEditOrgAdmin] = useState<{ id: string; name: string; admin_email: string | null } | null>(null)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const router = useRouter()
+
+  useEffect(() => {
+    const onResize = () => { if (window.innerWidth >= 768) setSidebarOpen(false) }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   const showToast = useCallback((msg: string) => {
     setToast(msg); setToastVis(true)
@@ -1466,12 +1473,42 @@ export function SuperAdminDashboard({ adminName, stats, bypassUsers, bypassOrgs,
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
         .sa-ni:hover { background:rgba(232,98,26,0.07) !important; color:${C.cream} !important; }
+        .sa-sidebar {
+          width:240px; min-width:240px;
+          background:linear-gradient(180deg,${C.dark2} 0%,${C.dark} 100%);
+          border-right:1px solid ${C.border}; display:flex; flex-direction:column;
+          position:sticky; top:0; height:100vh; overflow-y:auto;
+          z-index:40; transition:transform 0.25s ease;
+        }
+        .sa-overlay {
+          display:none; position:fixed; inset:0;
+          background:rgba(10,8,4,0.72); z-index:39; cursor:pointer;
+        }
+        .sa-hamburger { display:none; align-items:center; justify-content:center; }
+        @media (max-width: 767px) {
+          .sa-sidebar {
+            position:fixed !important; top:0 !important; left:0 !important;
+            transform:translateX(-100%);
+            height:100vh !important;
+            box-shadow:4px 0 24px rgba(0,0,0,0.6);
+          }
+          .sa-sidebar.open { transform:translateX(0); }
+          .sa-overlay.open { display:block; }
+          .sa-hamburger { display:flex !important; }
+          .sa-header { padding:12px 16px !important; }
+          .sa-header-actions .sa-export-btn { display:none !important; }
+          .sa-content { padding:16px !important; }
+          .sa-content [style*="grid-template-columns"] { grid-template-columns:1fr !important; }
+        }
       `}</style>
 
       <div style={{ display:'flex', minHeight:'100vh', background:C.dark, color:C.cream, fontFamily:"'DM Sans',sans-serif" }}>
 
+        {/* Mobile overlay */}
+        <div onClick={() => setSidebarOpen(false)} className={`sa-overlay${sidebarOpen ? ' open' : ''}`} />
+
         {/* SIDEBAR */}
-        <nav style={{ width:240, minWidth:240, background:`linear-gradient(180deg,${C.dark2} 0%,${C.dark} 100%)`, borderRight:`1px solid ${C.border}`, display:'flex', flexDirection:'column', position:'sticky', top:0, height:'100vh', overflowY:'auto' }}>
+        <nav className={`sa-sidebar${sidebarOpen ? ' open' : ''}`}>
           <div style={{ padding:'24px 20px 18px', borderBottom:`1px solid ${C.border}` }}>
             <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:24, letterSpacing:3 }}><span style={{ color:C.orange }}>VIBE</span>HYR</div>
             <div style={{ display:'inline-flex', alignItems:'center', gap:5, background:'linear-gradient(90deg,rgba(201,168,76,0.15),rgba(232,98,26,0.1))', border:`1px solid ${C.border2}`, borderRadius:2, padding:'3px 8px', marginTop:6, fontSize:9, letterSpacing:3, textTransform:'uppercase', color:C.gold }}>✦ Super Admin</div>
@@ -1483,7 +1520,7 @@ export function SuperAdminDashboard({ adminName, stats, bypassUsers, bypassOrgs,
               {g.items.map(item=>{
                 const active = page===item.id
                 return (
-                  <button key={item.id} onClick={()=>setPage(item.id)} className="sa-ni"
+                  <button key={item.id} onClick={()=>{ setPage(item.id); setSidebarOpen(false) }} className="sa-ni"
                     style={{ display:'flex', alignItems:'center', gap:10, padding:active?'9px 10px 9px 8px':'9px 10px', borderRadius:4, marginBottom:1, fontSize:12.5, width:'100%', textAlign:'left', cursor:'pointer', background:active?'linear-gradient(90deg,rgba(232,98,26,0.18),rgba(201,168,76,0.05))':'transparent', color:active?C.cream:C.muted2, border:'none', borderLeft:active?`2px solid ${C.orange}`:'2px solid transparent', transition:'all 0.18s' }}>
                     <span style={{ width:15, textAlign:'center', fontSize:12, opacity:active?1:0.7 }}>{item.icon}</span>
                     {item.label}
@@ -1498,8 +1535,8 @@ export function SuperAdminDashboard({ adminName, stats, bypassUsers, bypassOrgs,
 
           <div style={{ padding:'0 10px', marginTop:6 }}>
             <div style={{ fontSize:9, letterSpacing:3, textTransform:'uppercase', color:C.muted, padding:'14px 10px 6px' }}>Quick Actions</div>
-            <button onClick={()=>setModalUser(true)} className="sa-ni" style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 10px', borderRadius:4, marginBottom:1, fontSize:12.5, width:'100%', textAlign:'left', cursor:'pointer', background:'transparent', color:C.muted2, border:'none', transition:'all 0.18s' }}><span style={{ width:15, textAlign:'center', opacity:0.7 }}>+</span> Add User (Bypass)</button>
-            <button onClick={()=>setModalOrg(true)} className="sa-ni" style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 10px', borderRadius:4, marginBottom:1, fontSize:12.5, width:'100%', textAlign:'left', cursor:'pointer', background:'transparent', color:C.muted2, border:'none', transition:'all 0.18s' }}><span style={{ width:15, textAlign:'center', opacity:0.7 }}>+</span> Add Organization (Bypass)</button>
+            <button onClick={()=>{ setModalUser(true); setSidebarOpen(false) }} className="sa-ni" style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 10px', borderRadius:4, marginBottom:1, fontSize:12.5, width:'100%', textAlign:'left', cursor:'pointer', background:'transparent', color:C.muted2, border:'none', transition:'all 0.18s' }}><span style={{ width:15, textAlign:'center', opacity:0.7 }}>+</span> Add User (Bypass)</button>
+            <button onClick={()=>{ setModalOrg(true); setSidebarOpen(false) }} className="sa-ni" style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 10px', borderRadius:4, marginBottom:1, fontSize:12.5, width:'100%', textAlign:'left', cursor:'pointer', background:'transparent', color:C.muted2, border:'none', transition:'all 0.18s' }}><span style={{ width:15, textAlign:'center', opacity:0.7 }}>+</span> Add Organization (Bypass)</button>
           </div>
 
           <div style={{ marginTop:'auto', padding:'14px 16px', borderTop:`1px solid ${C.border}`, display:'flex', alignItems:'center', gap:10 }}>
@@ -1514,19 +1551,22 @@ export function SuperAdminDashboard({ adminName, stats, bypassUsers, bypassOrgs,
 
         {/* MAIN */}
         <div style={{ flex:1, display:'flex', flexDirection:'column', minWidth:0 }}>
-          <div style={{ padding:'16px 28px', borderBottom:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'space-between', background:C.dark2, position:'sticky', top:0, zIndex:20 }}>
-            <div>
-              <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:20, letterSpacing:2 }}>{meta.title}</div>
-              <div style={{ fontSize:10, color:C.muted, letterSpacing:1 }}>{meta.crumb}</div>
+          <div className="sa-header" style={{ padding:'16px 28px', borderBottom:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'space-between', background:C.dark2, position:'sticky', top:0, zIndex:20 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+              <button onClick={() => setSidebarOpen(o => !o)} className="sa-hamburger" style={{ background:'none', border:'none', color:C.cream, cursor:'pointer', fontSize:20, padding:'4px 8px', borderRadius:4, flexShrink:0, lineHeight:1 }}>☰</button>
+              <div>
+                <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:20, letterSpacing:2 }}>{meta.title}</div>
+                <div style={{ fontSize:10, color:C.muted, letterSpacing:1 }}>{meta.crumb}</div>
+              </div>
             </div>
-            <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-              <Btn variant="ghost" size="sm" onClick={()=>showToast('Exporting platform report...')}>Export Report</Btn>
-              <Btn variant="gold" size="sm" onClick={()=>setModalOrg(true)}>+ Add Organization</Btn>
-              <Btn variant="primary" size="sm" onClick={()=>setModalUser(true)}>+ Add User</Btn>
+            <div className="sa-header-actions" style={{ display:'flex', alignItems:'center', gap:10 }}>
+              <span className="sa-export-btn"><Btn variant="ghost" size="sm" onClick={()=>showToast('Exporting platform report...')}>Export Report</Btn></span>
+              <Btn variant="gold" size="sm" onClick={()=>setModalOrg(true)}>+ Org</Btn>
+              <Btn variant="primary" size="sm" onClick={()=>setModalUser(true)}>+ User</Btn>
             </div>
           </div>
 
-          <div style={{ padding:28, flex:1 }}>
+          <div className="sa-content" style={{ padding:28, flex:1 }}>
             {page==='overview' && <OverviewPage stats={stats} bypassUsers={bypassUsers} auditLog={auditLog} orgs={orgs} onNav={setPage} onAddUser={()=>setModalUser(true)} onAddOrg={()=>setModalOrg(true)}/>}
             {page==='bypass'   && <BypassPage bypassUsers={bypassUsers} bypassOrgs={bypassOrgs} onEdit={setEditTarget} onToast={showToast} onAddUser={()=>setModalUser(true)} onAddOrg={()=>setModalOrg(true)} onEditAdmin={setEditOrgAdmin}/>}
             {page==='orgs'     && <OrgsPage orgs={orgs} onToast={showToast} onAddOrg={()=>setModalOrg(true)} onAddUser={()=>setModalUser(true)} onDeleteOrg={setDeleteOrgTarget} onEditAdmin={setEditOrgAdmin}/>}

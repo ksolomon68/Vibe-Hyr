@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { editUser, removeUser, inviteUserDirect } from '@/app/admin/users/actions'
@@ -722,6 +722,13 @@ export function InstitutionalAdminDashboard({ org, members, adminName }: Props) 
   const [delTarget, setDelTarget]   = useState<Member | null>(null)
   const [delLoading, setDelLoading] = useState(false)
   const router = useRouter()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  useEffect(() => {
+    const onResize = () => { if (window.innerWidth >= 768) setSidebarOpen(false) }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   function showToast(msg: string) {
     setToast(msg)
@@ -777,12 +784,41 @@ export function InstitutionalAdminDashboard({ org, members, adminName }: Props) 
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
         .inst-nav-item { transition: all 0.2s; }
         .inst-nav-item:hover { background: ${C.glow}; color: ${C.cream}; }
+        .inst-sidebar {
+          width:260px; min-width:260px; background:${C.dark2};
+          border-right:1px solid ${C.border}; display:flex; flex-direction:column;
+          position:sticky; top:0; height:100vh; overflow-y:auto; padding-bottom:24px;
+          z-index:40; transition:transform 0.25s ease;
+        }
+        .inst-overlay {
+          display:none; position:fixed; inset:0;
+          background:rgba(10,8,4,0.72); z-index:39; cursor:pointer;
+        }
+        .inst-hamburger { display:none; align-items:center; justify-content:center; }
+        @media (max-width: 767px) {
+          .inst-sidebar {
+            position:fixed !important; top:0 !important; left:0 !important;
+            transform:translateX(-100%);
+            height:100vh !important;
+            box-shadow:4px 0 24px rgba(0,0,0,0.6);
+          }
+          .inst-sidebar.open { transform:translateX(0); }
+          .inst-overlay.open { display:block; }
+          .inst-hamburger { display:flex !important; }
+          .inst-header { padding:12px 16px !important; }
+          .inst-content { padding:16px !important; }
+          .inst-content [style*="grid-template-columns"] { grid-template-columns:1fr !important; }
+          .inst-upgrade-btn { display:none !important; }
+        }
       `}</style>
 
       <div style={{ display:'flex', minHeight:'100vh', background:C.dark, color:C.cream, fontFamily:"'DM Sans',sans-serif" }}>
 
+        {/* Mobile overlay */}
+        <div onClick={() => setSidebarOpen(false)} className={`inst-overlay${sidebarOpen ? ' open' : ''}`} />
+
         {/* ── SIDEBAR ── */}
-        <nav style={{ width:260, minWidth:260, background:C.dark2, borderRight:`1px solid ${C.border}`, display:'flex', flexDirection:'column', position:'sticky', top:0, height:'100vh', overflowY:'auto', paddingBottom:24 }}>
+        <nav className={`inst-sidebar${sidebarOpen ? ' open' : ''}`}>
           <div style={{ padding:'28px 24px 20px', borderBottom:`1px solid ${C.border}` }}>
             <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:26, letterSpacing:2 }}>
               <span style={{ color:C.orange }}>VIBE</span>HYR
@@ -800,7 +836,7 @@ export function InstitutionalAdminDashboard({ org, members, adminName }: Props) 
           <div style={{ padding:'0 12px', marginTop:8 }}>
             <div style={{ fontSize:9, letterSpacing:3, textTransform:'uppercase', color:C.muted, padding:'12px 12px 6px' }}>Overview</div>
             {navItems.slice(0, 3).map(n => (
-              <button key={n.id} onClick={() => setTab(n.id)} className="inst-nav-item" style={{
+              <button key={n.id} onClick={() => { setTab(n.id); setSidebarOpen(false) }} className="inst-nav-item" style={{
                 display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:6,
                 fontSize:13, fontWeight:400, width:'100%', textAlign:'left', cursor:'pointer', marginBottom:2,
                 background: tab === n.id ? 'linear-gradient(90deg,rgba(232,98,26,0.2),transparent)' : 'transparent',
@@ -815,7 +851,7 @@ export function InstitutionalAdminDashboard({ org, members, adminName }: Props) 
 
             <div style={{ fontSize:9, letterSpacing:3, textTransform:'uppercase', color:C.muted, padding:'12px 12px 6px' }}>Manage</div>
             {navItems.slice(3).map(n => (
-              <button key={n.id} onClick={() => setTab(n.id)} className="inst-nav-item" style={{
+              <button key={n.id} onClick={() => { setTab(n.id); setSidebarOpen(false) }} className="inst-nav-item" style={{
                 display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:6,
                 fontSize:13, fontWeight:400, width:'100%', textAlign:'left', cursor:'pointer', marginBottom:2,
                 background: tab === n.id ? 'linear-gradient(90deg,rgba(232,98,26,0.2),transparent)' : 'transparent',
@@ -845,19 +881,22 @@ export function InstitutionalAdminDashboard({ org, members, adminName }: Props) 
 
         {/* ── MAIN ── */}
         <div style={{ flex:1, display:'flex', flexDirection:'column', minWidth:0 }}>
-          <div style={{ padding:'18px 32px', borderBottom:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'space-between', background:C.dark2, position:'sticky', top:0, zIndex:10 }}>
-            <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, letterSpacing:2 }}>{TAB_TITLES[tab]}</div>
+          <div className="inst-header" style={{ padding:'18px 32px', borderBottom:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'space-between', background:C.dark2, position:'sticky', top:0, zIndex:10 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+              <button onClick={() => setSidebarOpen(o => !o)} className="inst-hamburger" style={{ background:'none', border:'none', color:C.cream, cursor:'pointer', fontSize:20, padding:'4px 8px', borderRadius:4, flexShrink:0, lineHeight:1 }}>☰</button>
+              <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, letterSpacing:2 }}>{TAB_TITLES[tab]}</div>
+            </div>
             <div style={{ display:'flex', alignItems:'center', gap:16 }}>
               <button onClick={() => setInvite(true)} style={{ background:'transparent', border:`1px solid ${C.borderB}`, color:C.cream, fontFamily:'inherit', fontSize:12, fontWeight:500, letterSpacing:1, padding:'8px 16px', borderRadius:4, cursor:'pointer', textTransform:'uppercase' }}>
-                + Invite Users
+                + Invite
               </button>
-              <button onClick={() => setTab('payments')} style={{ background:C.orange, border:`1px solid ${C.orange}`, color:'#fff', fontFamily:'inherit', fontSize:12, fontWeight:500, letterSpacing:1, padding:'8px 16px', borderRadius:4, cursor:'pointer', textTransform:'uppercase' }}>
+              <button className="inst-upgrade-btn" onClick={() => setTab('payments')} style={{ background:C.orange, border:`1px solid ${C.orange}`, color:'#fff', fontFamily:'inherit', fontSize:12, fontWeight:500, letterSpacing:1, padding:'8px 16px', borderRadius:4, cursor:'pointer', textTransform:'uppercase' }}>
                 Upgrade Plan
               </button>
             </div>
           </div>
 
-          <div style={{ padding:32, flex:1 }}>
+          <div className="inst-content" style={{ padding:32, flex:1 }}>
             {tab === 'dashboard' && <DashboardPage org={org} members={members} />}
             {tab === 'users'     && <OrgUserManagement />}
             {tab === 'progress'  && <ProgressPage members={members} />}

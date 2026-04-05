@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useTransition, useCallback } from 'react'
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
-import {
-  listCourseLessons, upsertLesson, deleteCmsLesson, reorderLessons, syncLeadershipCourses,
+import { listCourseLessons, upsertLesson, deleteCmsLesson, reorderLessons, syncLeadershipCourses,
   type CmsLesson,
 } from '@/app/admin/super/actions'
+import { RichTextEditor } from './RichTextEditor'
 
 // ── Brand colors (mirrors SuperAdminDashboard C palette) ─────────────────────
 const C = {
@@ -360,16 +360,13 @@ function LessonEditorModal({
           </div>
         )}
 
-        {/* Text content (text only) */}
-        {form.type === 'text' && (
+        {/* Text content (text & video only) */}
+        {(form.type === 'text' || form.type === 'video') && (
           <div style={{ marginBottom: 16 }}>
-            <Label>Content (Markdown)</Label>
-            <textarea
-              value={form.content}
-              onChange={e => set('content', e.target.value)}
-              placeholder="## Section Title&#10;&#10;Your markdown content here..."
-              rows={12}
-              style={IS({ resize: 'vertical', fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, lineHeight: 1.6 })}
+            <Label>{form.type === 'video' ? 'Video Description' : 'Lesson Content'}</Label>
+            <RichTextEditor
+              content={form.content}
+              onChange={val => set('content', val)}
             />
           </div>
         )}

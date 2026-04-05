@@ -8,11 +8,36 @@ interface LessonContentProps {
 // Simple markdown-to-JSX renderer (no external deps needed)
 // Handles: h2, h3, bold, italic, blockquote, hr, lists, paragraphs
 export function LessonContent({ content, className }: LessonContentProps) {
+  const isHtml = content.trim().startsWith('<') && content.includes('>')
+
+  if (isHtml) {
+    return (
+      <div 
+        className={cn('prose-vibe-html', className)}
+        dangerouslySetInnerHTML={{ __html: content }}
+      >
+        <style dangerouslySetInnerHTML={{ __html: `
+          .prose-vibe-html h2 { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; color: #E8621A; letter-spacing: 0.05em; margin: 2rem 0 1rem; text-transform: uppercase; }
+          .prose-vibe-html h3 { font-family: 'DM Sans', sans-serif; font-size: 1.25rem; color: #FFFFFF; font-weight: 600; margin: 1.5rem 0 0.75rem; }
+          .prose-vibe-html p  { margin-bottom: 1.25rem; line-height: 1.8; color: #B8A89A; font-size: 1.1rem; }
+          .prose-vibe-html strong { color: #FFFFFF; font-weight: 600; }
+          .prose-vibe-html em { font-style: italic; color: #D4C4B7; }
+          .prose-vibe-html ul, .prose-vibe-html ol { margin-bottom: 1.5rem; padding-left: 1.5rem; }
+          .prose-vibe-html li { margin-bottom: 0.5rem; color: #B8A89A; font-size: 1.1rem; }
+          .prose-vibe-html blockquote { border-left: 4px solid #E8621A; background: rgba(232, 98, 26, 0.05); padding: 1rem 1.5rem; margin: 1.5rem 0; font-style: italic; color: #D4C4B7; }
+          .prose-vibe-html a { color: #E8621A; text-decoration: underline; font-weight: 500; transition: opacity 0.2s; }
+          .prose-vibe-html a:hover { opacity: 0.8; }
+        `}} />
+      </div>
+    )
+  }
+
   const lines = content.split('\n')
   const elements: React.ReactNode[] = []
   let i = 0
 
   while (i < lines.length) {
+    // ... (rest of markdown parser)
     const line = lines[i]
 
     // Skip empty lines
@@ -63,7 +88,7 @@ export function LessonContent({ content, className }: LessonContentProps) {
       i++; continue
     }
 
-    // Unordered list — collect consecutive list items
+    // Unordered list
     if (line.startsWith('- ')) {
       const items: string[] = []
       while (i < lines.length && lines[i].startsWith('- ')) {
@@ -105,7 +130,7 @@ export function LessonContent({ content, className }: LessonContentProps) {
       continue
     }
 
-    // Bold heading-like line (entire line is bold)
+    // Bold heading-like line
     if (line.startsWith('**') && line.endsWith('**') && line.length > 4) {
       const text = line.slice(2, -2)
       elements.push(
