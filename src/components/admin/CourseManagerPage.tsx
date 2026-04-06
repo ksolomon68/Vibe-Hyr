@@ -503,10 +503,11 @@ export function CourseManagerPage({ onToast }: { onToast: (msg: string) => void 
 
   async function handleSyncLeadership() {
     setSyncing(true)
-    const res = await syncLeadershipCourses()
+    // force=true — always replace existing content with the expanded curriculum
+    const res = await syncLeadershipCourses(true)
     setSyncing(false)
     if (res.success) {
-      onToast(res.seeded > 0 ? `Synced ${res.seeded} leadership lessons from curriculum.` : 'Leadership lessons already seeded — nothing to sync.')
+      onToast(res.seeded > 0 ? `Resynced ${res.seeded} lessons with expanded curriculum content.` : 'Sync complete.')
       fetchLessons(selectedCourse)
     } else {
       onToast(`Sync failed: ${res.error}`)
