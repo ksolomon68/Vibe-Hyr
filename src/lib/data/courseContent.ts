@@ -18,6 +18,16 @@ import { createClient } from '@/lib/supabase/server'
 import { getLessonsForCourse as getStaticLessons } from '@/lib/data/lessons'
 import type { Lesson } from '@/types'
 
+// ── Title → URL slug (matches curriculum lesson IDs) ─────────────────────────
+// e.g. "The Responsibility Formula" → "the-responsibility-formula"
+function slugify(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/['']/g, '')        // strip apostrophes
+    .replace(/[^a-z0-9]+/g, '-') // non-alphanumeric → dash
+    .replace(/^-|-$/g, '')       // trim leading/trailing dashes
+}
+
 // ── YouTube URL → embed URL ───────────────────────────────────────────────────
 function toEmbedUrl(youtubeUrl: string): string {
   const m = youtubeUrl.match(
@@ -60,7 +70,7 @@ function getApproxDurationSeconds(type: string, content: string | null): number 
 
 function dbRowToLesson(row: DbLessonRow): Lesson {
   return {
-    id:               row.id,
+    id:               slugify(row.title),
     course_id:        numToStringId(row.course_id),
     order_index:      row.sort_order,
     title:            row.title,
