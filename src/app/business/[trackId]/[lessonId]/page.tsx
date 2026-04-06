@@ -5,9 +5,17 @@
 import { redirect, notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { WorkplaceLessonPlayerWrapper } from '@/components/business/WorkplaceLessonPlayerWrapper'
 import { CourseLockedScreen } from '@/components/CourseLockedScreen'
 import { TRACKS } from '@/lib/business/curriculum'
+
+const TRACK_COURSE_ID: Record<string, number> = {
+  'common-sense-in-the-workplace': 5,
+  'from-reaction-to-response':     6,
+  'know-yourself-lead-yourself':   7,
+  'the-high-frequency-team':       8,
+}
 
 interface PageProps {
   params: { trackId: string; lessonId: string }
@@ -31,6 +39,24 @@ export default async function LessonPage({ params }: PageProps) {
 
   const track = TRACKS.find(t => t.id === params.trackId)
   if (!track) return notFound()
+
+  // ── Load rich lesson content from DB (course_lessons) ────────────────────────
+  const courseId = TRACK_COURSE_ID[params.trackId]
+  let dbLessonContent: string | null = null
+  if (courseId) {
+    const lesson = track.lessons.find(l => l.id === params.lessonId)
+    if (lesson) {
+      const admin = createAdminClient()
+      const { data } = await admin
+        .from('course_lessons')
+        .select('content')
+        .eq('course_id', courseId)
+        .eq('title', lesson.title)
+        .eq('is_published', true)
+        .maybeSingle()
+      dbLessonContent = data?.content ?? null
+    }
+  }
 
   // ── DB-level access gate (RLS enforces membership_type + sub_tier) ──────────
   // course_catalog query returns null if the user's entitlements don't match —
@@ -57,6 +83,7 @@ export default async function LessonPage({ params }: PageProps) {
     <WorkplaceLessonPlayerWrapper
       initialTrackId={params.trackId}
       initialLessonId={params.lessonId}
+      dbLessonContent={dbLessonContent}
     />
   )
 }

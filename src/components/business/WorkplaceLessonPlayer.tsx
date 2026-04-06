@@ -8,6 +8,7 @@ import {
   Menu, X, FileText, Loader2, ArrowRight,
 } from 'lucide-react'
 import { VideoPlayer } from '@/components/personal/VideoPlayer'
+import { LessonContent } from '@/components/personal/LessonContent'
 import { AssumptionLab } from '@/components/shared/AssumptionLab'
 import { useLessonNotes } from '@/hooks/useLessonNotes'
 import { cn } from '@/lib/utils'
@@ -24,6 +25,7 @@ export interface WorkplaceLessonPlayerProps {
   onLessonComplete?: (trackId: string, lessonId: string) => void
   onNavigate?:       (trackId: string, lessonId: string) => void
   userTier?:         string
+  dbLessonContent?:  string
 }
 
 type Tab = 'lesson' | 'interact' | 'notes'
@@ -38,6 +40,7 @@ export default function WorkplaceLessonPlayer({
   onLessonComplete,
   onNavigate,
   userTier = 'seeker',
+  dbLessonContent,
 }: WorkplaceLessonPlayerProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [activeTab, setActiveTab]     = useState<Tab>('lesson')
@@ -282,21 +285,27 @@ export default function WorkplaceLessonPlayer({
                     </div>
                   )}
 
-                  {/* Content blocks */}
-                  <div className="space-y-7 mb-10 pb-8 border-b border-white/5">
+                  {/* Content blocks — rich HTML from DB when available */}
+                  <div className="mb-10 pb-8 border-b border-white/5">
+                    {dbLessonContent ? (
+                      <LessonContent content={dbLessonContent} />
+                    ) : (
+                    <div className="space-y-7">
                     {lesson.content.map((block, i) => (
                       <p
                         key={i}
                         className={cn(
                           'font-body leading-[1.8] tracking-[0.015em]',
-                          i === 0 
-                            ? 'text-xl md:text-2xl text-white italic border-l-4 border-[#E8621A] pl-6 py-2 bg-[#E8621A]/5' 
+                          i === 0
+                            ? 'text-xl md:text-2xl text-white italic border-l-4 border-[#E8621A] pl-6 py-2 bg-[#E8621A]/5'
                             : 'text-lg text-white/80'
                         )}
                       >
                         {block}
                       </p>
                     ))}
+                    </div>
+                    )}
                   </div>
 
                   {/* Tool badge */}

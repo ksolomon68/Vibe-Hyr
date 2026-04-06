@@ -17,6 +17,7 @@ import { PageLoader } from "@/components/shared/PageLoader";
 interface WrapperProps {
   initialTrackId?: string;
   initialLessonId?: string;
+  dbLessonContent?: string | null;
 }
 
 // Tier access rules:
@@ -32,6 +33,7 @@ const TIER_ACCESS: Record<string, string[]> = {
 export function WorkplaceLessonPlayerWrapper({
   initialTrackId = "common-sense-in-the-workplace",
   initialLessonId = "the-awareness-gap",
+  dbLessonContent,
 }: WrapperProps) {
   const supabase = createClient();
   const router   = useRouter();
@@ -97,11 +99,11 @@ export function WorkplaceLessonPlayerWrapper({
     );
 
     // Check track completion → record + send branded email
-    const trackLessonCounts: Record<string, number> = { 
-      "common-sense-in-the-workplace": 6, 
-      "from-reaction-to-response": 6, 
-      "know-yourself-lead-yourself": 3, 
-      "the-high-frequency-team": 1 
+    const trackLessonCounts: Record<string, number> = {
+      "common-sense-in-the-workplace": 6,
+      "from-reaction-to-response":     6,
+      "know-yourself-lead-yourself":   6,
+      "the-high-frequency-team":       6,
     };
     const newCount = (progress[trackId]?.length ?? 0) + 1;
     if (newCount >= trackLessonCounts[trackId]) {
@@ -140,6 +142,7 @@ export function WorkplaceLessonPlayerWrapper({
       onLessonComplete={handleComplete}
       onNavigate={handleNavigate}
       userTier={userTier}
+      dbLessonContent={dbLessonContent ?? undefined}
     />
   );
 }
