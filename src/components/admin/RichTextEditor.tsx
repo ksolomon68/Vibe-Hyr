@@ -4,11 +4,36 @@ import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Underline from '@tiptap/extension-underline'
-import { 
-  Bold, Italic, Underline as UnderlineIcon, List, ListOrdered, 
-  Link as LinkIcon, Heading2, Heading3, Quote, Undo, Redo 
+import { Node, mergeAttributes } from '@tiptap/core'
+import {
+  Bold, Italic, Underline as UnderlineIcon, List, ListOrdered,
+  Link as LinkIcon, Heading2, Heading3, Quote, Undo, Redo, Film
 } from 'lucide-react'
 import { useCallback, useEffect } from 'react'
+
+// Custom TipTap node that preserves <iframe> embeds (Vimeo, YouTube, etc.)
+const IframeNode = Node.create({
+  name: 'iframe',
+  group: 'block',
+  atom: true,
+  addAttributes() {
+    return {
+      src:             { default: null },
+      width:           { default: '100%' },
+      height:          { default: '315' },
+      frameborder:     { default: '0' },
+      allowfullscreen: { default: 'true' },
+      allow:           { default: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture' },
+      title:           { default: '' },
+    }
+  },
+  parseHTML() {
+    return [{ tag: 'iframe' }]
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ['iframe', mergeAttributes(HTMLAttributes)]
+  },
+})
 
 // Brand colors (synced with CourseManagerPage)
 const C = {
@@ -66,7 +91,7 @@ const MenuButton = ({
   </button>
 )
 
-export function RichTextEditor({ content, onChange, placeholder }: RichTextEditorProps) {
+export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -81,6 +106,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
           style: `color: ${C.orange}; font-weight: 500; text-decoration: underline;`,
         },
       }),
+      IframeNode,
     ],
     content,
     onUpdate: ({ editor }) => {
@@ -108,10 +134,11 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
     },
   })
 
-  // Sync content when prop changes (e.g. when opening modal with different lesson)
+  // Sync content when prop changes (e.g. when opening modal with different lesson).
+  // Pass false as second arg so setContent doesn't fire onUpdate → onChange → infinite loop.
   useEffect(() => {
     if (editor && content !== editor.getHTML()) {
-      editor.commands.setContent(content)
+      editor.commands.setContent(content, { emitUpdate: false })
     }
   }, [content, editor])
 
@@ -126,6 +153,15 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
     }
 
     editor?.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
+  }, [editor])
+
+  const insertEmbed = useCallback(() => {
+    const src = window.prompt('Paste embed URL (YouTube, Vimeo, etc.)')
+    if (!src?.trim()) return
+    editor?.chain().focus().insertContent({
+      type: 'iframe',
+      attrs: { src: src.trim() },
+    }).run()
   }, [editor])
 
   if (!editor) return null
@@ -208,12 +244,19 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
 
         <div style={{ width: '1px', background: C.border, margin: '0 4px' }} />
 
-        <MenuButton 
+        <MenuButton
           title="Add Link"
           onClick={setLink}
           isActive={editor.isActive('link')}
         >
           <LinkIcon size={16} />
+        </MenuButton>
+        <MenuButton
+          title="Insert Video Embed"
+          onClick={insertEmbed}
+          isActive={editor.isActive('iframe')}
+        >
+          <Film size={16} />
         </MenuButton>
 
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '4px' }}>

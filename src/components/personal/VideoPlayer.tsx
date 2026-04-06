@@ -105,15 +105,20 @@ export function VideoPlayer({ videoUrl, title, thumbnailUrl, onComplete }: Video
   const [started, setStarted] = useState(false)
   const [muted,   setMuted]   = useState(false)
 
-  // YouTube URL detection
-  const isYouTube = videoUrl?.includes('youtube.com') || videoUrl?.includes('youtu.be')
+  // YouTube URL detection — includes youtube-nocookie.com (used by courseContent.ts embed conversion)
+  const isYouTube = videoUrl?.includes('youtube.com') ||
+                    videoUrl?.includes('youtu.be') ||
+                    videoUrl?.includes('youtube-nocookie.com')
 
   const getYouTubeEmbedUrl = (url: string): string => {
-    if (url.includes('youtube.com/embed')) return `${url}?autoplay=1`
+    // Already an embed URL (youtube.com/embed or youtube-nocookie.com/embed) — just append autoplay
+    if (url.includes('/embed/')) {
+      return url.includes('?') ? `${url}&autoplay=1` : `${url}?autoplay=1`
+    }
     const watchMatch = url.match(/[?&]v=([^&]+)/)
-    if (watchMatch) return `https://www.youtube.com/embed/${watchMatch[1]}?autoplay=1`
+    if (watchMatch) return `https://www.youtube-nocookie.com/embed/${watchMatch[1]}?autoplay=1&rel=0`
     const shortMatch = url.match(/youtu\.be\/([^?&]+)/)
-    if (shortMatch) return `https://www.youtube.com/embed/${shortMatch[1]}?autoplay=1`
+    if (shortMatch) return `https://www.youtube-nocookie.com/embed/${shortMatch[1]}?autoplay=1&rel=0`
     return url
   }
 

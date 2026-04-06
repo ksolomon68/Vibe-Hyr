@@ -370,6 +370,7 @@ function LessonEditorModal({
           <div style={{ marginBottom: 16 }}>
             <Label>{form.type === 'video' ? 'Video Description' : 'Lesson Content'}</Label>
             <RichTextEditor
+              key={form.id ?? 'new'}
               content={form.content}
               onChange={val => set('content', val)}
             />

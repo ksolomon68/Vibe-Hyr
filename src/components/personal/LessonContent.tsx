@@ -12,10 +12,7 @@ export function LessonContent({ content, className }: LessonContentProps) {
 
   if (isHtml) {
     return (
-      <div 
-        className={cn('prose-vibe-html', className)}
-        dangerouslySetInnerHTML={{ __html: content }}
-      >
+      <>
         <style dangerouslySetInnerHTML={{ __html: `
           .prose-vibe-html h2 { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; color: #E8621A; letter-spacing: 0.05em; margin: 2rem 0 1rem; text-transform: uppercase; }
           .prose-vibe-html h3 { font-family: 'DM Sans', sans-serif; font-size: 1.25rem; color: #FFFFFF; font-weight: 600; margin: 1.5rem 0 0.75rem; }
@@ -27,8 +24,13 @@ export function LessonContent({ content, className }: LessonContentProps) {
           .prose-vibe-html blockquote { border-left: 4px solid #E8621A; background: rgba(232, 98, 26, 0.05); padding: 1rem 1.5rem; margin: 1.5rem 0; font-style: italic; color: #D4C4B7; }
           .prose-vibe-html a { color: #E8621A; text-decoration: underline; font-weight: 500; transition: opacity 0.2s; }
           .prose-vibe-html a:hover { opacity: 0.8; }
+          .prose-vibe-html iframe { width: 100%; aspect-ratio: 16/9; border: none; border-radius: 4px; margin: 1rem 0; }
         `}} />
-      </div>
+        <div
+          className={cn('prose-vibe-html', className)}
+          dangerouslySetInnerHTML={{ __html: content }}
+        />
+      </>
     )
   }
 
