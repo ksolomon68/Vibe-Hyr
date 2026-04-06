@@ -764,16 +764,6 @@ export type CmsLesson = {
   updated_at: string
 }
 
-function isValidYoutubeUrl(url: string): boolean {
-  if (!url) return false
-  const trimmed = url.trim()
-  // If it's a full URL, check for youtube domain
-  if (trimmed.startsWith('http')) {
-    return /^https?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)/.test(trimmed)
-  }
-  // If it's just an ID (Cloudflare or YouTube ID), we'll allow it as it's common for "uploads"
-  return trimmed.length > 0
-}
 
 // ── List lessons for a course ─────────────────────────────────────────────────
 
@@ -899,11 +889,14 @@ export async function reorderLessons(
 
 // ── Sync Leadership courses from curriculum into course_lessons ───────────────
 
-export async function syncLeadershipCourses(): Promise<ActionResult & { seeded: number }> {
+export async function syncLeadershipCourses(
+  force = false
+): Promise<ActionResult & { seeded: number }> {
   const sa = await requireSuperAdmin()
   if (!sa) return { success: false, error: 'Unauthorized', seeded: 0 }
 
   const { COURSES } = await import('@/lib/leadership/curriculum')
+  const { LESSON_EXPANSIONS } = await import('@/lib/leadership/curriculum-expanded')
   const admin = createAdminClient()
 
   // course_id mapping: leadership_course_N → integer 12 + N
@@ -921,28 +914,55 @@ export async function syncLeadershipCourses(): Promise<ActionResult & { seeded: 
     if (!courseId) continue
 
     const lessons = course.lessons.map((lesson, index) => {
-      const content = `
-        <p>${lesson.description}</p>
-        <h2>Key Concepts</h2>
-        <ul>
-          ${lesson.keyConcepts.map(c => `<li>${c}</li>`).join('')}
-        </ul>
-        <div class="callout">
-          <h2>Neuroscience Anchor</h2>
-          <p>${lesson.neuroscienceAnchor}</p>
-        </div>
-        <div class="callout">
-          <h2>Law Anchor</h2>
-          <p>${lesson.lawAnchor}</p>
-        </div>
-      `.trim()
+      const exp = LESSON_EXPANSIONS[lesson.id]
+
+      // ── Rich HTML content assembled from base curriculum + expansion fields ──
+      const content = [
+        // Opening description
+        `<p>${lesson.description}</p>`,
+
+        // Deep dive (3 paragraphs of expanded instruction) — from expansion
+        exp?.deepDive ?? '',
+
+        // Key Insight callout
+        exp?.keyInsight
+          ? `<blockquote><strong>Key Insight:</strong> ${exp.keyInsight}</blockquote>`
+          : '',
+
+        // Key Concepts
+        `<h2>Key Concepts</h2>`,
+        `<ul>${lesson.keyConcepts.map(c => `<li>${c}</li>`).join('\n')}</ul>`,
+
+        // Neuroscience Anchor
+        `<h2>Neuroscience Anchor</h2>`,
+        `<p>${lesson.neuroscienceAnchor}</p>`,
+
+        // Law Anchor
+        `<h2>The Law in Action</h2>`,
+        `<p>${lesson.lawAnchor}</p>`,
+
+        // Practical Application — from expansion
+        exp?.practicalApplication
+          ? `<h2>Practical Application</h2><p>${exp.practicalApplication}</p>`
+          : '',
+
+        // Reflection Prompts — from expansion
+        exp?.reflectionPrompts?.length
+          ? `<h2>Reflection Prompts</h2><ul>${exp.reflectionPrompts.map(p => `<li>${p}</li>`).join('\n')}</ul>`
+          : '',
+
+        // Weekly Challenge — from expansion
+        exp?.weeklyChallenge
+          ? `<h2>This Week's Challenge</h2><p>${exp.weeklyChallenge}</p>`
+          : '',
+      ].filter(Boolean).join('\n')
 
       return {
         course_id:    courseId,
         title:        lesson.title,
         type:         'text' as const,
         youtube_url:  null,
-        content,
+        content:      sanitizeHtml(content),
         sort_order:   index + 1,
         is_published: true,
         is_preview:   index === 0,
@@ -951,25 +971,36 @@ export async function syncLeadershipCourses(): Promise<ActionResult & { seeded: 
       }
     })
 
-    // Seed if empty; or if we want to force-update (but we'll be careful here)
+    // When force=true, delete existing lessons and reseed with expanded content.
+    // When force=false, only seed if the course has no lessons yet.
     const { count } = await admin
       .from('course_lessons')
       .select('id', { count: 'exact', head: true })
       .eq('course_id', courseId)
 
-    // Only seed if the course is empty to avoid overwriting user edits
-    if ((count ?? 0) > 0) continue
+    if ((count ?? 0) > 0) {
+      if (!force) continue
+      // Delete existing rows so we can reinsert with the expanded content
+      const { error: delErr } = await admin
+        .from('course_lessons')
+        .delete()
+        .eq('course_id', courseId)
+      if (delErr) {
+        console.error(`[syncLeadershipCourses] Delete failed for course ${courseId}:`, delErr)
+        continue
+      }
+    }
 
     const { error } = await admin.from('course_lessons').insert(lessons)
     if (error) {
-      console.error(`[syncLeadershipCourses] Failed for course ${courseId}:`, error)
+      console.error(`[syncLeadershipCourses] Insert failed for course ${courseId}:`, error)
       continue
     }
     seeded += lessons.length
   }
 
   await logAudit(sa.userId, sa.email, 'LEADERSHIP_COURSES_SYNCED', 'course', null, null,
-    `Seeded ${seeded} lessons across leadership courses`)
+    `Seeded/updated ${seeded} lessons across leadership courses (force=${force})`)
 
   revalidatePath('/admin/super')
   return { success: true, seeded }
