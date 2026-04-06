@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useTransition, useCallback } from 'react'
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
-import { listCourseLessons, upsertLesson, deleteCmsLesson, reorderLessons, syncLeadershipCourses,
+import { listCourseLessons, upsertLesson, deleteCmsLesson, reorderLessons,
+  syncLeadershipCourses, syncBusinessCourses, syncEducatorCourses,
   type CmsLesson,
 } from '@/app/admin/super/actions'
 import { RichTextEditor } from './RichTextEditor'
@@ -480,6 +481,8 @@ export function CourseManagerPage({ onToast }: { onToast: (msg: string) => void 
   const [showEditor, setShowEditor]         = useState(false)
   const [isPending, startTransition]        = useTransition()
   const [syncing, setSyncing]               = useState(false)
+  const [syncingBusiness, setSyncingBusiness] = useState(false)
+  const [syncingEducation, setSyncingEducation] = useState(false)
 
   const fetchLessons = useCallback(async (courseId: number) => {
     setLoading(true)
@@ -511,6 +514,30 @@ export function CourseManagerPage({ onToast }: { onToast: (msg: string) => void 
       fetchLessons(selectedCourse)
     } else {
       onToast(`Sync failed: ${res.error}`)
+    }
+  }
+
+  async function handleSyncBusiness() {
+    setSyncingBusiness(true)
+    const res = await syncBusinessCourses(true)
+    setSyncingBusiness(false)
+    if (res.success) {
+      onToast(res.seeded > 0 ? `Resynced ${res.seeded} business lessons with expanded curriculum content.` : 'Business sync complete.')
+      fetchLessons(selectedCourse)
+    } else {
+      onToast(`Business sync failed: ${res.error}`)
+    }
+  }
+
+  async function handleSyncEducation() {
+    setSyncingEducation(true)
+    const res = await syncEducatorCourses(true)
+    setSyncingEducation(false)
+    if (res.success) {
+      onToast(res.seeded > 0 ? `Resynced ${res.seeded} educator lessons from curriculum.` : 'Education sync complete.')
+      fetchLessons(selectedCourse)
+    } else {
+      onToast(`Education sync failed: ${res.error}`)
     }
   }
 
@@ -637,6 +664,16 @@ export function CourseManagerPage({ onToast }: { onToast: (msg: string) => void 
               {activeCategory === 'leadership' && (
                 <Btn variant="gold" size="md" onClick={handleSyncLeadership} disabled={syncing}>
                   {syncing ? 'Syncing…' : '⟳ Sync from Curriculum'}
+                </Btn>
+              )}
+              {activeCategory === 'business' && (
+                <Btn variant="gold" size="md" onClick={handleSyncBusiness} disabled={syncingBusiness}>
+                  {syncingBusiness ? 'Syncing…' : '⟳ Sync from Curriculum'}
+                </Btn>
+              )}
+              {activeCategory === 'education' && (
+                <Btn variant="gold" size="md" onClick={handleSyncEducation} disabled={syncingEducation}>
+                  {syncingEducation ? 'Syncing…' : '⟳ Sync from Curriculum'}
                 </Btn>
               )}
               <Btn variant="primary" size="md" onClick={openNew}>+ Add Lesson</Btn>

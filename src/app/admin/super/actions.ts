@@ -1005,3 +1005,159 @@ export async function syncLeadershipCourses(
   revalidatePath('/admin/super')
   return { success: true, seeded }
 }
+
+// ── Sync Business courses from curriculum into course_lessons ─────────────────
+
+export async function syncBusinessCourses(
+  force = false
+): Promise<ActionResult & { seeded: number }> {
+  const sa = await requireSuperAdmin()
+  if (!sa) return { success: false, error: 'Unauthorized', seeded: 0 }
+
+  const { TRACKS } = await import('@/lib/business/curriculum')
+  const { LESSON_EXPANSIONS } = await import('@/lib/business/curriculum-expanded')
+  const admin = createAdminClient()
+
+  // course_id mapping: track.id → integer
+  const COURSE_ID_MAP: Record<string, number> = {
+    'common-sense-in-the-workplace': 5,
+    'from-reaction-to-response':     6,
+    'know-yourself-lead-yourself':   7,
+    'the-high-frequency-team':       8,
+  }
+
+  let seeded = 0
+
+  for (const track of TRACKS) {
+    const courseId = COURSE_ID_MAP[track.id]
+    if (!courseId) continue
+
+    const lessons = track.lessons
+      .filter(lesson => !lesson.isLive) // skip live sessions
+      .map((lesson, index) => {
+        const exp = LESSON_EXPANSIONS[lesson.id]
+
+        const content = [
+          `<p>${lesson.description}</p>`,
+          exp?.deepDive ?? '',
+          exp?.keyInsight
+            ? `<blockquote><strong>Key Insight:</strong> ${exp.keyInsight}</blockquote>`
+            : '',
+          lesson.objectives?.length
+            ? `<h2>Learning Objectives</h2><ul>${lesson.objectives.map(o => `<li>${o}</li>`).join('\n')}</ul>`
+            : '',
+          lesson.content?.length
+            ? `<h2>Core Concepts</h2>${lesson.content.map(c => `<p>${c}</p>`).join('\n')}`
+            : '',
+          exp?.practicalApplication
+            ? `<h2>Practical Application</h2><p>${exp.practicalApplication}</p>`
+            : '',
+          exp?.reflectionPrompts?.length
+            ? `<h2>Reflection Prompts</h2><ul>${exp.reflectionPrompts.map(p => `<li>${p}</li>`).join('\n')}</ul>`
+            : '',
+          exp?.weeklyChallenge
+            ? `<h2>This Week's Challenge</h2><p>${exp.weeklyChallenge}</p>`
+            : '',
+        ].filter(Boolean).join('\n')
+
+        return {
+          course_id:    courseId,
+          title:        lesson.title,
+          type:         lesson.type === 'video' ? 'video' as const : 'text' as const,
+          youtube_url:  null,
+          content:      sanitizeHtml(content),
+          sort_order:   index + 1,
+          is_published: true,
+          is_preview:   index === 0,
+          created_at:   new Date().toISOString(),
+          updated_at:   new Date().toISOString(),
+        }
+      })
+
+    const { count } = await admin
+      .from('course_lessons')
+      .select('id', { count: 'exact', head: true })
+      .eq('course_id', courseId)
+
+    if ((count ?? 0) > 0) {
+      if (!force) continue
+      await admin.from('course_lessons').delete().eq('course_id', courseId)
+    }
+
+    const { error } = await admin.from('course_lessons').insert(lessons)
+    if (error) {
+      console.error(`[syncBusinessCourses] Insert failed for course ${courseId}:`, error)
+      continue
+    }
+    seeded += lessons.length
+  }
+
+  await logAudit(sa.userId, sa.email, 'BUSINESS_COURSES_SYNCED', 'course', null, null,
+    `Seeded/updated ${seeded} lessons across business courses (force=${force})`)
+
+  revalidatePath('/admin/super')
+  return { success: true, seeded }
+}
+
+// ── Sync Educator courses from curriculum into course_lessons ─────────────────
+
+export async function syncEducatorCourses(
+  force = false
+): Promise<ActionResult & { seeded: number }> {
+  const sa = await requireSuperAdmin()
+  if (!sa) return { success: false, error: 'Unauthorized', seeded: 0 }
+
+  const { PROGRAMS } = await import('@/lib/education/curriculum')
+  const admin = createAdminClient()
+
+  // course_id mapping: program.id → integer
+  const COURSE_ID_MAP: Record<string, number> = {
+    'ed01': 9,
+    'ed02': 10,
+    'ed03': 11,
+    'ed04': 12,
+  }
+
+  let seeded = 0
+
+  for (const program of PROGRAMS) {
+    const courseId = COURSE_ID_MAP[program.id]
+    if (!courseId) continue
+
+    const lessons = program.modules.map((module, index) => ({
+      course_id:    courseId,
+      title:        module.title,
+      type:         'text' as const,
+      youtube_url:  null,
+      content:      sanitizeHtml(module.content),
+      sort_order:   index + 1,
+      is_published: true,
+      is_preview:   index === 0,
+      created_at:   new Date().toISOString(),
+      updated_at:   new Date().toISOString(),
+    }))
+
+    const { count } = await admin
+      .from('course_lessons')
+      .select('id', { count: 'exact', head: true })
+      .eq('course_id', courseId)
+
+    if ((count ?? 0) > 0) {
+      if (!force) continue
+      await admin.from('course_lessons').delete().eq('course_id', courseId)
+    }
+
+    const { error } = await admin.from('course_lessons').insert(lessons)
+    if (error) {
+      console.error(`[syncEducatorCourses] Insert failed for course ${courseId}:`, error)
+      continue
+    }
+    seeded += lessons.length
+  }
+
+  await logAudit(sa.userId, sa.email, 'EDUCATOR_COURSES_SYNCED', 'course', null, null,
+    `Seeded/updated ${seeded} lessons across educator courses (force=${force})`)
+
+  revalidatePath('/admin/super')
+  return { success: true, seeded }
+}
