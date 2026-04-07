@@ -1161,3 +1161,108 @@ export async function syncEducatorCourses(
   revalidatePath('/admin/super')
   return { success: true, seeded }
 }
+
+// ── Sync Personal courses from curriculum into course_lessons ─────────────────
+
+export async function syncPersonalCourses(
+  force = false
+): Promise<ActionResult & { seeded: number }> {
+  const sa = await requireSuperAdmin()
+  if (!sa) return { success: false, error: 'Unauthorized', seeded: 0 }
+
+  const { COURSE_01_LESSONS, COURSE_02_LESSONS, COURSE_03_LESSONS, COURSE_04_LESSONS } =
+    await import('@/lib/data/lessons')
+  const { PERSONAL_LESSON_EXPANSIONS } = await import('@/lib/personal/curriculum-expanded')
+  const admin = createAdminClient()
+
+  const COURSE_SETS = [
+    { courseId: 1, lessons: COURSE_01_LESSONS },
+    { courseId: 2, lessons: COURSE_02_LESSONS },
+    { courseId: 3, lessons: COURSE_03_LESSONS },
+    { courseId: 4, lessons: COURSE_04_LESSONS },
+  ]
+
+  let seeded = 0
+
+  for (const { courseId, lessons } of COURSE_SETS) {
+    const rows = lessons.map((lesson, index) => {
+      const exp = PERSONAL_LESSON_EXPANSIONS[lesson.title]
+
+      // Build rich HTML: existing content_md converted to HTML paragraphs + expansion
+      const existingContent = lesson.content_md
+        ? lesson.content_md
+            .split('\n\n')
+            .filter(Boolean)
+            .map(block => {
+              if (block.startsWith('## ')) return `<h2>${block.slice(3)}</h2>`
+              if (block.startsWith('### ')) return `<h3>${block.slice(4)}</h3>`
+              if (block.startsWith('> ')) return `<blockquote>${block.slice(2)}</blockquote>`
+              if (block.startsWith('- ') || block.startsWith('* ')) {
+                const items = block.split('\n').filter(l => l.match(/^[-*] /))
+                return `<ul>${items.map(l => `<li>${l.replace(/^[-*] /, '')}</li>`).join('')}</ul>`
+              }
+              if (block.startsWith('1. ')) {
+                const items = block.split('\n').filter(l => l.match(/^\d+\. /))
+                return `<ul>${items.map(l => `<li>${l.replace(/^\d+\. /, '')}</li>`).join('')}</ul>`
+              }
+              if (block.startsWith('---')) return '<hr />'
+              return `<p>${block.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>').replace(/`(.+?)`/g, '<code>$1</code>')}</p>`
+            })
+            .join('\n')
+        : `<p>${lesson.description}</p>`
+
+      const content = [
+        existingContent,
+        exp?.deepDive ?? '',
+        exp?.keyInsight
+          ? `<blockquote><strong>Key Insight:</strong> ${exp.keyInsight}</blockquote>`
+          : '',
+        exp?.practicalApplication
+          ? `<h2>Your Practice</h2><p>${exp.practicalApplication}</p>`
+          : '',
+        exp?.reflectionPrompts?.length
+          ? `<h2>Reflection Prompts</h2><ul>${exp.reflectionPrompts.map(p => `<li>${p}</li>`).join('\n')}</ul>`
+          : '',
+        exp?.weeklyChallenge
+          ? `<h2>This Week's Challenge</h2><p>${exp.weeklyChallenge}</p>`
+          : '',
+      ].filter(Boolean).join('\n')
+
+      return {
+        course_id:    courseId,
+        title:        lesson.title,
+        type:         lesson.video_url ? 'video' as const : 'text' as const,
+        youtube_url:  lesson.video_url ?? null,
+        content:      sanitizeHtml(content),
+        sort_order:   index + 1,
+        is_published: true,
+        is_preview:   lesson.is_preview,
+        created_at:   new Date().toISOString(),
+        updated_at:   new Date().toISOString(),
+      }
+    })
+
+    const { count } = await admin
+      .from('course_lessons')
+      .select('id', { count: 'exact', head: true })
+      .eq('course_id', courseId)
+
+    if ((count ?? 0) > 0) {
+      if (!force) continue
+      await admin.from('course_lessons').delete().eq('course_id', courseId)
+    }
+
+    const { error } = await admin.from('course_lessons').insert(rows)
+    if (error) {
+      console.error(`[syncPersonalCourses] Insert failed for course ${courseId}:`, error)
+      continue
+    }
+    seeded += rows.length
+  }
+
+  await logAudit(sa.userId, sa.email, 'PERSONAL_COURSES_SYNCED', 'course', null, null,
+    `Seeded/updated ${seeded} lessons across personal courses (force=${force})`)
+
+  revalidatePath('/admin/super')
+  return { success: true, seeded }
+}

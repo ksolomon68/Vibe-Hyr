@@ -3,7 +3,7 @@
 import { useState, useEffect, useTransition, useCallback } from 'react'
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
 import { listCourseLessons, upsertLesson, deleteCmsLesson, reorderLessons,
-  syncLeadershipCourses, syncBusinessCourses, syncEducatorCourses,
+  syncLeadershipCourses, syncBusinessCourses, syncEducatorCourses, syncPersonalCourses,
   type CmsLesson,
 } from '@/app/admin/super/actions'
 import { RichTextEditor } from './RichTextEditor'
@@ -483,6 +483,7 @@ export function CourseManagerPage({ onToast }: { onToast: (msg: string) => void 
   const [syncing, setSyncing]               = useState(false)
   const [syncingBusiness, setSyncingBusiness] = useState(false)
   const [syncingEducation, setSyncingEducation] = useState(false)
+  const [syncingPersonal, setSyncingPersonal] = useState(false)
 
   const fetchLessons = useCallback(async (courseId: number) => {
     setLoading(true)
@@ -502,6 +503,18 @@ export function CourseManagerPage({ onToast }: { onToast: (msg: string) => void 
   function openEdit(lesson: CmsLesson) {
     setEditLesson(lesson)
     setShowEditor(true)
+  }
+
+  async function handleSyncPersonal() {
+    setSyncingPersonal(true)
+    const res = await syncPersonalCourses(true)
+    setSyncingPersonal(false)
+    if (res.success) {
+      onToast(res.seeded > 0 ? `Resynced ${res.seeded} lessons with expanded content.` : 'Sync complete.')
+      fetchLessons(selectedCourse)
+    } else {
+      onToast(`Sync failed: ${res.error}`)
+    }
   }
 
   async function handleSyncLeadership() {
@@ -661,6 +674,11 @@ export function CourseManagerPage({ onToast }: { onToast: (msg: string) => void 
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
+              {activeCategory === 'individual' && (
+                <Btn variant="gold" size="md" onClick={handleSyncPersonal} disabled={syncingPersonal}>
+                  {syncingPersonal ? 'Syncing…' : '⟳ Sync from Curriculum'}
+                </Btn>
+              )}
               {activeCategory === 'leadership' && (
                 <Btn variant="gold" size="md" onClick={handleSyncLeadership} disabled={syncing}>
                   {syncing ? 'Syncing…' : '⟳ Sync from Curriculum'}
