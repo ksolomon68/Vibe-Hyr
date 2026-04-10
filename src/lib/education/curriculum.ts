@@ -47,7 +47,7 @@ export const PROGRAMS: EducationProgram[] = [
         id: "ed01-m01", num: "01",
         title: "The Regulated Leader",
         subtitle: "Understanding that your internal state is your most powerful classroom tool",
-        duration: "35m", hasReflection: false,
+        duration: "35m", hasReflection: true,
         content: `
           <h2>THE REGULATED LEADER</h2>
           <p>Before we talk about curriculum, co-regulation, or classroom management — we need to talk about you. Not as a professional. As a nervous system. Because the most overlooked variable in educator effectiveness is not pedagogy, not content mastery, and not classroom structure. It is the <strong>regulated or dysregulated state of the adult body in the room</strong>.</p>
@@ -91,13 +91,47 @@ export const PROGRAMS: EducationProgram[] = [
             <p>The goal of this entire program is to move each number. One point in any direction, consistently, changes the entire classroom experience.</p>
           </div>
         `,
-        quiz: []
+        quiz: [
+          {
+            q: `Which of the following best explains why a teacher's physiological state affects student behavior — even before the teacher speaks?`,
+            options: [
+              `Students are trained to watch for adult cues through years of conditioning`,
+              `Mirror neurons, co-regulation, and the social nervous system cause students to unconsciously read and synchronize with the physiological state of the adult in the room`,
+              `Students intentionally mirror teacher behavior to gain approval`,
+              `Classroom acoustics amplify physiological signals from teachers`,
+            ],
+            correct: 1,
+            explanation: `The nervous system is a social organ designed to regulate in relationship. Mirror neurons and co-regulation mechanisms allow students — especially those from high-stress environments — to detect and synchronize with the physiological broadcast of nearby adults before any verbal communication occurs. This is biology, not behavior management.`,
+          },
+          {
+            q: `An educator rates herself 2 out of 5 on "recovery speed" — the ability to return to baseline after a difficult encounter. What does this self-assessment most directly indicate?`,
+            options: [
+              `She lacks professional experience dealing with difficult situations`,
+              `Her nervous system is retaining sympathetic activation longer than optimal, reducing the regulation she can offer subsequent students and interactions`,
+              `She is emotionally oversensitive and should seek counseling`,
+              `Her classroom management strategies need updating`,
+            ],
+            correct: 1,
+            explanation: `Recovery speed measures how quickly the nervous system returns to its ventral vagal baseline. A low score means cortisol and sympathetic activation linger — depleting the teacher's capacity to co-regulate each successive encounter throughout the day. This is a physiological training target, not a character assessment.`,
+          },
+          {
+            q: `The statement "you cannot give what you don't have" applies to educator regulation because:`,
+            options: [
+              `Teachers must be happy to teach effectively`,
+              `A chronically dysregulated nervous system has no regulatory surplus to offer students who need co-regulation — the resource that most benefits high-need learners is absent at the source`,
+              `Stressed teachers give poor instructional explanations`,
+              `Emotional availability is a talent rather than a trained skill`,
+            ],
+            correct: 1,
+            explanation: `Co-regulation — the process by which a stable nervous system helps stabilize a dysregulated one — requires a regulated source. If the teacher's nervous system is locked in sympathetic or dorsal states, there is no regulatory broadcast for students to borrow from. Restoring teacher regulation is therefore the highest-leverage intervention for student outcomes in high-stress school environments.`,
+          },
+        ]
       },
       {
         id: "ed01-m02", num: "02",
         title: "Nervous System Literacy",
         subtitle: "The biology of stress and calm for adults — how to read your own body's signals before they read you",
-        duration: "30m", hasReflection: false,
+        duration: "30m", hasReflection: true,
         content: `
           <h2>NERVOUS SYSTEM LITERACY</h2>
           <p>Nervous system literacy is the ability to read your own physiological state accurately and in real time — and to understand which part of your nervous system is currently driving the car. Most educators have never been formally taught this. They experience stress, exhaustion, frustration, and anxiety without a framework for understanding what is biologically happening — or what to do about it.</p>
@@ -128,13 +162,47 @@ export const PROGRAMS: EducationProgram[] = [
             <p>Three times a day — before first bell, before lunch, before last period — do a 60-second body scan: jaw, shoulders, chest, breath. Name the state. Sympathetic / Ventral / Dorsal. No action required. Just naming begins the shift. Research shows that labeling physiological state — affect labeling — reduces amygdala activation within seconds.</p>
           </div>
         `,
-        quiz: []
+        quiz: [
+          {
+            q: `According to Polyvagal Theory, which nervous system state allows an educator to genuinely read social cues, modulate their voice, and engage creatively with students?`,
+            options: [
+              `Dorsal vagal — the body conserves energy for focused instruction`,
+              `Sympathetic — heightened arousal improves alertness and responsiveness`,
+              `Ventral vagal — the "safe and social" state that is the biological prerequisite for relational attunement`,
+              `Parasympathetic shutdown — reduced stimulation enables deeper thinking`,
+            ],
+            correct: 2,
+            explanation: `The ventral vagal state (Dr. Stephen Porges' Polyvagal Theory) is the only state in which the social nervous system is fully online. It enables voice modulation, genuine eye contact, perspective-taking, and creative problem-solving — the full toolkit of effective teaching. Both sympathetic and dorsal states significantly compromise these capacities.`,
+          },
+          {
+            q: `Why does simply naming your physiological state — "I am in sympathetic right now" — begin to reduce activation even without additional intervention?`,
+            options: [
+              `Naming creates distraction from the stressor`,
+              `Affect labeling engages the prefrontal cortex, which down-regulates amygdala activity — the neural equivalent of a circuit breaker engaging`,
+              `Verbal processing releases stored cortisol`,
+              `Language use signals to students that the teacher is still in control`,
+            ],
+            correct: 1,
+            explanation: `Research in affective neuroscience shows that labeling an emotional or physiological state activates the prefrontal cortex and reduces amygdala firing within seconds — a process called "affect labeling." The act of naming creates the very observer capacity that begins the self-regulation process. This is why the body scan protocol is effective without requiring any further action.`,
+          },
+          {
+            q: `A teacher feels "behind glass" — present physically but unable to track conversations, with flat affect and low energy. According to Polyvagal Theory, this most accurately reflects:`,
+            options: [
+              `Sympathetic activation from accumulated stress`,
+              `Dorsal vagal shutdown — the nervous system's deepest collapse response, often produced by chronic overwhelm`,
+              `Ventral vagal overextension from excessive emotional labor`,
+              `A normal end-of-day fatigue response requiring no specific intervention`,
+            ],
+            correct: 1,
+            explanation: `The "behind glass" experience — disconnection, flat affect, difficulty tracking — are classic dorsal vagal signals. This state represents the nervous system's most ancient survival response: collapse when threat becomes unmanageable. Unlike sympathetic dysregulation (which is activating), dorsal dysregulation is depleting, and requires different recovery strategies — movement, connection, and warmth rather than calming techniques.`,
+          },
+        ]
       },
       {
         id: "ed01-m03", num: "03",
         title: "The Co-Regulation Move",
         subtitle: "Meeting a student's storm with your calm — the biology of presence as intervention",
-        duration: "35m", hasReflection: false,
+        duration: "35m", hasReflection: true,
         content: `
           <h2>THE CO-REGULATION MOVE</h2>
           <p>Co-regulation is the process by which a regulated nervous system helps regulate a dysregulated one — not through instruction or discipline, but through <em>presence</em>. It is one of the most powerful interventions available in any educational setting, and it requires exactly one thing: a regulated adult.</p>
@@ -162,13 +230,47 @@ export const PROGRAMS: EducationProgram[] = [
             <p>Practice this sequence before you need it. Find a quiet moment and rehearse each physical element: jaw softened → shoulders dropped → slow exhale → low voice → seated proximity. Repeat until the sequence is muscle memory. When the moment arrives in the classroom, the drill fires automatically.</p>
           </div>
         `,
-        quiz: []
+        quiz: [
+          {
+            q: `Why is it ineffective to use logical reasoning or deliver consequences to a student who is in active sympathetic activation (fight-or-flight)?`,
+            options: [
+              `Students in this state are deliberately ignoring adult authority`,
+              `The prefrontal cortex — the seat of reasoning, consequence evaluation, and language comprehension — has significantly reduced function during survival-mode activation`,
+              `Consequences only work for older students with developed self-regulation`,
+              `Logical reasoning requires more eye contact than dysregulated students can maintain`,
+            ],
+            correct: 1,
+            explanation: `When the amygdala fires a threat signal, the brainstem initiates a survival protocol that reduces prefrontal cortex function. In this state, the student literally cannot process logical arguments or future-oriented consequences. The only effective intervention addresses the nervous system state directly — through a regulated adult presence that broadcasts safety — before any language-based approach can land.`,
+          },
+          {
+            q: `In the Co-Regulation Move protocol, Step 4 instructs "offer presence, not problem-solving." What is the neurobiological rationale for this sequence?`,
+            options: [
+              `Problem-solving should wait until the teacher has gathered all facts`,
+              `A dysregulated nervous system cannot engage prefrontal problem-solving; it first needs the nervous system to synchronize with a safe external signal before cognitive functions become available`,
+              `Students feel interrogated by immediate problem-solving questions`,
+              `Waiting ensures the teacher responds from policy rather than impulse`,
+            ],
+            correct: 1,
+            explanation: `Co-regulation works through nervous system synchrony, not through language or instruction. Until the student's autonomic state has been influenced by the teacher's regulated broadcast — which requires time and presence, not words — the cognitive architecture needed for problem-solving is inaccessible. "We've got time" is itself regulating because it removes urgency, which is one of the primary signals that keeps the threat response activated.`,
+          },
+          {
+            q: `When a teacher prepares to approach a dysregulated student by first taking a slow exhale and softening their jaw, they are primarily:`,
+            options: [
+              `Performing calmness to model behavior for the student`,
+              `Regulating their own nervous system broadcast — because the quality of the co-regulation they can offer is entirely determined by their own physiological state at the moment of approach`,
+              `Following a scripted de-escalation protocol for liability purposes`,
+              `Creating a pause to gather their thoughts before speaking`,
+            ],
+            correct: 1,
+            explanation: `The quality of co-regulation an educator can offer is a direct function of their own nervous system state. A teacher who approaches a dysregulated student while still in sympathetic activation will broadcast urgency and threat — which amplifies, rather than calms, the student's state. The pre-approach regulation sequence is not preparation for technique; it IS the technique.`,
+          },
+        ]
       },
       {
         id: "ed01-m04", num: "04",
         title: "The Gap Between Stim and Response",
         subtitle: "Redefining classroom management through the space Viktor Frankl called 'the last human freedom'",
-        duration: "30m", hasReflection: false,
+        duration: "30m", hasReflection: true,
         content: `
           <h2>THE GAP BETWEEN STIM AND RESPONSE</h2>
           <p>Viktor Frankl, writing from inside a Nazi concentration camp, identified what he called "the last human freedom" — the ability to choose one's response to any stimulus. Between stimulus and response, there is a space. In that space lies freedom and power.</p>
@@ -201,13 +303,47 @@ export const PROGRAMS: EducationProgram[] = [
             <p>You are not building a record of failures. You are mapping your specific trigger-stimulus territory — the inputs that consistently narrow your gap. That map is the training plan.</p>
           </div>
         `,
-        quiz: []
+        quiz: [
+          {
+            q: `Viktor Frankl's concept of "the gap between stimulus and response" is especially relevant for classroom management because:`,
+            options: [
+              `Teachers with more experience naturally develop larger gaps`,
+              `The gap — the space between a student's behavior and the teacher's response — is where every classroom management technique is either empowered or undermined, and it is trainable through physiological and observer practices`,
+              `Frankl's work proves that emotional responses are always a choice`,
+              `A longer gap gives students time to self-correct before the teacher responds`,
+            ],
+            correct: 1,
+            explanation: `The gap is not a philosophical concept — it is a measurable neurological window determined by the teacher's nervous system state and observer capacity. A wider gap means more response options are available. Narrowed by sympathetic activation or accumulated stress, even excellent techniques fail because they are applied reactively rather than intentionally. The gap is the operating system underneath every classroom management strategy.`,
+          },
+          {
+            q: `A teacher notices that a specific student's tone of voice — regardless of what is said — triggers immediate emotional reactivity. According to this module, this most likely reflects:`,
+            options: [
+              `A personality clash that may require a class transfer`,
+              `Unprocessed emotional charge that has attached to a specific stimulus, creating a particularly narrow gap around that trigger specifically`,
+              `A lack of professional boundaries with students`,
+              `Insufficient training in de-escalation techniques`,
+            ],
+            correct: 1,
+            explanation: `When specific stimuli carry historical emotional charge — a tone, a gesture, a phrase — they create asymmetric trigger points where the gap compresses to near-zero for that input specifically, while remaining wider for others. Mapping these specific triggers through the Gap Journal is the first step to expanding them, because you cannot train a gap you have not identified.`,
+          },
+          {
+            q: `Sleep deprivation is listed as a gap-narrowing factor because:`,
+            options: [
+              `Tired teachers are less patient and more irritable`,
+              `Each hour of lost sleep measurably reduces prefrontal cortex override capacity — the biological mechanism that allows choosing a response over a reaction`,
+              `Fatigue causes tunnel vision that misreads student intentions`,
+              `Sleep-deprived teachers use fewer evidence-based strategies`,
+            ],
+            correct: 1,
+            explanation: `The prefrontal cortex — which enables the pause between stimulus and response — is exquisitely sensitive to sleep quantity and quality. Research shows measurable degradation in prefrontal function after even one night of reduced sleep. For educators, this means chronic sleep debt directly and biologically narrows the gap, making reactive responses more likely regardless of training or intention.`,
+          },
+        ]
       },
       {
         id: "ed01-m05", num: "05",
         title: "Compassion Without Fatigue",
         subtitle: "Language and boundaries for holding space without becoming the space",
-        duration: "35m", hasReflection: false,
+        duration: "35m", hasReflection: true,
         content: `
           <h2>COMPASSION WITHOUT FATIGUE</h2>
           <p>Compassion fatigue is not a character flaw. It is a predictable physiological and psychological outcome of sustained emotional labor without adequate recovery. Educators are particularly vulnerable because the nature of the work — being emotionally present for 25–35 people simultaneously for 6+ hours daily — is among the most demanding forms of relational labor that exists.</p>
@@ -234,7 +370,41 @@ export const PROGRAMS: EducationProgram[] = [
             <p>Create a physical transition between school and home — something that signals to your nervous system that the workday is complete and you are not required to continue processing. Examples: a specific song played in the car, a shower immediately after arrival home, a 5-minute walk. The specific act matters less than its consistency. Consistent transition rituals reduce cortisol carryover by signaling the amygdala that the threat environment has ended.</p>
           </div>
         `,
-        quiz: []
+        quiz: [
+          {
+            q: `Compassion fatigue in educators is most accurately described as:`,
+            options: [
+              `A character flaw indicating the teacher cares too much`,
+              `A predictable physiological and psychological outcome of sustained emotional labor — particularly when care involves absorption rather than witnessing`,
+              `Burnout caused primarily by workload and administrative demands`,
+              `A temporary condition that resolves with vacation and rest`,
+            ],
+            correct: 1,
+            explanation: `Compassion fatigue is not a personal failing — it is a predictable outcome of emotional labor conducted without adequate recovery and without the absorber/witness distinction. The source of depletion is not caring deeply; it is merging with the student's emotional state rather than holding presence alongside it. This distinction is both the diagnosis and the intervention.`,
+          },
+          {
+            q: `The "lighthouse" metaphor in this module describes the witness stance because:`,
+            options: [
+              `Lighthouses direct ships, just as teachers guide students`,
+              `A lighthouse stands steady and remains visible from within the storm without entering it — modeling the capacity to be present with a student's distress without internalizing it`,
+              `Lighthouses are isolated structures, reflecting the solitary nature of teaching`,
+              `The light represents insight and wisdom offered to students in darkness`,
+            ],
+            correct: 1,
+            explanation: `The witness stance requires the same structural integrity as a lighthouse — remaining fixed and luminous regardless of the storm's intensity. What students need from educators in distress is not a fellow drowning person; they need a stable reference point. The lighthouse metaphor captures why witnessing is the more sophisticated and sustainable form of compassion than absorption.`,
+          },
+          {
+            q: `Why does a consistent transition ritual between school and home reduce cortisol carryover more effectively than simply deciding to "leave work at work"?`,
+            options: [
+              `Rituals create positive associations that override negative work memories`,
+              `The amygdala responds to consistent physical cues, not to cognitive decisions — a reliable sensory signal marks the end of the threat context and begins the parasympathetic recovery process`,
+              `Physical movement burns off stress hormones directly`,
+              `Rituals create habit loops that replace anxious thinking patterns`,
+            ],
+            correct: 1,
+            explanation: `The amygdala operates on pattern recognition, not on intention. A cognitive decision ("I won't think about work") does not communicate to the limbic system that the threat context has ended. A consistent physical ritual — specific sensory input at a specific time — does. The specificity and repetition create a neurological signal that reliably begins down-regulation of the stress response.`,
+          },
+        ]
       },
       {
         id: "ed01-m06", num: "06",
@@ -305,7 +475,7 @@ export const PROGRAMS: EducationProgram[] = [
         id: "ed02-m01", num: "01",
         title: "The Principal as Frequency Setter",
         subtitle: "Understanding that your state as a leader is felt building-wide — every day, before you say a word",
-        duration: "30m", hasReflection: false,
+        duration: "30m", hasReflection: true,
         content: `
           <h2>THE PRINCIPAL AS FREQUENCY SETTER</h2>
           <p>Every organization has a nervous system, and that nervous system has a hierarchy. In a school, the nervous system hierarchy flows from principal to department heads to teachers to students. The emotional frequency at the top propagates downward — not through policy, not through meetings, but through the biological broadcasting of physiological state.</p>
@@ -324,13 +494,47 @@ export const PROGRAMS: EducationProgram[] = [
             <p>Before you walk into the building each morning, do a 2-minute physiological check. Jaw: soft or tight? Shoulders: dropped or elevated? Breath: deep or shallow? Belly: soft or held? If any signal is dysregulated, complete one slow cycle — 4-count inhale, 6-count exhale — before entering. You are not performing for staff. You are genuinely preparing your broadcast. The difference is felt immediately.</p>
           </div>
         `,
-        quiz: []
+        quiz: [
+          {
+            q: `Research in organizational psychology shows that leader emotional states are more contagious than peer states specifically because:`,
+            options: [
+              `Leaders interact with more people and therefore spread their state further`,
+              `Authority-based attunement primes staff to read and calibrate to their leader's physiological state — the nervous system hierarchy assigns disproportionate weight to signals from those in positions of power`,
+              `Leaders have louder voices and are more visible in the building`,
+              `Staff spend more time thinking about leadership decisions than peer interactions`,
+            ],
+            correct: 1,
+            explanation: `The social nervous system does not process all relationships equally — it assigns more regulatory weight to individuals perceived as higher in the authority hierarchy. This evolutionary mechanism means a principal's physiological broadcast is amplified relative to peer signals, creating both heightened influence and heightened responsibility for deliberate self-regulation.`,
+          },
+          {
+            q: `When a principal completes the Arrival Protocol (physiological check before entering the building), the primary benefit to staff is:`,
+            options: [
+              `The principal models professional consistency`,
+              `The principal's nervous system enters the building in a ventral vagal state, providing a regulated broadcast that staff unconsciously synchronize with throughout the morning`,
+              `The protocol prevents the principal from making reactive decisions early in the day`,
+              `Staff observe the principal's calm demeanor and are reassured about school conditions`,
+            ],
+            correct: 1,
+            explanation: `The Arrival Protocol works through biological broadcasting, not modeling. Staff do not need to observe the protocol to benefit from it — they experience the physiological result of it through the principal's body language, voice prosody, and presence as the principal moves through the building. The regulated state IS the intervention; the visibility of the preparation is secondary.`,
+          },
+          {
+            q: `A principal who consistently arrives to the building in a sympathetic (fight-or-flight) state will most likely produce what building-wide effect?`,
+            options: [
+              `Staff will work harder to compensate for the principal's stress`,
+              `An anxious, urgency-driven staff culture that mirrors the leader's dysregulated broadcast — increasing reactive behavior and decreasing psychological safety across the building`,
+              `A temporary performance boost as staff mobilize around the leader's energy`,
+              `No significant effect, as teachers regulate independently within their classrooms`,
+            ],
+            correct: 1,
+            explanation: `The principal's nervous system state propagates through the building via authority-based attunement. A chronically sympathetic leader creates a chronically sympathetic culture — staff operate in urgency mode, communication becomes defensive, and psychological safety erodes. This is not a consequence of policy decisions; it is a direct neurobiological cascade that requires deliberate regulatory intervention at the source.`,
+          },
+        ]
       },
       {
         id: "ed02-m02", num: "02",
         title: "Culture Architecture",
         subtitle: "Designing building-wide systems that support nervous system health — not accidentally undermine it",
-        duration: "35m", hasReflection: false,
+        duration: "35m", hasReflection: true,
         content: `
           <h2>CULTURE ARCHITECTURE</h2>
           <p>Culture is not what you put on the wall. It is not your mission statement or your values list. Culture is what happens in the first 60 seconds of a staff meeting. It is the quality of silence after a difficult announcement. It is whether a teacher will tell you the truth about how they're doing. These things are not accidental — they are the product of deliberate or accidental architecture.</p>
@@ -347,15 +551,50 @@ export const PROGRAMS: EducationProgram[] = [
           <div class="key-concept">
             <div class="key-concept-label">THE ARCHITECTURAL AUDIT</div>
             <p>Before implementing any new wellness initiative, audit your existing culture against these five elements. In many schools, new wellness programs are placed on top of systems that are actively creating dysregulation — and the result is cynicism rather than uptake. Fix the architecture first.</p>
+
           </div>
         `,
-        quiz: []
+        quiz: [
+          {
+            q: `Culture is described as "what happens in the first 60 seconds of a staff meeting" rather than what appears on the mission statement because:`,
+            options: [
+              `Mission statements are rarely read by staff`,
+              `Culture is a lived, embodied experience — the nervous system reads behavioral and relational cues, not declared values. The actual experience in the first 60 seconds of a meeting communicates more about psychological safety than any written statement`,
+              `Staff meetings are the primary venue for culture transmission`,
+              `Written values are too abstract to influence daily behavior`,
+            ],
+            correct: 1,
+            explanation: `Culture is not what institutions claim — it is what people experience. The nervous system is continuously scanning for evidence of safety or threat in real interactions. Whether a principal listens with genuine openness in the first 60 seconds of a meeting, or immediately moves to agenda, communicates volumes that no values document can override.`,
+          },
+          {
+            q: `The module identifies a minimum 5:1 positive-to-corrective feedback ratio as essential for psychological safety in staff communication. What happens to information flow when this ratio is inverted?`,
+            options: [
+              `Staff performance declines due to reduced positive reinforcement`,
+              `Staff filter the information they share upward — the problems leadership most needs to know about become invisible because sharing them feels unsafe`,
+              `Staff become resistant to any corrective feedback`,
+              `Communication frequency decreases as staff avoid unnecessary contact`,
+            ],
+            correct: 1,
+            explanation: `Psychological safety is the precondition for accurate upward information flow. When the communication environment is dominated by correction, staff nervous systems learn that disclosure is risky — and they stop sharing the honest, difficult information that leaders depend on for effective decision-making. The distortion that results is one of the most dangerous leadership blind spots in school culture.`,
+          },
+          {
+            q: `"Recovery infrastructure" as a cultural architectural element refers to:`,
+            options: [
+              `Support systems for staff recovering from physical injury`,
+              `Institutional provisions — protected planning time, decompression spaces, meeting-free periods — that treat staff nervous system recovery as a structural responsibility rather than a personal one`,
+              `Post-incident debriefing protocols after behavioral crises`,
+              `Mental health resources provided through employee assistance programs`,
+            ],
+            correct: 1,
+            explanation: `When recovery is treated as personal responsibility only, staff who most need it — those running on empty — are least positioned to access it. Making recovery structural means protecting it by design: untouchable planning periods, quiet spaces, predictable buffers between demands. This architectural choice communicates institutional care in a way that no wellness program can replicate on its own.`,
+          },
+        ]
       },
       {
         id: "ed02-m03", num: "03",
         title: "Holding Staff in Hard Moments",
         subtitle: "The regulated leader's toolkit for supporting dysregulated staff without becoming dysregulated yourself",
-        duration: "30m", hasReflection: false,
+        duration: "30m", hasReflection: true,
         content: `
           <h2>HOLDING STAFF IN HARD MOMENTS</h2>
           <p>A teacher cries in your office after a parent confrontation. A veteran educator says they're thinking about leaving. A staff member is clearly running on empty but denying it. A conflict between two colleagues is spreading through the department. These are leadership moments — and they are nervous system moments. How you show up in them shapes everything that follows.</p>
@@ -375,13 +614,47 @@ export const PROGRAMS: EducationProgram[] = [
             <p>Write five phrases you can say in the first 90 seconds of a difficult staff disclosure — phrases that communicate witness without immediately moving to solution. Memorize them. These are your co-regulation moves as a leader. They are as important as any policy or procedure you manage.</p>
           </div>
         `,
-        quiz: []
+        quiz: [
+          {
+            q: `Why does immediately moving to problem-solving when a distressed staff member discloses a difficulty actually undermine the interaction's effectiveness?`,
+            options: [
+              `It makes the leader appear to be minimizing the staff member's concerns`,
+              `A dysregulated person's prefrontal cortex is significantly offline — solutions cannot be received or processed until the person first feels witnessed, allowing the nervous system to begin returning to a receptive state`,
+              `Problem-solving requires information the leader does not yet have`,
+              `Staff prefer to solve their own problems and resent unsolicited advice`,
+            ],
+            correct: 1,
+            explanation: `The instinct to fix is well-intentioned but neurobiologically premature. Solutions require prefrontal engagement that is not available during active dysregulation. The breath change — the visible shift in breathing pattern — is the biological signal that the nervous system has begun to regulate and cognitive processing is returning online. Only then can collaborative problem-solving be received.`,
+          },
+          {
+            q: `The breath change described in the module — when a dysregulated staff member's breathing pattern shifts — is significant because:`,
+            options: [
+              `It indicates the person has calmed down sufficiently to return to work`,
+              `It is the somatic signal that the prefrontal cortex is coming back online — the biological green light for transitioning from witness mode to collaborative problem-solving`,
+              `Slow breathing activates the parasympathetic system in observers`,
+              `It confirms the disclosure is complete and the meeting can proceed`,
+            ],
+            correct: 1,
+            explanation: `Breath is one of the most reliable visible indicators of autonomic state change. The shift from dysregulated (shallow, fast, high chest) to regulated (deeper, slower, belly-led) breathing reflects a genuine change in nervous system state — not a performance of calm. Reading this shift allows the leader to time their response to the actual biological readiness of the person, rather than to social convention.`,
+          },
+          {
+            q: `A principal's ability to hold a distressed staff member without becoming dysregulated themselves depends primarily on:`,
+            options: [
+              `Years of experience in educational leadership`,
+              `Their own current nervous system regulation — a dysregulated leader cannot provide the stable co-regulatory broadcast needed to help a distressed staff member return to baseline`,
+              `Knowledge of counseling techniques and trauma-informed language`,
+              `Maintaining professional detachment throughout difficult disclosures`,
+            ],
+            correct: 1,
+            explanation: `Holding others requires regulatory surplus — you cannot offer nervous system stability you don't possess. A principal who is themselves in sympathetic or dorsal activation will either co-dysregulate (escalating the staff member's state) or fail to provide the stable presence needed for genuine co-regulation. The regulated approach drill is therefore a prerequisite for effective leadership support, not an optional enhancement.`,
+          },
+        ]
       },
       {
         id: "ed02-m04", num: "04",
         title: "Wellness Advocacy — The Business Case",
         subtitle: "The data, the language, and the framework for making staff wellness non-negotiable at the district level",
-        duration: "35m", hasReflection: false,
+        duration: "35m", hasReflection: true,
         content: `
           <h2>WELLNESS ADVOCACY — THE BUSINESS CASE</h2>
           <p>If you are reading this as a building principal, you will need to make the case for sustained wellness investment to a superintendent, a school board, or a budget committee. This module gives you the data, the framing, and the language to make that case persuasively — not as an argument for a nice-to-have, but as a return-on-investment analysis.</p>
@@ -403,13 +676,47 @@ export const PROGRAMS: EducationProgram[] = [
             <p>Calculate your school's current annual turnover cost using $14,000 per teacher (conservative midpoint). Calculate what a 30% reduction in turnover would save. This savings number is your maximum justifiable wellness investment, with budget left over. In most schools, this makes a comprehensive wellness program cost-neutral at minimum.</p>
           </div>
         `,
-        quiz: []
+        quiz: [
+          {
+            q: `Teacher turnover costs between $8,000 and $21,000 per departing teacher. This figure makes wellness investment compelling to budget committees because:`,
+            options: [
+              `The cost of wellness programs is always less than $8,000 per teacher`,
+              `It reframes wellness as cost avoidance — the ROI of reducing turnover by even 30% at most school sizes exceeds the cost of comprehensive wellness investment, making the program financially net-positive`,
+              `Budget committees respond to salary data better than program outcome data`,
+              `Turnover costs are the only educational metric that is universally tracked`,
+            ],
+            correct: 1,
+            explanation: `When you calculate the annual turnover cost at conservative estimates — say, 7 teachers at $14,000 each = $98,000 — a 30% reduction saves approximately $29,400. Most comprehensive wellness programs cost a fraction of this. The business case is not aspirational; it is arithmetic. The language of cost avoidance translates wellness from a soft expenditure into a defensible investment.`,
+          },
+          {
+            q: `The module recommends framing wellness investment as "academic infrastructure" rather than "staff benefit" specifically because:`,
+            options: [
+              `Academic language is more persuasive to educators than administrative language`,
+              `Budget-committee decisions are made in the language of outcomes and costs — framing wellness as infrastructure that directly produces measurable academic results positions it alongside other non-negotiable school investments`,
+              `Infrastructure funding streams are more accessible than staff development funds`,
+              `The word "benefit" implies entitlement, which creates political resistance`,
+            ],
+            correct: 1,
+            explanation: `Language shapes perception and decision-making. "Staff benefit" positions wellness as a perk — the first target for cuts under budget pressure. "Academic infrastructure" positions it alongside electricity and textbooks — essentials that produce the outputs the district is accountable for. The framing is not manipulation; it is an accurate characterization that uses the language that drives budget decisions.`,
+          },
+          {
+            q: `A school of 50 teachers has an annual turnover rate of 18%. Which calculation best demonstrates the baseline cost the wellness business case must address?`,
+            options: [
+              `50 teachers × $21,000 = $1.05M (maximum exposure)`,
+              `9 teachers departing × $14,000 (conservative midpoint) = $126,000 in annual replacement costs — the financial floor the wellness investment must improve`,
+              `18% × average teacher salary = wellness budget ceiling`,
+              `18 turnover events × $8,000 (minimum cost) = $144,000`,
+            ],
+            correct: 1,
+            explanation: `18% of 50 teachers is approximately 9 annual departures. At the conservative $14,000 midpoint, this produces $126,000 in replacement costs — before accounting for institutional knowledge loss, student disruption, or new hire productivity curves. A wellness investment that reduces turnover by even 30% saves roughly $38,000, typically exceeding program costs and making the case cost-neutral at minimum.`,
+          },
+        ]
       },
       {
         id: "ed02-m05", num: "05",
         title: "Data-Informed Wellness",
         subtitle: "Using the Vibe Hyr staff dashboard to make wellness visible, trackable, and actionable",
-        duration: "25m", hasReflection: false,
+        duration: "25m", hasReflection: true,
         content: `
           <h2>DATA-INFORMED WELLNESS</h2>
           <p>One of the consistent barriers to sustained wellness investment is the perceived lack of data. Academic outcomes have grades. Attendance has percentages. Discipline has incident counts. Wellness has — what, exactly? This module answers that question by introducing the metrics that make staff wellness visible and correlatable with the outcomes districts already track.</p>
@@ -429,7 +736,41 @@ export const PROGRAMS: EducationProgram[] = [
             <p>The goal of wellness data is not surveillance. It is advocacy. When you can show a board that weeks with high staff wellness engagement correlate with lower behavioral incident rates, you have created an evidence base for sustainable investment. The data protects the program during budget pressure — because it makes the cost of cutting it visible.</p>
           </div>
         `,
-        quiz: []
+        quiz: [
+          {
+            q: `The module identifies wellness data as primarily a tool for advocacy rather than surveillance. What does this distinction mean in practice?`,
+            options: [
+              `Wellness data should not be shared with administrators`,
+              `Aggregate, anonymized engagement data is used to demonstrate program ROI to decision-makers and protect the program during budget pressure — not to monitor or evaluate individual staff`,
+              `Only teachers who consent to tracking should participate in wellness programs`,
+              `Wellness dashboards should remain confidential and inaccessible to board members`,
+            ],
+            correct: 1,
+            explanation: `The distinction between advocacy and surveillance is both ethical and strategic. Individual data creates compliance anxiety, reducing authentic engagement. Aggregate data showing correlations between platform engagement and behavioral incident rates serves a different purpose entirely — building the institutional evidence base that makes wellness investment defensible when budgets are reviewed. The anonymization is not just an ethical protection; it is what makes the data genuinely useful.`,
+          },
+          {
+            q: `Staff who engage consistently with wellness tools show "measurably different retention profiles." This is important for data-informed wellness because:`,
+            options: [
+              `It proves that wellness programs cause teacher retention`,
+              `It creates a leading indicator — engagement patterns become predictive of retention, giving leaders an actionable signal months before resignations appear in exit data`,
+              `It justifies mandatory program participation for all staff`,
+              `It demonstrates that wellness-engaged staff are higher-performing`,
+            ],
+            correct: 1,
+            explanation: `Leading indicators are more valuable than lagging ones because they allow intervention rather than just documentation. If consistent platform engagement correlates with retention, then tracking engagement gives administrators a 3–6 month early warning system for retention risk — at the individual level, through general patterns — allowing proactive support rather than reactive replacement.`,
+          },
+          {
+            q: `The Vibe Hyr staff dashboard provides data that correlates wellness engagement with behavioral incident rates. Why is this correlation particularly compelling for board presentations?`,
+            options: [
+              `Board members are primarily concerned with student safety and behavioral outcomes`,
+              `It connects staff wellness — which boards may see as secondary — directly to student behavioral outcomes, which boards track and are accountable for, making wellness investment instrumentally tied to the district's primary metrics`,
+              `Behavioral incident data is more reliable than academic performance data`,
+              `The correlation proves causation, making the case scientifically airtight`,
+            ],
+            correct: 1,
+            explanation: `Boards track what they are accountable for: student outcomes. Wellness programs that remain siloed from those metrics are vulnerable to cuts. A visible, data-backed correlation between staff wellness engagement and behavioral incident reduction connects the investment directly to board-level accountability metrics — making wellness no longer a separate line item but a documented lever of student outcome improvement.`,
+          },
+        ]
       },
       {
         id: "ed02-m06", num: "06",
@@ -493,7 +834,7 @@ export const PROGRAMS: EducationProgram[] = [
         id: "ed03-m01", num: "01",
         title: "What Dysregulation Actually Is",
         subtitle: "A neuroscience lens on student behavior — why 'misbehavior' is almost always a nervous system event",
-        duration: "30m", hasReflection: false,
+        duration: "30m", hasReflection: true,
         content: `
           <h2>WHAT DYSREGULATION ACTUALLY IS</h2>
           <p>The shift in understanding that makes everything else in this program possible: <strong>most of what we call student misbehavior is a nervous system event, not a choice event.</strong> This distinction is not about reducing accountability. It is about accurately identifying what's happening — because the intervention for a nervous system event and the intervention for a deliberate defiance event are completely different.</p>
@@ -516,13 +857,47 @@ export const PROGRAMS: EducationProgram[] = [
             <li><strong>Sensory threat:</strong> Noise, lighting, crowding, hunger — physiological inputs that push the nervous system toward activation</li>
           </ul>
         `,
-        quiz: []
+        quiz: [
+          {
+            q: `The module asserts that most classroom misbehavior is "a nervous system event, not a choice event." Why does this distinction matter for intervention design?`,
+            options: [
+              `It removes student accountability for their actions`,
+              `A nervous system event requires a physiological intervention (co-regulation, sensory regulation) rather than a cognitive or punitive one — applying the wrong intervention to the correct diagnosis reliably fails`,
+              `It simplifies discipline procedures by removing moral judgment`,
+              `It distinguishes between younger and older students who have different levels of impulse control`,
+            ],
+            correct: 1,
+            explanation: `When a student is in amygdala-hijack, the brainstem has overridden prefrontal function. Consequences, reasoning, and behavioral correction are addressed to prefrontal systems that are temporarily offline. Applying them during active dysregulation is like prescribing medication for the wrong diagnosis — the intervention fails not because it's bad medicine, but because it's addressing a different problem than the one occurring.`,
+          },
+          {
+            q: `A student who disrupts class every time the teacher announces an unexpected schedule change most likely has a dominant trigger in which threat category?`,
+            options: [
+              `Relational threat — they fear the teacher's disapproval`,
+              `Novelty threat — their nervous system treats unpredictable transitions as threat signals that override executive function`,
+              `Sensory threat — schedule changes often involve changes to the physical environment`,
+              `Social threat — transitions expose them to peer comparison`,
+            ],
+            correct: 1,
+            explanation: `Novelty threat activates when the nervous system encounters unpredictability. For students whose home environments have been chaotic or inconsistent, the threat response to uncertainty is often highly sensitized — the amygdala has learned to treat the unknown as dangerous. Understanding this pattern allows the teacher to intervene preventively: advance notice, visual schedules, and transition warnings reduce novelty threat before it peaks.`,
+          },
+          {
+            q: `Public correction of a student who has made an error is identified as a "social threat" because:`,
+            options: [
+              `It embarrasses students in front of their peers`,
+              `The neural networks that process public correction activate the same threat-response circuitry as physical danger — social rejection and status loss are processed as survival threats by the amygdala`,
+              `Students are taught from a young age that mistakes are negative`,
+              `The presence of peers amplifies any negative experience through social facilitation`,
+            ],
+            correct: 1,
+            explanation: `Social neuroscience research (Naomi Eisenberger, UCLA) has demonstrated that social exclusion and public loss of status activate identical neural pathways to physical pain. This is why "it shouldn't bother them" is an inaccurate framework — the threat response to public correction is neurobiological, not oversensitive. Private correction is not just kinder; it avoids triggering a threat cascade that forecloses the learning the correction was intended to enable.`,
+          },
+        ]
       },
       {
         id: "ed03-m02", num: "02",
         title: "The Regulation Toolkit",
         subtitle: "12 evidence-based micro-interventions for real-time nervous system support in the classroom",
-        duration: "35m", hasReflection: false,
+        duration: "35m", hasReflection: true,
         content: `
           <h2>THE REGULATION TOOLKIT</h2>
           <p>These 12 tools are not theoretical. They are body-based, evidence-backed, and usable in a live classroom without disrupting instruction for other students. Each one works by activating the parasympathetic nervous system — shifting the student from threat-mode toward safety.</p>
@@ -552,13 +927,47 @@ export const PROGRAMS: EducationProgram[] = [
             <p>Choose three tools from this module — one movement, one breath, one relational. Commit to implementing all three consistently for two weeks. At the end of two weeks, note which one produced the most visible shift. That's your primary tool. The others become your rotation.</p>
           </div>
         `,
-        quiz: []
+        quiz: [
+          {
+            q: `The 2×10 strategy is described as reducing behavioral incidents with specific students by up to 85%. The neurobiological mechanism that produces this effect is:`,
+            options: [
+              `Students feel obligated to behave well toward teachers who invest time in them`,
+              `Ten days of genuine non-academic connection builds relational evidence that allows the student's threat-scanning amygdala to relax specifically around that adult — lowering the baseline activation threshold for subsequent interactions`,
+              `Positive attention naturally extinguishes attention-seeking misbehavior`,
+              `Daily conversation gives the teacher insight into the student's triggers, enabling more targeted interventions`,
+            ],
+            correct: 1,
+            explanation: `Relational connection is the most powerful co-regulation tool available because it changes the nervous system's baseline assessment of safety with a specific person. When the amygdala has sufficient positive relational evidence about a specific adult, it does not fire a threat signal when that adult approaches — removing the physiological trigger for reactive behavior before the behavior has a chance to occur.`,
+          },
+          {
+            q: `The "Brain Break" (60-90 seconds of bilateral movement) is effective for classroom regulation primarily because:`,
+            options: [
+              `Physical activity releases dopamine and serotonin, improving mood`,
+              `Bilateral movement activates cross-lateral neurological pathways that reset the nervous system, restoring prefrontal cortex access — and it serves the whole class without requiring any student to be individually identified as dysregulated`,
+              `Movement provides a break from cognitive demand, reducing cognitive overload`,
+              `The change in routine disrupts escalating behavioral patterns`,
+            ],
+            correct: 1,
+            explanation: `Bilateral movement (engaging both hemispheres alternately) engages cerebellar and vestibular systems that down-regulate sympathetic activation. The practical genius of the Brain Break is that it works at the whole-class level — providing a genuine neurological reset to every student, including dysregulated ones, without the stigma of individual targeting that can itself trigger threat responses in sensitive students.`,
+          },
+          {
+            q: `The 6-Count Exhale works as a rapid regulation tool because:`,
+            options: [
+              `Counting to six gives the mind a focus point that interrupts anxious thinking`,
+              `An exhale that is longer than the inhale activates the vagus nerve, triggering the parasympathetic response — shifting the autonomic nervous system from sympathetic toward rest-and-digest within seconds`,
+              `Slow breathing reduces oxygen uptake, calming physiological arousal`,
+              `The extended breath signals to others in the room that the person is calm, prompting social mirroring`,
+            ],
+            correct: 1,
+            explanation: `The vagus nerve — the body's primary parasympathetic highway — is directly activated by slow, extended exhalation. This is why the exhale-longer-than-inhale pattern is physiologically reliable: it engages a specific neural mechanism rather than relying on cognitive control. In a classroom, a teacher can use this privately (self-regulation) or publicly as a whole-class practice, making it one of the most versatile tools in the toolkit.`,
+          },
+        ]
       },
       {
         id: "ed03-m03", num: "03",
         title: "Reading the Room",
         subtitle: "Developing somatic awareness of classroom climate — the early warning system that prevents escalation",
-        duration: "30m", hasReflection: false,
+        duration: "30m", hasReflection: true,
         content: `
           <h2>READING THE ROOM</h2>
           <p>The most powerful moment to intervene in a dysregulation cycle is before it peaks — in the window when a student is beginning to activate but has not yet gone into full survival mode. Catching this window requires a skill most educators were never explicitly taught: somatic reading of the room's emotional climate.</p>
@@ -586,13 +995,47 @@ export const PROGRAMS: EducationProgram[] = [
             <p>Set a silent timer for every 20 minutes during one class period. When it fires, do a 10-second Zone check: scan the room's energy, name the Zone (1-4), and make one intentional choice based on it. Over time, this check becomes automatic — a background process running continuously.</p>
           </div>
         `,
-        quiz: []
+        quiz: [
+          {
+            q: `When a teacher notices the classroom volume floor gradually rising and students beginning to socially scan rather than stay on task, they are observing:`,
+            options: [
+              `Zone 3 behavior requiring immediate de-escalation intervention`,
+              `Zone 2 early-activation signals — the most valuable intervention window, where a low-cost regulation input can prevent escalation to Zone 3`,
+              `Normal variation in class engagement that does not require intervention`,
+              `Zone 4 precursors indicating a safety concern should be prepared for`,
+            ],
+            correct: 1,
+            explanation: `Volume creep and social scanning are classic Zone 2 signals — the nervous system's pre-escalation indicators. The Zone Check protocol exists specifically to catch this window, because Zone 2 intervention (a brain break, a proximity move, a tone shift) costs almost nothing and prevents Zone 3, which may cost 10–15 minutes of instructional time and significant relational repair. The entire ROI of the Four-Zone model is in recognizing and acting in Zone 2.`,
+          },
+          {
+            q: `The module notes that "your own body" is one of the early Zone 2 signals. What makes the teacher's own nervous system a reliable early warning instrument?`,
+            options: [
+              `Experienced teachers develop intuition about classroom dynamics over time`,
+              `The teacher's social nervous system is unconsciously processing the room's collective state and signaling emerging activation through somatic cues — jaw tightening, slight urgency — before the conscious mind has registered the shift`,
+              `Teachers are more physiologically sensitive than students because of professional training`,
+              `Stress contagion means teachers feel what students feel at the same time`,
+            ],
+            correct: 1,
+            explanation: `The social nervous system scans relational environments continuously and below conscious awareness. When the room begins to activate, the teacher's nervous system often responds somatically — a subtle tightening, rising urgency — before the teacher consciously notices behavioral changes. Learning to read these somatic signals as data gives the teacher a real-time instrument that is always present and never requires looking away from the class.`,
+          },
+          {
+            q: `The Four-Zone model transforms classroom management from reactive to preventive primarily by:`,
+            options: [
+              `Giving teachers a clear framework for applying discipline at the appropriate intensity level`,
+              `Training the teacher to identify and act on Zone 2 signals before full dysregulation occurs — converting the question from "how do I manage this crisis?" to "what did I notice that I can address earlier next time?"`,
+              `Classifying student behavior into categories that guide specific intervention scripts`,
+              `Providing a shared language that students and teachers can use to self-report regulation state`,
+            ],
+            correct: 1,
+            explanation: `Reactivity is a function of entering intervention conversations at Zone 3 or 4. Prevention is a function of developing the somatic literacy to recognize Zone 2 — and the discipline to act on low-level signals before they peak. The Four-Zone model's practical contribution is not the category labels themselves; it is the shift in cognitive frame from "when do I respond?" to "what am I noticing right now?"`,
+          },
+        ]
       },
       {
         id: "ed03-m04", num: "04",
         title: "Language That Regulates vs. Language That Activates",
         subtitle: "The words, tone, and timing that de-escalate — and the common phrases that reliably make things worse",
-        duration: "30m", hasReflection: false,
+        duration: "30m", hasReflection: true,
         content: `
           <h2>LANGUAGE THAT REGULATES VS. LANGUAGE THAT ACTIVATES</h2>
           <p>Language in the classroom operates on two levels simultaneously: the semantic level (what the words mean) and the prosodic/relational level (what they feel like to the nervous system). A dysregulated student may process 10–20% of your semantic content and 100% of your prosodic content. Understanding this changes everything about how you speak in difficult moments.</p>
@@ -617,13 +1060,47 @@ export const PROGRAMS: EducationProgram[] = [
             "The most powerful words in any de-escalation are not the cleverest ones. They are the simplest ones, spoken slowly, from a body that means them."
           </div>
         `,
-        quiz: []
+        quiz: [
+          {
+            q: `Language operates on two levels simultaneously in the classroom. Why does prosodic content (the music of the voice) have disproportionate influence on a dysregulated student compared to semantic content (the meaning of words)?`,
+            options: [
+              `Dysregulated students have not developed sufficient vocabulary to process complex language`,
+              `The brainstem and limbic system — which process threat and safety — respond primarily to vocal tone, pitch, and pace, while semantic processing requires prefrontal engagement that is significantly reduced during dysregulation`,
+              `Students from high-stress backgrounds rely more on nonverbal communication generally`,
+              `A teacher who modulates their voice has better training and is therefore more credible`,
+            ],
+            correct: 1,
+            explanation: `This is the key insight that changes everything about de-escalation language: the dysregulated student's threat-detection system is processing 100% of voice prosody and perhaps 10–20% of semantic content. The words "I'm here. We've got time." work not primarily because of their meaning, but because a slow, low, unhurried voice tells the brainstem: no emergency. The body hears the voice before the mind processes the words.`,
+          },
+          {
+            q: `Affect labeling — phrases like "I notice you seem frustrated" — reduces amygdala activation within 90 seconds. This works because:`,
+            options: [
+              `Being named validates the student's experience, which reduces defensiveness`,
+              `Labeling an emotion engages prefrontal cortex processing, which has a direct down-regulating effect on amygdala activity — naming the state neurologically begins the process of managing it`,
+              `Students feel understood and therefore choose to calm down`,
+              `The word "notice" communicates non-judgmental observation that reduces shame`,
+            ],
+            correct: 1,
+            explanation: `Research by Matthew Lieberman at UCLA demonstrated that labeling emotional states reduces amygdala activation within 90 seconds through a process called affect labeling. The act of naming recruits prefrontal cortex processing, which has an inhibitory relationship with the amygdala — the circuit that processes threat. This is why "I notice you seem frustrated" is physiologically effective even when the student says nothing in response.`,
+          },
+          {
+            q: `Using generalizing language like "Every time you do this..." when addressing student behavior is activating because:`,
+            options: [
+              `It suggests the teacher has been keeping score, which creates resentment`,
+              `Generalizing language signals an attack on identity rather than address of specific behavior — the threat-detection system treats identity-level judgment as a more serious threat than behavioral correction, increasing rather than decreasing activation`,
+              `Students hear generalization as unfair criticism that invalidates their experience`,
+              `"Every time" language focuses on the past, which creates irrelevant cognitive load during the interaction`,
+            ],
+            correct: 1,
+            explanation: `The threat-detection system distinguishes between feedback about a specific behavior ("you did this specific thing today") and feedback that implicates identity ("you always do this"). The latter triggers a more intense threat response because identity-level threats carry existential weight — they imply the person is fundamentally problematic, not merely that a specific action was problematic. Specific, behavior-focused language addresses conduct without triggering this deeper alarm.`,
+          },
+        ]
       },
       {
         id: "ed03-m05", num: "05",
         title: "Building Regulation Into Classroom Structure",
         subtitle: "Designing the physical and temporal environment of your classroom as a regulation infrastructure",
-        duration: "30m", hasReflection: false,
+        duration: "30m", hasReflection: true,
         content: `
           <h2>BUILDING REGULATION INTO CLASSROOM STRUCTURE</h2>
           <p>Co-regulation as a reactive skill — something you deploy when a student is already dysregulated — is powerful. Co-regulation as a structural feature of your classroom environment — something that prevents dysregulation from reaching crisis point — is transformational. This module addresses the second.</p>
@@ -641,7 +1118,41 @@ export const PROGRAMS: EducationProgram[] = [
             <p>Every structural element of your classroom is communicating something to your students' nervous systems, continuously, before a single word is spoken. The question is not whether your environment is regulating or dysregulating — it always is one or the other. The question is whether that communication is intentional.</p>
           </div>
         `,
-        quiz: []
+        quiz: [
+          {
+            q: `Predictability is described as "one of the single most powerful regulation tools available" in classroom structure. The neurobiological reason this is true is:`,
+            options: [
+              `Predictable classrooms create positive habit loops that reduce cognitive load`,
+              `The anticipatory threat response — the nervous system activating in response to uncertainty about what comes next — is eliminated when transitions and schedule are made visible and reliable`,
+              `Students function better with routine because school builds on prior knowledge`,
+              `Predictability reduces the frequency of unexpected demands that require extra effort`,
+            ],
+            correct: 1,
+            explanation: `Anticipatory threat — the nervous system activating in response to the unknown — is often a more significant dysregulation driver than the actual event itself. For students whose home environments have been unpredictable, the classroom's temporal uncertainty is a continuous low-grade stressor. A visible daily schedule and transition warnings with five minutes' notice essentially remove this threat category from the nervous system's scanning load throughout the day.`,
+          },
+          {
+            q: `The "Calm Corner" works as a regulation tool rather than a punishment space primarily because of:`,
+            options: [
+              `The physical separation it provides from the social dynamics of the classroom`,
+              `Its proactive design — it is available to any student who notices their own activation and self-selects to regulate, removing shame and stigma by framing regulation as a skill rather than a consequence`,
+              `The sensory materials it contains that directly activate the parasympathetic system`,
+              `Its proximity to the teacher's desk, which provides a natural co-regulation effect`,
+            ],
+            correct: 1,
+            explanation: `The distinction between a punishment space and a regulation station is entirely one of design intent and social framing. When the Calm Corner is introduced as a tool any student can choose when they notice themselves activating — before a teacher sends them — it removes the identity threat of being singled out and replaces it with agency. Students who choose to regulate are practicing self-awareness, not receiving consequences. This frame is what determines whether the space actually functions as a regulation resource.`,
+          },
+          {
+            q: `The module's core design principle states that the classroom environment is "always" either regulating or dysregulating. This framing changes a teacher's relationship to environmental design because:`,
+            options: [
+              `It proves that poorly-designed classrooms cause student misbehavior`,
+              `It removes the option of passivity — if the environment is continuously communicating to students' nervous systems regardless of intent, then the only meaningful question is whether that communication is deliberate or accidental`,
+              `It gives teachers accountability for student outcomes beyond their instructional control`,
+              `It demonstrates that behavior management and environment design are equally important`,
+            ],
+            correct: 1,
+            explanation: `The key shift is from "environment as backdrop" to "environment as continuous nervous system input." This changes the design question from "how do I decorate this space?" to "what is this space communicating to the nervous systems in it, right now?" Once a teacher accepts that environmental neutrality is not an option, intentional regulation design becomes not an enhancement but a responsibility.`,
+          },
+        ]
       },
       {
         id: "ed03-m06", num: "06",
@@ -718,7 +1229,7 @@ export const PROGRAMS: EducationProgram[] = [
         id: "ed04-m01", num: "01",
         title: "Why Teachers Actually Leave",
         subtitle: "The data behind the turnover crisis — and why the standard interventions haven't worked",
-        duration: "30m", hasReflection: false,
+        duration: "30m", hasReflection: true,
         content: `
           <h2>WHY TEACHERS ACTUALLY LEAVE</h2>
           <p>Every district has data on teacher turnover. Almost none have accurate data on why it happens. Exit surveys capture departing teachers at their most diplomatic, their most fatigued, and their most conflict-avoidant — which means the data collected is systematically biased toward surface-level, face-saving explanations that rarely address root causes.</p>
@@ -741,13 +1252,47 @@ export const PROGRAMS: EducationProgram[] = [
             <p>The three root causes above share one feature: they are all relational and psychological, not structural or compensatory. This is why pay raises alone do not solve the turnover crisis. Money addresses none of the three top reasons teachers leave. Wellness-centered culture addresses all three.</p>
           </div>
         `,
-        quiz: []
+        quiz: [
+          {
+            q: `Exit surveys systematically underreport the true reasons teachers leave because:`,
+            options: [
+              `Exiting teachers are legally advised not to disclose grievances`,
+              `They are collected at a moment when departing teachers are most fatigued, conflict-avoidant, and invested in a professional exit — producing face-saving responses that protect relationships rather than surface root causes`,
+              `HR departments select only non-sensitive questions for exit surveys`,
+              `Teachers are unfamiliar with academic research on turnover and therefore cannot articulate contributing factors`,
+            ],
+            correct: 1,
+            explanation: `Exit surveys are structurally compromised as data sources: the departing teacher is already in their final week, may need a positive reference, and has no incentive to escalate a difficult exit with honest criticism. Post-resignation research — conducted 6–12 months later when professional stakes have reduced — consistently reveals a different, more honest picture. Districts that rely on exit surveys alone are building retention strategy on diplomatically distorted data.`,
+          },
+          {
+            q: `"Loss of identity connection to the work" as a root cause of teacher departure refers specifically to:`,
+            options: [
+              `Teachers who chose the wrong profession and eventually realize it`,
+              `The experience of having one's original reason for teaching — connection with students, meaningful work, creative instruction — crowded out by compliance, administrative tasks, and reactive management until the original motivation is no longer accessible`,
+              `Professional identity confusion during organizational change`,
+              `The dissonance between idealistic teacher preparation and classroom reality`,
+            ],
+            correct: 1,
+            explanation: `Most teachers entered the profession for deeply identity-connected reasons. When the day-to-day experience becomes dominated by things that have nothing to do with those reasons, the work loses its intrinsic sustaining quality. No amount of compensation restores identity-work connection. This is precisely why districts focused exclusively on structural and financial solutions continue to lose teachers who are drawn to the work itself but can no longer access it.`,
+          },
+          {
+            q: `The claim that "wellness-centered culture addresses all three root causes" of teacher departure is most defensible because:`,
+            options: [
+              `Wellness programs make schools more attractive employers in a competitive market`,
+              `A culture that prioritizes staff wellbeing directly addresses feeling unseen (by demonstrating genuine institutional care), chronic emotional exhaustion (through structural recovery provision), and identity erosion (by reconnecting educators to meaning in their work)`,
+              `Wellness certification programs improve teacher professional identity`,
+              `Schools with wellness cultures typically have smaller class sizes and better resources`,
+            ],
+            correct: 1,
+            explanation: `The alignment is not coincidental. The three root causes — relational, physiological, and identity-based — map precisely onto what a genuinely wellness-centered culture provides: leaders who see and care for staff (relational), structural recovery provisions (physiological), and practices that reconnect educators to purpose (identity). Financial interventions address none of these; cultural interventions address all three simultaneously.`,
+          },
+        ]
       },
       {
         id: "ed04-m02", num: "02",
         title: "The Retention Diagnostic",
         subtitle: "The assessment tools that surface the real state of your district's culture — before it shows up as resignations",
-        duration: "25m", hasReflection: false,
+        duration: "25m", hasReflection: true,
         content: `
           <h2>THE RETENTION DIAGNOSTIC</h2>
           <p>Most districts discover they have a serious retention problem when they begin losing teachers they cannot afford to lose. By that point, the cultural conditions that produced the departures have usually been in place for 1–3 years. A retention diagnostic is the tool for reading the culture before it shows up in the exit survey data.</p>
@@ -767,13 +1312,47 @@ export const PROGRAMS: EducationProgram[] = [
             <p>Send these five questions as an anonymous pulse survey at the start of each quarter. Track the trend, not the number. A declining trend on question 5 gives you 6–9 months of advance notice before resignations materialize. That window is enough to intervene — if you use it.</p>
           </div>
         `,
-        quiz: []
+        quiz: [
+          {
+            q: `The diagnostic instructs leaders to "track the trend, not the number." Why does the trend carry more analytical value than any single score?`,
+            options: [
+              `Aggregate numbers mask individual responses that may require intervention`,
+              `A single survey captures a moment in time; the trend reveals the direction the culture is moving — and a declining trend is always more actionable than any absolute score, regardless of where it starts`,
+              `Numbers from anonymous surveys are unreliable without benchmarking data`,
+              `Trends are easier to present to boards than static scores`,
+            ],
+            correct: 1,
+            explanation: `A school where 60% of staff feel supported but that number is declining quarter-over-quarter is in a different — and more concerning — situation than a school where 45% feel supported but that number is rising. The trend is the forward-looking signal; the number is the current snapshot. Managing to trends rather than absolutes is the discipline that turns diagnostic data into proactive retention strategy rather than lagging documentation.`,
+          },
+          {
+            q: `The question "Would you recommend this school as a place to work to a teacher you care about?" functions as a staff culture NPS proxy because:`,
+            options: [
+              `Teachers' personal networks are the most effective recruitment channel`,
+              `Willingness to stake a personal relationship on a recommendation is the highest-integrity indicator of genuine culture quality — it requires honest assessment rather than diplomatic optimism`,
+              `Referral rates are correlated with staff satisfaction in service industries`,
+              `Teachers who would recommend the school are the most engaged and highest-performing`,
+            ],
+            correct: 1,
+            explanation: `The Net Promoter Score logic applied to staff culture is powerful because recommendation requires risking one's own reputation and relationships. A teacher who genuinely would not bring a friend into the school knows something about the culture that they may not express through other survey channels. This question bypasses diplomatic filtering because the stakes of an inaccurate answer fall on the respondent personally, not the institution.`,
+          },
+          {
+            q: `The five diagnostic questions are sent anonymously and quarterly. The anonymity is essential because:`,
+            options: [
+              `Anonymous surveys have higher legal protection for respondents`,
+              `Without anonymity, responses are filtered through self-protection — staff will not disclose genuine concerns about leadership if leadership can identify who said what. Anonymity is what makes the data honest enough to act on`,
+              `Anonymous surveys have higher completion rates due to reduced burden`,
+              `Identifying information could be used to target dissatisfied staff for performance management`,
+            ],
+            correct: 1,
+            explanation: `Psychological safety — the precondition for honest upward communication — requires that disclosure carries no professional risk. In a named survey, the calculus changes: staff weigh the honest answer against the possible consequences and often choose the safer, less candid response. Anonymous surveys don't just improve response rates; they fundamentally change the quality of the data by making honesty safe.`,
+          },
+        ]
       },
       {
         id: "ed04-m03", num: "03",
         title: "Systemic Wellness Design",
         subtitle: "Building wellness into the architecture of the district — not as a program, but as a structural feature",
-        duration: "30m", hasReflection: false,
+        duration: "30m", hasReflection: true,
         content: `
           <h2>SYSTEMIC WELLNESS DESIGN</h2>
           <p>The most common wellness initiative failure mode: a program is designed, funded, and launched — and then sits at 12% engagement while the structural conditions that are creating dysregulation remain completely unchanged. Structural wellness design addresses the architecture first, programs second.</p>
@@ -792,13 +1371,47 @@ export const PROGRAMS: EducationProgram[] = [
             <p>Do not launch wellness programs on top of broken structures. First, audit your five structural levers. Fix the worst one before adding any new initiative. A staff that sees structural change — rather than just program provision — begins to believe the institution means it. That belief is the foundation everything else is built on.</p>
           </div>
         `,
-        quiz: []
+        quiz: [
+          {
+            q: `The most common wellness initiative failure mode described in this module is:`,
+            options: [
+              `Programs that are too complex for staff to implement consistently`,
+              `Launching wellness programs on top of unchanged structural conditions that are actively generating dysregulation — producing cynicism rather than uptake because staff experience the structural contradiction`,
+              `Insufficient budget allocation for meaningful wellness programming`,
+              `Poor marketing and communication of wellness program benefits to staff`,
+            ],
+            correct: 1,
+            explanation: `When staff experience administrative emails at 10pm, co-opted planning periods, and meeting saturation — and then receive a wellness app or mindfulness workshop — the contradiction communicates that wellness is performance rather than commitment. The cynicism that results is not irrationality; it is an accurate reading of institutional priorities. Structural change before programmatic investment is what makes programs credible.`,
+          },
+          {
+            q: `A district-wide norm of "no administrative email sent or expected after 5pm and before 7am" is described as a structural wellness intervention with zero budget requirement. Its effectiveness as a retention tool is based on:`,
+            options: [
+              `Reducing the volume of communication so staff can process information more effectively`,
+              `Eliminating the ambient stress of always-on professional availability — which keeps the sympathetic nervous system in a low-grade activation state even during off-hours — without any financial investment`,
+              `Modeling healthy work-life balance that staff can replicate with students`,
+              `Protecting family time, which reduces resignation driven by personal relationship strain`,
+            ],
+            correct: 1,
+            explanation: `Ambient stress — the background awareness that a work demand could arrive at any moment — maintains low-grade sympathetic activation even during recovery periods. The nervous system cannot fully shift into parasympathetic recovery when it is monitoring for incoming demands. An email norm effectively gives staff permission to genuinely disconnect during off-hours, enabling real recovery. The cost is zero; the physiological benefit is significant and cumulative.`,
+          },
+          {
+            q: `Employee Assistance Programs (EAP) are identified as an underutilized retention tool because:`,
+            options: [
+              `Most EAP providers offer limited services that don't address educator-specific needs`,
+              `Most staff don't know EAPs exist, the process feels stigmatized, or they lack time to access them — meaning active, destigmatized promotion is itself a wellness intervention that requires only policy change, not additional funding`,
+              `EAP services are only effective for staff in crisis, not for preventive wellness`,
+              `Districts typically don't include EAP access in the benefits packages teachers actually need`,
+            ],
+            correct: 1,
+            explanation: `An EAP that exists but is unknown, stigmatized, or inaccessible is not a wellness resource — it is a budget line item that isn't working. The intervention required is not new services but active, normalizing promotion: mentioning EAP in staff meetings, normalizing its use by leadership reference, and removing friction from access. This is a structural wellness intervention that costs nothing additional and may significantly increase the support staff actually receive.`,
+          },
+        ]
       },
       {
         id: "ed04-m04", num: "04",
         title: "Onboarding Into a Culture of Wellness",
         subtitle: "How the first 90 days of a teacher's experience determine whether they'll be here in year three",
-        duration: "25m", hasReflection: false,
+        duration: "25m", hasReflection: true,
         content: `
           <h2>ONBOARDING INTO A CULTURE OF WELLNESS</h2>
           <p>The data is stark: 44% of new teachers leave within five years. The vast majority who leave cite factors that were present — and knowable — within the first 90 days. The first 90 days are not orientation. They are the moment a new hire's nervous system decides whether this institution is safe, whether they belong, and whether they can sustain themselves here long-term.</p>
@@ -811,13 +1424,47 @@ export const PROGRAMS: EducationProgram[] = [
             <li><strong>Days 61–90 — Identity reinforcement:</strong> Reconnecting the new hire to why they chose teaching — not through a motivational exercise but through genuine conversation about their specific vision for the work. Keeping identity-work connection alive is the most powerful long-term retention tool available.</li>
           </ul>
         `,
-        quiz: []
+        quiz: [
+          {
+            q: `Why does the 90-Day Nervous System Architecture prioritize relationship-building over information transfer in Days 1–10?`,
+            options: [
+              `New teachers have already received information through credential programs and don't need repetition`,
+              `The new hire's nervous system is making an unconscious safety assessment in the first 10 days — whether this institution is safe and whether they belong — and that assessment is shaped by relationship, not information`,
+              `Information overload during orientation leads to retention failure of key procedural knowledge`,
+              `Relationship-first onboarding follows best practices from human resources research`,
+            ],
+            correct: 1,
+            explanation: `The first days in any new environment are dominated by the nervous system's social safety assessment — the question "do I belong here?" is being answered through hundreds of micro-interactions. Information transfer cannot compete with this primary scanning process. A new teacher who feels genuinely seen by two people in the building before the first day of classes has a fundamentally different nervous system baseline than one who has received excellent orientation materials.`,
+          },
+          {
+            q: `The "Honest Safety" check-in (Days 31–60) explicitly asks what is harder than expected. Its design is based on the insight that:`,
+            options: [
+              `New teachers often have unrealistic expectations from teacher preparation programs`,
+              `Most new teachers are struggling with something they are afraid to disclose through normal channels — a structured safe channel with guaranteed genuine response is the mechanism that surfaces this before it becomes a resignation`,
+              `Struggles in weeks 5–8 are the most predictive of long-term retention risk`,
+              `Administrative check-ins demonstrate institutional care more effectively than peer mentoring`,
+            ],
+            correct: 1,
+            explanation: `The fear of disclosure for new teachers is rational: they are navigating a probationary period, managing impressions with administrators, and uncertain about professional consequences of admitting difficulty. Without a deliberately designed safe channel — where the question is explicitly invited and the institution commits to genuine response — most struggles remain invisible until they become unsalvageable. The check-in's structure signals permission, which changes what gets disclosed.`,
+          },
+          {
+            q: `Identity reinforcement in Days 61–90 is described as "the most powerful long-term retention tool available" because:`,
+            options: [
+              `Teachers who are connected to their purpose are more resilient to external challenges`,
+              `The original motivation that brought a person into teaching is the intrinsic fuel that sustains them through difficulty — when that connection erodes, no external incentive can replace it, making identity-work alignment the deepest retention lever`,
+              `Purpose-connected teachers demonstrate higher instructional quality, making them more rewarding to retain`,
+              `New teachers in their first year are most susceptible to purpose erosion before professional habits are established`,
+            ],
+            correct: 1,
+            explanation: `Teaching is not inherently lucrative or administratively light — people sustain themselves in it through intrinsic motivation, specifically the connection between their daily work and their original reason for choosing the profession. When that connection erodes (as it does rapidly in dysregulated, compliance-heavy environments), no compensation or workload reduction can replace it. A genuine conversation about why someone chose teaching — and how their current role connects to that reason — is not soft content; it is the highest-return retention investment available.`,
+          },
+        ]
       },
       {
         id: "ed04-m05", num: "05",
         title: "The Culture ROI Report",
         subtitle: "Building the data infrastructure that makes wellness investment defensible at board level",
-        duration: "25m", hasReflection: false,
+        duration: "25m", hasReflection: true,
         content: `
           <h2>THE CULTURE ROI REPORT</h2>
           <p>Every HR director and district administrator faces the same challenge: the investment in culture and wellness is real, but the return is distributed, delayed, and expressed in metrics that don't naturally appear on a budget line. The Culture ROI Report is the tool for making the return visible — in the language that drives institutional resource allocation.</p>
@@ -836,7 +1483,41 @@ export const PROGRAMS: EducationProgram[] = [
             <p>Pull your current numbers on all five metrics. If you don't have them, their absence is itself a finding — the district isn't measuring what matters. Establish the baseline this year. Measure again in 12 months. The delta is your Culture ROI narrative.</p>
           </div>
         `,
-        quiz: []
+        quiz: [
+          {
+            q: `Chronic absence (6+ days per year) is listed as a Culture ROI metric because:`,
+            options: [
+              `Absent teachers create substitute coverage costs that appear directly in operational budgets`,
+              `Chronic absence is strongly correlated with burnout — it is a physiological leading indicator that precedes resignation by months, giving HR a measurable early-warning signal embedded in already-tracked data`,
+              `Absence data is required for state reporting and therefore easy to access without additional data infrastructure`,
+              `Staff who are chronically absent are demonstrably less committed and more likely to leave`,
+            ],
+            correct: 1,
+            explanation: `Chronic absence is not primarily a compliance or coverage issue — it is a burnout signal. The body's withdrawal from the work environment before the mind has consciously decided to resign is a measurable precursor that appears in existing attendance data. Districts that track absence trends across buildings can identify high-risk staff populations months before formal resignations occur, enabling proactive rather than reactive intervention.`,
+          },
+          {
+            q: `"Wellness program engagement: active monthly users" is described as both a lagging indicator and a leading indicator simultaneously. This means:`,
+            options: [
+              `Engagement data is ambiguous and should be used cautiously in board presentations`,
+              `It lags behind culture health (meaning high engagement follows — rather than creates — a healthy culture) but leads resignations (meaning consistently engaged staff are significantly more likely to remain in role)`,
+              `Monthly data captures short-term patterns but misses long-term cultural trends`,
+              `Active users represent a self-selected population whose data is not representative of the full staff`,
+            ],
+            correct: 1,
+            explanation: `A lagging indicator confirms that culture is healthy — you see high engagement because the culture already supports it. But relative to turnover outcomes, engagement is leading — consistently engaged staff show measurably different 12–18 month retention profiles. This dual nature makes it particularly valuable: it confirms current culture quality while also predicting future retention, providing both a current-state reading and a forward-looking indicator in a single metric.`,
+          },
+          {
+            q: `If a district does not currently have data on any of the five Culture ROI metrics, the module suggests that their absence is:`,
+            options: [
+              `Expected for smaller districts with limited HR infrastructure`,
+              `Itself a finding — the district is not measuring the variables that most predict its highest recurring cost, suggesting a systematic gap in strategic data infrastructure that must be addressed before meaningful ROI reporting is possible`,
+              `Normal for most districts, since culture metrics are a relatively new field`,
+              `Acceptable as long as exit interview data and anecdotal evidence are available`,
+            ],
+            correct: 1,
+            explanation: `You cannot manage what you don't measure. A district that lacks data on retention rates, absence trends, and onboarding outcomes is operating without instrumentation on its most costly and consequential HR dynamics. The gap in data is not a neutral administrative situation — it is evidence of a measurement system that prioritizes compliance and academic metrics while treating the human capital factors that determine everything else as invisible.`,
+          },
+        ]
       },
       {
         id: "ed04-m06", num: "06",

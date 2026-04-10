@@ -14,6 +14,7 @@ import EducationReflection from '@/components/educators/EducationReflection'
 import { useLessonNotes } from '@/hooks/useLessonNotes'
 import { createClient } from '@/lib/supabase/client'
 import { PROGRAMS } from '@/lib/education/curriculum'
+import { EDUCATION_LABS } from '@/lib/education/assumption-labs'
 import { cn } from '@/lib/utils'
 import type { EducationProgram, EducationModule } from '@/lib/education/curriculum'
 
@@ -236,7 +237,7 @@ export default function EducationPageClient({
             <div className="flex items-center gap-8 border-b border-white/5 mb-8">
               <EduTab id="lesson" active={activeTab} setActive={setActiveTab} label="01. Lesson" />
               {hasQuiz && (
-                <EduTab id="reflection" active={activeTab} setActive={setActiveTab} label="02. Reflection" />
+                <EduTab id="reflection" active={activeTab} setActive={setActiveTab} label="02. Knowledge Check" />
               )}
               <EduTab
                 id="notes"
@@ -262,34 +263,22 @@ export default function EducationPageClient({
                     dangerouslySetInnerHTML={{ __html: module.content }}
                   />
 
-                  {/* Assumption Labs — module-specific */}
-                  {module.hasReflection && (
-                    <div className="my-16">
-                      {module.id === 'ed01-m03' ? (
+                  {/* Assumption Lab — tailored per module */}
+                  {(() => {
+                    const lab = EDUCATION_LABS[module.id]
+                    if (!lab) return null
+                    return (
+                      <div className="my-16">
                         <AssumptionLab
-                          title="Co-Regulation Move"
-                          subtitle="From Defiance to Biological Safety"
-                          scenario="A student is shouting in the hallway. Your immediate assumption (and physiological response) is 'Defiance' or 'Disrespect'."
-                          prompt="If you shifted your assumption to 'Safety/Biological Emergency', how would your first 10 seconds of interaction (voice, proximity, eye contact) change?"
-                          accentColor="#E8621A"
+                          title={lab.title}
+                          subtitle={lab.subtitle}
+                          scenario={lab.scenario}
+                          prompt={lab.prompt}
+                          accentColor={lab.accentColor ?? '#E8621A'}
                         />
-                      ) : module.id === 'ed01-m01' ? (
-                        <AssumptionLab
-                          title="The Regulated Leader"
-                          subtitle="The Morning Pivot"
-                          scenario="A chaotic morning commute or personal issue has you in a state of 'Survival' before the first bell ever rings."
-                          prompt="How would leading from a deliberate 'Sovereign' assumption change your very first interaction with a difficult colleague today?"
-                          accentColor="#E8621A"
-                        />
-                      ) : (
-                        <AssumptionLab
-                          title="Identity Workshop"
-                          subtitle="Reflecting on Your Educational Standard"
-                          prompt={`In the context of "${module.title}", what is one assumption you've held about your students or your environment that no longer serves the standard you're building?`}
-                        />
-                      )}
-                    </div>
-                  )}
+                      </div>
+                    )
+                  })()}
                 </motion.div>
               )}
 
