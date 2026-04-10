@@ -375,10 +375,16 @@ function AddOrgModal({ open, onClose, onSuccess }: { open: boolean; onClose: ()=
         <FField label="Organization Name" span2><input value={form.name} onChange={e=>set('name',e.target.value)} style={IS} placeholder="e.g. Horizon Leadership Academy"/></FField>
         <FField label="Segment">
           <select value={form.segment} onChange={e=>set('segment',e.target.value)} style={IS}>
-            <option value="personal">Personal</option>
-            <option value="educator">Educator</option>
-            <option value="business">Business</option>
-            <option value="leadership">Leadership</option>
+            <option value="business">Business / Corporate</option>
+            <option value="small-business">Small Business</option>
+            <option value="education">Education (General)</option>
+            <option value="k12">K-12 District</option>
+            <option value="university">University / College</option>
+            <option value="leadership">Leadership / Community</option>
+            <option value="nonprofit">Nonprofit</option>
+            <option value="government">Government</option>
+            <option value="healthcare">Healthcare</option>
+            <option value="personal">Personal / Individual</option>
           </select>
         </FField>
         <FField label="Industry">
