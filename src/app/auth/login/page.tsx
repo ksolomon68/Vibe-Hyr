@@ -25,6 +25,13 @@ function LoginForm() {
       toast.error(error.message)
       setLoading(false)
     } else {
+      // Notify super admin
+      fetch('/api/email/superadmin-notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event: 'login', userEmail: email })
+      }).catch(() => {})
+
       toast.success('Welcome back. ✦')
       router.push(redirect)
       router.refresh()

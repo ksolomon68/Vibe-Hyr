@@ -57,6 +57,13 @@ function SignupForm() {
       body: JSON.stringify({ name, email, plan }),
     }).catch(() => {})
 
+    // Notify super admin
+    fetch('/api/email/superadmin-notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event: 'signup', userEmail: email, userName: name })
+    }).catch(() => {})
+
     if (plan !== 'free' && data.user) {
       // Redirect to Stripe checkout (handled via API route)
       const res = await fetch('/api/stripe/checkout', {
