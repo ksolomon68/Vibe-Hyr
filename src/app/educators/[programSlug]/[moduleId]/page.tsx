@@ -3,9 +3,17 @@
 
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { PROGRAMS } from '@/lib/education/curriculum'
 import { CourseLockedScreen } from '@/components/CourseLockedScreen'
 import EducationPageClient from './client'
+
+const PROGRAM_COURSE_ID: Record<string, number> = {
+  'ed01': 9,
+  'ed02': 10,
+  'ed03': 11,
+  'ed04': 12,
+}
 
 export default async function EducationModulePage({
   params,
@@ -27,6 +35,20 @@ export default async function EducationModulePage({
   const module = program.modules[mIdx]
 
   // ── DB-level access gate (RLS enforces membership_type + sub_tier) ──────────
+  // Fetch video URL from course_lessons for this module
+  const courseId = PROGRAM_COURSE_ID[program.id]
+  let videoUrl: string | null = null
+  if (courseId) {
+    const admin = createAdminClient()
+    const { data: lessonRow } = await admin
+      .from('course_lessons')
+      .select('youtube_url')
+      .eq('course_id', courseId)
+      .eq('title', module.title)
+      .maybeSingle()
+    videoUrl = lessonRow?.youtube_url ?? null
+  }
+
   const [{ data: catalogEntry }, { data: progressData }] = await Promise.all([
     supabase
       .from('course_catalog')
@@ -61,6 +83,7 @@ export default async function EducationModulePage({
       module={module}
       userId={user.id}
       initialCompleted={initialCompleted}
+      videoUrl={videoUrl}
     />
   )
 }

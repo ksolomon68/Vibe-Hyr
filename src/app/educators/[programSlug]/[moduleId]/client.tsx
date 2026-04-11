@@ -27,6 +27,7 @@ interface Props {
   module:            EducationModule
   userId:            string
   initialCompleted:  string[]
+  videoUrl?:         string | null
 }
 
 type Tab = 'lesson' | 'reflection' | 'notes'
@@ -39,6 +40,7 @@ export default function EducationPageClient({
   module,
   userId,
   initialCompleted,
+  videoUrl,
 }: Props) {
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -197,7 +199,7 @@ export default function EducationPageClient({
 
           {/* Video player */}
           <VideoPlayer
-            videoUrl={null}
+            videoUrl={videoUrl ?? null}
             lessonId={module.id}
             title={module.title}
           />
