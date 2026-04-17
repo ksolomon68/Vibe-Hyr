@@ -869,6 +869,7 @@ function UsersPage({ users, onToast, onAddUser, onInviteUser, onEdit, onDelete }
   const [typeF, setTypeF] = useState('All Types')
   const [tierF, setTierF] = useState('All Tiers')
   const [isPending, startTransition] = useTransition()
+  const [resetingId, setResetingId] = useState<string|null>(null)
   const router = useRouter()
 
   const uStatus = (u: SAUser) => u.is_bypassed ? 'bypassed' : (Date.now()-new Date(u.updated_at).getTime())/86400000 > 14 ? 'inactive' : 'active'
@@ -887,6 +888,17 @@ function UsersPage({ users, onToast, onAddUser, onInviteUser, onEdit, onDelete }
     })
   }
 
+  async function handleResetPassword(u: SAUser) {
+    setResetingId(u.id)
+    try {
+      const res = await sendPasswordResetEmail(u.id, u.email, u.full_name??u.email)
+      if (res.success) onToast(`✓ Password reset link sent to ${u.email}`)
+      else onToast(`Error: ${res.error}`)
+    } finally {
+      setResetingId(null)
+    }
+  }
+
   return (
     <div>
       <div style={{ display:'flex', gap:10, marginBottom:14 }}>
@@ -900,6 +912,7 @@ function UsersPage({ users, onToast, onAddUser, onInviteUser, onEdit, onDelete }
         <Tbl cols={['User','Type','Organization','Tier','Payment','Status','Actions']}>
           {filtered.map(u => {
             const s = uStatus(u)
+            const isSendingReset = resetingId === u.id
             return (
               <TR key={u.id}>
                 <TName name={u.full_name??'—'} sub={u.email} badge={u.role==='institution_admin'?'Org Admin':undefined}/>
@@ -908,8 +921,17 @@ function UsersPage({ users, onToast, onAddUser, onInviteUser, onEdit, onDelete }
                 <TD>{tierPill(u.membership_tier)}</TD>
                 <TD><Tag bypass={u.is_bypassed} label={u.is_bypassed?'Bypassed':'Paid'}/></TD>
                 <TD>{s==='bypassed'?<Pill v="bypassed" label="Bypassed"/>:s==='active'?<Pill v="active" label="Active"/>:<Pill v="inactive" label="Inactive"/>}</TD>
-                <TD><div style={{ display:'flex', gap:6 }}>
+                <TD><div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
                   <Btn variant="ghost" size="sm" onClick={()=>onEdit({ id:u.id, full_name:u.full_name, email:u.email, membership_tier:u.membership_tier, institution_type:u.institution_type, org_id:u.org_id })}>Edit</Btn>
+                  <Btn
+                    variant="gold"
+                    size="sm"
+                    onClick={()=>handleResetPassword(u)}
+                    disabled={isSendingReset || isPending}
+                    title={`Send password reset link to ${u.email}`}
+                  >
+                    {isSendingReset ? 'Sending…' : 'Reset PW'}
+                  </Btn>
                   {u.is_bypassed
                     ? <Btn variant="danger" size="sm" onClick={()=>onToast('Use Bypass Manager to revoke.')}>Revoke</Btn>
                     : <Btn variant="danger" size="sm" onClick={()=>handleDeactivate(u)} disabled={isPending}>Deactivate</Btn>
