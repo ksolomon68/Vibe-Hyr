@@ -11,6 +11,8 @@ import { COURSES } from '@/lib/data/courses'
 import { TRACKS } from '@/lib/business/curriculum'
 import { PROGRAMS } from '@/lib/education/curriculum'
 import { LEADERSHIP_COURSES_SUMMARY } from '@/lib/leadership/curriculum-summary'
+import { DailyEngagementProvider } from '@/components/checkin/DailyEngagementProvider'
+import type { DailyCheckin } from '@/types'
 
 export const metadata = { title: 'Dashboard' }
 
@@ -106,6 +108,41 @@ export default async function DashboardPage() {
       .select('course_id, progress_percent')
       .eq('user_id', user.id)
     personalProgress = data ?? []
+  }
+
+  // ── Daily engagement queries ───────────────────────────────────────────────
+  const today = new Date().toISOString().slice(0, 10)
+  const [
+    { data: todayCheckin },
+    { data: todayDietLogs },
+  ] = await Promise.all([
+    supabase
+      .from('daily_checkins')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('date', today)
+      .maybeSingle(),
+    supabase
+      .from('mental_diet_logs')
+      .select('compliance_rating')
+      .eq('user_id', user.id)
+      .eq('date', today),
+  ])
+
+  // Compute today's diet score (0-100)
+  const dietRatings  = (todayDietLogs ?? []).map(l => l.compliance_rating as number)
+  const dietAvg      = dietRatings.length
+    ? dietRatings.reduce((a: number, b: number) => a + b, 0) / dietRatings.length
+    : null
+  const dietScore    = dietAvg !== null ? Math.round((dietAvg / 3) * 100) : null
+  const dietEntryCount = dietRatings.length
+
+  // Bridge day
+  let bridgeDay: number | null = null
+  if (profile?.bridge_start_date) {
+    const start = new Date(profile.bridge_start_date as string)
+    const diff  = Math.floor((new Date(today).getTime() - start.getTime()) / 86_400_000) + 1
+    bridgeDay = diff > 0 && diff <= 90 ? diff : null
   }
 
   const streak            = profile?.journal_streak ?? 0
@@ -254,6 +291,15 @@ export default async function DashboardPage() {
                 </div>
               ))}
             </div>
+
+            {/* ── Daily Engagement Widgets ── */}
+            <DailyEngagementProvider
+              todayCheckin={(todayCheckin ?? null) as DailyCheckin | null}
+              initialStreak={profile?.checkin_streak ?? 0}
+              dietScore={dietScore}
+              dietEntryCount={dietEntryCount}
+              bridgeDay={bridgeDay}
+            />
 
             <div className="grid lg:grid-cols-3 gap-8">
 

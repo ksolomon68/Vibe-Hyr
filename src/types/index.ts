@@ -193,6 +193,39 @@ export interface Assumption {
   created_at: string
 }
 
+// ── DAILY ENGAGEMENT ─────────────────────────────────────────────────────────
+
+export type CheckinStateLabel =
+  | 'beta_resistance'
+  | 'alpha_aware'
+  | 'theta_receptive'
+  | 'identity_locked'
+
+export type MentalDietCategory = 'thoughts' | 'media' | 'conversations' | 'reactions'
+
+export interface DailyCheckin {
+  id: string
+  user_id: string
+  checked_in_at: string
+  date: string
+  state_label: CheckinStateLabel
+  state_score: number
+  journal_prompt: string | null
+  journal_response: string | null
+  streak_count: number
+}
+
+export interface MentalDietLog {
+  id: string
+  user_id: string
+  logged_at: string
+  date: string
+  category: MentalDietCategory
+  entry_text: string
+  compliance_rating: 1 | 2 | 3
+  bridge_day: number | null
+}
+
 // ── COMMUNITY ─────────────────────────────────────────────────────────────────
 
 export type PostCategory = 'general' | 'bridge_of_incidents' | 'sats_wins' | 'questions' | 'accountability'

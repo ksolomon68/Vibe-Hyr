@@ -237,6 +237,29 @@ export function Navbar() {
                       <span className="nav-dropdown-label">My Courses</span>
                       <span className="nav-dropdown-desc">Progress &amp; learning</span>
                     </Link>
+                    <Link href="/dashboard" className="nav-dropdown-item">
+                      <span className="nav-dropdown-label flex items-center gap-1.5">
+                        🔥 Daily Check-In
+                        {profile?.checkin_streak && profile.checkin_streak > 0 ? (
+                          <span style={{
+                            background: 'var(--orange)',
+                            color: '#000',
+                            fontSize: '0.55rem',
+                            fontWeight: 700,
+                            padding: '1px 5px',
+                            borderRadius: '20px',
+                            letterSpacing: '0.05em',
+                          }}>
+                            {profile.checkin_streak}d
+                          </span>
+                        ) : null}
+                      </span>
+                      <span className="nav-dropdown-desc">Set your neural state</span>
+                    </Link>
+                    <Link href="/dashboard/mental-diet" className="nav-dropdown-item">
+                      <span className="nav-dropdown-label">📊 Mental Diet</span>
+                      <span className="nav-dropdown-desc">Track your daily compliance</span>
+                    </Link>
                     <Link href="/journal" className="nav-dropdown-item">
                       <span className="nav-dropdown-label">Nightly Journal</span>
                       <span className="nav-dropdown-desc">Revise &amp; rewire</span>
@@ -411,6 +434,14 @@ export function Navbar() {
                   <Link href="/dashboard" onClick={() => setOpen(false)} className="nav-dropdown-item">
                     <span className="nav-dropdown-label">My Courses</span>
                     <span className="nav-dropdown-desc">Progress &amp; learning</span>
+                  </Link>
+                  <Link href="/dashboard" onClick={() => setOpen(false)} className="nav-dropdown-item">
+                    <span className="nav-dropdown-label">🔥 Daily Check-In</span>
+                    <span className="nav-dropdown-desc">Set your neural state</span>
+                  </Link>
+                  <Link href="/dashboard/mental-diet" onClick={() => setOpen(false)} className="nav-dropdown-item">
+                    <span className="nav-dropdown-label">📊 Mental Diet</span>
+                    <span className="nav-dropdown-desc">Track your daily compliance</span>
                   </Link>
                   <Link href="/journal" onClick={() => setOpen(false)} className="nav-dropdown-item">
                     <span className="nav-dropdown-label">Nightly Journal</span>
