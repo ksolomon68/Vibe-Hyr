@@ -24,6 +24,12 @@ export interface Profile {
   bypass_expiry: string | null
   bypass_notes: string | null
   bypass_added_by: string | null
+  // Daily engagement fields
+  checkin_streak: number
+  last_checkin_date: string | null
+  bridge_start_date: string | null
+  mental_diet_score: number
+  identity_score_contribution: number
   created_at: string
   updated_at: string
 }
