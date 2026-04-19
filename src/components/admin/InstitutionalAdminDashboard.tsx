@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { editUser, removeUser, inviteUserDirect } from '@/app/admin/users/actions'
@@ -820,9 +821,11 @@ export function InstitutionalAdminDashboard({ org, members, adminName }: Props) 
         {/* ── SIDEBAR ── */}
         <nav className={`inst-sidebar${sidebarOpen ? ' open' : ''}`}>
           <div style={{ padding:'28px 24px 20px', borderBottom:`1px solid ${C.border}` }}>
-            <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:26, letterSpacing:2 }}>
-              <span style={{ color:C.orange }}>VIBE</span>HYR
-            </div>
+            <Link href="/" style={{ textDecoration:'none', color:'inherit' }}>
+              <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:26, letterSpacing:2 }}>
+                <span style={{ color:C.orange }}>VIBE</span>HYR
+              </div>
+            </Link>
             <div style={{ fontSize:10, color:C.gold, letterSpacing:3, textTransform:'uppercase', marginTop:2 }}>Institutional Admin</div>
           </div>
 

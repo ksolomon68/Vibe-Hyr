@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useTransition, useCallback, useEffect } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { BYPASS_ROLES } from '@/lib/constants/bypassRoles'
@@ -1853,7 +1854,7 @@ export function SuperAdminDashboard({ adminName, stats, bypassUsers, bypassOrgs,
         {/* SIDEBAR */}
         <nav className={`sa-sidebar${sidebarOpen ? ' open' : ''}`}>
           <div style={{ padding:'24px 20px 18px', borderBottom:`1px solid ${C.border}` }}>
-            <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:24, letterSpacing:3 }}><span style={{ color:C.orange }}>VIBE</span>HYR</div>
+            <Link href="/" style={{ textDecoration:'none', color:'inherit' }}><div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:24, letterSpacing:3 }}><span style={{ color:C.orange }}>VIBE</span>HYR</div></Link>
             <div style={{ display:'inline-flex', alignItems:'center', gap:5, background:'linear-gradient(90deg,rgba(201,168,76,0.15),rgba(232,98,26,0.1))', border:`1px solid ${C.border2}`, borderRadius:2, padding:'3px 8px', marginTop:6, fontSize:9, letterSpacing:3, textTransform:'uppercase', color:C.gold }}>✦ Super Admin</div>
           </div>
 
