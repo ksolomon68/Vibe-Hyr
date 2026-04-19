@@ -246,14 +246,26 @@ export async function addBypassOrg(data: {
       })
       if (profileErr) {
         console.error('[addBypassOrg] profile upsert failed:', profileErr.message)
+        // If we fail here, we still want to try creating the membership if possible, 
+        // but it's likely a constraint error that will affect both.
         return { success: false, error: `Failed to configure org admin profile: ${profileErr.message}` }
       }
-      await admin.from('organization_members').upsert({
+
+      console.log(`[addBypassOrg] Profile configured for ${data.adminEmail} (Role: ${adminRole})`)
+
+      const { error: memErr } = await admin.from('organization_members').upsert({
         org_id: org.id, user_id: adminUserId,
         email: data.adminEmail,
         full_name: `${data.adminFirstName} ${data.adminLastName}`,
         role: 'admin', status: 'active',
       }, { onConflict: 'org_id,email' })
+
+      if (memErr) {
+        console.error('[addBypassOrg] organization_members upsert failed:', memErr.message)
+        return { success: false, error: `Failed to link admin to organization: ${memErr.message}` }
+      }
+
+      console.log(`[addBypassOrg] Admin linked to organization: ${org.id}`)
 
       // Update org seats_used
       await admin.from('organizations').update({ seats_used: 1 }).eq('id', org.id)
