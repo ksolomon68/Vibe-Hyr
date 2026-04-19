@@ -8,24 +8,24 @@ import { institutionInviteTemplate } from '@/lib/email/templates'
 
 // ─── Helper: resolve admin's org ID from either column ───────────────────────
 // The schema has two org-FK columns on profiles: org_id (used by invite flow)
-// and institution_id (added by institution_access migration). Admin profiles
+// and org_id (added by institution_access migration). Admin profiles
 // created via different paths may have one or the other populated.
 // This helper coalesces both so auth checks never fail due to column mismatch.
 
 async function getAdminOrg(
   adminSupabase: ReturnType<typeof createAdminClient>,
   adminUserId: string
-): Promise<{ orgId: string; institutionType: string } | null> {
-  // Check profiles first (legacy institution_admin role)
+): Promise<{ orgId: string; vertical: string } | null> {
+  // Check profiles first (legacy admin role)
   const { data: profile } = await adminSupabase
     .from('profiles')
-    .select('role, org_id, institution_id, institution_type')
+    .select('role, org_id, institution_type')
     .eq('id', adminUserId)
     .single()
 
-  if (profile?.role === 'institution_admin') {
-    const orgId = profile.org_id ?? profile.institution_id
-    if (orgId) return { orgId, institutionType: profile.institution_type ?? 'business' }
+  if (profile?.role === 'admin') {
+    const orgId = profile.org_id
+    if (orgId) return { orgId, vertical: profile.institution_type ?? 'business' }
   }
 
   // Fallback: check organization_members for admin role (new invite flow)
@@ -40,8 +40,8 @@ async function getAdminOrg(
 
   if (!membership) return null
 
-  const orgType = (membership.organizations as any)?.type ?? 'business'
-  return { orgId: membership.org_id, institutionType: orgType }
+  const vertical = (membership.organizations as any)?.type ?? 'business'
+  return { orgId: membership.org_id, vertical }
 }
 
 // ─── Check if a target profile belongs to the given org ──────────────────────
@@ -53,13 +53,12 @@ async function isInOrg(
 ): Promise<boolean> {
   const { data } = await adminSupabase
     .from('profiles')
-    .select('org_id, institution_id')
+    .select('org_id')
     .eq('id', targetId)
     .single()
 
   if (!data) return false
-  const targetOrgId = data.org_id ?? data.institution_id
-  return targetOrgId === orgId
+  return data.org_id === orgId
 }
 
 // ─── Invite a new user ────────────────────────────────────────────────────────
@@ -83,12 +82,12 @@ export async function inviteUser(
   const adminOrg = await getAdminOrg(adminSupabase, user.id)
   if (!adminOrg) return { error: 'Unauthorized.' }
 
-  const { orgId, institutionType } = adminOrg
+  const { orgId, vertical } = adminOrg
 
   // Role must be valid for this org type
-  const educationRoles = ['educator', 'institution_admin']
-  const businessRoles  = ['business', 'institution_admin']
-  const allowedRoles   = institutionType === 'education' ? educationRoles : businessRoles
+  const educationRoles = ['educator', 'admin']
+  const businessRoles  = ['business', 'admin']
+  const allowedRoles   = vertical === 'education' ? educationRoles : businessRoles
   if (!allowedRoles.includes(role)) return { error: 'Invalid role for your organization type.' }
 
   // Fetch org plan + check seat limit
@@ -103,7 +102,7 @@ export async function inviteUser(
   const { count: currentCount } = await adminSupabase
     .from('profiles')
     .select('id', { count: 'exact', head: true })
-    .or(`org_id.eq.${orgId},institution_id.eq.${orgId}`)
+    .eq('org_id', orgId)
 
   if ((currentCount ?? 0) >= org.seats_purchased) {
     return {
@@ -124,7 +123,7 @@ export async function inviteUser(
       redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password`,
       data: {
         org_id:           orgId,
-        institution_type: institutionType,
+        vertical:         vertical,
         role,
         membership_tier:  org.tier,
       },
@@ -140,14 +139,13 @@ export async function inviteUser(
   }
 
   if (inviteData?.user) {
-    const membershipType = institutionType === 'education' ? 'education' : 'business'
+    const membershipType = vertical === 'education' ? 'education' : 'business'
     await adminSupabase.from('profiles').upsert(
       {
         id:               inviteData.user.id,
         email,
         org_id:           orgId,
-        institution_id:   orgId,
-        institution_type: institutionType as 'education' | 'business',
+        vertical:         vertical as 'education' | 'business',
         role,
         membership_tier:  org.tier,
         membership_type:  membershipType,

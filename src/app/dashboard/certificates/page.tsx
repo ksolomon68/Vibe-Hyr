@@ -23,13 +23,13 @@ export default async function CertificatesPage() {
   ])
 
   const certificates = certRes.data ?? []
-  const institutionType = profileRes.data?.institution_type ?? 'individual'
+  const vertical = profileRes.data?.institution_type ?? 'personal'
 
   return (
     <>
       <Navbar />
       <main className="pt-[68px] min-h-screen" style={{ background: '#0a0a0a' }}>
-        <CertificateDashboard certificates={certificates} institutionType={institutionType} />
+        <CertificateDashboard certificates={certificates} vertical={vertical} />
       </main>
       <Footer />
     </>

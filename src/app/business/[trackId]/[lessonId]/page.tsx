@@ -58,16 +58,30 @@ export default async function LessonPage({ params }: PageProps) {
     }
   }
 
-  // ── DB-level access gate (RLS enforces membership_type + sub_tier) ──────────
-  // course_catalog query returns null if the user's entitlements don't match —
-  // this is the authoritative security check, not a client-side UI hint.
-  const { data: catalogEntry } = await supabase
-    .from('course_catalog')
-    .select('id')
-    .eq('slug', params.trackId)
-    .maybeSingle()
+  // ── Access gate: profile-based tier + institution_type check ────────────────
+  const BUSINESS_TIER_ACCESS: Record<string, string[]> = {
+    free:      ['common-sense-in-the-workplace'],
+    architect: ['common-sense-in-the-workplace', 'from-reaction-to-response', 'know-yourself-lead-yourself'],
+    elite:     ['common-sense-in-the-workplace', 'from-reaction-to-response', 'know-yourself-lead-yourself', 'the-high-frequency-team'],
+  }
 
-  if (!catalogEntry) {
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('membership_tier, institution_type, is_super_admin, is_bypassed')
+    .eq('id', user.id)
+    .single()
+
+  const tier         = profile?.membership_tier ?? 'free'
+  const isSuperAdmin = !!profile?.is_super_admin
+  const isBypassed   = !!profile?.is_bypassed
+  const instType     = profile?.institution_type ?? 'personal'
+  const allowed      = (isSuperAdmin || isBypassed)
+    ? Object.values(BUSINESS_TIER_ACCESS).at(-1)!
+    : (BUSINESS_TIER_ACCESS[tier] ?? BUSINESS_TIER_ACCESS['free'])
+
+  const canAccess = isSuperAdmin || isBypassed || (instType === 'business' && allowed.includes(params.trackId))
+
+  if (!canAccess) {
     return (
       <CourseLockedScreen
         reason="tier_required"

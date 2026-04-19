@@ -54,9 +54,9 @@ export default async function DashboardPage() {
     .single()
 
   const tier             = profile?.membership_tier ?? 'free'
-  const institutionType  = profile?.institution_type ?? 'individual'
+  const vertical         = profile?.institution_type ?? 'individual'
   const isSuperAdmin     = profile?.is_super_admin ?? false
-  const isOrgAdmin       = profile?.role === 'institution_admin'
+  const isOrgAdmin       = profile?.role === 'admin'
 
   // ── Stats queries (shared across all user types) ───────────────────────────
   const [
@@ -83,19 +83,19 @@ export default async function DashboardPage() {
   let workplaceProgress: Array<{ track_id: string; lesson_id: string }> = []
   let leadershipProgress: Array<{ course_id: string; lesson_id: string }> = []
 
-  if (institutionType === 'education') {
+  if (vertical === 'education') {
     const { data } = await supabase
       .from('education_progress')
       .select('program_id, module_id')
       .eq('user_id', user.id)
     educationProgress = data ?? []
-  } else if (institutionType === 'business') {
+  } else if (vertical === 'business') {
     const { data } = await supabase
       .from('workplace_progress')
       .select('track_id, lesson_id')
       .eq('user_id', user.id)
     workplaceProgress = data ?? []
-  } else if (institutionType === 'leadership') {
+  } else if (vertical === 'leadership') {
     const { data } = await supabase
       .from('leadership_progress')
       .select('course_id, lesson_id')
@@ -155,7 +155,7 @@ export default async function DashboardPage() {
   const QUICK_LINKS = [
     { href: '/journal',   icon: BookOpen, label: "Tonight's Revision", desc: 'Open the nightly journal' },
     {
-      href: institutionType === 'education' ? '/educators' : institutionType === 'business' ? '/business' : institutionType === 'leadership' ? '/leadership' : '/personal',
+      href: vertical === 'education' ? '/educators' : vertical === 'business' ? '/business' : vertical === 'leadership' ? '/leadership' : '/personal',
       icon: Target,
       label: 'Continue Course',
       desc: 'Pick up where you left off',
@@ -254,7 +254,7 @@ export default async function DashboardPage() {
               {isOrgAdmin && (
                 <div className="flex items-center gap-2 bg-orange/10 border border-orange/40 px-4 py-3">
                   <Users size={15} className="text-orange" />
-                  <span className="font-mono text-[0.6rem] tracking-widest uppercase text-orange">Institution Admin</span>
+                  <span className="font-mono text-[0.6rem] tracking-widest uppercase text-orange">Admin</span>
                 </div>
               )}
               <div className="flex items-center gap-3 bg-black-2 border border-orange/40 px-5 py-3">
@@ -329,7 +329,7 @@ export default async function DashboardPage() {
                     <p className="font-mono text-[0.6rem] tracking-[0.2em] uppercase text-orange mb-2">
                       ✦ Unlock More
                     </p>
-                    {institutionType === 'individual' ? (
+                    {vertical === 'individual' ? (
                       <>
                         <p className="font-body text-sm text-grey-DEFAULT mb-4 leading-relaxed">
                           {tier === 'free'
@@ -353,7 +353,7 @@ export default async function DashboardPage() {
                           }
                         </p>
                         <Link
-                          href={institutionType === 'education' ? '/educators#pricing' : '/business#pricing'}
+                          href={vertical === 'education' ? '/educators#pricing' : '/business#pricing'}
                           className="btn-outline-orange text-[0.62rem] px-6 py-3"
                         >
                           View Plan Options
@@ -368,7 +368,7 @@ export default async function DashboardPage() {
               <div className="lg:col-span-2">
 
                 {/* ── PERSONAL COURSES ── */}
-                {(institutionType === 'individual' || isSuperAdmin) && (
+                {(vertical === 'individual' || isSuperAdmin) && (
                   <>
                     <h2 className="font-display text-2xl tracking-widest text-white mb-5">YOUR COURSES</h2>
                     <div className="flex flex-col gap-3">
@@ -417,8 +417,8 @@ export default async function DashboardPage() {
                 )}
 
                 {/* ── BUSINESS TRACKS ── */}
-                {(institutionType === 'business' || isSuperAdmin) && (
-                  <div className={(institutionType === 'individual' || isSuperAdmin) ? 'mt-10' : ''}>
+                {(vertical === 'business' || isSuperAdmin) && (
+                  <div className={(vertical === 'individual' || isSuperAdmin) ? 'mt-10' : ''}>
                     <h2 className="font-display text-2xl tracking-widest text-white mb-5">
                       WORKPLACE TRAINING
                     </h2>
@@ -465,8 +465,8 @@ export default async function DashboardPage() {
                 )}
 
                 {/* ── EDUCATION PROGRAMS ── */}
-                {(institutionType === 'education' || isSuperAdmin) && (
-                  <div className={(institutionType === 'individual' || isSuperAdmin) ? 'mt-10' : ''}>
+                {(vertical === 'education' || isSuperAdmin) && (
+                  <div className={(vertical === 'individual' || isSuperAdmin) ? 'mt-10' : ''}>
                     <h2 className="font-display text-2xl tracking-widest text-white mb-5">
                       EDUCATOR PROGRAMS
                     </h2>
@@ -513,8 +513,8 @@ export default async function DashboardPage() {
                 )}
 
                 {/* ── LEADERSHIP ARCHITECTURE ── */}
-                {(institutionType === 'leadership' || isSuperAdmin) && (
-                  <div className={(institutionType === 'individual' || isSuperAdmin) ? 'mt-10' : ''}>
+                {(vertical === 'leadership' || isSuperAdmin) && (
+                  <div className={(vertical === 'individual' || isSuperAdmin) ? 'mt-10' : ''}>
                     <h2 className="font-display text-2xl tracking-widest text-white mb-5">
                       THE ARCHITECTURE OF IMPACT
                     </h2>

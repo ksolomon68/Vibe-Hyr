@@ -1,4 +1,4 @@
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
@@ -6,9 +6,15 @@ import { createClient } from '@/lib/supabase/server'
 import { TRACKS } from '@/lib/business/curriculum'
 import { cn } from '@/lib/utils'
 import {
-  Lock, Play, CheckCircle, Clock, BookOpen, Crown
+  Lock, Play, CheckCircle, Clock, BookOpen,
 } from 'lucide-react'
 import { CourseLockedScreen } from '@/components/CourseLockedScreen'
+
+const BUSINESS_TIER_ACCESS: Record<string, string[]> = {
+  free:      ['common-sense-in-the-workplace'],
+  architect: ['common-sense-in-the-workplace', 'from-reaction-to-response', 'know-yourself-lead-yourself'],
+  elite:     ['common-sense-in-the-workplace', 'from-reaction-to-response', 'know-yourself-lead-yourself', 'the-high-frequency-team'],
+}
 
 export async function generateMetadata({ params }: { params: { trackId: string } }) {
   const track = TRACKS.find(t => t.id === params.trackId)
@@ -24,26 +30,40 @@ export default async function BusinessTrackPage({ params }: { params: { trackId:
   const { data: { user } } = await supabase.auth.getUser()
 
   let canAccess = false;
+  let accessReason: string | undefined;
   let completedLessons: string[] = []
 
   if (user) {
-    // Check authoritative catalog access
-    const { data: catalogEntry } = await supabase
-      .from('course_catalog')
-      .select('id')
-      .eq('slug', track.id)
-      .maybeSingle()
-    
-    canAccess = !!catalogEntry;
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('membership_tier, institution_type, is_super_admin, is_bypassed')
+      .eq('id', user.id)
+      .single()
 
-    if (canAccess) {
-      const { data: prog } = await supabase
-        .from('workplace_progress')
-        .select('lesson_id')
-        .eq('user_id', user.id)
-        .eq('track_id', track.id)
-      
-      completedLessons = prog?.map(p => p.lesson_id) ?? []
+    if (profile) {
+      const tier          = profile.membership_tier ?? 'free'
+      const isSuperAdmin  = !!profile.is_super_admin
+      const isBypassed    = !!profile.is_bypassed
+      const instType      = profile.institution_type ?? 'personal'
+
+      if (isSuperAdmin || isBypassed) {
+        canAccess = true
+      } else if (instType === 'business') {
+        const allowed = BUSINESS_TIER_ACCESS[tier] ?? BUSINESS_TIER_ACCESS['free']
+        canAccess = allowed.includes(track.id)
+        if (!canAccess) accessReason = 'tier_required'
+      } else {
+        accessReason = 'wrong_vertical'
+      }
+
+      if (canAccess) {
+        const { data: prog } = await supabase
+          .from('workplace_progress')
+          .select('lesson_id')
+          .eq('user_id', user.id)
+          .eq('track_id', track.id)
+        completedLessons = prog?.map(p => p.lesson_id) ?? []
+      }
     }
   }
 
@@ -51,7 +71,7 @@ export default async function BusinessTrackPage({ params }: { params: { trackId:
   if (user && !canAccess) {
     return (
       <CourseLockedScreen
-        reason="tier_required"
+        reason={accessReason as any || 'tier_required'}
         courseSlug={track.id}
         sectionLabel="BUSINESS"
         backHref="/business"

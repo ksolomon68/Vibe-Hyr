@@ -13,7 +13,7 @@ type UserRow = {
   full_name: string | null
   role: UserRole
   membership_tier: MembershipTier
-  institution_type: InstitutionType
+  vertical: string | null
   org_id: string | null
   created_at: string
 }
@@ -22,12 +22,12 @@ type OrgRow = {
   id: string
   name: string
   seats_purchased: number
-  institution_type?: string
+  vertical?: string
 }
 
 const ROLE_BADGE: Record<UserRole, { label: string; color: string }> = {
   super_admin:       { label: 'Super Admin',       color: 'bg-red-500/20 text-red-400 border-red-500/30' },
-  institution_admin: { label: 'Institution Admin', color: 'bg-orange/20 text-orange border-orange/30' },
+  admin:             { label: 'Admin',             color: 'bg-orange/20 text-orange border-orange/30' },
   educator:          { label: 'Educator',          color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
   business:          { label: 'Team Member',       color: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
   personal:          { label: 'Personal',          color: 'bg-white/10 text-grey-DEFAULT border-white/10' },
@@ -56,7 +56,7 @@ export default async function ManageUsersPage() {
   const isSuperAdmin = myProfile?.role === 'super_admin'
 
   // isOrgAdmin: legacy check (profiles.role) OR new-flow check (organization_members.role='admin')
-  let isOrgAdmin = myProfile?.role === 'institution_admin'
+  let isOrgAdmin = myProfile?.role === 'admin'
   let myOrgId    = myProfile?.org_id as string | null
 
   if (!isSuperAdmin && !isOrgAdmin) {
@@ -102,9 +102,9 @@ export default async function ManageUsersPage() {
     id:               m.user_id,
     email:            m.email,
     full_name:        m.full_name,
-    role:             m.role === 'admin' ? 'institution_admin' : (m.profiles?.role ?? m.role),
+    role:             m.profiles?.role ?? m.role,
     membership_tier:  m.profiles?.membership_tier ?? 'free',
-    institution_type: m.profiles?.institution_type ?? null,
+    vertical:         m.profiles?.institution_type ?? null,
     org_id:           myOrgId,
     created_at:       m.created_at,
   }))
@@ -123,7 +123,7 @@ export default async function ManageUsersPage() {
           {/* Header */}
           <div className="mb-8">
             <p className="font-mono text-[0.6rem] tracking-[0.3em] uppercase text-orange mb-2">
-              Institution Admin
+              Admin
             </p>
             <h1 className="font-display text-4xl md:text-5xl text-white mb-3">
               Manage Users
@@ -133,7 +133,7 @@ export default async function ManageUsersPage() {
             </p>
           </div>
 
-          {/* Invite form — institution admins only */}
+          {/* Invite form — admins only */}
           {isOrgAdmin && myOrg && (
             <InviteUserForm
               orgType={(myProfile?.institution_type === 'education' ? 'education' : 'business') as 'education' | 'business'}
@@ -194,7 +194,7 @@ export default async function ManageUsersPage() {
                         )}
                         <td className="px-6 py-4">
                           <span className="font-mono text-[0.6rem] tracking-widest uppercase text-grey-dark capitalize">
-                            {u.institution_type}
+                            {u.vertical}
                           </span>
                         </td>
                         <td className="px-6 py-4">
