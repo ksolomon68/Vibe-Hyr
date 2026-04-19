@@ -630,7 +630,7 @@ function EditUserModal({ open, onClose, onSuccess, user, orgOptions }: {
               </select>
             </FField>
             <FField label="Institution Type">
-              <select value={form.institutionType} onChange={e=>set('institutionType',e.target.value)} style={IS}>
+              <select value={form.vertical} onChange={e=>set('vertical',e.target.value)} style={IS}>
                 <option value="individual">Individual</option>
                 <option value="education">Education</option>
                 <option value="business">Business</option>
@@ -739,7 +739,7 @@ function OverviewPage({ stats, bypassUsers, auditLog, orgs, onNav, onAddUser, on
           {orgs.slice(0,6).map(o=>(
             <TR key={o.id}>
               <TName name={o.name} sub={o.admin_email??'—'}/>
-              <TD>{segPill(o.segment)}</TD>
+              <TD>{segPill(o.vertical)}</TD>
               <TD>{tierPill(o.tier)}</TD>
               <TD><ProgBar value={o.seats_used} max={o.seats_purchased}/></TD>
               <TD><Tag bypass={o.is_bypassed} label={o.is_bypassed?(o.bypass_reason??'Bypass'):'Paid'}/></TD>
@@ -963,7 +963,7 @@ function OrgsPage({ orgs, onToast, onAddOrg, onAddUser, onDeleteOrg, onEditOrg }
           {filtered.map(o=>(
             <TR key={o.id}>
               <TName name={o.name} sub={o.admin_email??'—'}/>
-              <TD>{segPill(o.segment)}</TD>
+              <TD>{segPill(o.vertical)}</TD>
               <TD>{tierPill(o.tier)}</TD>
               <TD><ProgBar value={o.seats_used} max={o.seats_purchased}/></TD>
               <TD><Tag bypass={o.is_bypassed} label={o.is_bypassed?(o.bypass_reason??'Bypass'):'Paid'}/></TD>

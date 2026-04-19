@@ -44,7 +44,7 @@ async function logAudit(
 
 export async function addBypassUser(data: {
   firstName: string; lastName: string; email: string
-  institutionType: string; orgId: string | null
+  vertical: string; orgId: string | null
   membershipTier: string; role: string; courseAccess: string[]
   bypassReason: string; bypassExpiry: string | null
   bypassNotes: string; sendWelcomeEmail: boolean
@@ -87,7 +87,7 @@ export async function addBypassUser(data: {
     id: userId, email: data.email,
     full_name: `${data.firstName} ${data.lastName}`,
     membership_tier: data.membershipTier,
-    vertical: data.institutionType,
+    vertical: data.vertical,
     org_id: data.orgId || null,
     role: data.role,
     is_bypassed: true,
@@ -529,7 +529,7 @@ export async function deactivateUser(userId: string, userName: string): Promise<
 export async function updateUserProfile(
   userId: string,
   userName: string,
-  data: { fullName: string; email: string; membershipTier: string; institutionType: string; orgId: string | null; courses?: string[] }
+  data: { fullName: string; email: string; membershipTier: string; vertical: string; orgId: string | null; courses?: string[] }
 ): Promise<ActionResult> {
   const sa = await requireSuperAdmin()
   if (!sa) return { success: false, error: 'Unauthorized' }
@@ -548,14 +548,14 @@ export async function updateUserProfile(
     full_name: data.fullName,
     email: data.email,
     membership_tier: data.membershipTier,
-    vertical: data.institutionType,
+    vertical: data.vertical,
     org_id: data.orgId || null,
   }).eq('id', userId)
   if (profileErr) return { success: false, error: profileErr.message }
 
   // Auto-sync course access with the selected vertical and tier
   await admin.from('course_access').delete().eq('user_id', userId)
-  const defaultRole = BYPASS_ROLES.find(r => r.vertical === data.institutionType && r.membership_tier === data.membershipTier)
+  const defaultRole = BYPASS_ROLES.find(r => r.vertical === data.vertical && r.membership_tier === data.membershipTier)
   if (defaultRole && defaultRole.access.length > 0) {
     await admin.from('course_access').insert(
       defaultRole.access.map(slug => ({ user_id: userId, course_slug: slug, granted_by: sa.userId }))
@@ -615,7 +615,7 @@ export async function deleteUser(
 export async function inviteUserBySuperAdmin(data: {
   email: string
   role: string
-  institutionType: string
+  vertical: string
   orgId: string | null
   membershipTier: string
 }): Promise<ActionResult> {
@@ -636,7 +636,7 @@ export async function inviteUserBySuperAdmin(data: {
       redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password`,
       data: {
         org_id:           data.orgId,
-        vertical:         data.institutionType,
+        vertical:         data.vertical,
         role:             data.role,
         membership_tier:  data.membershipTier,
       },
@@ -656,7 +656,7 @@ export async function inviteUserBySuperAdmin(data: {
         id:               inviteData.user.id,
         email:            data.email,
         org_id:           data.orgId,
-        vertical:         data.institutionType,
+        vertical:         data.vertical,
         role:             data.role,
         membership_tier:  data.membershipTier,
       },
@@ -686,7 +686,7 @@ export async function inviteUserBySuperAdmin(data: {
 
   await logAudit(sa.userId, sa.email, 'USER_INVITED', 'user',
     inviteData?.user?.id ?? null, data.email,
-    `Invited as ${data.role} (${data.institutionType}), tier: ${data.membershipTier}`)
+    `Invited as ${data.role} (${data.vertical}), tier: ${data.membershipTier}`)
   revalidatePath('/admin/super')
   return { success: true }
 }
