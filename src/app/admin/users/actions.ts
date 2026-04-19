@@ -164,11 +164,11 @@ export async function inviteUser(
     // Re-apply protocol
     appUrl = appUrl.startsWith('localhost') || appUrl.startsWith('127.0.0.1') ? `http://${appUrl}` : `https://${appUrl}`
     const { data: linkData } = await adminSupabase.auth.admin.generateLink({
-      type: 'recovery',
+      type: 'invite',
       email,
       options: { redirectTo: `${appUrl}/auth/reset-password` },
     })
-    let setupUrl = `${appUrl}/auth/login`
+    let setupUrl = `${appUrl}/auth/reset-password`
     if (linkData?.properties?.action_link) {
       // Wrap in branded enrollment link for consistency
       setupUrl = `${appUrl}/auth/enroll?link=${encodeURIComponent(linkData.properties.action_link)}`

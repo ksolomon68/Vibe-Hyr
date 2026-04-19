@@ -125,15 +125,14 @@ export async function addBypassUser(data: {
       appUrl = appUrl.startsWith('localhost') || appUrl.startsWith('127.0.0.1') ? `http://${appUrl}` : `https://${appUrl}`
       
       const { data: linkData, error: lErr } = await admin.auth.admin.generateLink({
-        type: 'recovery',
+        type: 'invite',
         email: data.email,
-        // implicit flow — hash fragment goes to client-side page, not server callback
         options: { redirectTo: `${appUrl}/auth/reset-password` },
       })
 
       if (lErr) console.warn('[addBypassUser] generateLink error:', lErr)
 
-      let setupUrl = `${appUrl}/auth/login`
+      let setupUrl = `${appUrl}/auth/reset-password`
       if (linkData?.properties?.action_link) {
         setupUrl = `${appUrl}/auth/enroll?link=${encodeURIComponent(linkData.properties.action_link)}`
       }
@@ -256,14 +255,14 @@ export async function addBypassOrg(data: {
           appUrl = appUrl.startsWith('localhost') || appUrl.startsWith('127.0.0.1') ? `http://${appUrl}` : `https://${appUrl}`
 
           const { data: linkData, error: lErr } = await admin.auth.admin.generateLink({
-            type: 'recovery',
+            type: 'invite',
             email: data.adminEmail,
             options: { redirectTo: `${appUrl}/auth/reset-password` },
           })
-          
+
           if (lErr) console.warn('[addBypassOrg] generateLink error:', lErr)
 
-          let setupUrl = `${appUrl}/auth/login`
+          let setupUrl = `${appUrl}/auth/reset-password`
           if (linkData?.properties?.action_link) {
             setupUrl = `${appUrl}/auth/enroll?link=${encodeURIComponent(linkData.properties.action_link)}`
           }
@@ -610,11 +609,11 @@ export async function inviteUserBySuperAdmin(data: {
   // Send branded invite email
   try {
     const { data: linkData } = await admin.auth.admin.generateLink({
-      type: 'recovery',
+      type: 'invite',
       email: data.email,
       options: { redirectTo: `${appUrl}/auth/reset-password` },
     })
-    let setupUrl = `${appUrl}/auth/login`
+    let setupUrl = `${appUrl}/auth/reset-password`
     if (linkData?.properties?.action_link) {
       setupUrl = `${appUrl}/auth/enroll?link=${encodeURIComponent(linkData.properties.action_link)}`
     }

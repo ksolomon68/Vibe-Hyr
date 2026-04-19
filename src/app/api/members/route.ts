@@ -262,12 +262,12 @@ export async function POST(req: NextRequest) {
     appUrl = appUrl.startsWith('localhost') || appUrl.startsWith('127.0.0.1') ? `http://${appUrl}` : `https://${appUrl}`
 
     const { data: linkData } = await admin.auth.admin.generateLink({
-      type: 'recovery',
+      type: 'invite',
       email: emailNorm,
       options: { redirectTo: `${appUrl}/auth/reset-password` },
     })
 
-    let setupUrl = `${appUrl}/auth/login`
+    let setupUrl = `${appUrl}/auth/reset-password`
     if (linkData?.properties?.action_link) {
       setupUrl = `${appUrl}/auth/enroll?link=${encodeURIComponent(linkData.properties.action_link)}`
     }
