@@ -114,15 +114,17 @@ export function LessonPlayerClient({
   // ── Fetch Certificate if all complete ──
   useEffect(() => {
     if (allDone && !certNumber && isLoggedIn) {
-      const supabase = createClient()
-      supabase.rpc('get_user_certificate', { p_course_id: course.id })
-        .then(({ data }) => {
+      const fetchCert = async () => {
+        try {
+          const supabase = createClient()
+          const { data } = await supabase.rpc('get_user_certificate', { p_course_id: course.id })
           if (data) {
             setCertNumber(data.certificate_number)
             setCertShareToken(data.share_token)
           }
-        })
-        .catch(() => {})
+        } catch (err) {}
+      }
+      fetchCert()
     }
   }, [allDone, certNumber, course.id, isLoggedIn])
 

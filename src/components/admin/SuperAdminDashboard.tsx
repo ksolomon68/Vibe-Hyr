@@ -127,9 +127,9 @@ function timeAgo(iso: string) {
 
 // ── Base components ───────────────────────────────────────────────────────────
 
-function Btn({ variant='ghost', size='sm', children, onClick, disabled }: {
+function Btn({ variant='ghost', size='sm', children, onClick, disabled, title }: {
   variant?: 'ghost'|'primary'|'gold'|'danger'|'success'
-  size?: 'sm'|'md'; children: React.ReactNode; onClick?: () => void; disabled?: boolean
+  size?: 'sm'|'md'; children: React.ReactNode; onClick?: () => void; disabled?: boolean; title?: string
 }) {
   const base: React.CSSProperties = {
     fontFamily:"'DM Sans',sans-serif", fontWeight:600, letterSpacing:'1.5px',
@@ -144,7 +144,7 @@ function Btn({ variant='ghost', size='sm', children, onClick, disabled }: {
     danger:  { background:'transparent', border:`1px solid rgba(192,57,43,0.3)`, color:C.red },
     success: { background:'transparent', border:`1px solid rgba(39,174,96,0.3)`, color:C.green },
   }
-  return <button style={{ ...base, ...vs[variant] }} onClick={onClick} disabled={disabled}>{children}</button>
+  return <button style={{ ...base, ...vs[variant] }} onClick={onClick} disabled={disabled} title={title}>{children}</button>
 }
 
 function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
