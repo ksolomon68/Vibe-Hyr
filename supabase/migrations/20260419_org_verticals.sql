@@ -10,14 +10,21 @@ ADD COLUMN IF NOT EXISTS content_tier TEXT
 CHECK (content_tier IN ('free', 'architect', 'elite'))
 NOT NULL DEFAULT 'architect';
 
--- 2C — Backfill existing orgs from profile institution_type
+-- 2C — Add remaining columns referenced by the admin insert
+ALTER TABLE public.organizations
+  ADD COLUMN IF NOT EXISTS domain_restriction TEXT,
+  ADD COLUMN IF NOT EXISTS type TEXT,
+  ADD COLUMN IF NOT EXISTS plan TEXT,
+  ADD COLUMN IF NOT EXISTS seat_limit INTEGER NOT NULL DEFAULT 0;
+
+-- 2D — Backfill existing orgs from profile institution_type
 UPDATE public.organizations o
 SET vertical = p.institution_type
 FROM public.profiles p
 WHERE p.org_id = o.id
 AND p.institution_type IN ('education','business','leadership');
 
--- 2D — Add index
+-- 2E — Add index
 CREATE INDEX IF NOT EXISTS idx_organizations_vertical 
 ON public.organizations (vertical);
 
