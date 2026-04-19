@@ -44,7 +44,7 @@ async function logAudit(
 export async function addBypassUser(data: {
   firstName: string; lastName: string; email: string
   institutionType: string; orgId: string | null
-  membershipTier: string; courseAccess: string[]
+  membershipTier: string; role: string; courseAccess: string[]
   bypassReason: string; bypassExpiry: string | null
   bypassNotes: string; sendWelcomeEmail: boolean
 }): Promise<ActionResult> {
@@ -75,18 +75,23 @@ export async function addBypassUser(data: {
   }
 
   // Upsert profile with bypass flags
-  await admin.from('profiles').upsert({
+  const { error: upsertErr } = await admin.from('profiles').upsert({
     id: userId, email: data.email,
     full_name: `${data.firstName} ${data.lastName}`,
     membership_tier: data.membershipTier,
     institution_type: data.institutionType,
     org_id: data.orgId || null,
+    role: data.role,
     is_bypassed: true,
     bypass_reason: data.bypassReason,
     bypass_expiry: data.bypassExpiry ? new Date(data.bypassExpiry).toISOString() : null,
     bypass_notes: data.bypassNotes || null,
     bypass_added_by: sa.userId,
   })
+
+  if (upsertErr) {
+    return { success: false, error: upsertErr.message }
+  }
 
   // Add to organization_members if org specified
   if (data.orgId) {

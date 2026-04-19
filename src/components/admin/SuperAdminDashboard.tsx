@@ -3,6 +3,7 @@
 import React, { useState, useTransition, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { BYPASS_ROLES } from '@/lib/constants/bypassRoles'
 import {
   addBypassUser, addBypassOrg,
   revokeUserBypass, revokeOrgBypass,
@@ -292,13 +293,28 @@ function AddUserModal({ open, onClose, onSuccess, orgOptions }: {
   open: boolean; onClose: ()=>void; onSuccess: (m:string)=>void; orgOptions: { id:string; name:string }[]
 }) {
   const [isPending, startTransition] = useTransition()
-  const [form, setForm] = useState({ firstName:'', lastName:'', email:'', institutionType:'individual', orgId:'', membershipTier:'elite', bypassReason:'Partner', bypassExpiry:'', bypassNotes:'' })
-  const [courses, setCourses] = useState(COURSES.map(c=>c.slug))
-  const set = (k: string, v: string) => setForm(f=>({...f,[k]:v}))
+  const [form, setForm] = useState({ firstName:'', lastName:'', email:'', orgId:'', roleIndex:0, bypassReason:'Partner', bypassExpiry:'', bypassNotes:'' })
+  const set = (k: string, v: string | number) => setForm(f=>({...f,[k]:v}))
+  
+  const selectedRole = BYPASS_ROLES[form.roleIndex]
+  const [courses, setCourses] = useState(selectedRole.access)
+
+  // When role changes, update default courses
+  useEffect(() => {
+    setCourses(BYPASS_ROLES[form.roleIndex].access)
+  }, [form.roleIndex])
 
   function submit() {
     startTransition(async () => {
-      const res = await addBypassUser({ firstName:form.firstName, lastName:form.lastName, email:form.email, institutionType:form.institutionType, orgId:form.orgId||null, membershipTier:form.membershipTier, courseAccess:courses, bypassReason:form.bypassReason, bypassExpiry:form.bypassExpiry||null, bypassNotes:form.bypassNotes, sendWelcomeEmail:true })
+      const res = await addBypassUser({ 
+        firstName: form.firstName, lastName: form.lastName, email: form.email, 
+        institutionType: selectedRole.vertical, 
+        orgId: form.orgId || null, 
+        membershipTier: selectedRole.membership_tier, 
+        role: selectedRole.role,
+        courseAccess: courses, 
+        bypassReason: form.bypassReason, bypassExpiry: form.bypassExpiry || null, bypassNotes: form.bypassNotes, sendWelcomeEmail: true 
+      })
       if (res.success) { onClose(); onSuccess('User added & payment bypassed.') } else onSuccess(`Error: ${res.error}`)
     })
   }
@@ -314,25 +330,17 @@ function AddUserModal({ open, onClose, onSuccess, orgOptions }: {
       </div>
       <SDivider label="Access Configuration"/>
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom:14 }}>
-        <FField label="Institution Type">
-          <select value={form.institutionType} onChange={e=>set('institutionType',e.target.value)} style={IS}>
-            <option value="individual">Individual</option>
-            <option value="education">Education</option>
-            <option value="business">Business</option>
-            <option value="leadership">Leadership</option>
+        <FField label="Role Template (Vertical & Tier)">
+          <select value={form.roleIndex} onChange={e=>set('roleIndex', parseInt(e.target.value))} style={IS}>
+            {BYPASS_ROLES.map((role, idx) => (
+              <option key={idx} value={idx}>{role.label} — {role.vertical.toUpperCase()}</option>
+            ))}
           </select>
         </FField>
         <FField label="Assign to Organization (optional)">
           <select value={form.orgId} onChange={e=>set('orgId',e.target.value)} style={IS}>
             <option value="">— None (standalone) —</option>
             {orgOptions.map(o=><option key={o.id} value={o.id}>{o.name}</option>)}
-          </select>
-        </FField>
-        <FField label="Membership Tier">
-          <select value={form.membershipTier} onChange={e=>set('membershipTier',e.target.value)} style={IS}>
-            <option value="free">Seeker</option>
-            <option value="architect">Architect</option>
-            <option value="elite">Reality Master</option>
           </select>
         </FField>
         <FField label="Bypass Reason">

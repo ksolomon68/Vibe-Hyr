@@ -22,6 +22,7 @@ interface Certificate {
 
 interface Props {
   certificates: Certificate[]
+  institutionType?: string
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -43,9 +44,14 @@ function formatDate(iso: string) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Main component
 // ─────────────────────────────────────────────────────────────────────────────
-export function CertificateDashboard({ certificates }: Props) {
+export function CertificateDashboard({ certificates, institutionType = 'individual' }: Props) {
   const [downloading, setDownloading] = useState<string | null>(null)
   const [copied,      setCopied]      = useState<string | null>(null)
+
+  const browseLink = institutionType === 'education' ? '/educators' :
+                     institutionType === 'business'  ? '/business' :
+                     institutionType === 'leadership'? '/leadership' :
+                     '/personal'
   const [previewCert, setPreviewCert] = useState<Certificate | null>(null)
 
   async function handleDownload(cert: Certificate) {
@@ -109,7 +115,7 @@ export function CertificateDashboard({ certificates }: Props) {
           <p style={{ color: '#888', fontSize: 15, maxWidth: 380, margin: '0 auto', lineHeight: 1.7 }}>
             Complete a course to earn your first certificate. Your achievements will appear here.
           </p>
-          <a href="/personal" style={{
+          <a href={browseLink} style={{
             display: 'inline-block', marginTop: 28,
             background: '#E8621A', color: '#fff',
             padding: '12px 28px', borderRadius: 4,

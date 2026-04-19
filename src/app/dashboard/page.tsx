@@ -281,7 +281,7 @@ export default async function DashboardPage() {
                 { icon: Flame,    label: 'Journal Streak',    val: `${streak} days`,   sub: getStreakMessage(streak) },
                 { icon: BookOpen, label: 'Total Revisions',   val: totalJournal,        sub: 'entries in your timeline' },
                 { icon: Sparkles, label: 'Active Assumptions', val: activeAssumptions,  sub: 'bridges being built' },
-                { icon: Crown,    label: 'Tier',              val: getTierLabel(tier),  sub: 'upgrade to unlock more' },
+                { icon: Crown,    label: 'Tier',              val: getTierLabel(tier),  sub: TIER_RANK[tier] >= 2 ? 'highest tier active' : 'upgrade to unlock more' },
               ].map(({ icon: Icon, label, val, sub }) => (
                 <div key={label} className="bg-black-2 p-7 hover:bg-black-3 transition-colors">
                   <Icon size={18} className="text-orange-DEFAULT mb-3" />
@@ -324,7 +324,7 @@ export default async function DashboardPage() {
                 </div>
 
                 {/* Upgrade CTA for all non-elite users */}
-                {tier !== 'elite' && !isSuperAdmin && (
+                {TIER_RANK[tier] < 2 && !isSuperAdmin && (
                   <div className="mt-6 bg-black-2 border border-orange/40 p-5">
                     <p className="font-mono text-[0.6rem] tracking-[0.2em] uppercase text-orange mb-2">
                       ✦ Unlock More
