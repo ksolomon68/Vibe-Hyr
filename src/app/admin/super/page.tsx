@@ -57,12 +57,12 @@ export default async function SuperAdminPage() {
       .limit(30),
     // Bypassed organizations
     admin.from('organizations')
-      .select('id, name, segment, tier, seats_purchased, seats_used, bypass_reason, bypass_expiry, status, created_at')
+      .select('id, name, vertical, tier, seats_purchased, seats_used, bypass_reason, bypass_expiry, status, created_at')
       .eq('is_bypassed', true)
       .order('created_at', { ascending: false }),
     // All organizations
     admin.from('organizations')
-      .select('id, name, segment, tier, seats_purchased, seats_used, is_bypassed, bypass_reason, mrr, status, website, industry, created_at')
+      .select('id, name, vertical, tier, seats_purchased, seats_used, is_bypassed, bypass_reason, mrr, status, website, industry, created_at')
       .order('created_at', { ascending: false }),
     // All users (non super admin)
     admin.from('profiles')
@@ -129,7 +129,7 @@ export default async function SuperAdminPage() {
     bypass_expiry: string | null; bypass_notes: string | null; created_at: string;
   }) => ({
     id: u.id, full_name: u.full_name, email: u.email,
-    institution_type: u.institution_type, org_id: u.org_id,
+    vertical: u.institution_type, org_id: u.org_id,
     org_name: u.org_id ? orgNameMap[u.org_id] ?? null : null,
     membership_tier: u.membership_tier,
     bypass_reason: u.bypass_reason, bypass_expiry: u.bypass_expiry,
@@ -137,13 +137,13 @@ export default async function SuperAdminPage() {
   }))
 
   const bypassOrgs: BypassOrg[] = (rawBypassOrgs ?? []).map((o: {
-    id: string; name: string; segment: string; tier: string;
+    id: string; name: string; vertical: string; tier: string;
     seats_purchased: number; seats_used: number;
     bypass_reason: string | null; bypass_expiry: string | null; status: string; created_at: string;
   }) => {
     const adminInfo = orgAdminMap[o.id]
     return {
-      id: o.id, name: o.name, segment: o.segment, tier: o.tier,
+      id: o.id, name: o.name, vertical: o.vertical, tier: o.tier,
       seats_purchased: o.seats_purchased, seats_used: o.seats_used,
       admin_email: adminInfo ? (adminInfo.userId ? adminEmailMap[adminInfo.userId] ?? adminInfo.email : adminInfo.email) : null,
       bypass_reason: o.bypass_reason, bypass_expiry: o.bypass_expiry,
@@ -152,13 +152,13 @@ export default async function SuperAdminPage() {
   })
 
   const orgs: SAOrg[] = (rawOrgs ?? []).map((o: {
-    id: string; name: string; segment: string; tier: string;
+    id: string; name: string; vertical: string; tier: string;
     seats_purchased: number; seats_used: number; is_bypassed: boolean;
     bypass_reason: string | null; mrr: number; status: string; created_at: string;
   }) => {
     const adminInfo = orgAdminMap[o.id]
     return {
-      id: o.id, name: o.name, segment: o.segment, tier: o.tier,
+      id: o.id, name: o.name, vertical: o.vertical, tier: o.tier,
       seats_purchased: o.seats_purchased, seats_used: o.seats_used,
       is_bypassed: o.is_bypassed, bypass_reason: o.bypass_reason,
       mrr: o.mrr ?? 0, status: o.status,
@@ -173,7 +173,7 @@ export default async function SuperAdminPage() {
     bypass_reason: string | null; role: string; updated_at: string; created_at: string;
   }) => ({
     id: u.id, full_name: u.full_name, email: u.email,
-    institution_type: u.institution_type, org_id: u.org_id,
+    vertical: u.institution_type, org_id: u.org_id,
     org_name: u.org_id ? orgNameMap[u.org_id] ?? null : null,
     membership_tier: u.membership_tier, is_bypassed: u.is_bypassed,
     bypass_reason: u.bypass_reason, role: u.role,

@@ -42,23 +42,27 @@ export default async function CoursePage({ params }: { params: { slug: string } 
   let completedLessons: string[] = []
   let membershipType: string | null = null
   let role: string | null = null
+  let isSuperAdmin = false
+  let isBypassed   = false
 
   if (user) {
     const [{ data: profile }, { data: progress }] = await Promise.all([
-      supabase.from('profiles').select('membership_tier, membership_type, role').eq('id', user.id).single(),
+      supabase.from('profiles').select('membership_tier, membership_type, role, is_super_admin, is_bypassed').eq('id', user.id).single(),
       supabase.from('course_progress').select('completed_lessons')
         .eq('user_id', user.id).eq('course_id', course.id).single(),
     ])
     userTier        = profile?.membership_tier ?? 'free'
     membershipType  = profile?.membership_type ?? null
     role            = profile?.role ?? null
+    isSuperAdmin    = !!profile?.is_super_admin
+    isBypassed      = !!profile?.is_bypassed
     completedLessons = progress?.completed_lessons ?? []
   }
 
   const courseRoute = getCourseRoute(membershipType, role)
 
   const lessons    = await getLessonsWithDBFallback(course.id, course.order_index)
-  const canAccess  = hasAccess(userTier, course.tier)
+  const canAccess  = hasAccess(userTier, course.tier) || isSuperAdmin || isBypassed
   const totalMins  = lessons.reduce((s, l) => s + Math.ceil(l.duration_seconds / 60), 0)
   const pct        = lessons.length
     ? Math.round((completedLessons.length / lessons.length) * 100)

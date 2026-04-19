@@ -55,7 +55,7 @@ export default async function LessonPage({
   const { data: { user } } = await supabase.auth.getUser()
 
   let userTier: MembershipTier   = 'free'
-  let institutionType            = 'individual'
+  let vertical                   = 'personal'
   let completedLessons: string[] = []
   let passedQuizzes: string[]    = []
   let hasDirectAccess            = false
@@ -90,7 +90,7 @@ export default async function LessonPage({
     ])
 
     userTier         = (profile?.membership_tier as MembershipTier) ?? 'free'
-    institutionType  = profile?.institution_type ?? 'individual'
+    vertical         = profile?.institution_type ?? 'personal'
     completedLessons = (progress ?? []).map((r: { lesson_id: string }) => r.lesson_id)
     passedQuizzes    = (quizAttempts ?? []).map((r: { lesson_id: string }) => r.lesson_id)
     hasDirectAccess  = (courseAccessData ?? []).length > 0
@@ -104,7 +104,7 @@ export default async function LessonPage({
         // Primary gate: DB RLS (authoritative — blocks direct URL access too)
         if (!catalogEntry) {
           // Use canAccessCourse only to determine the reason for the locked screen UX
-          const { reason } = await canAccessCourse(course.slug, userTier, institutionType, profile ?? undefined)
+          const { reason } = await canAccessCourse(course.slug, userTier, vertical, profile ? { id: profile.id, org_id: profile.org_id, vertical: profile.institution_type } : undefined)
           return <CourseLockedScreen reason={reason ?? 'tier_required'} courseSlug={course.slug} sectionLabel="PERSONAL" />
         }
       }
