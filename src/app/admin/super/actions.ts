@@ -505,7 +505,6 @@ export async function deactivateUser(userId: string, userName: string): Promise<
   return { success: true }
 }
 
-import { BYPASS_ROLES } from '@/lib/constants/bypassRoles'
 
 // ── Update User Profile (name, email, tier, type, org) ────────────────────────
 
