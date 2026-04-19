@@ -493,6 +493,8 @@ export async function deactivateUser(userId: string, userName: string): Promise<
   return { success: true }
 }
 
+import { BYPASS_ROLES } from '@/lib/constants/bypassRoles'
+
 // ── Update User Profile (name, email, tier, type, org) ────────────────────────
 
 export async function updateUserProfile(
@@ -522,13 +524,13 @@ export async function updateUserProfile(
   }).eq('id', userId)
   if (profileErr) return { success: false, error: profileErr.message }
 
-  if (data.courses) {
-    await admin.from('course_access').delete().eq('user_id', userId)
-    if (data.courses.length > 0) {
-      await admin.from('course_access').insert(
-        data.courses.map(slug => ({ user_id: userId, course_slug: slug, granted_by: sa.userId }))
-      )
-    }
+  // Auto-sync course access with the selected vertical and tier
+  await admin.from('course_access').delete().eq('user_id', userId)
+  const defaultRole = BYPASS_ROLES.find(r => r.vertical === data.institutionType && r.membership_tier === data.membershipTier)
+  if (defaultRole && defaultRole.access.length > 0) {
+    await admin.from('course_access').insert(
+      defaultRole.access.map(slug => ({ user_id: userId, course_slug: slug, granted_by: sa.userId }))
+    )
   }
 
   await logAudit(sa.userId, sa.email, 'USER_PROFILE_UPDATED', 'user', userId, userName,
@@ -870,10 +872,12 @@ export async function updateOrganizationComplete(
     }
   }
 
-  // 3. Update Course Access for Organization
+  // 3. Update Course Access for Organization using BYPASS_ROLES
   await admin.from('course_access').delete().eq('org_id', orgId)
-  if (data.courses.length > 0) {
-    const grants = data.courses.map(slug => ({
+  
+  const defaultRole = BYPASS_ROLES.find(r => r.vertical === data.vertical && r.membership_tier === data.tier)
+  if (defaultRole && defaultRole.access.length > 0) {
+    const grants = defaultRole.access.map(slug => ({
       org_id: orgId,
       course_slug: slug,
       granted_by: sa.userId
@@ -881,7 +885,7 @@ export async function updateOrganizationComplete(
     await admin.from('course_access').insert(grants)
     
     if (adminUserId) {
-      const adminGrants = data.courses.map(slug => ({
+      const adminGrants = defaultRole.access.map(slug => ({
         user_id: adminUserId,
         org_id: orgId,
         course_slug: slug,

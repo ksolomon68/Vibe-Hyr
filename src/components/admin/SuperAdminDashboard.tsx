@@ -560,19 +560,13 @@ function EditUserModal({ open, onClose, onSuccess, user, orgOptions }: {
   const [tab, setTab]           = useState<'profile'|'password'>('profile')
   const [isPending, startTrans] = useTransition()
   const [form, setForm]         = useState({ fullName:'', email:'', membershipTier:'free', institutionType:'individual', orgId:'' })
-  const [courses, setCourses]   = useState<string[]>([])
   const [pw, setPw]             = useState('')
   const [confirmPw, setConfirmPw] = useState('')
-  const supabase = createClient()
-
+  
   useEffect(() => {
     if (user && open) {
       setForm({ fullName: user.full_name??'', email: user.email, membershipTier: user.membership_tier, institutionType: user.institution_type, orgId: user.org_id??'' })
       setPw(''); setConfirmPw('')
-      
-      supabase.from('course_access').select('course_slug').eq('user_id', user.id).then(({ data }) => {
-        if (data) setCourses(data.map(d => d.course_slug))
-      })
     }
   }, [user, open])
 
@@ -591,8 +585,7 @@ function EditUserModal({ open, onClose, onSuccess, user, orgOptions }: {
       const res = await updateUserProfile(user!.id, user!.full_name??user!.email, {
         fullName: form.fullName, email: form.email,
         membershipTier: form.membershipTier, institutionType: form.institutionType,
-        orgId: form.orgId || null,
-        courses,
+        orgId: form.orgId || null
       })
       if (res.success) { onClose(); onSuccess('User profile updated.') }
       else onSuccess(`Error: ${res.error}`)
@@ -651,8 +644,6 @@ function EditUserModal({ open, onClose, onSuccess, user, orgOptions }: {
               </select>
             </FField>
           </div>
-          <SDivider label="Course Access" />
-          <CourseChecks selected={courses} onChange={setCourses} />
           
           <MFooter onClose={onClose} onConfirm={saveProfile} label="Save Profile" isPending={isPending}/>
         </>
@@ -938,9 +929,6 @@ function EditOrganizationModal({ open, onClose, onSuccess, org }: {
             <input type="text" value={form.fullName} onChange={e=>set('fullName',e.target.value)} style={IS} placeholder="Change name..."/>
           </FField>
         </div>
-        
-        <SDivider label="Course Access" />
-        <CourseChecks selected={courses} onChange={setCourses} />
 
         {err && <p style={{ color:C.red, fontSize:12, margin:0 }}>{err}</p>}
         <MFooter onClose={onClose} onConfirm={handleSave} label="Save Changes" isPending={isPending} />
