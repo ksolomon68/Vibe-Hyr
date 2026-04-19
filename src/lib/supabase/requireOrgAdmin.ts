@@ -78,7 +78,7 @@ export async function requireOrgAdmin(): Promise<OrgAdminResult> {
   // 3. Verify organization type (education | business only)
   const { data: org, error: orgErr } = await admin
     .from('organizations')
-    .select('id, name, segment, tier, seats_purchased, seats_used')
+    .select('id, name, vertical, tier, seats_purchased, seats_used')
     .eq('id', membership.org_id)
     .single()
 
@@ -89,10 +89,10 @@ export async function requireOrgAdmin(): Promise<OrgAdminResult> {
     }
   }
 
-  // Map the segment column to the org type used for course assignment.
+  // Map the vertical column to the org type used for course assignment.
   const orgType: 'education' | 'business' | 'leadership' =
-    (org.segment === 'education' || org.segment === 'educator') ? 'education'
-    : org.segment === 'leadership' ? 'leadership'
+    (org.vertical === 'education' || org.vertical === 'educator') ? 'education'
+    : org.vertical === 'leadership' ? 'leadership'
     : 'business'
 
   return {

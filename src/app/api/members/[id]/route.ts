@@ -192,7 +192,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
   if (member.user_id) {
     await admin
       .from('profiles')
-      .update({ institution_id: null })
+      .update({ org_id: null })
       .eq('id', member.user_id)
   }
 
@@ -248,9 +248,9 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   const { error: inviteErr } = await admin.auth.admin.inviteUserByEmail(member.email, {
     redirectTo: `${appUrl}/auth/callback?next=/dashboard`,
     data: {
-      org_id:           ctx.orgId,
-      institution_type: ctx.orgType,
-      role:             member.role,
+      org_id:   ctx.orgId,
+      vertical: ctx.orgType,
+      role:     member.role,
     },
   })
 

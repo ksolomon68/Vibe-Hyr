@@ -36,7 +36,7 @@ export default async function BusinessTrackPage({ params }: { params: { trackId:
   if (user) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('membership_tier, institution_type, is_super_admin, is_bypassed')
+      .select('membership_tier, vertical, is_super_admin, is_bypassed')
       .eq('id', user.id)
       .single()
 
@@ -44,7 +44,7 @@ export default async function BusinessTrackPage({ params }: { params: { trackId:
       const tier          = profile.membership_tier ?? 'free'
       const isSuperAdmin  = !!profile.is_super_admin
       const isBypassed    = !!profile.is_bypassed
-      const instType      = profile.institution_type ?? 'personal'
+      const instType      = profile.vertical ?? 'personal'
 
       if (isSuperAdmin || isBypassed) {
         canAccess = true

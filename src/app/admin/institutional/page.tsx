@@ -24,7 +24,7 @@ export default async function InstitutionalAdminPage() {
   const { createAdminClient } = await import('@/lib/supabase/admin')
   const adminClient = createAdminClient()
 
-  let orgId: string | null = adminProfile?.role === 'institution_admin' ? (adminProfile.org_id ?? null) : null
+  let orgId: string | null = adminProfile?.role === 'admin' ? (adminProfile.org_id ?? null) : null
 
   if (!orgId) {
     const { data: membership } = await adminClient

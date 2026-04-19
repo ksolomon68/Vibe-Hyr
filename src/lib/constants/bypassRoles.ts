@@ -43,7 +43,7 @@ export const BYPASS_ROLES: BypassRole[] = [
     membership_type: 'education',
     membership_tier: 'architect',
     role: 'educator',
-    access: ['ed01', 'ed02', 'ed03'],
+    access: ['the-educator-reset', 'vibrational-leadership', 'co-regulation-mastery'],
   },
   {
     label: 'Educator (Elite)',
@@ -52,10 +52,10 @@ export const BYPASS_ROLES: BypassRole[] = [
     membership_tier: 'elite',
     role: 'educator',
     access: [
-      'ed01', 
-      'ed02', 
-      'ed03', 
-      'ed04'
+      'the-educator-reset', 
+      'vibrational-leadership', 
+      'co-regulation-mastery', 
+      'the-retained-educator'
     ],
   },
   {
@@ -63,12 +63,12 @@ export const BYPASS_ROLES: BypassRole[] = [
     vertical: 'education',
     membership_type: 'education',
     membership_tier: 'elite',
-    role: 'institution_admin',
+    role: 'admin',
     access: [
-      'ed01', 
-      'ed02', 
-      'ed03', 
-      'ed04'
+      'the-educator-reset', 
+      'vibrational-leadership', 
+      'co-regulation-mastery', 
+      'the-retained-educator'
     ],
   },
 
@@ -94,7 +94,7 @@ export const BYPASS_ROLES: BypassRole[] = [
     vertical: 'business',
     membership_type: 'business',
     membership_tier: 'elite',
-    role: 'institution_admin',
+    role: 'admin',
     access: ['common-sense-in-the-workplace', 'from-reaction-to-response', 'know-yourself-lead-yourself', 'the-high-frequency-team'],
   },
 
@@ -105,7 +105,7 @@ export const BYPASS_ROLES: BypassRole[] = [
     membership_type: 'leadership',
     membership_tier: 'architect',
     role: 'leader',
-    access: ['leadership_course_1', 'leadership_course_2', 'leadership_course_3'],
+    access: ['leadership-the-internal-authority', 'leadership-visionary-architecture', 'leadership-bridge-of-incidents'],
   },
   {
     label: 'Leader (Elite)',
@@ -113,6 +113,6 @@ export const BYPASS_ROLES: BypassRole[] = [
     membership_type: 'leadership',
     membership_tier: 'elite',
     role: 'leader',
-    access: ['leadership_course_1', 'leadership_course_2', 'leadership_course_3', 'leadership_course_4'],
+    access: ['leadership-the-internal-authority', 'leadership-visionary-architecture', 'leadership-bridge-of-incidents', 'leadership-echo-theory-mastery'],
   }
 ]

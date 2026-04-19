@@ -5,7 +5,7 @@ import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { InviteUserForm } from './InviteUserForm'
 import { RemoveUserButton } from './RemoveUserButton'
-import type { UserRole, MembershipTier, InstitutionType } from '@/types'
+import type { UserRole, MembershipTier } from '@/types'
 
 type UserRow = {
   id: string
@@ -49,7 +49,7 @@ export default async function ManageUsersPage() {
 
   const { data: myProfile } = await adminSupabase
     .from('profiles')
-    .select('role, org_id, institution_type')
+    .select('role, org_id, vertical')
     .eq('id', user.id)
     .single()
 
@@ -89,7 +89,7 @@ export default async function ManageUsersPage() {
   const [{ data: orgMembers }, { data: orgData }] = await Promise.all([
     adminSupabase
       .from('organization_members')
-      .select('user_id, email, full_name, role, status, created_at, profiles(membership_tier, institution_type, org_id)')
+      .select('user_id, email, full_name, role, status, created_at, profiles(membership_tier, vertical, org_id)')
       .eq('org_id', myOrgId)
       .order('email'),
     adminSupabase
@@ -104,7 +104,7 @@ export default async function ManageUsersPage() {
     full_name:        m.full_name,
     role:             m.profiles?.role ?? m.role,
     membership_tier:  m.profiles?.membership_tier ?? 'free',
-    vertical:         m.profiles?.institution_type ?? null,
+    vertical:         m.profiles?.vertical ?? null,
     org_id:           myOrgId,
     created_at:       m.created_at,
   }))
@@ -136,7 +136,7 @@ export default async function ManageUsersPage() {
           {/* Invite form — admins only */}
           {isOrgAdmin && myOrg && (
             <InviteUserForm
-              orgType={(myProfile?.institution_type === 'education' ? 'education' : 'business') as 'education' | 'business'}
+              orgType={(myProfile?.vertical === 'education' ? 'education' : 'business') as 'education' | 'business'}
               seatsUsed={users.length}
               seatsPurchased={myOrg.seats_purchased}
             />

@@ -54,7 +54,7 @@ export default async function DashboardPage() {
     .single()
 
   const tier             = profile?.membership_tier ?? 'free'
-  const vertical         = profile?.institution_type ?? 'individual'
+  const vertical         = profile?.vertical ?? 'individual'
   const isSuperAdmin     = profile?.is_super_admin ?? false
   const isBypassed       = profile?.is_bypassed ?? false
   const isOrgAdmin       = ['admin', 'institution_admin', 'leader'].includes(profile?.role ?? '')

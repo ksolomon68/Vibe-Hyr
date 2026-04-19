@@ -4,7 +4,7 @@
  * GET  — returns the course slugs currently assigned to a member
  * PUT  — replaces the member's course assignments (full replace, not merge)
  *
- * Uses the course_access table: (user_id, institution_id, course_slug).
+ * Uses the course_access table: (user_id, org_id, course_slug).
  * All operations use the service-role client and are scoped to the admin's org.
  */
 
@@ -52,7 +52,7 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
     .from('course_access')
     .select('course_slug')
     .eq('user_id',       member.user_id)
-    .eq('institution_id', ctx.orgId)
+    .eq('org_id', ctx.orgId)
 
   if (fetchErr) return NextResponse.json({ error: fetchErr.message }, { status: 500 })
 
@@ -95,7 +95,7 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
     .from('course_access')
     .delete()
     .eq('user_id',       member.user_id)
-    .eq('institution_id', ctx.orgId)
+    .eq('org_id', ctx.orgId)
 
   if (course_slugs.length > 0) {
     const { error: insertErr } = await admin
@@ -103,7 +103,7 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
       .insert(
         course_slugs.map(slug => ({
           user_id:        member.user_id,
-          institution_id: ctx.orgId,
+          org_id: ctx.orgId,
           course_slug:    slug,
           granted_by:     ctx.userId,
         }))

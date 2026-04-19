@@ -18,11 +18,11 @@ export default function AccountSettingsPage() {
   const [message, setMessage]   = useState('')
   const router = useRouter()
 
-  // Form state — institution_type and membership_tier are read-only (set by admin/billing)
+  // Form state — vertical and membership_tier are read-only (set by admin/billing)
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
-    institution_type: 'individual' as 'individual' | 'education' | 'business' | 'leadership',
+    vertical: 'individual' as 'individual' | 'education' | 'business' | 'leadership',
     membership_tier: 'free' as 'free' | 'architect' | 'elite'
   })
 
@@ -47,11 +47,11 @@ export default function AccountSettingsPage() {
           setFormData({
             full_name: profileData.full_name || '',
             email: session.user.email || '',
-            institution_type: profileData.institution_type || 'individual',
+            vertical: profileData.vertical || 'individual',
             membership_tier: profileData.membership_tier || 'free'
           })
         }
-        setIsOrgAdmin(profileData?.role === 'institution_admin')
+        setIsOrgAdmin(profileData?.role === 'admin')
         setIsSuperAdmin(!!profileData?.is_super_admin)
         setLoading(false)
       })
@@ -107,7 +107,7 @@ export default function AccountSettingsPage() {
     }
   }
 
-  const isOrgMember = formData.institution_type !== 'individual'
+  const isOrgMember = formData.vertical !== 'individual'
 
   // Personal pricing is only shown for individual accounts
   const tierLabel = formData.membership_tier === 'free'
@@ -183,7 +183,7 @@ export default function AccountSettingsPage() {
               <div>
                 <label className="block text-sm font-medium text-grey-DEFAULT mb-2">Account Type</label>
                 <div className="w-full px-4 py-3 bg-black-2 border border-white/10 rounded-lg text-grey-dark capitalize">
-                  {formData.institution_type}
+                  {formData.vertical}
                 </div>
                 <p className="text-xs text-grey-dark mt-1">
                   Account type is assigned by your organization administrator.
@@ -285,7 +285,7 @@ export default function AccountSettingsPage() {
               )}
 
               {/* Individual paying user: Stripe portal */}
-              {!isOrgAdmin && formData.institution_type === 'individual' && hasActivePlan && (
+              {!isOrgAdmin && formData.vertical === 'individual' && hasActivePlan && (
                 <>
                   <div className="flex items-center justify-between p-4 bg-black-2 rounded-lg">
                     <div>
@@ -337,7 +337,7 @@ export default function AccountSettingsPage() {
               )}
 
               {/* Free individual user: upgrade prompt */}
-              {!isOrgAdmin && formData.institution_type === 'individual' && !hasActivePlan && (
+              {!isOrgAdmin && formData.vertical === 'individual' && !hasActivePlan && (
                 <div className="flex items-center justify-between p-4 bg-black-2 rounded-lg">
                   <div>
                     <h3 className="text-white font-medium">Upgrade to Paid Plan</h3>
@@ -355,7 +355,7 @@ export default function AccountSettingsPage() {
               )}
 
               {/* Org member (non-admin, non-super-admin): contact admin */}
-              {!isOrgAdmin && !isSuperAdmin && formData.institution_type !== 'individual' && (
+              {!isOrgAdmin && !isSuperAdmin && formData.vertical !== 'individual' && (
                 <div className="p-4 bg-black-2 rounded-lg">
                   <h3 className="text-white font-medium mb-1">Subscription Managed by Your Organization</h3>
                   <p className="text-grey-DEFAULT text-sm">

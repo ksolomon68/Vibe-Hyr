@@ -11,12 +11,12 @@ type Props = {
 
 const ROLE_OPTIONS = {
   education: [
-    { value: 'educator',          label: 'Educator' },
-    { value: 'institution_admin', label: 'Institution Admin' },
+    { value: 'educator', label: 'Educator' },
+    { value: 'admin',    label: 'Admin' },
   ],
   business: [
-    { value: 'business',          label: 'Team Member' },
-    { value: 'institution_admin', label: 'Institution Admin' },
+    { value: 'business', label: 'Team Member' },
+    { value: 'admin',    label: 'Admin' },
   ],
 }
 

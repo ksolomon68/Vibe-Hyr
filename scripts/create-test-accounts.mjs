@@ -21,9 +21,9 @@ const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
 const TEST_PASSWORD = 'VH_Test_2026!'
 
 const accounts = [
-  { email: 'test.seeker@vibehyr.com',    name: 'Test Seeker',         tier: 'free' },
-  { email: 'test.architect@vibehyr.com', name: 'Test Architect',      tier: 'architect' },
-  { email: 'test.master@vibehyr.com',    name: 'Test Reality Master', tier: 'elite' },
+  { email: 'test.seeker@vibehyr.com',    name: 'Test Seeker',         tier: 'free',      vertical: 'personal' },
+  { email: 'test.architect@vibehyr.com', name: 'Test Architect',      tier: 'architect', vertical: 'business' },
+  { email: 'test.master@vibehyr.com',    name: 'Test Reality Master', tier: 'elite',     vertical: 'business' },
 ]
 
 async function createTestAccount({ email, name, tier }) {
@@ -60,7 +60,7 @@ async function createTestAccount({ email, name, tier }) {
 
   if (!userId) { console.error('  ✗ no userId'); return }
 
-  // 2. Set profile tier
+  // 2. Set profile tier and vertical (supporting both legacy/new columns)
   const { error: profileError } = await supabase
     .from('profiles')
     .upsert(
@@ -69,6 +69,9 @@ async function createTestAccount({ email, name, tier }) {
         email,
         full_name: name,
         membership_tier: tier,
+        vertical: accounts.find(a => a.email === email)?.vertical || 'personal',
+        institution_type: accounts.find(a => a.email === email)?.vertical || 'personal',
+        role: accounts.find(a => a.email === email)?.vertical || 'member',
         updated_at: new Date().toISOString(),
       },
       { onConflict: 'id' }

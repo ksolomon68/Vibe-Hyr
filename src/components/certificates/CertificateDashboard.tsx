@@ -22,7 +22,7 @@ interface Certificate {
 
 interface Props {
   certificates: Certificate[]
-  institutionType?: string
+  vertical?: string
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -44,13 +44,13 @@ function formatDate(iso: string) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Main component
 // ─────────────────────────────────────────────────────────────────────────────
-export function CertificateDashboard({ certificates, institutionType = 'individual' }: Props) {
+export function CertificateDashboard({ certificates, vertical = 'personal' }: Props) {
   const [downloading, setDownloading] = useState<string | null>(null)
   const [copied,      setCopied]      = useState<string | null>(null)
 
-  const browseLink = institutionType === 'education' ? '/education' :
-                     institutionType === 'business'  ? '/business' :
-                     institutionType === 'leadership'? '/leadership' :
+  const browseLink = vertical === 'education' ? '/education' :
+                     vertical === 'business'  ? '/business' :
+                     vertical === 'leadership'? '/leadership' :
                      '/personal'
   const [previewCert, setPreviewCert] = useState<Certificate | null>(null)
 

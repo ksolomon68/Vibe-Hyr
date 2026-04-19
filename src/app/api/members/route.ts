@@ -157,7 +157,7 @@ export async function POST(req: NextRequest) {
       redirectTo: `${appUrl}/auth/callback?next=/dashboard`,
       data: {
         org_id:           ctx.orgId,
-        institution_type: ctx.orgType,
+        vertical:         ctx.orgType,
         role,
         full_name:        nameNorm,
       },
@@ -230,8 +230,8 @@ export async function POST(req: NextRequest) {
     await admin
       .from('profiles')
       .update({
-        institution_id:   ctx.orgId,
-        institution_type: ctx.orgType,
+        org_id:           ctx.orgId,
+        vertical:         ctx.orgType,
         role,
       })
       .eq('id', userId)
@@ -244,7 +244,7 @@ export async function POST(req: NextRequest) {
       .upsert(
         slugArr.map(slug => ({
           user_id:        userId,
-          institution_id: ctx.orgId,
+          org_id:         ctx.orgId,
           course_slug:    slug,
           granted_by:     ctx.userId,
         })),

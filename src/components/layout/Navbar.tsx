@@ -55,7 +55,7 @@ const STATIC_LINKS = [
 function getUserRole(profile: Profile | null): 'individual' | 'orgAdmin' | 'superAdmin' {
   if (!profile) return 'individual'
   if (profile.role === 'super_admin') return 'superAdmin'
-  if (profile.role === 'institution_admin') return 'orgAdmin'
+  if (profile.role === 'admin') return 'orgAdmin'
   return 'individual'
 }
 

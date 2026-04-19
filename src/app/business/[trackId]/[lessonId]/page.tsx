@@ -58,7 +58,7 @@ export default async function LessonPage({ params }: PageProps) {
     }
   }
 
-  // ── Access gate: profile-based tier + institution_type check ────────────────
+  // ── Access gate: profile-based tier + vertical check ────────────────
   const BUSINESS_TIER_ACCESS: Record<string, string[]> = {
     free:      ['common-sense-in-the-workplace'],
     architect: ['common-sense-in-the-workplace', 'from-reaction-to-response', 'know-yourself-lead-yourself'],
@@ -67,14 +67,14 @@ export default async function LessonPage({ params }: PageProps) {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('membership_tier, institution_type, is_super_admin, is_bypassed')
+    .select('membership_tier, vertical, is_super_admin, is_bypassed')
     .eq('id', user.id)
     .single()
 
   const tier         = profile?.membership_tier ?? 'free'
   const isSuperAdmin = !!profile?.is_super_admin
   const isBypassed   = !!profile?.is_bypassed
-  const instType     = profile?.institution_type ?? 'personal'
+  const instType     = profile?.vertical ?? 'personal'
   const allowed      = (isSuperAdmin || isBypassed)
     ? Object.values(BUSINESS_TIER_ACCESS).at(-1)!
     : (BUSINESS_TIER_ACCESS[tier] ?? BUSINESS_TIER_ACCESS['free'])

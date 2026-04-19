@@ -105,10 +105,10 @@ function EditUserModal({
   const [saving, setSaving]     = useState(false)
 
   const roles = orgSegment === 'education'
-    ? ['educator', 'institution_admin']
+    ? ['educator', 'admin']
     : orgSegment === 'leadership'
-    ? ['leader', 'institution_admin']
-    : ['business', 'institution_admin']
+    ? ['leader', 'admin']
+    : ['business', 'admin']
 
   async function handleSave() {
     setSaving(true)
@@ -140,7 +140,7 @@ function EditUserModal({
             <label style={{ display:'block', fontSize:10, letterSpacing:2, textTransform:'uppercase', color:C.muted, marginBottom:6 }}>Role</label>
             <select value={role} onChange={e => setRole(e.target.value)} style={inputStyle}>
               {roles.map(r => (
-                <option key={r} value={r}>{r === 'institution_admin' ? 'Institution Admin' : r.charAt(0).toUpperCase() + r.slice(1)}</option>
+                <option key={r} value={r}>{r === 'admin' ? 'Admin' : r.charAt(0).toUpperCase() + r.slice(1)}</option>
               ))}
             </select>
           </div>
@@ -214,10 +214,10 @@ function InviteModal({
   const [sending, setSending]       = useState(false)
 
   const roles = orgSegment === 'education'
-    ? ['educator', 'institution_admin']
+    ? ['educator', 'admin']
     : orgSegment === 'leadership'
-    ? ['leader', 'institution_admin']
-    : ['business', 'institution_admin']
+    ? ['leader', 'admin']
+    : ['business', 'admin']
 
   const inputStyle: React.CSSProperties = {
     background: C.dark4, border: `1px solid ${C.border}`, color: C.cream,
@@ -262,7 +262,7 @@ function InviteModal({
             <label style={{ display:'block', fontSize:10, letterSpacing:2, textTransform:'uppercase', color:C.muted, marginBottom:6 }}>Assign Role</label>
             <select value={role} onChange={e => setRole(e.target.value)} style={inputStyle}>
               {roles.map(r => (
-                <option key={r} value={r}>{r === 'institution_admin' ? 'Institution Admin' : r.charAt(0).toUpperCase() + r.slice(1)}</option>
+                <option key={r} value={r}>{r === 'admin' ? 'Admin' : r.charAt(0).toUpperCase() + r.slice(1)}</option>
               ))}
             </select>
           </div>
@@ -346,7 +346,7 @@ function MembersTable({
             const status  = getMemberStatus(m)
             const daysAgo = Math.floor((Date.now() - new Date(m.updated_at).getTime()) / 86400000)
             const lastActive = daysAgo === 0 ? 'Today' : daysAgo === 1 ? 'Yesterday' : `${daysAgo}d ago`
-            const roleLabel = m.role === 'institution_admin' ? 'Admin' : m.role ? m.role.charAt(0).toUpperCase() + m.role.slice(1) : '—'
+            const roleLabel = m.role === 'admin' ? 'Admin' : m.role ? m.role.charAt(0).toUpperCase() + m.role.slice(1) : '—'
             return (
               <tr key={m.id} style={{ borderBottom:`1px solid rgba(201,168,76,0.06)` }}>
                 <td style={{ padding:'12px 12px' }}>
@@ -876,7 +876,7 @@ export function InstitutionalAdminDashboard({ org, members, adminName }: Props) 
             <div style={{ width:34, height:34, borderRadius:'50%', background:`linear-gradient(135deg,${C.orange},${C.gold})`, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:"'Bebas Neue',sans-serif", fontSize:14, color:'#fff', flexShrink:0 }}>{initials}</div>
             <div style={{ flex:1, minWidth:0 }}>
               <div style={{ fontSize:12, fontWeight:600, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{adminName}</div>
-              <div style={{ fontSize:10, color:C.muted }}>Institution Admin</div>
+              <div style={{ fontSize:10, color:C.muted }}>Admin</div>
             </div>
             <button onClick={handleLogout} title="Log out" style={{ background:'none', border:'none', color:C.muted, cursor:'pointer', fontSize:14 }}>↩</button>
           </div>

@@ -1,8 +1,8 @@
 // ── USER & AUTH ──────────────────────────────────────────────────────────────
 
 export type MembershipTier = 'free' | 'architect' | 'elite'
-export type InstitutionType = 'individual' | 'education' | 'business' | 'leadership'
-export type UserRole = 'super_admin' | 'institution_admin' | 'educator' | 'business' | 'personal' | 'leader'
+export type VerticalType = 'individual' | 'education' | 'business' | 'leadership'
+export type UserRole = 'super_admin' | 'admin' | 'educator' | 'business' | 'personal' | 'leader'
 
 export interface Profile {
   id: string
@@ -10,7 +10,7 @@ export interface Profile {
   full_name: string | null
   avatar_url: string | null
   membership_tier: MembershipTier
-  institution_type: InstitutionType
+  vertical: VerticalType
   org_id: string | null
   role: UserRole
   stripe_customer_id: string | null
@@ -37,7 +37,7 @@ export interface Profile {
 export interface Institution {
   id: string
   name: string
-  type: InstitutionType
+  vertical: VerticalType
   plan: MembershipTier
   seat_limit: number
   seats_used: number

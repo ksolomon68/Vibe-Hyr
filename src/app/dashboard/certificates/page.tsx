@@ -19,11 +19,11 @@ export default async function CertificatesPage() {
 
   const [certRes, profileRes] = await Promise.all([
     supabase.from('certificates').select('*').eq('user_id', user.id).order('issued_at', { ascending: false }),
-    supabase.from('profiles').select('institution_type').eq('id', user.id).single()
+    supabase.from('profiles').select('vertical').eq('id', user.id).single()
   ])
 
   const certificates = certRes.data ?? []
-  const vertical = profileRes.data?.institution_type ?? 'personal'
+  const vertical = profileRes.data?.vertical ?? 'personal'
 
   return (
     <>

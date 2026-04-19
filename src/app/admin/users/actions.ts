@@ -19,13 +19,13 @@ async function getAdminOrg(
   // Check profiles first (legacy admin role)
   const { data: profile } = await adminSupabase
     .from('profiles')
-    .select('role, org_id, institution_type')
+    .select('role, org_id, vertical')
     .eq('id', adminUserId)
     .single()
 
   if (profile?.role === 'admin') {
     const orgId = profile.org_id
-    if (orgId) return { orgId, vertical: profile.institution_type ?? 'business' }
+    if (orgId) return { orgId, vertical: profile.vertical ?? 'business' }
   }
 
   // Fallback: check organization_members for admin role (new invite flow)

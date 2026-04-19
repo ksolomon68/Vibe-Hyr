@@ -10,7 +10,7 @@ interface Props {
   sectionLabel?: string  // e.g. 'PERSONAL', 'BUSINESS', 'EDUCATION'
   backHref?: string      // override the secondary "go back" link
   backLabel?: string     // override the secondary link label
-  adminEmail?: string    // institution admin email for institution_blocked screens
+  adminEmail?: string    // organization admin email for institution_blocked screens
 }
 
 export function CourseLockedScreen({
