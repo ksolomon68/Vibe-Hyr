@@ -77,13 +77,11 @@ function buildReminderHtml(
 }
 
 export async function GET(req: NextRequest) {
-  // ── Auth guard for cron ───────────────────────────────────────────────────
+  // ── Auth guard — always required ──────────────────────────────────────────
   const cronSecret = process.env.CRON_SECRET
-  if (cronSecret) {
-    const authHeader = req.headers.get('authorization')
-    if (authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
+  const authHeader = req.headers.get('authorization')
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
   try {
@@ -102,13 +100,14 @@ export async function GET(req: NextRequest) {
 
     const checkedInIds = new Set((checkedInToday ?? []).map(r => r.user_id))
 
-    // Get all profiles with email — exclude those who already checked in
+    // Get all profiles with email — exclude those who already checked in today
+    // or who already received a reminder today (dedup guard)
     const { data: allProfiles } = await admin
       .from('profiles')
-      .select('id, email, full_name, checkin_streak')
+      .select('id, email, full_name, checkin_streak, last_reminder_date')
 
     const toNotify = (allProfiles ?? []).filter(
-      p => p.email && !checkedInIds.has(p.id),
+      p => p.email && !checkedInIds.has(p.id) && p.last_reminder_date !== today,
     )
 
     if (toNotify.length === 0) {
@@ -137,6 +136,11 @@ export async function GET(req: NextRequest) {
           subject: 'Your neural state is unchecked today',
           html:    buildReminderHtml(firstName, profile.checkin_streak ?? 0, appUrl),
         })
+        // Mark reminder sent so this user won't get a second email today
+        await admin
+          .from('profiles')
+          .update({ last_reminder_date: today })
+          .eq('id', profile.id)
         sent++
       } catch (emailErr) {
         console.error('[checkin-reminder] email error for', profile.id, emailErr)
