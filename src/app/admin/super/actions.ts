@@ -181,158 +181,114 @@ export async function addBypassOrg(data: {
   const admin = createAdminClient()
   const expiryVal = data.bypassExpiry ? new Date(data.bypassExpiry).toISOString() : null
 
-  // Create organization
+  // 1. Create organization
   const { data: org, error: orgErr } = await admin.from('organizations').insert({
     name: data.name,
     vertical: data.vertical,
     content_tier: data.tier,
-    // Provide fallback segment and plan since old schema required them
     segment: data.vertical,
     type: data.vertical,
     plan: data.tier,
     tier: data.tier,
     seats_purchased: data.seats,
     seat_limit: data.seats,
-    seats_used: 0,
+    seats_used: 1, // Pre-allocate the admin seat
     domain: data.domain || null,
-    domain_restriction: data.domain || null,
-    website: data.website || null,
-    billing_cycle: null,
-    stripe_customer_id: null,
-    stripe_subscription_id: null,
+    status: 'active',
     is_bypassed: data.bypassPayment,
     bypass_reason: data.bypassPayment ? data.bypassReason : null,
     bypass_expiry: data.bypassPayment ? expiryVal : null,
-    bypass_notes: data.bypassPayment ? data.bypassNotes : null,
-    bypass_added_by: data.bypassPayment ? sa.userId : null,
-    status: 'active',
-    mrr: 0,
   }).select().single()
 
   if (orgErr || !org) return { success: false, error: orgErr?.message ?? 'Failed to create organization' }
 
-  // Create admin user if email provided
-  if (data.adminEmail) {
-    let authDataFinal: any = null
-    const { data: authData, error: authErr } = await admin.auth.admin.createUser({
-      email: data.adminEmail,
-      email_confirm: true,
-      user_metadata: { full_name: `${data.adminFirstName} ${data.adminLastName}` },
-    })
-    
-    if (authErr) {
-      if (authErr.message.includes('already registered')) {
-        // 1. Try robust Auth list check
-        const { data: { users } } = await admin.auth.admin.listUsers({ perPage: 1000 })
-        const foundAuth = users.find(u => u.email?.toLowerCase() === data.adminEmail.toLowerCase())
-        if (foundAuth) {
-          authDataFinal = { user: foundAuth }
-        } else {
-          // 2. Fallback to profile check
-          const { data: existing } = await admin.from('profiles').select('id').eq('email', data.adminEmail).maybeSingle()
-          authDataFinal = { user: existing }
-        }
-      } else {
-        console.error('[addBypassOrg] admin creation failed:', authErr.message)
-      }
+  // 2. Handle Admin User Creation/Retrieval
+  let adminUserId: string | null = null
+
+  // Try to create the user
+  const { data: authData, error: authErr } = await admin.auth.admin.createUser({
+    email: data.adminEmail,
+    email_confirm: true,
+    user_metadata: { full_name: `${data.adminFirstName} ${data.adminLastName}` },
+  })
+
+  if (authErr) {
+    if (authErr.message.includes('already registered')) {
+      // If user exists, find their ID
+      const { data: { users } } = await admin.auth.admin.listUsers()
+      const existingUser = users.find(u => u.email?.toLowerCase() === data.adminEmail.toLowerCase())
+      adminUserId = existingUser?.id || null
     } else {
-      authDataFinal = authData
+      return { success: false, error: `Auth Error: ${authErr.message}` }
     }
-
-    if (authDataFinal?.user) {
-      const adminUserId = authDataFinal.user.id
-      const adminRole = data.vertical === 'leadership' ? 'leader' : 'institution_admin'
-
-      const { error: profileErr } = await admin.from('profiles').upsert({
-        id:               adminUserId,
-        email:            data.adminEmail,
-        full_name:        `${data.adminFirstName} ${data.adminLastName}`,
-        membership_tier:  data.tier,
-        org_id:           org.id,
-        vertical:         data.vertical,
-        role:             adminRole,
-        is_bypassed:      data.bypassPayment,
-        bypass_reason:    data.bypassPayment ? data.bypassReason : null,
-        bypass_expiry:    data.bypassPayment ? expiryVal : null,
-        bypass_notes:     data.bypassPayment ? data.bypassNotes : null,
-        bypass_added_by:  data.bypassPayment ? sa.userId : null,
-      })
-
-      if (profileErr) {
-        console.error('[addBypassOrg] profile configuration failed:', profileErr)
-        // Check for specific constraint errors
-        if (profileErr.code === '23514') {
-          return { success: false, error: `Invalid role selected for this vertical. Database rejected '${adminRole}'. Please run the latest migration.` }
-        }
-        return { success: false, error: `Database error configuring admin profile: ${profileErr.message}` }
-      }
-
-      console.log(`[addBypassOrg] Profile configured for ${data.adminEmail} (Role: ${adminRole})`)
-
-      const { error: memErr } = await admin.from('organization_members').upsert({
-        org_id: org.id, user_id: adminUserId,
-        email: data.adminEmail,
-        full_name: `${data.adminFirstName} ${data.adminLastName}`,
-        role: 'admin', status: 'active',
-      }, { onConflict: 'org_id,email' })
-
-      if (memErr) {
-        console.error('[addBypassOrg] organization_members upsert failed:', memErr.message)
-        return { success: false, error: `Failed to link admin to organization: ${memErr.message}` }
-      }
-
-      console.log(`[addBypassOrg] Admin linked to organization: ${org.id}`)
-
-      // Stamp admin_email on the org row so the dashboard can display it
-      await admin.from('organizations')
-        .update({ seats_used: 1, admin_email: data.adminEmail })
-        .eq('id', org.id)
-      
-      const defaultRole = BYPASS_ROLES.find(r => r.vertical === data.vertical && r.membership_tier === data.tier)
-      if (defaultRole && defaultRole.access.length > 0) {
-        await admin.from('course_access').insert(defaultRole.access.map(slug => ({ org_id: org.id, course_slug: slug, granted_by: sa.userId })))
-        await admin.from('course_access').upsert(defaultRole.access.map(slug => ({ user_id: adminUserId, org_id: org.id, course_slug: slug, granted_by: sa.userId })), { onConflict: 'user_id,course_slug' })
-      }
-
-      if (data.sendOnboarding) {
-        try {
-          let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
-          // Bulletproof sanitization: remove quotes, remove ALL existing protocol prefixes, and trailing slashes
-          appUrl = appUrl.replace(/["]/g, '').replace(/https?:?\/+/gi, '').replace(/\/+$/, '')
-          if (appUrl.includes('0.0.0.0')) appUrl = appUrl.replace('0.0.0.0', 'localhost')
-          // Re-apply protocol
-          appUrl = appUrl.startsWith('localhost') || appUrl.startsWith('127.0.0.1') ? `http://${appUrl}` : `https://${appUrl}`
-
-          const { data: linkData, error: lErr } = await admin.auth.admin.generateLink({
-            type: 'invite',
-            email: data.adminEmail,
-            options: { redirectTo: `${appUrl}/auth/reset-password` },
-          })
-
-          if (lErr) console.warn('[addBypassOrg] generateLink error:', lErr)
-
-          let setupUrl = `${appUrl}/auth/reset-password`
-          if (linkData?.properties?.action_link) {
-            setupUrl = `${appUrl}/auth/enroll?link=${encodeURIComponent(linkData.properties.action_link)}`
-          }
-          const fullName = `${data.adminFirstName} ${data.adminLastName}`
-          
-          await sendEmail({
-            to: data.adminEmail,
-            subject: `Welcome to ${data.name} on Vibe Hyr`,
-            html: institutionInviteTemplate(fullName, data.name, adminRole, setupUrl),
-          })
-          console.log('[addBypassOrg] Onboarding email sent to:', data.adminEmail)
-        } catch (err: any) {
-          console.error('[addBypassOrg] email failure:', err.message)
-        }
-      }
-    }
+  } else {
+    adminUserId = authData.user!.id
   }
 
-  await logAudit(sa.userId, sa.email, 'BYPASS_ORG_CREATED', 'organization', org.id, data.name,
-    `${data.tier} · ${data.vertical} · ${data.seats} seats · Bypass: ${data.bypassPayment}`
-  )
+  if (!adminUserId) return { success: false, error: "Could not create or find admin user." }
+
+  // 3. Force Update Profile & Link to Org
+  const adminRole = data.vertical === 'leadership' ? 'leader' : 'institution_admin'
+
+  const { error: profileErr } = await admin.from('profiles').upsert({
+    id: adminUserId,
+    email: data.adminEmail,
+    full_name: `${data.adminFirstName} ${data.adminLastName}`,
+    membership_tier: data.tier,
+    org_id: org.id,
+    institution_id: org.id,
+    institution_type: data.vertical,
+    membership_type: data.vertical,
+    role: adminRole,
+    is_bypassed: data.bypassPayment,
+  })
+
+  if (profileErr) return { success: false, error: `Profile Link Error: ${profileErr.message}` }
+
+  // 4. Critical: Add to organization_members table
+  // This is what makes them "show up" under the organization in the dashboard
+  const { error: memErr } = await admin.from('organization_members').upsert({
+    org_id: org.id,
+    user_id: adminUserId,
+    email: data.adminEmail,
+    full_name: `${data.adminFirstName} ${data.adminLastName}`,
+    role: 'admin', // Hardcode 'admin' for the membership table
+    status: 'active',
+  }, { onConflict: 'org_id,user_id' })
+
+  if (memErr) return { success: false, error: `Member Link Error: ${memErr.message}` }
+
+  // 5. Grant Course Access based on BYPASS_ROLES
+  const defaultRole = BYPASS_ROLES.find(r => r.vertical === data.vertical && r.membership_tier === data.tier)
+  if (defaultRole && defaultRole.access.length > 0) {
+    const grants = defaultRole.access.map(slug => ({
+      user_id: adminUserId,
+      org_id: org.id,
+      course_slug: slug,
+      granted_by: sa.userId,
+    }))
+    await admin.from('course_access').upsert(grants, { onConflict: 'user_id,course_slug' })
+  }
+
+  // 6. Send Onboarding Email
+  if (data.sendOnboarding) {
+    // Generate recovery link for password setup
+    const { data: linkData } = await admin.auth.admin.generateLink({
+      type: 'recovery',
+      email: data.adminEmail,
+      options: { redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password` },
+    })
+
+    const setupUrl = linkData?.properties?.action_link
+      ? `${process.env.NEXT_PUBLIC_APP_URL}/auth/enroll?link=${encodeURIComponent(linkData.properties.action_link)}`
+      : `${process.env.NEXT_PUBLIC_APP_URL}/auth/login`
+
+    await sendEmail({
+      to: data.adminEmail,
+      subject: `Welcome to ${data.name} on Vibe Hyr`,
+      html: institutionInviteTemplate(`${data.adminFirstName} ${data.adminLastName}`, data.name, adminRole, setupUrl),
+    })
+  }
 
   revalidatePath('/admin/super')
   return { success: true }
