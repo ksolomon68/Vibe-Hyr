@@ -64,10 +64,17 @@ export async function addBypassUser(data: {
 
   if (authErr) {
     if (authErr.message.includes('already registered')) {
-      // User exists — fetch their ID
-      const { data: existing } = await admin.from('profiles').select('id').eq('email', data.email).single()
-      if (!existing) return { success: false, error: 'User exists in Auth but no profile found.' }
-      userId = existing.id
+      // Robust retrieval: check Auth list if profile missing
+      const { data: { users } } = await admin.auth.admin.listUsers({ perPage: 1000 })
+      const found = users.find(u => u.email?.toLowerCase() === data.email.toLowerCase())
+      if (found) {
+        userId = found.id
+      } else {
+        // Fallback to profile check (should have worked if trigger ran)
+        const { data: existing } = await admin.from('profiles').select('id').eq('email', data.email).single()
+        if (!existing) return { success: false, error: 'User exists in Auth but could not retrieve ID.' }
+        userId = existing.id
+      }
     } else {
       return { success: false, error: authErr.message }
     }
@@ -215,8 +222,16 @@ export async function addBypassOrg(data: {
     
     if (authErr) {
       if (authErr.message.includes('already registered')) {
-        const { data: existing } = await admin.from('profiles').select('id').eq('email', data.adminEmail).single()
-        authDataFinal = { user: existing }
+        // 1. Try robust Auth list check
+        const { data: { users } } = await admin.auth.admin.listUsers({ perPage: 1000 })
+        const foundAuth = users.find(u => u.email?.toLowerCase() === data.adminEmail.toLowerCase())
+        if (foundAuth) {
+          authDataFinal = { user: foundAuth }
+        } else {
+          // 2. Fallback to profile check
+          const { data: existing } = await admin.from('profiles').select('id').eq('email', data.adminEmail).maybeSingle()
+          authDataFinal = { user: existing }
+        }
       } else {
         console.error('[addBypassOrg] admin creation failed:', authErr.message)
       }
@@ -302,9 +317,9 @@ export async function addBypassOrg(data: {
           await sendEmail({
             to: data.adminEmail,
             subject: `Welcome to ${data.name} on Vibe Hyr`,
-            html: bypassWelcomeTemplate(fullName, data.tier, setupUrl),
+            html: institutionInviteTemplate(fullName, data.name, adminRole, setupUrl),
           })
-          console.log('[addBypassOrg] Welcome email sent to:', data.adminEmail)
+          console.log('[addBypassOrg] Onboarding email sent to:', data.adminEmail)
         } catch (err: any) {
           console.error('[addBypassOrg] email failure:', err.message)
         }

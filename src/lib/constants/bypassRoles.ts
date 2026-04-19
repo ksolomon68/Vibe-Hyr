@@ -25,7 +25,7 @@ export const BYPASS_ROLES: BypassRole[] = [
     membership_type: 'personal',
     membership_tier: 'architect',
     role: 'personal',
-    access: ['programming-the-gatekeeper', 'mastery-of-the-law-of-assumption', 'subconscious-reprogramming-sats'],
+    access: ['programming-the-gatekeeper', 'law-of-assumption', 'sats-reprogramming'],
   },
   {
     label: 'Reality Master (Elite)',
@@ -33,7 +33,7 @@ export const BYPASS_ROLES: BypassRole[] = [
     membership_type: 'personal',
     membership_tier: 'elite',
     role: 'personal',
-    access: ['programming-the-gatekeeper', 'mastery-of-the-law-of-assumption', 'subconscious-reprogramming-sats', 'navigating-the-echo-theory-delay'],
+    access: ['programming-the-gatekeeper', 'law-of-assumption', 'sats-reprogramming', 'echo-theory-delay'],
   },
 
   // ── EDUCATION ─────────────────────────────
@@ -43,7 +43,7 @@ export const BYPASS_ROLES: BypassRole[] = [
     membership_type: 'education',
     membership_tier: 'architect',
     role: 'educator',
-    access: ['the-educator-reset', 'vibrational-leadership', 'co-regulation-mastery'],
+    access: ['ed01', 'ed02', 'ed03'],
   },
   {
     label: 'Educator (Elite)',
@@ -52,10 +52,10 @@ export const BYPASS_ROLES: BypassRole[] = [
     membership_tier: 'elite',
     role: 'educator',
     access: [
-      'the-educator-reset', 
-      'vibrational-leadership', 
-      'co-regulation-mastery', 
-      'the-retained-educator'
+      'ed01', 
+      'ed02', 
+      'ed03', 
+      'ed04'
     ],
   },
   {
@@ -65,10 +65,10 @@ export const BYPASS_ROLES: BypassRole[] = [
     membership_tier: 'elite',
     role: 'institution_admin',
     access: [
-      'the-educator-reset', 
-      'vibrational-leadership', 
-      'co-regulation-mastery', 
-      'the-retained-educator'
+      'ed01', 
+      'ed02', 
+      'ed03', 
+      'ed04'
     ],
   },
 
@@ -105,7 +105,7 @@ export const BYPASS_ROLES: BypassRole[] = [
     membership_type: 'leadership',
     membership_tier: 'architect',
     role: 'leader',
-    access: ['conscious-leadership-alignment', 'the-architecture-of-influence', 'systems-of-resonance'],
+    access: ['leadership_course_1', 'leadership_course_2', 'leadership_course_3'],
   },
   {
     label: 'Leader (Elite)',
@@ -113,6 +113,6 @@ export const BYPASS_ROLES: BypassRole[] = [
     membership_type: 'leadership',
     membership_tier: 'elite',
     role: 'leader',
-    access: ['conscious-leadership-alignment', 'the-architecture-of-influence', 'systems-of-resonance', 'mastery-of-timeline-collapse'],
+    access: ['leadership_course_1', 'leadership_course_2', 'leadership_course_3', 'leadership_course_4'],
   }
 ]

@@ -77,7 +77,7 @@ export default async function SuperAdminPage() {
       .limit(50),
     // Org admins (role = 'admin' in organization_members)
     admin.from('organization_members')
-      .select('org_id, user_id, role')
+      .select('org_id, user_id, email, role')
       .eq('role', 'admin')
       .eq('status', 'active'),
   ])
@@ -85,14 +85,14 @@ export default async function SuperAdminPage() {
   // Compute MRR
   const mrr = (mrrData ?? []).reduce((sum: number, r: { mrr: number }) => sum + (r.mrr ?? 0), 0)
 
-  // Build org → admin user_id map
-  const orgAdminMap: Record<string, string> = {}
-  ;(rawOrgAdmins ?? []).forEach((m: { org_id: string; user_id: string }) => {
-    orgAdminMap[m.org_id] = m.user_id
+  // Build org → admin info map
+  const orgAdminMap: Record<string, { userId: string | null; email: string }> = {}
+  ;(rawOrgAdmins ?? []).forEach((m: { org_id: string; user_id: string | null; email: string }) => {
+    orgAdminMap[m.org_id] = { userId: m.user_id, email: m.email }
   })
 
   // Fetch admin emails from profiles
-  const adminUserIds = Array.from(new Set(Object.values(orgAdminMap)))
+  const adminUserIds = Array.from(new Set(Object.values(orgAdminMap).map(v => v.userId).filter(Boolean))) as string[]
   let adminEmailMap: Record<string, string> = {}
   if (adminUserIds.length > 0) {
     const { data: adminProfiles } = await admin
@@ -140,26 +140,32 @@ export default async function SuperAdminPage() {
     id: string; name: string; segment: string; tier: string;
     seats_purchased: number; seats_used: number;
     bypass_reason: string | null; bypass_expiry: string | null; status: string; created_at: string;
-  }) => ({
-    id: o.id, name: o.name, segment: o.segment, tier: o.tier,
-    seats_purchased: o.seats_purchased, seats_used: o.seats_used,
-    admin_email: adminEmailMap[orgAdminMap[o.id]] ?? null,
-    bypass_reason: o.bypass_reason, bypass_expiry: o.bypass_expiry,
-    status: o.status, created_at: o.created_at,
-  }))
+  }) => {
+    const adminInfo = orgAdminMap[o.id]
+    return {
+      id: o.id, name: o.name, segment: o.segment, tier: o.tier,
+      seats_purchased: o.seats_purchased, seats_used: o.seats_used,
+      admin_email: adminInfo ? (adminInfo.userId ? adminEmailMap[adminInfo.userId] ?? adminInfo.email : adminInfo.email) : null,
+      bypass_reason: o.bypass_reason, bypass_expiry: o.bypass_expiry,
+      status: o.status, created_at: o.created_at,
+    }
+  })
 
   const orgs: SAOrg[] = (rawOrgs ?? []).map((o: {
     id: string; name: string; segment: string; tier: string;
     seats_purchased: number; seats_used: number; is_bypassed: boolean;
     bypass_reason: string | null; mrr: number; status: string; created_at: string;
-  }) => ({
-    id: o.id, name: o.name, segment: o.segment, tier: o.tier,
-    seats_purchased: o.seats_purchased, seats_used: o.seats_used,
-    is_bypassed: o.is_bypassed, bypass_reason: o.bypass_reason,
-    mrr: o.mrr ?? 0, status: o.status,
-    admin_email: orgAdminMap[o.id] ? adminEmailMap[orgAdminMap[o.id]] ?? null : null,
-    created_at: o.created_at,
-  }))
+  }) => {
+    const adminInfo = orgAdminMap[o.id]
+    return {
+      id: o.id, name: o.name, segment: o.segment, tier: o.tier,
+      seats_purchased: o.seats_purchased, seats_used: o.seats_used,
+      is_bypassed: o.is_bypassed, bypass_reason: o.bypass_reason,
+      mrr: o.mrr ?? 0, status: o.status,
+      admin_email: adminInfo ? (adminInfo.userId ? adminEmailMap[adminInfo.userId] ?? adminInfo.email : adminInfo.email) : null,
+      created_at: o.created_at,
+    }
+  })
 
   const users: SAUser[] = (rawUsers ?? []).map((u: {
     id: string; full_name: string | null; email: string; institution_type: string;
