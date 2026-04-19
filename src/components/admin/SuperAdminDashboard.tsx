@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { BYPASS_ROLES } from '@/lib/constants/bypassRoles'
 import {
-  addBypassUser, addBypassOrg,
+  addBypassUser, addBypassOrg, validateOrgAdminEmail,
   revokeUserBypass, revokeOrgBypass,
   updateBypassDetails,
   overrideUserCourseAccess, overrideOrgCourseAccess,
@@ -396,26 +396,45 @@ function AddOrgModal({ open, onClose, onSuccess }: { open: boolean; onClose: ()=
   const [form, setForm] = useState({ name:'', website:'', domain:'', adminFirst:'', adminLast:'', adminEmail:'', seats:25, bypassReason:'Pilot Program', bypassExpiry:'', bypassNotes:'', bypassPayment: true })
   const [vertical, setVertical] = useState<OrgVertical>('business')
   const [tier, setTier] = useState<OrgTier>('elite')
-  
-  const set = (k: string, v: any) => setForm(f=>({...f,[k]:v}))
+  const [emailError, setEmailError]     = useState<string | null>(null)
+  const [emailWarning, setEmailWarning] = useState<string | null>(null)
+  const [emailValidated, setEmailValidated] = useState(false)
+
+  const set = (k: string, v: any) => {
+    setForm(f=>({...f,[k]:v}))
+    if (k === 'adminEmail') { setEmailError(null); setEmailWarning(null); setEmailValidated(false) }
+  }
+
+  async function checkAdminEmail() {
+    const email = form.adminEmail.trim()
+    if (!email) return
+    const res = await validateOrgAdminEmail(email)
+    if (!res.valid) { setEmailError(res.error ?? 'Invalid'); setEmailWarning(null); setEmailValidated(false) }
+    else { setEmailError(null); setEmailWarning(res.warning ?? null); setEmailValidated(true) }
+  }
 
   function submit() {
+    if (form.adminEmail && !emailValidated) {
+      setEmailError('Click "Check" to validate the admin email before submitting.')
+      return
+    }
+    if (emailError) return
     startTransition(async () => {
-      const res = await addBypassOrg({ 
-        name: form.name, 
-        vertical,          // updated schema payload
-        website: form.website, 
-        domain: form.domain, 
-        adminFirstName: form.adminFirst, 
-        adminLastName: form.adminLast, 
-        adminEmail: form.adminEmail, 
-        tier,              // updated schema payload
-        seats: form.seats, 
+      const res = await addBypassOrg({
+        name: form.name,
+        vertical,
+        website: form.website,
+        domain: form.domain,
+        adminFirstName: form.adminFirst,
+        adminLastName: form.adminLast,
+        adminEmail: form.adminEmail,
+        tier,
+        seats: form.seats,
         bypassPayment: form.bypassPayment,
-        bypassReason: form.bypassReason, 
-        bypassExpiry: form.bypassExpiry || null, 
-        bypassNotes: form.bypassNotes, 
-        sendOnboarding: true 
+        bypassReason: form.bypassReason,
+        bypassExpiry: form.bypassExpiry || null,
+        bypassNotes: form.bypassNotes,
+        sendOnboarding: true
       })
       if (res.success) { onClose(); onSuccess('Organization created. Admin onboarding email sent.') } else onSuccess(`Error: ${res.error}`)
     })
@@ -439,7 +458,15 @@ function AddOrgModal({ open, onClose, onSuccess }: { open: boolean; onClose: ()=
         <FField label="Organization Name" span2><input value={form.name} onChange={e=>set('name',e.target.value)} style={IS} placeholder="e.g. Horizon Academy"/></FField>
         <FField label="Admin First Name"><input value={form.adminFirst} onChange={e=>set('adminFirst',e.target.value)} style={IS} placeholder="First name"/></FField>
         <FField label="Admin Last Name"><input value={form.adminLast} onChange={e=>set('adminLast',e.target.value)} style={IS} placeholder="Last name"/></FField>
-        <FField label="Admin Email" span2><input type="email" value={form.adminEmail} onChange={e=>set('adminEmail',e.target.value)} style={IS} placeholder="admin@org.com"/></FField>
+        <FField label="Admin Email" span2>
+          <div style={{ display:'flex', gap:8 }}>
+            <input type="email" value={form.adminEmail} onChange={e=>set('adminEmail',e.target.value)} onBlur={()=>{ if(form.adminEmail) checkAdminEmail() }} style={{ ...IS, flex:1 }} placeholder="admin@org.com"/>
+            <button type="button" onClick={checkAdminEmail} style={{ padding:'0 14px', background:'rgba(232,98,26,0.15)', border:'1px solid rgba(232,98,26,0.4)', color:C.orange, borderRadius:4, fontSize:11, fontWeight:700, letterSpacing:1, cursor:'pointer', whiteSpace:'nowrap' }}>Check</button>
+          </div>
+          {emailError   && <div style={{ marginTop:6, fontSize:11, color:'#e05252', lineHeight:1.4 }}>⚠ {emailError}</div>}
+          {emailWarning && <div style={{ marginTop:6, fontSize:11, color:C.gold,   lineHeight:1.4 }}>⚡ {emailWarning}</div>}
+          {emailValidated && !emailWarning && <div style={{ marginTop:6, fontSize:11, color:'#6ecf7f' }}>✓ Account found</div>}
+        </FField>
         <FField label="Website (optional)"><input value={form.website} onChange={e=>set('website',e.target.value)} style={IS} placeholder="https://..."/></FField>
         <FField label="Domain Restriction (optional)"><input value={form.domain} onChange={e=>set('domain',e.target.value)} style={IS} placeholder="@company.com"/></FField>
       </div>

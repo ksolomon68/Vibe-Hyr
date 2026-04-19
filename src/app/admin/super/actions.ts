@@ -225,16 +225,28 @@ export async function addBypassOrg(data: {
 
     if (authDataFinal?.user) {
       const adminUserId = authDataFinal.user.id
-      await admin.from('profiles').upsert({
-        id: adminUserId, email: data.adminEmail,
-        full_name: `${data.adminFirstName} ${data.adminLastName}`,
-        membership_tier: data.tier, 
-        org_id: org.id,
-        institution_id: org.id,
+      const adminRole = data.vertical === 'leadership' ? 'leader' : 'institution_admin'
+
+      const { error: profileErr } = await admin.from('profiles').upsert({
+        id:               adminUserId,
+        email:            data.adminEmail,
+        full_name:        `${data.adminFirstName} ${data.adminLastName}`,
+        membership_tier:  data.tier,
+        org_id:           org.id,
+        institution_id:   org.id,
         institution_type: data.vertical,
-        membership_type: data.vertical,
-        role: 'institution_admin',
+        membership_type:  data.vertical,
+        role:             adminRole,
+        is_bypassed:      data.bypassPayment,
+        bypass_reason:    data.bypassPayment ? data.bypassReason : null,
+        bypass_expiry:    data.bypassPayment ? expiryVal : null,
+        bypass_notes:     data.bypassPayment ? data.bypassNotes : null,
+        bypass_added_by:  data.bypassPayment ? sa.userId : null,
       })
+      if (profileErr) {
+        console.error('[addBypassOrg] profile upsert failed:', profileErr.message)
+        return { success: false, error: `Failed to configure org admin profile: ${profileErr.message}` }
+      }
       await admin.from('organization_members').upsert({
         org_id: org.id, user_id: adminUserId,
         email: data.adminEmail,
@@ -754,6 +766,55 @@ export async function updateOrgAdmin(
 
   revalidatePath('/admin/super')
   return { success: true }
+}
+
+// ── Validate Org Admin Email ──────────────────────────────────────────────────
+
+export async function validateOrgAdminEmail(
+  email: string
+): Promise<{
+  valid: boolean
+  error?: string
+  warning?: string
+  userId?: string
+  existingOrgId?: string
+  existingOrgName?: string
+}> {
+  const sa = await requireSuperAdmin()
+  if (!sa) return { valid: false, error: 'Unauthorized' }
+
+  const emailNorm = email.toLowerCase().trim()
+  const admin = createAdminClient()
+
+  const { data: profile } = await admin
+    .from('profiles')
+    .select('id, is_super_admin, org_id, organizations(name)')
+    .eq('email', emailNorm)
+    .maybeSingle()
+
+  if (!profile) {
+    return {
+      valid: false,
+      error: 'No account found with this email. The user must have a Vibe Hyr account before being assigned as an org admin.',
+    }
+  }
+
+  if (profile.is_super_admin) {
+    return { valid: false, error: 'Super admins cannot be assigned as org admins.' }
+  }
+
+  if (profile.org_id) {
+    const orgName = (profile.organizations as any)?.name ?? 'another organization'
+    return {
+      valid: true,
+      warning: `This user is already assigned to ${orgName}. Proceeding will move them to this organization.`,
+      userId: profile.id,
+      existingOrgId: profile.org_id,
+      existingOrgName: orgName,
+    }
+  }
+
+  return { valid: true, userId: profile.id }
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
