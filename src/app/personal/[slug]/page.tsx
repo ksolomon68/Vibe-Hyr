@@ -7,6 +7,7 @@ import { COURSES } from '@/lib/data/courses'
 import { getLessonsForCourse } from '@/lib/data/lessons'
 import { getLessonsWithDBFallback } from '@/lib/data/courseContent'
 import { hasAccess, formatDuration, cn } from '@/lib/utils'
+import { getCourseRoute } from '@/lib/constants/verticalRoutes'
 import {
   Lock, Play, CheckCircle, Clock, BookOpen,
   ChevronRight, Crown, ArrowRight
@@ -39,16 +40,22 @@ export default async function CoursePage({ params }: { params: { slug: string } 
 
   let userTier: MembershipTier = 'free'
   let completedLessons: string[] = []
+  let membershipType: string | null = null
+  let role: string | null = null
 
   if (user) {
     const [{ data: profile }, { data: progress }] = await Promise.all([
-      supabase.from('profiles').select('membership_tier').eq('id', user.id).single(),
+      supabase.from('profiles').select('membership_tier, membership_type, role').eq('id', user.id).single(),
       supabase.from('course_progress').select('completed_lessons')
         .eq('user_id', user.id).eq('course_id', course.id).single(),
     ])
     userTier        = profile?.membership_tier ?? 'free'
+    membershipType  = profile?.membership_type ?? null
+    role            = profile?.role ?? null
     completedLessons = progress?.completed_lessons ?? []
   }
+
+  const courseRoute = getCourseRoute(membershipType, role)
 
   const lessons    = await getLessonsWithDBFallback(course.id, course.order_index)
   const canAccess  = hasAccess(userTier, course.tier)
@@ -80,7 +87,7 @@ export default async function CoursePage({ params }: { params: { slug: string } 
           <div className="max-w-7xl mx-auto px-6 md:px-14 py-16 relative z-10">
             <div className="flex items-center gap-3 mb-6">
               <Link
-                href="/personal"
+                href={courseRoute}
                 className="font-mono text-[0.58rem] tracking-[0.2em] uppercase text-grey-dark hover:text-orange-DEFAULT transition-colors"
               >
                 ← Courses
@@ -312,7 +319,7 @@ export default async function CoursePage({ params }: { params: { slug: string } 
                     <p className="font-body text-lg text-white">{next.title}</p>
                   </div>
                   <Link
-                    href={`/personal/${next.slug}`}
+                    href={`${courseRoute}/${next.slug}`}
                     className="btn-outline-orange flex items-center gap-2 text-[0.62rem]"
                   >
                     Preview <ArrowRight size={12} />

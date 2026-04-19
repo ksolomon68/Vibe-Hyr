@@ -59,6 +59,8 @@ export default async function LessonPage({
   let completedLessons: string[] = []
   let passedQuizzes: string[]    = []
   let hasDirectAccess            = false
+  let membershipType: string | null = null
+  let role: string | null           = null
 
   if (user) {
     const [
@@ -69,7 +71,7 @@ export default async function LessonPage({
       { data: catalogEntry },
     ] = await Promise.all([
       supabase.from('profiles')
-        .select('membership_tier, institution_type, is_super_admin')
+        .select('id, org_id, membership_tier, institution_type, is_super_admin, membership_type, role')
         .eq('id', user.id).single(),
       supabase.from('course_progress')
         .select('lesson_id')
@@ -92,6 +94,8 @@ export default async function LessonPage({
     completedLessons = (progress ?? []).map((r: { lesson_id: string }) => r.lesson_id)
     passedQuizzes    = (quizAttempts ?? []).map((r: { lesson_id: string }) => r.lesson_id)
     hasDirectAccess  = (courseAccessData ?? []).length > 0
+    membershipType   = profile?.membership_type ?? null
+    role             = profile?.role ?? null
 
     // Super admins bypass all access gates
     if (!profile?.is_super_admin) {
@@ -100,7 +104,7 @@ export default async function LessonPage({
         // Primary gate: DB RLS (authoritative — blocks direct URL access too)
         if (!catalogEntry) {
           // Use canAccessCourse only to determine the reason for the locked screen UX
-          const { reason } = canAccessCourse(course.slug, userTier, institutionType)
+          const { reason } = await canAccessCourse(course.slug, userTier, institutionType, profile ?? undefined)
           return <CourseLockedScreen reason={reason ?? 'tier_required'} courseSlug={course.slug} sectionLabel="PERSONAL" />
         }
       }
@@ -131,6 +135,8 @@ export default async function LessonPage({
       nextLesson={nextLesson}
       userTier={userTier}
       isLoggedIn={!!user}
+      membershipType={membershipType}
+      role={role}
     />
   )
 }

@@ -1,11 +1,15 @@
 'use client'
 
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { COURSES } from '@/lib/leadership/curriculum'
+import { createClient } from '@/lib/supabase/client'
+import { getCourseRoute } from '@/lib/constants/verticalRoutes'
 
 const FADE_UP = {
   initial: { opacity: 0, y: 20 },
@@ -38,6 +42,27 @@ const PILLARS = [
 ]
 
 export default function LeadershipPage() {
+  const router = useRouter()
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return
+      supabase
+        .from('profiles')
+        .select('membership_type')
+        .eq('id', user.id)
+        .single()
+        .then(({ data: profile }) => {
+          if (!profile?.membership_type) return
+          const correctRoute = getCourseRoute(profile.membership_type, null)
+          if (correctRoute !== '/leadership') {
+            router.replace(correctRoute)
+          }
+        })
+    })
+  }, [router])
+
   return (
     <>
       <Navbar />

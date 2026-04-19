@@ -363,77 +363,130 @@ function AddUserModal({ open, onClose, onSuccess, orgOptions }: {
 // ADD ORGANIZATION MODAL
 // ══════════════════════════════════════════════════════════════════════════════
 
+type OrgVertical = 'education' | 'business' | 'leadership'
+type OrgTier = 'free' | 'architect' | 'elite'
+
+const VERTICALS: { id: OrgVertical; label: string; desc: string }[] = [
+  { id: 'education', label: 'Education', desc: 'Focus: Schools, Districts, Educators' },
+  { id: 'business', label: 'Business', desc: 'Focus: Corporate, Enterprises, SMEs' },
+  { id: 'leadership', label: 'Leadership', desc: 'Focus: Civic, Community, Nonprofits' },
+]
+
+const TIERS: { id: OrgTier; label: string; courses: Record<OrgVertical, string> }[] = [
+  { 
+    id: 'free', 
+    label: 'Seeker (1 item)', 
+    courses: { education: 'Program 01 only', business: 'Track 01 only', leadership: 'Course 01 only' } 
+  },
+  { 
+    id: 'architect', 
+    label: 'Architect (3 items)', 
+    courses: { education: 'Programs 01–03', business: 'Tracks 01–03', leadership: 'Courses 01–03' } 
+  },
+  { 
+    id: 'elite', 
+    label: 'Reality Master Elite (All 4)', 
+    courses: { education: 'All 4 Programs', business: 'All 4 Tracks', leadership: 'All 4 Courses' } 
+  },
+]
+
 function AddOrgModal({ open, onClose, onSuccess }: { open: boolean; onClose: ()=>void; onSuccess: (m:string)=>void }) {
   const [isPending, startTransition] = useTransition()
-  const [form, setForm] = useState({ name:'', segment:'business', industry:'', website:'', domain:'', adminFirst:'', adminLast:'', adminEmail:'', tier:'elite', seats:25, bypassReason:'Pilot Program', bypassExpiry:'', bypassNotes:'' })
-  const [courses, setCourses] = useState(COURSES.map(c=>c.slug))
-  const set = (k: string, v: string|number) => setForm(f=>({...f,[k]:v}))
+  const [form, setForm] = useState({ name:'', website:'', domain:'', adminFirst:'', adminLast:'', adminEmail:'', seats:25, bypassReason:'Pilot Program', bypassExpiry:'', bypassNotes:'', bypassPayment: true })
+  const [vertical, setVertical] = useState<OrgVertical>('business')
+  const [tier, setTier] = useState<OrgTier>('elite')
+  
+  const set = (k: string, v: any) => setForm(f=>({...f,[k]:v}))
 
   function submit() {
     startTransition(async () => {
-      const res = await addBypassOrg({ name:form.name, segment:form.segment, industry:form.industry, website:form.website, domain:form.domain, adminFirstName:form.adminFirst, adminLastName:form.adminLast, adminEmail:form.adminEmail, tier:form.tier, seats:form.seats, courseAccess:courses, bypassReason:form.bypassReason, bypassExpiry:form.bypassExpiry||null, bypassNotes:form.bypassNotes, sendOnboarding:true })
+      const res = await addBypassOrg({ 
+        name: form.name, 
+        vertical,          // updated schema payload
+        website: form.website, 
+        domain: form.domain, 
+        adminFirstName: form.adminFirst, 
+        adminLastName: form.adminLast, 
+        adminEmail: form.adminEmail, 
+        tier,              // updated schema payload
+        seats: form.seats, 
+        bypassPayment: form.bypassPayment,
+        bypassReason: form.bypassReason, 
+        bypassExpiry: form.bypassExpiry || null, 
+        bypassNotes: form.bypassNotes, 
+        sendOnboarding: true 
+      })
       if (res.success) { onClose(); onSuccess('Organization created. Admin onboarding email sent.') } else onSuccess(`Error: ${res.error}`)
     })
   }
 
+  const cardStyle = (selected: boolean): React.CSSProperties => ({
+    padding: '1rem',
+    borderRadius: '8px',
+    border: selected ? `2px solid var(--orange, #E8621A)` : `1px solid var(--border, #2E2416)`,
+    background: selected ? 'rgba(232,98,26,0.05)' : 'rgba(20,16,8,0.5)',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+  })
+
   return (
-    <Modal open={open} onClose={onClose} title="Add Organization — Bypass Payment" sub="Create an organization with full access and no billing. Can be converted to paid at any time." wide>
-      <Notice icon="⬡">This organization will be active immediately with no billing attached.</Notice>
-      <SDivider label="Organization Details"/>
+    <Modal open={open} onClose={onClose} title="Add Organization" sub="Create an organization and define their strict vertical." wide>
+      <Notice icon="⬡">Organizations are strictly bound to one vertical. There is zero crossover.</Notice>
+      
+      <SDivider label="1. Organization & Admin Details"/>
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom:14 }}>
-        <FField label="Organization Name" span2><input value={form.name} onChange={e=>set('name',e.target.value)} style={IS} placeholder="e.g. Horizon Leadership Academy"/></FField>
-        <FField label="Segment">
-          <select value={form.segment} onChange={e=>set('segment',e.target.value)} style={IS}>
-            <option value="business">Business / Corporate</option>
-            <option value="small-business">Small Business</option>
-            <option value="education">Education (General)</option>
-            <option value="k12">K-12 District</option>
-            <option value="university">University / College</option>
-            <option value="leadership">Leadership / Community</option>
-            <option value="nonprofit">Nonprofit</option>
-            <option value="government">Government</option>
-            <option value="healthcare">Healthcare</option>
-            <option value="personal">Personal / Individual</option>
-          </select>
-        </FField>
-        <FField label="Industry">
-          <select value={form.industry} onChange={e=>set('industry',e.target.value)} style={IS}>
-            {['Financial Services','Technology','Healthcare','Education','Retail','Government','Other'].map(o=><option key={o}>{o}</option>)}
-          </select>
-        </FField>
+        <FField label="Organization Name" span2><input value={form.name} onChange={e=>set('name',e.target.value)} style={IS} placeholder="e.g. Horizon Academy"/></FField>
+        <FField label="Admin First Name"><input value={form.adminFirst} onChange={e=>set('adminFirst',e.target.value)} style={IS} placeholder="First name"/></FField>
+        <FField label="Admin Last Name"><input value={form.adminLast} onChange={e=>set('adminLast',e.target.value)} style={IS} placeholder="Last name"/></FField>
+        <FField label="Admin Email" span2><input type="email" value={form.adminEmail} onChange={e=>set('adminEmail',e.target.value)} style={IS} placeholder="admin@org.com"/></FField>
         <FField label="Website (optional)"><input value={form.website} onChange={e=>set('website',e.target.value)} style={IS} placeholder="https://..."/></FField>
         <FField label="Domain Restriction (optional)"><input value={form.domain} onChange={e=>set('domain',e.target.value)} style={IS} placeholder="@company.com"/></FField>
       </div>
-      <SDivider label="Admin Contact"/>
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom:14 }}>
-        <FField label="First Name"><input value={form.adminFirst} onChange={e=>set('adminFirst',e.target.value)} style={IS} placeholder="First name"/></FField>
-        <FField label="Last Name"><input value={form.adminLast} onChange={e=>set('adminLast',e.target.value)} style={IS} placeholder="Last name"/></FField>
-        <FField label="Admin Email" span2><input type="email" value={form.adminEmail} onChange={e=>set('adminEmail',e.target.value)} style={IS} placeholder="admin@org.com"/></FField>
+
+      <SDivider label="2. Content Vertical"/>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:14, marginBottom:14 }}>
+        {VERTICALS.map(v => (
+          <div key={v.id} style={cardStyle(vertical === v.id)} onClick={() => setVertical(v.id)}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--cream)', marginBottom: 4 }}>{v.label}</div>
+            <div style={{ fontSize: 11, color: 'var(--muted)', lineHeight: 1.4 }}>{v.desc}</div>
+          </div>
+        ))}
       </div>
-      <SDivider label="Plan & Seats"/>
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom:14 }}>
-        <FField label="Tier">
-          <select value={form.tier} onChange={e=>set('tier',e.target.value)} style={IS}>
-            <option value="free">Seeker (Course 1 only)</option>
-            <option value="architect">Architect (Courses 1–3)</option>
-            <option value="elite">Reality Master Elite (All 4)</option>
-          </select>
-        </FField>
-        <FField label="Seats"><input type="number" value={form.seats} onChange={e=>set('seats',parseInt(e.target.value)||1)} style={IS} min={1} max={10000}/></FField>
+
+      <SDivider label="3. Content Tier & Seats"/>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:14, marginBottom:14 }}>
+        {TIERS.map(t => (
+          <div key={t.id} style={cardStyle(tier === t.id)} onClick={() => setTier(t.id)}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--cream)', marginBottom: 4 }}>{t.label}</div>
+            <div style={{ fontSize: 11, color: 'var(--gold)' }}>Access: {t.courses[vertical]}</div>
+          </div>
+        ))}
       </div>
-      <SDivider label="Course Access Override"/>
-      <div style={{ marginBottom:14 }}><CourseChecks selected={courses} onChange={setCourses}/></div>
-      <SDivider label="Bypass Details"/>
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
-        <FField label="Bypass Reason">
-          <select value={form.bypassReason} onChange={e=>set('bypassReason',e.target.value)} style={IS}>
-            {['Pilot Program','Partnership','Demo / Sales Trial','Scholarship Institution','Internal','Other'].map(o=><option key={o}>{o}</option>)}
-          </select>
-        </FField>
-        <FField label="Bypass Expiry (blank = never)"><input type="date" value={form.bypassExpiry} onChange={e=>set('bypassExpiry',e.target.value)} style={IS}/></FField>
-        <FField label="Internal Notes" span2><textarea value={form.bypassNotes} onChange={e=>set('bypassNotes',e.target.value)} style={{ ...IS, resize:'vertical', minHeight:72 }} placeholder="e.g. Demo for SHRM conference..."/></FField>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr', gap:14, marginBottom:14 }}>
+        <FField label="Seats to Allocate"><input type="number" value={form.seats} onChange={e=>set('seats',parseInt(e.target.value)||1)} style={IS} min={1} max={10000}/></FField>
       </div>
-      <MFooter onClose={onClose} onConfirm={submit} label="⬡ Create Organization & Bypass Payment" isPending={isPending}/>
+
+      <SDivider label="4. Billing Configuration"/>
+      <div style={{ marginBottom: 14 }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', fontSize: 13, color: 'var(--cream)' }}>
+          <input type="checkbox" checked={form.bypassPayment} onChange={e=>set('bypassPayment', e.target.checked)} style={{ width: 16, height: 16, accentColor: 'var(--orange)' }} />
+          Bypass Payment (Organization will be active immediately with no billing attached)
+        </label>
+      </div>
+      
+      {form.bypassPayment && (
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, padding: '1rem', background: 'rgba(20,16,8,0.5)', borderRadius: 8, border: '1px solid var(--border)' }}>
+          <FField label="Bypass Reason">
+            <select value={form.bypassReason} onChange={e=>set('bypassReason',e.target.value)} style={IS}>
+              {['Pilot Program','Partnership','Demo / Sales Trial','Scholarship Institution','Internal','Other'].map(o=><option key={o}>{o}</option>)}
+            </select>
+          </FField>
+          <FField label="Bypass Expiry (blank = never)"><input type="date" value={form.bypassExpiry} onChange={e=>set('bypassExpiry',e.target.value)} style={IS}/></FField>
+          <FField label="Internal Notes" span2><textarea value={form.bypassNotes} onChange={e=>set('bypassNotes',e.target.value)} style={{ ...IS, resize:'vertical', minHeight:72 }} placeholder="e.g. Demo for conference..."/></FField>
+        </div>
+      )}
+      
+      <MFooter onClose={onClose} onConfirm={submit} label="⬡ Create Organization" isPending={isPending} />
     </Modal>
   )
 }
@@ -653,7 +706,7 @@ function OverviewPage({ stats, bypassUsers, auditLog, orgs, onNav, onAddUser, on
       </div>
       <Card>
         <SecHd title="Organization Snapshot" sub="All organizations at a glance" action={<Btn variant="ghost" size="sm" onClick={()=>onNav('orgs')}>Manage All →</Btn>}/>
-        <Tbl cols={['Organization','Segment','Tier','Seats','Bypass','Status','MRR','Actions']}>
+        <Tbl cols={['Organization','Vertical','Tier','Seats','Bypass','Status','MRR','Actions']}>
           {orgs.slice(0,6).map(o=>(
             <TR key={o.id}>
               <TName name={o.name} sub={o.admin_email??'—'}/>
@@ -748,7 +801,7 @@ function BypassPage({ bypassUsers, bypassOrgs, onEdit, onToast, onAddUser, onAdd
             <Btn variant="primary" size="sm" onClick={onAddOrg}>+ Add Organization (Bypass)</Btn>
           </div>
           <Card>
-            <Tbl cols={['Organization','Segment','Tier','Seats','Reason','Expires','Admin','Actions']}>
+            <Tbl cols={['Organization','Vertical','Tier','Seats','Reason','Expires','Admin','Actions']}>
               {filteredOrgs.map(o=>(
                 <TR key={o.id}>
                   <TName name={o.name} sub={o.admin_email??'—'}/>
@@ -825,12 +878,12 @@ function EditOrgAdminModal({ open, onClose, onSuccess, org }: {
 
 function OrgsPage({ orgs, onToast, onAddOrg, onAddUser, onDeleteOrg, onEditAdmin }: { orgs:SAOrg[]; onToast:(m:string)=>void; onAddOrg:()=>void; onAddUser:()=>void; onDeleteOrg:(o:SAOrg)=>void; onEditAdmin:(o:{id:string;name:string;admin_email:string|null})=>void }) {
   const [query, setQuery] = useState('')
-  const [segF, setSegF]   = useState('All Segments')
+  const [segF, setSegF]   = useState('All Verticals')
   const [tierF, setTierF] = useState('All Tiers')
 
   const filtered = orgs.filter(o => {
     const q = `${o.name} ${o.admin_email}`.toLowerCase().includes(query.toLowerCase())
-    const s = segF==='All Segments' || o.segment===segF
+    const s = segF==='All Verticals' || o.segment===segF
     const t = tierF==='All Tiers' || o.tier===tierF
     return q && s && t
   })
@@ -839,13 +892,13 @@ function OrgsPage({ orgs, onToast, onAddOrg, onAddUser, onDeleteOrg, onEditAdmin
     <div>
       <div style={{ display:'flex', gap:10, marginBottom:14 }}>
         <SearchInput placeholder="Search organizations..." value={query} onChange={setQuery}/>
-        <FilterSel value={segF} onChange={setSegF} options={['All Segments','personal','educator','business','leadership']}/>
+        <FilterSel value={segF} onChange={setSegF} options={['All Verticals','personal','educator','business','leadership']}/>
         <FilterSel value={tierF} onChange={setTierF} options={['All Tiers','free','architect','elite']}/>
         <Btn variant="gold" size="sm" onClick={()=>onToast('Exporting...')}>Export</Btn>
         <Btn variant="primary" size="sm" onClick={onAddOrg}>+ Add Organization</Btn>
       </div>
       <Card>
-        <Tbl cols={['Organization','Segment','Tier','Seats','Bypass','MRR','Status','Admin','Actions']}>
+        <Tbl cols={['Organization','Vertical','Tier','Seats','Bypass','MRR','Status','Admin','Actions']}>
           {filtered.map(o=>(
             <TR key={o.id}>
               <TName name={o.name} sub={o.admin_email??'—'}/>

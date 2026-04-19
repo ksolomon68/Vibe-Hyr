@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { 
@@ -33,6 +34,7 @@ import { COURSES as PERSONAL_COURSES } from '@/lib/data/courses'
 import { PersonalCheckoutModal } from '@/components/pricing/PersonalCheckoutModal'
 import type { PersonalTier } from '@/components/pricing/PersonalCheckoutModal'
 import { createClient } from '@/lib/supabase/client'
+import { getCourseRoute } from '@/lib/constants/verticalRoutes'
 import type { User } from '@supabase/supabase-js'
 import type { MembershipTier } from '@/types'
 
@@ -78,6 +80,7 @@ const FORMATS = [
 ]
 
 export default function WorkplaceTrainingPage() {
+  const router = useRouter()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const [panelOpen, setPanelOpen] = useState(false)
@@ -97,22 +100,28 @@ export default function WorkplaceTrainingPage() {
     setModalOpen(true)
   }
 
-  React.useEffect(() => {
+  useEffect(() => {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user)
       if (user) {
         supabase
           .from('profiles')
-          .select('membership_tier')
+          .select('membership_tier, membership_type')
           .eq('id', user.id)
           .single()
           .then(({ data: profile }) => {
             if (profile?.membership_tier) setUserTier(profile.membership_tier as MembershipTier)
+            if (profile?.membership_type) {
+              const correctRoute = getCourseRoute(profile.membership_type, null)
+              if (correctRoute !== '/business') {
+                router.replace(correctRoute)
+              }
+            }
           })
       }
     })
-  }, [])
+  }, [router])
 
   return (
     <main className="bg-black min-h-screen text-white pt-20">

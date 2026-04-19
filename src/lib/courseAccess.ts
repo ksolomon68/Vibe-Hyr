@@ -2,8 +2,18 @@
 // Server-side course access matrix — checks BOTH membership tier AND institution type.
 // All access logic must run server-side only. Never trust client-side tier checks.
 
+import { createClient } from '@/lib/supabase/server'
+
 export type InstitutionType = 'individual' | 'education' | 'business' | 'leadership'
-export type AccessDeniedReason = 'institution_blocked' | 'tier_required'
+export type AccessDeniedReason = 'institution_blocked' | 'tier_required' | 'wrong_vertical'
+
+export function getCourseVertical(courseId: string): string {
+  if (courseId.startsWith('education_')) return 'education'
+  if (courseId.startsWith('business_') || 
+      courseId.startsWith('track_')) return 'business'
+  if (courseId.startsWith('leadership_')) return 'leadership'
+  return 'personal'
+}
 
 interface AccessRule {
   /** DB tier values that can access this course. */
@@ -53,11 +63,12 @@ const COURSE_ACCESS_MATRIX: Record<string, AccessRule> = {
  * Course slugs not in the matrix are passed through (allowed = true) so that
  * educator/business routes are unaffected.
  */
-export function canAccessCourse(
+export async function canAccessCourse(
   courseSlug: string,
   tier: string,
   institutionType: string,
-): { allowed: boolean; reason?: AccessDeniedReason } {
+  profile?: { id: string; org_id: string | null }
+): Promise<{ allowed: boolean; reason?: AccessDeniedReason }> {
   const rule = COURSE_ACCESS_MATRIX[courseSlug]
 
   // Course not in matrix — no restriction defined, pass through
@@ -68,6 +79,22 @@ export function canAccessCourse(
     return {
       allowed: false,
       reason: 'institution_blocked',
+    }
+  }
+
+  // Vertical isolation — org members can only access 
+  // their own vertical's content
+  let orgVertical: string | null = null
+  if (profile?.org_id) {
+    const supabase = createClient()
+    const { data } = await supabase.rpc('get_org_vertical', { p_user_id: profile.id })
+    orgVertical = data as string | null
+  }
+
+  if (orgVertical) {
+    const courseVertical = getCourseVertical(courseSlug)
+    if (courseVertical !== orgVertical) {
+      return { allowed: false, reason: 'wrong_vertical' }
     }
   }
 

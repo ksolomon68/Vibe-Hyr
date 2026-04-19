@@ -22,6 +22,7 @@ export function CourseLockedScreen({
   adminEmail,
 }: Props) {
   const isInstitutionBlocked = reason === 'institution_blocked'
+  const isWrongVertical = reason === 'wrong_vertical'
   const resolvedBackHref  = backHref  ?? `/personal/${courseSlug}`
   const resolvedBackLabel = backLabel ?? 'View Course Details'
 
@@ -62,7 +63,7 @@ export function CourseLockedScreen({
             margin: '0 auto 2rem',
           }}
         >
-          {isInstitutionBlocked
+          {(isInstitutionBlocked || isWrongVertical)
             ? <Building2 size={32} color="var(--orange, #E8621A)" />
             : <Lock size={32} color="var(--orange, #E8621A)" />
           }
@@ -79,7 +80,7 @@ export function CourseLockedScreen({
             lineHeight: 1.1,
           }}
         >
-          {isInstitutionBlocked ? 'Course Unavailable' : 'Upgrade to Unlock'}
+          {(isInstitutionBlocked || isWrongVertical) ? 'Course Unavailable' : 'Upgrade to Unlock'}
         </h1>
 
         {/* Message */}
@@ -92,7 +93,9 @@ export function CourseLockedScreen({
             marginBottom: '2rem',
           }}
         >
-          {isInstitutionBlocked
+          {isWrongVertical
+            ? "This content is not available for your organization's program. Contact your administrator for access questions."
+            : isInstitutionBlocked
             ? "This course is not included in your institution\u2019s plan. Contact your administrator to request access."
             : `This course is available to a higher \u201c${sectionLabel}\u201d membership tier. Upgrade your plan to continue your journey.`}
         </p>
@@ -107,7 +110,7 @@ export function CourseLockedScreen({
         />
 
         {/* CTA */}
-        {isInstitutionBlocked ? (
+        {(isInstitutionBlocked || isWrongVertical) ? (
           <div
             style={{
               display: 'flex',

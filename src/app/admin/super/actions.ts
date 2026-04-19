@@ -162,9 +162,9 @@ export async function addBypassUser(data: {
 // ── Add Organization (Bypass) ─────────────────────────────────────────────────
 
 export async function addBypassOrg(data: {
-  name: string; segment: string; industry: string; website: string; domain: string
+  name: string; vertical: string; website: string; domain: string
   adminFirstName: string; adminLastName: string; adminEmail: string
-  tier: string; seats: number; courseAccess: string[]
+  tier: string; seats: number; bypassPayment: boolean
   bypassReason: string; bypassExpiry: string | null; bypassNotes: string
   sendOnboarding: boolean
 }): Promise<ActionResult> {
@@ -177,21 +177,27 @@ export async function addBypassOrg(data: {
   // Create organization
   const { data: org, error: orgErr } = await admin.from('organizations').insert({
     name: data.name,
-    segment: data.segment,
+    vertical: data.vertical,
+    content_tier: data.tier,
+    // Provide fallback segment and plan since old schema required them
+    segment: data.vertical,
+    type: data.vertical,
+    plan: data.tier,
     tier: data.tier,
     seats_purchased: data.seats,
+    seat_limit: data.seats,
     seats_used: 0,
     domain: data.domain || null,
+    domain_restriction: data.domain || null,
     website: data.website || null,
-    industry: data.industry || null,
-    billing_cycle: null,            // bypass orgs are not billed
+    billing_cycle: null,
     stripe_customer_id: null,
     stripe_subscription_id: null,
-    is_bypassed: true,
-    bypass_reason: data.bypassReason,
-    bypass_expiry: expiryVal,
-    bypass_notes: data.bypassNotes || null,
-    bypass_added_by: sa.userId,
+    is_bypassed: data.bypassPayment,
+    bypass_reason: data.bypassPayment ? data.bypassReason : null,
+    bypass_expiry: data.bypassPayment ? expiryVal : null,
+    bypass_notes: data.bypassPayment ? data.bypassNotes : null,
+    bypass_added_by: data.bypassPayment ? sa.userId : null,
     status: 'active',
     mrr: 0,
   }).select().single()
@@ -223,11 +229,11 @@ export async function addBypassOrg(data: {
       await admin.from('profiles').upsert({
         id: adminUserId, email: data.adminEmail,
         full_name: `${data.adminFirstName} ${data.adminLastName}`,
-        membership_tier: data.tier, org_id: org.id,
-        institution_type: (data.segment === 'education' || data.segment === 'educator') ? 'education'
-          : data.segment === 'leadership' ? 'leadership'
-          : data.segment === 'personal' ? 'individual'
-          : 'business',
+        membership_tier: data.tier, 
+        org_id: org.id,
+        institution_id: org.id,
+        institution_type: data.vertical,
+        membership_type: data.vertical,
         role: 'institution_admin',
       })
       await admin.from('organization_members').upsert({
@@ -277,7 +283,7 @@ export async function addBypassOrg(data: {
   }
 
   await logAudit(sa.userId, sa.email, 'BYPASS_ORG_CREATED', 'organization', org.id, data.name,
-    `${data.tier} · ${data.seats} seats · Reason: ${data.bypassReason} · Expiry: ${data.bypassExpiry ?? 'Never'}`
+    `${data.tier} · ${data.vertical} · ${data.seats} seats · Bypass: ${data.bypassPayment}`
   )
 
   revalidatePath('/admin/super')

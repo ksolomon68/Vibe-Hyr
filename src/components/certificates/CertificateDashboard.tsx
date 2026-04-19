@@ -48,7 +48,7 @@ export function CertificateDashboard({ certificates, institutionType = 'individu
   const [downloading, setDownloading] = useState<string | null>(null)
   const [copied,      setCopied]      = useState<string | null>(null)
 
-  const browseLink = institutionType === 'education' ? '/educators' :
+  const browseLink = institutionType === 'education' ? '/education' :
                      institutionType === 'business'  ? '/business' :
                      institutionType === 'leadership'? '/leadership' :
                      '/personal'

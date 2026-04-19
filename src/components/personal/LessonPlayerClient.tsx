@@ -14,6 +14,7 @@ import { LessonSidebar } from '@/components/personal/LessonSidebar'
 import { LessonQuiz }   from '@/components/personal/LessonQuiz'
 import { AssumptionLab } from '@/components/shared/AssumptionLab'
 import { CourseCompletionBanner } from '@/components/personal/CourseCompletionBanner'
+import { BrowseCoursesButton } from '@/components/navigation/BrowseCoursesButton'
 
 import { useCourseProgress } from '@/hooks/useCourseProgress'
 import { useLessonNotes } from '@/hooks/useLessonNotes'
@@ -33,6 +34,8 @@ interface LessonPlayerClientProps {
   nextLesson:       Lesson | null
   userTier:         MembershipTier
   isLoggedIn:       boolean
+  membershipType:   string | null
+  role:             string | null
   assumptionLab:    AssumptionLabType | null
 }
 
@@ -49,6 +52,8 @@ export function LessonPlayerClient({
   nextLesson,
   userTier,
   isLoggedIn,
+  membershipType,
+  role,
   assumptionLab,
 }: LessonPlayerClientProps) {
   const router = useRouter()
@@ -602,13 +607,9 @@ export function LessonPlayerClient({
 
                     <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
                       {course.order_index < 4 ? (
-                        <Link href="/personal" className="btn-orange flex items-center gap-2">
-                          Explore Next Course <ArrowRight size={14} />
-                        </Link>
+                        <BrowseCoursesButton membershipType={membershipType} role={role} label="Explore Next Course →" className="btn-orange flex items-center gap-2" variant="link" />
                       ) : (
-                        <Link href="/personal" className="btn-orange flex items-center gap-2">
-                          <Sparkles size={14} /> View All Courses
-                        </Link>
+                        <BrowseCoursesButton membershipType={membershipType} role={role} label="✦ View All Courses" className="btn-orange flex items-center gap-2" variant="link" />
                       )}
 
                       {/* Architect → Course 4 upsell */}

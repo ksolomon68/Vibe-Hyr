@@ -1,11 +1,13 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { CourseCard } from '@/components/personal/CourseCard'
 import { COURSES } from '@/lib/data/courses'
 import { createClient } from '@/lib/supabase/client'
+import { getCourseRoute } from '@/lib/constants/verticalRoutes'
 import type { MembershipTier } from '@/types'
 import { PersonalCheckoutModal } from '@/components/pricing/PersonalCheckoutModal'
 import type { PersonalTier } from '@/components/pricing/PersonalCheckoutModal'
@@ -14,6 +16,7 @@ export default function CoursesPage() {
   const [userTier,  setUserTier]  = useState<MembershipTier>('free')
   const [modalOpen, setModalOpen] = useState(false)
   const [modalTier, setModalTier] = useState<PersonalTier>('architect')
+  const router = useRouter()
 
   useEffect(() => {
     const supabase = createClient()
@@ -21,17 +24,23 @@ export default function CoursesPage() {
       if (user) {
         supabase
           .from('profiles')
-          .select('membership_tier')
+          .select('membership_tier, membership_type')
           .eq('id', user.id)
           .single()
           .then(({ data: profile }) => {
             if (profile?.membership_tier) {
               setUserTier(profile.membership_tier as MembershipTier)
             }
+            if (profile?.membership_type) {
+              const correctRoute = getCourseRoute(profile.membership_type, null)
+              if (correctRoute !== '/personal') {
+                router.replace(correctRoute)
+              }
+            }
           })
       }
     })
-  }, [])
+  }, [router])
 
   const handleUpgrade = (tier: string) => {
     // Normalize course tier values to PersonalTier
