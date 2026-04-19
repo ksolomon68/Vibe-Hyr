@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { sendEmail } from '@/lib/email/resend'
 import { bypassWelcomeTemplate, institutionInviteTemplate, passwordResetTemplate } from '@/lib/email/templates'
+import { BYPASS_ROLES } from '@/lib/constants/bypassRoles'
 
 type ActionResult = { success: boolean; error?: string }
 
@@ -125,7 +126,7 @@ export async function addBypassUser(data: {
       appUrl = appUrl.startsWith('localhost') || appUrl.startsWith('127.0.0.1') ? `http://${appUrl}` : `https://${appUrl}`
       
       const { data: linkData, error: lErr } = await admin.auth.admin.generateLink({
-        type: 'invite',
+        type: 'recovery',
         email: data.email,
         options: { redirectTo: `${appUrl}/auth/reset-password` },
       })
@@ -257,6 +258,12 @@ export async function addBypassOrg(data: {
       // Update org seats_used
       await admin.from('organizations').update({ seats_used: 1 }).eq('id', org.id)
       
+      const defaultRole = BYPASS_ROLES.find(r => r.vertical === data.vertical && r.membership_tier === data.tier)
+      if (defaultRole && defaultRole.access.length > 0) {
+        await admin.from('course_access').insert(defaultRole.access.map(slug => ({ org_id: org.id, course_slug: slug, granted_by: sa.userId })))
+        await admin.from('course_access').upsert(defaultRole.access.map(slug => ({ user_id: adminUserId, org_id: org.id, course_slug: slug, granted_by: sa.userId })), { onConflict: 'user_id,course_slug' })
+      }
+
       if (data.sendOnboarding) {
         try {
           let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
@@ -267,7 +274,7 @@ export async function addBypassOrg(data: {
           appUrl = appUrl.startsWith('localhost') || appUrl.startsWith('127.0.0.1') ? `http://${appUrl}` : `https://${appUrl}`
 
           const { data: linkData, error: lErr } = await admin.auth.admin.generateLink({
-            type: 'invite',
+            type: 'recovery',
             email: data.adminEmail,
             options: { redirectTo: `${appUrl}/auth/reset-password` },
           })
@@ -491,7 +498,7 @@ export async function deactivateUser(userId: string, userName: string): Promise<
 export async function updateUserProfile(
   userId: string,
   userName: string,
-  data: { fullName: string; email: string; membershipTier: string; institutionType: string; orgId: string | null }
+  data: { fullName: string; email: string; membershipTier: string; institutionType: string; orgId: string | null; courses?: string[] }
 ): Promise<ActionResult> {
   const sa = await requireSuperAdmin()
   if (!sa) return { success: false, error: 'Unauthorized' }
@@ -514,6 +521,15 @@ export async function updateUserProfile(
     org_id: data.orgId || null,
   }).eq('id', userId)
   if (profileErr) return { success: false, error: profileErr.message }
+
+  if (data.courses) {
+    await admin.from('course_access').delete().eq('user_id', userId)
+    if (data.courses.length > 0) {
+      await admin.from('course_access').insert(
+        data.courses.map(slug => ({ user_id: userId, course_slug: slug, granted_by: sa.userId }))
+      )
+    }
+  }
 
   await logAudit(sa.userId, sa.email, 'USER_PROFILE_UPDATED', 'user', userId, userName,
     `Name: ${data.fullName} · Email: ${data.email} · Tier: ${data.membershipTier}`
@@ -763,6 +779,120 @@ export async function updateOrgAdmin(
 
   await logAudit(sa.userId, sa.email, 'ORG_ADMIN_UPDATED', 'organization', orgId, orgName,
     `Admin updated: email=${emailNorm}${nameNorm ? ` · name=${nameNorm}` : ''}`)
+
+  revalidatePath('/admin/super')
+  return { success: true }
+}
+
+// ── Update Organization Complete ──────────────────────────────────────────────
+
+export async function updateOrganizationComplete(
+  orgId: string,
+  data: {
+    orgName: string
+    vertical: string
+    tier: string
+    adminEmail: string
+    adminFullName: string
+    courses: string[]
+  }
+): Promise<ActionResult> {
+  const sa = await requireSuperAdmin()
+  if (!sa) return { success: false, error: 'Unauthorized' }
+
+  const emailNorm = data.adminEmail.toLowerCase().trim()
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNorm)) {
+    return { success: false, error: 'Invalid email address.' }
+  }
+
+  const admin = createAdminClient()
+
+  // 1. Update Organization (vertical, tier, name)
+  const { error: orgErr } = await admin.from('organizations').update({
+    name: data.orgName,
+    vertical: data.vertical,
+    type: data.vertical,
+    segment: data.vertical,
+    tier: data.tier,
+    plan: data.tier,
+    content_tier: data.tier,
+  }).eq('id', orgId)
+
+  if (orgErr) return { success: false, error: 'Failed to update organization details: ' + orgErr.message }
+
+  // 2. Find Admin and Update
+  let adminUserId: string | null = null
+  const { data: adminMember } = await admin
+    .from('organization_members')
+    .select('user_id')
+    .eq('org_id', orgId)
+    .eq('role', 'admin')
+    .eq('status', 'active')
+    .limit(1)
+    .maybeSingle()
+
+  if (adminMember?.user_id) {
+    adminUserId = adminMember.user_id
+  } else {
+    const { data: profileAdmin } = await admin
+      .from('profiles')
+      .select('id')
+      .eq('org_id', orgId)
+      .eq('role', 'institution_admin')
+      .limit(1)
+      .maybeSingle()
+    if (profileAdmin) adminUserId = profileAdmin.id
+  }
+
+  if (adminUserId) {
+    // Update Supabase Auth record
+    const nameNorm = data.adminFullName.trim()
+    const { error: authErr } = await admin.auth.admin.updateUserById(adminUserId, {
+      email: emailNorm,
+      user_metadata: { full_name: nameNorm }
+    })
+    
+    if (!authErr) {
+      // Update profile
+      await admin.from('profiles').update({
+        email: emailNorm,
+        full_name: nameNorm,
+        membership_tier: data.tier,
+        institution_type: data.vertical,
+        membership_type: data.vertical,
+      }).eq('id', adminUserId)
+
+      // Update organization_members row
+      await admin.from('organization_members').update({
+        email: emailNorm,
+        full_name: nameNorm,
+      }).eq('org_id', orgId).eq('user_id', adminUserId)
+    }
+  }
+
+  // 3. Update Course Access for Organization
+  await admin.from('course_access').delete().eq('org_id', orgId)
+  if (data.courses.length > 0) {
+    const grants = data.courses.map(slug => ({
+      org_id: orgId,
+      course_slug: slug,
+      granted_by: sa.userId
+    }))
+    await admin.from('course_access').insert(grants)
+    
+    if (adminUserId) {
+      const adminGrants = data.courses.map(slug => ({
+        user_id: adminUserId,
+        org_id: orgId,
+        course_slug: slug,
+        granted_by: sa.userId
+      }))
+      await admin.from('course_access').upsert(adminGrants, { onConflict: 'user_id,course_slug' })
+    }
+  }
+
+  await logAudit(sa.userId, sa.email, 'ORG_FULL_UPDATED', 'organization', orgId, data.orgName,
+    `Updated vertical=${data.vertical}, tier=${data.tier}, admin_email=${emailNorm}, courses=${data.courses.length}`)
 
   revalidatePath('/admin/super')
   return { success: true }

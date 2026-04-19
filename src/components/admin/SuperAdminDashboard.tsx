@@ -15,7 +15,7 @@ import {
   adminSetUserPassword,
   sendPasswordResetEmail,
   inviteUserBySuperAdmin,
-  updateOrgAdmin,
+  updateOrganizationComplete,
   toggleCertificateStatus
 } from '@/app/admin/super/actions'
 import { CourseManagerPage } from './CourseManagerPage'
@@ -560,15 +560,21 @@ function EditUserModal({ open, onClose, onSuccess, user, orgOptions }: {
   const [tab, setTab]           = useState<'profile'|'password'>('profile')
   const [isPending, startTrans] = useTransition()
   const [form, setForm]         = useState({ fullName:'', email:'', membershipTier:'free', institutionType:'individual', orgId:'' })
+  const [courses, setCourses]   = useState<string[]>([])
   const [pw, setPw]             = useState('')
   const [confirmPw, setConfirmPw] = useState('')
+  const supabase = createClient()
 
   useEffect(() => {
-    if (user) {
+    if (user && open) {
       setForm({ fullName: user.full_name??'', email: user.email, membershipTier: user.membership_tier, institutionType: user.institution_type, orgId: user.org_id??'' })
       setPw(''); setConfirmPw('')
+      
+      supabase.from('course_access').select('course_slug').eq('user_id', user.id).then(({ data }) => {
+        if (data) setCourses(data.map(d => d.course_slug))
+      })
     }
-  }, [user])
+  }, [user, open])
 
   if (!user) return null
   const set = (k: string, v: string) => setForm(f => ({...f, [k]: v}))
@@ -586,6 +592,7 @@ function EditUserModal({ open, onClose, onSuccess, user, orgOptions }: {
         fullName: form.fullName, email: form.email,
         membershipTier: form.membershipTier, institutionType: form.institutionType,
         orgId: form.orgId || null,
+        courses,
       })
       if (res.success) { onClose(); onSuccess('User profile updated.') }
       else onSuccess(`Error: ${res.error}`)
@@ -644,6 +651,9 @@ function EditUserModal({ open, onClose, onSuccess, user, orgOptions }: {
               </select>
             </FField>
           </div>
+          <SDivider label="Course Access" />
+          <CourseChecks selected={courses} onChange={setCourses} />
+          
           <MFooter onClose={onClose} onConfirm={saveProfile} label="Save Profile" isPending={isPending}/>
         </>
       )}
@@ -840,8 +850,8 @@ function BypassPage({ bypassUsers, bypassOrgs, onEdit, onToast, onAddUser, onAdd
                   <TD muted>{formatExpiry(o.bypass_expiry)}</TD>
                   <TD muted><span style={{ fontSize:11 }}>{o.admin_email??'—'}</span></TD>
                   <TD><div style={{ display:'flex', gap:6 }}>
-                    <Btn variant="ghost" size="sm" onClick={()=>onEdit({ type:'organization', id:o.id, name:o.name, tier:o.tier, reason:o.bypass_reason, expiry:o.bypass_expiry })}>Edit</Btn>
-                    <Btn variant="ghost" size="sm" onClick={()=>onEditAdmin({ id:o.id, name:o.name, admin_email:o.admin_email })}>Edit Admin</Btn>
+                    <Btn variant="ghost" size="sm" onClick={()=>onEdit({ type:'organization', id:o.id, name:o.name, tier:o.tier, reason:o.bypass_reason, expiry:o.bypass_expiry })}>Edit Bypass</Btn>
+                    <Btn variant="ghost" size="sm" onClick={()=>onEditOrg(o)}>Edit Org</Btn>
                     <Btn variant="danger" size="sm" onClick={()=>handleRevokeOrg(o)} disabled={isPending}>Revoke</Btn>
                   </div></TD>
                 </TR>
@@ -855,56 +865,91 @@ function BypassPage({ bypassUsers, bypassOrgs, onEdit, onToast, onAddUser, onAdd
   )
 }
 
-// ── EditOrgAdminModal ─────────────────────────────────────────────────────────
+// ── EditOrganizationModal ─────────────────────────────────────────────────────────
 
-function EditOrgAdminModal({ open, onClose, onSuccess, org }: {
+function EditOrganizationModal({ open, onClose, onSuccess, org }: {
   open: boolean
   onClose: () => void
   onSuccess: (msg: string) => void
-  org: { id: string; name: string; admin_email: string | null } | null
+  org: SAOrg | BypassOrg | null
 }) {
-  const [email, setEmail]       = useState('')
-  const [fullName, setFullName] = useState('')
+  const [form, setForm] = useState({ name:'', email:'', fullName:'', vertical:'', tier:'' })
+  const [courses, setCourses] = useState<string[]>([])
   const [isPending, startTransition] = useTransition()
-  const [err, setErr]           = useState('')
+  const [err, setErr] = useState('')
+  const set = (k: string, v: string) => setForm(f=>({...f,[k]:v}))
+  const supabase = createClient()
 
-  React.useEffect(() => {
-    if (open && org) { setEmail(org.admin_email ?? ''); setFullName(''); setErr('') }
+  useEffect(() => {
+    if (open && org) {
+      setForm({ name: org.name, email: org.admin_email ?? '', fullName: '', vertical: org.segment, tier: org.tier })
+      setErr('')
+      // fetch course access for org
+      supabase.from('course_access').select('course_slug').eq('org_id', org.id).then(({ data }) => {
+        if (data) setCourses(data.map(d => d.course_slug))
+      })
+    }
   }, [open, org])
 
   function handleSave() {
     if (!org) return
     setErr('')
     startTransition(async () => {
-      const res = await updateOrgAdmin(org.id, org.name, { email, fullName })
-      if (res.success) { onSuccess(`Admin updated for ${org.name}.`); onClose() }
-      else setErr(res.error ?? 'Failed to update admin.')
+      const res = await updateOrganizationComplete(org.id, {
+        orgName: form.name,
+        vertical: form.vertical,
+        tier: form.tier,
+        adminEmail: form.email,
+        adminFullName: form.fullName, // Not pre-populated from DB as logic didn't easily have it, so only updates if typed
+        courses,
+      })
+      if (res.success) { onSuccess(`Organization ${form.name} updated.`); onClose() }
+      else setErr(res.error ?? 'Failed to update organization.')
     })
   }
 
   if (!open || !org) return null
   return (
-    <Modal open={open} onClose={onClose} title="Edit Org Admin" sub={`Update the admin contact for ${org.name}`}>
+    <Modal open={open} onClose={onClose} title="Edit Organization" sub={`Update details and access for ${org.name}`} wide>
       <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-        <FField label="Admin Email" span2>
-          <input type="email" value={email} onChange={e=>setEmail(e.target.value)} style={IS} placeholder="admin@org.com"/>
-        </FField>
-        <FField label="Full Name (optional)" span2>
-          <input type="text" value={fullName} onChange={e=>setFullName(e.target.value)} style={IS} placeholder="First Last"/>
-        </FField>
-        {err && <p style={{ color:C.red, fontSize:12, margin:0 }}>{err}</p>}
-        <div style={{ display:'flex', gap:10, justifyContent:'flex-end' }}>
-          <Btn variant="ghost" size="sm" onClick={onClose}>Cancel</Btn>
-          <Btn variant="primary" size="sm" onClick={handleSave} disabled={isPending || !email}>
-            {isPending ? 'Saving…' : 'Save Changes'}
-          </Btn>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+          <FField label="Organization Name" span2>
+            <input type="text" value={form.name} onChange={e=>set('name',e.target.value)} style={IS}/>
+          </FField>
+          <FField label="Vertical">
+            <select value={form.vertical} onChange={e=>set('vertical',e.target.value)} style={IS}>
+              <option value="business">Business</option>
+              <option value="education">Education</option>
+              <option value="leadership">Leadership</option>
+              <option value="personal">Personal</option>
+            </select>
+          </FField>
+          <FField label="Membership Tier">
+            <select value={form.tier} onChange={e=>set('tier',e.target.value)} style={IS}>
+              <option value="free">Seeker</option>
+              <option value="architect">Architect</option>
+              <option value="elite">Reality Master (Elite)</option>
+            </select>
+          </FField>
+          <FField label="Admin Email">
+            <input type="email" value={form.email} onChange={e=>set('email',e.target.value)} style={IS} placeholder="admin@org.com"/>
+          </FField>
+          <FField label="Admin Full Name (optional)">
+            <input type="text" value={form.fullName} onChange={e=>set('fullName',e.target.value)} style={IS} placeholder="Change name..."/>
+          </FField>
         </div>
+        
+        <SDivider label="Course Access" />
+        <CourseChecks selected={courses} onChange={setCourses} />
+
+        {err && <p style={{ color:C.red, fontSize:12, margin:0 }}>{err}</p>}
+        <MFooter onClose={onClose} onConfirm={handleSave} label="Save Changes" isPending={isPending} />
       </div>
     </Modal>
   )
 }
 
-function OrgsPage({ orgs, onToast, onAddOrg, onAddUser, onDeleteOrg, onEditAdmin }: { orgs:SAOrg[]; onToast:(m:string)=>void; onAddOrg:()=>void; onAddUser:()=>void; onDeleteOrg:(o:SAOrg)=>void; onEditAdmin:(o:{id:string;name:string;admin_email:string|null})=>void }) {
+function OrgsPage({ orgs, onToast, onAddOrg, onAddUser, onDeleteOrg, onEditOrg }: { orgs:SAOrg[]; onToast:(m:string)=>void; onAddOrg:()=>void; onAddUser:()=>void; onDeleteOrg:(o:SAOrg)=>void; onEditOrg:(o:SAOrg)=>void }) {
   const [query, setQuery] = useState('')
   const [segF, setSegF]   = useState('All Verticals')
   const [tierF, setTierF] = useState('All Tiers')
@@ -938,7 +983,7 @@ function OrgsPage({ orgs, onToast, onAddOrg, onAddUser, onDeleteOrg, onEditAdmin
               <TD><Pill v={o.status as PillV} label={o.status}/></TD>
               <TD muted><span style={{ fontSize:11 }}>{o.admin_email??'—'}</span></TD>
               <TD><div style={{ display:'flex', gap:6 }}>
-                <Btn variant="ghost" size="sm" onClick={()=>onEditAdmin({ id:o.id, name:o.name, admin_email:o.admin_email })}>Edit Admin</Btn>
+                <Btn variant="ghost" size="sm" onClick={()=>onEditOrg(o)}>Edit Org</Btn>
                 <Btn variant="ghost" size="sm" onClick={onAddUser}>+ User</Btn>
                 <Btn variant="danger" size="sm" onClick={()=>onDeleteOrg(o)}>Delete</Btn>
               </div></TD>
@@ -1797,7 +1842,7 @@ export function SuperAdminDashboard({ adminName, stats, bypassUsers, bypassOrgs,
   const [deleteOrgTarget, setDeleteOrgTarget] = useState<SAOrg | null>(null)
   const [editTarget, setEditTarget] = useState<EditTarget>(null)
   const [editUser, setEditUser]   = useState<EditUser>(null)
-  const [editOrgAdmin, setEditOrgAdmin] = useState<{ id: string; name: string; admin_email: string | null } | null>(null)
+  const [editOrganization, setEditOrganization] = useState<SAOrg | BypassOrg | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const router = useRouter()
 
@@ -1939,8 +1984,8 @@ export function SuperAdminDashboard({ adminName, stats, bypassUsers, bypassOrgs,
 
           <div className="sa-content" style={{ padding:28, flex:1 }}>
             {page==='overview'      && <OverviewPage stats={stats} bypassUsers={bypassUsers} auditLog={auditLog} orgs={orgs} onNav={setPage} onAddUser={()=>setModalUser(true)} onAddOrg={()=>setModalOrg(true)}/>}
-            {page==='bypass'        && <BypassPage bypassUsers={bypassUsers} bypassOrgs={bypassOrgs} onEdit={setEditTarget} onToast={showToast} onAddUser={()=>setModalUser(true)} onAddOrg={()=>setModalOrg(true)} onEditAdmin={setEditOrgAdmin}/>}
-            {page==='orgs'          && <OrgsPage orgs={orgs} onToast={showToast} onAddOrg={()=>setModalOrg(true)} onAddUser={()=>setModalUser(true)} onDeleteOrg={setDeleteOrgTarget} onEditAdmin={setEditOrgAdmin}/>}
+            {page==='bypass'        && <BypassPage bypassUsers={bypassUsers} bypassOrgs={bypassOrgs} onEdit={setEditTarget} onToast={showToast} onAddUser={()=>setModalUser(true)} onAddOrg={()=>setModalOrg(true)} onEditOrg={setEditOrganization}/>}
+            {page==='orgs'          && <OrgsPage orgs={orgs} onToast={showToast} onAddOrg={()=>setModalOrg(true)} onAddUser={()=>setModalUser(true)} onDeleteOrg={setDeleteOrgTarget} onEditOrg={setEditOrganization}/>}
             {page==='users'         && <UsersPage users={users} onToast={showToast} onAddUser={()=>setModalUser(true)} onInviteUser={()=>setModalInvite(true)} onEdit={setEditUser} onDelete={setDeleteTarget}/>}
             {page==='courses'       && <CoursesPage orgs={orgs} users={users} onToast={showToast}/>}
             {page==='cms'           && <CourseManagerPage onToast={showToast}/>}
@@ -1960,7 +2005,7 @@ export function SuperAdminDashboard({ adminName, stats, bypassUsers, bypassOrgs,
       <DeleteOrgModal  open={!!deleteOrgTarget} onClose={()=>setDeleteOrgTarget(null)}    onSuccess={m=>{showToast(m);router.refresh()}} org={deleteOrgTarget}/>
       <EditBypassModal    open={!!editTarget}    onClose={()=>setEditTarget(null)}    onSuccess={m=>{showToast(m);router.refresh()}} target={editTarget}/>
       <EditUserModal      open={!!editUser}      onClose={()=>setEditUser(null)}      onSuccess={m=>{showToast(m);router.refresh()}} user={editUser} orgOptions={orgOptions}/>
-      <EditOrgAdminModal  open={!!editOrgAdmin}  onClose={()=>setEditOrgAdmin(null)}  onSuccess={m=>{showToast(m);router.refresh()}} org={editOrgAdmin}/>
+      <EditOrganizationModal open={!!editOrganization} onClose={()=>setEditOrganization(null)} onSuccess={m=>{showToast(m);setEditOrganization(null);router.refresh()}} org={editOrganization} />
 
       {toastVis && (
         <div style={{ position:'fixed', bottom:28, right:28, background:C.dark3, border:`1px solid ${C.border2}`, borderRadius:5, padding:'12px 18px', fontSize:12.5, display:'flex', alignItems:'center', gap:8, boxShadow:'0 8px 32px rgba(0,0,0,0.5)', zIndex:300, animation:'toastIn 0.25s ease' }}>
