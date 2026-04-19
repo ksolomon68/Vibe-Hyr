@@ -229,26 +229,31 @@ export async function addBypassOrg(data: {
 
   // Create admin user if email provided
   if (data.adminEmail) {
-    let authDataFinal: any = null
+    let adminUserId: string | null = null
+
     const { data: authData, error: authErr } = await admin.auth.admin.createUser({
       email: data.adminEmail,
       email_confirm: true,
       user_metadata: { full_name: `${data.adminFirstName} ${data.adminLastName}` },
     })
-    
+
     if (authErr) {
-      if (authErr.message.includes('already registered')) {
-        const { data: existing } = await admin.from('profiles').select('id').eq('email', data.adminEmail).single()
-        authDataFinal = { user: existing }
+      if (authErr.message.toLowerCase().includes('already registered') || authErr.message.toLowerCase().includes('already been registered')) {
+        // User exists in auth — fetch their ID from profiles
+        const { data: existing } = await admin.from('profiles').select('id').eq('email', data.adminEmail).maybeSingle()
+        if (existing?.id) {
+          adminUserId = existing.id
+        } else {
+          return { success: false, error: `User ${data.adminEmail} already exists in auth but has no profile. Please resolve manually.` }
+        }
       } else {
-        console.error('[addBypassOrg] admin creation failed:', authErr.message)
+        return { success: false, error: `Failed to create admin auth user: ${authErr.message}` }
       }
     } else {
-      authDataFinal = authData
+      adminUserId = authData.user!.id
     }
 
-    if (authDataFinal?.user) {
-      const adminUserId = authDataFinal.user.id
+    if (adminUserId) {
       const adminRole = data.vertical === 'leadership' ? 'leader' : 'admin'
 
       const { error: profileErr } = await admin.from('profiles').upsert({
@@ -266,7 +271,7 @@ export async function addBypassOrg(data: {
         bypass_expiry:    data.bypassPayment ? expiryVal : null,
         bypass_notes:     data.bypassPayment ? data.bypassNotes : null,
         bypass_added_by:  data.bypassPayment ? sa.userId : null,
-      })
+      }, { onConflict: 'id' })
       if (profileErr) {
         console.error('[addBypassOrg] profile upsert failed:', profileErr.message)
         return { success: false, error: `Failed to configure org admin profile: ${profileErr.message}` }
