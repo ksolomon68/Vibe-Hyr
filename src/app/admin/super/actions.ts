@@ -8,6 +8,29 @@ import { bypassWelcomeTemplate, institutionInviteTemplate, passwordResetTemplate
 
 type ActionResult = { success: boolean; error?: string }
 
+// ── Course-slug helper ────────────────────────────────────────────────────────
+
+function getCoursesForOrgTier(vertical: string, tier: string): string[] {
+  const map: Record<string, Record<string, string[]>> = {
+    education: {
+      free:      ['ed01'],
+      architect: ['ed01', 'ed02', 'ed03'],
+      elite:     ['ed01', 'ed02', 'ed03', 'ed04'],
+    },
+    business: {
+      free:      ['common-sense-in-the-workplace'],
+      architect: ['common-sense-in-the-workplace', 'from-reaction-to-response', 'know-yourself-lead-yourself'],
+      elite:     ['common-sense-in-the-workplace', 'from-reaction-to-response', 'know-yourself-lead-yourself', 'the-high-frequency-team'],
+    },
+    leadership: {
+      free:      ['leadership_course_1'],
+      architect: ['leadership_course_1', 'leadership_course_2', 'leadership_course_3'],
+      elite:     ['leadership_course_1', 'leadership_course_2', 'leadership_course_3', 'leadership_course_4'],
+    },
+  }
+  return map[vertical]?.[tier] ?? []
+}
+
 // ── Auth helper ───────────────────────────────────────────────────────────────
 
 async function requireSuperAdmin(): Promise<{ userId: string; email: string } | null> {
@@ -225,7 +248,7 @@ export async function addBypassOrg(data: {
 
     if (authDataFinal?.user) {
       const adminUserId = authDataFinal.user.id
-      const adminRole = data.vertical === 'leadership' ? 'leader' : 'institution_admin'
+      const adminRole = data.vertical === 'leadership' ? 'leader' : 'admin'
 
       const { error: profileErr } = await admin.from('profiles').upsert({
         id:               adminUserId,
@@ -256,7 +279,21 @@ export async function addBypassOrg(data: {
 
       // Update org seats_used
       await admin.from('organizations').update({ seats_used: 1 }).eq('id', org.id)
-      
+
+      // Grant course access to the org admin based on vertical + tier
+      const courseSlugs = getCoursesForOrgTier(data.vertical, data.tier)
+      if (courseSlugs.length > 0) {
+        await admin.from('course_access').upsert(
+          courseSlugs.map(slug => ({
+            user_id:        adminUserId,
+            institution_id: org.id,
+            course_slug:    slug,
+            granted_by:     sa.userId,
+          })),
+          { onConflict: 'user_id,course_slug' }
+        )
+      }
+
       if (data.sendOnboarding) {
         try {
           let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
@@ -406,6 +443,94 @@ export async function updateBypassDetails(
   await logAudit(sa.userId, sa.email, 'BYPASS_UPDATED', targetType, targetId, targetName,
     `Reason: ${data.bypassReason} · Expiry: ${data.bypassExpiry ?? 'Never'}`
   )
+  revalidatePath('/admin/super')
+  return { success: true }
+}
+
+// ── Update Organization (vertical / tier / seats + member cascade) ───────────
+
+export async function updateOrg(
+  orgId: string,
+  orgName: string,
+  data: { vertical: string; tier: string; seats: number }
+): Promise<ActionResult> {
+  const sa = await requireSuperAdmin()
+  if (!sa) return { success: false, error: 'Unauthorized' }
+
+  const admin = createAdminClient()
+
+  // 1. Update the org record — sync all aliased columns
+  const { error: orgErr } = await admin.from('organizations').update({
+    vertical:        data.vertical,
+    segment:         data.vertical,
+    type:            data.vertical,
+    tier:            data.tier,
+    content_tier:    data.tier,
+    plan:            data.tier,
+    seats_purchased: data.seats,
+    seat_limit:      data.seats,
+  }).eq('id', orgId)
+
+  if (orgErr) return { success: false, error: orgErr.message }
+
+  // 2. Get all active member user_ids for this org
+  const { data: members } = await admin
+    .from('organization_members')
+    .select('user_id')
+    .eq('org_id', orgId)
+    .eq('status', 'active')
+    .not('user_id', 'is', null)
+
+  const memberUserIds = ((members ?? []) as { user_id: string | null }[])
+    .map(m => m.user_id).filter(Boolean) as string[]
+
+  if (memberUserIds.length > 0) {
+    // 3. Fetch bypass status + current tier for each member
+    const { data: memberProfiles } = await admin
+      .from('profiles')
+      .select('id, is_bypassed, membership_tier')
+      .in('id', memberUserIds)
+
+    const tierRank: Record<string, number> = { free: 0, architect: 1, elite: 2 }
+
+    // 4. Update each member's institution_type and cap tier for non-bypassed users
+    for (const p of (memberProfiles ?? []) as { id: string; is_bypassed: boolean; membership_tier: string }[]) {
+      const updates: Record<string, unknown> = {
+        institution_type: data.vertical,
+        membership_type:  data.vertical,
+      }
+      if (!p.is_bypassed) {
+        const userRank = tierRank[p.membership_tier] ?? 0
+        const orgRank  = tierRank[data.tier] ?? 0
+        if (userRank > orgRank) updates.membership_tier = data.tier
+      }
+      await admin.from('profiles').update(updates).eq('id', p.id)
+    }
+
+    // 5. Delete old org-linked course grants and re-issue based on new vertical + tier
+    const newCourses = getCoursesForOrgTier(data.vertical, data.tier)
+
+    await admin.from('course_access').delete().eq('institution_id', orgId)
+
+    if (newCourses.length > 0) {
+      const grants = memberUserIds.flatMap(userId =>
+        newCourses.map(slug => ({
+          user_id:        userId,
+          institution_id: orgId,
+          course_slug:    slug,
+          granted_by:     sa.userId,
+        }))
+      )
+      await admin.from('course_access').upsert(grants, { onConflict: 'user_id,course_slug' })
+    }
+  }
+
+  await logAudit(
+    sa.userId, sa.email,
+    'ORG_UPDATED', 'organization', orgId, orgName,
+    `Vertical: ${data.vertical} · Tier: ${data.tier} · Seats: ${data.seats}`
+  )
+
   revalidatePath('/admin/super')
   return { success: true }
 }

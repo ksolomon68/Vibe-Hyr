@@ -8,7 +8,7 @@ import { BYPASS_ROLES } from '@/lib/constants/bypassRoles'
 import {
   addBypassUser, addBypassOrg, validateOrgAdminEmail,
   revokeUserBypass, revokeOrgBypass,
-  updateBypassDetails,
+  updateBypassDetails, updateOrg,
   overrideUserCourseAccess, overrideOrgCourseAccess,
   deactivateUser, deleteUser, deleteOrganization,
   updateUserProfile,
@@ -753,9 +753,10 @@ function OverviewPage({ stats, bypassUsers, auditLog, orgs, onNav, onAddUser, on
   )
 }
 
-function BypassPage({ bypassUsers, bypassOrgs, onEdit, onToast, onAddUser, onAddOrg, onEditAdmin }: {
+function BypassPage({ bypassUsers, bypassOrgs, onEdit, onToast, onAddUser, onAddOrg, onEditAdmin, onEditOrg }: {
   bypassUsers: BypassUser[]; bypassOrgs: BypassOrg[]
   onEditAdmin: (o:{id:string;name:string;admin_email:string|null})=>void
+  onEditOrg: (o: SAOrg) => void
   onEdit: (t: EditTarget)=>void; onToast: (m:string)=>void; onAddUser:()=>void; onAddOrg:()=>void
 }) {
   const [tab, setTab] = useState<'users'|'orgs'>('users')
@@ -840,7 +841,8 @@ function BypassPage({ bypassUsers, bypassOrgs, onEdit, onToast, onAddUser, onAdd
                   <TD muted>{formatExpiry(o.bypass_expiry)}</TD>
                   <TD muted><span style={{ fontSize:11 }}>{o.admin_email??'—'}</span></TD>
                   <TD><div style={{ display:'flex', gap:6 }}>
-                    <Btn variant="ghost" size="sm" onClick={()=>onEdit({ type:'organization', id:o.id, name:o.name, tier:o.tier, reason:o.bypass_reason, expiry:o.bypass_expiry })}>Edit</Btn>
+                    <Btn variant="ghost" size="sm" onClick={()=>onEditOrg({ id:o.id, name:o.name, segment:o.segment, tier:o.tier, seats_purchased:o.seats_purchased, seats_used:o.seats_used, is_bypassed:true, bypass_reason:o.bypass_reason, mrr:0, status:o.status, admin_email:o.admin_email, created_at:o.created_at })}>Edit Org</Btn>
+                    <Btn variant="ghost" size="sm" onClick={()=>onEdit({ type:'organization', id:o.id, name:o.name, tier:o.tier, reason:o.bypass_reason, expiry:o.bypass_expiry })}>Edit Bypass</Btn>
                     <Btn variant="ghost" size="sm" onClick={()=>onEditAdmin({ id:o.id, name:o.name, admin_email:o.admin_email })}>Edit Admin</Btn>
                     <Btn variant="danger" size="sm" onClick={()=>handleRevokeOrg(o)} disabled={isPending}>Revoke</Btn>
                   </div></TD>
@@ -904,7 +906,84 @@ function EditOrgAdminModal({ open, onClose, onSuccess, org }: {
   )
 }
 
-function OrgsPage({ orgs, onToast, onAddOrg, onAddUser, onDeleteOrg, onEditAdmin }: { orgs:SAOrg[]; onToast:(m:string)=>void; onAddOrg:()=>void; onAddUser:()=>void; onDeleteOrg:(o:SAOrg)=>void; onEditAdmin:(o:{id:string;name:string;admin_email:string|null})=>void }) {
+// ── EditOrgModal ──────────────────────────────────────────────────────────────
+
+function EditOrgModal({ open, onClose, onSuccess, org }: {
+  open: boolean; onClose: ()=>void; onSuccess: (m:string)=>void; org: SAOrg | null
+}) {
+  const [isPending, startTransition] = useTransition()
+  const [vertical, setVertical] = useState<OrgVertical>('business')
+  const [tier, setTier]         = useState<OrgTier>('elite')
+  const [seats, setSeats]       = useState(50)
+  const router = useRouter()
+
+  useEffect(() => {
+    if (org) {
+      setVertical((org.segment as OrgVertical) || 'business')
+      setTier((org.tier as OrgTier) || 'elite')
+      setSeats(org.seats_purchased || 50)
+    }
+  }, [org])
+
+  if (!org) return null
+
+  const cardStyle = (selected: boolean): React.CSSProperties => ({
+    padding: '1rem', borderRadius: '8px', cursor: 'pointer',
+    border: selected ? `2px solid ${C.orange}` : `1px solid ${C.border}`,
+    background: selected ? 'rgba(232,98,26,0.05)' : C.dark5,
+    transition: 'all 0.2s ease',
+  })
+
+  function save() {
+    startTransition(async () => {
+      const res = await updateOrg(org!.id, org!.name, { vertical, tier, seats })
+      if (res.success) {
+        onClose()
+        onSuccess(`${org!.name} updated — member access cascaded.`)
+        router.refresh()
+      } else {
+        onSuccess(`Error: ${res.error}`)
+      }
+    })
+  }
+
+  return (
+    <Modal open={open} onClose={onClose} title="Edit Organization" sub={`Changes cascade to ALL active members: institution type, tier cap, and course access are all updated.`} wide>
+      <Notice icon="⚠">Changing vertical or tier re-grants courses for every active member. Bypassed members keep their existing tier.</Notice>
+
+      <SDivider label="1. Content Vertical"/>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:14, marginBottom:14 }}>
+        {VERTICALS.map(v => (
+          <div key={v.id} style={cardStyle(vertical === v.id)} onClick={() => setVertical(v.id)}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: C.cream, marginBottom: 4 }}>{v.label}</div>
+            <div style={{ fontSize: 11, color: C.muted, lineHeight: 1.4 }}>{v.desc}</div>
+          </div>
+        ))}
+      </div>
+
+      <SDivider label="2. Content Tier"/>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:14, marginBottom:14 }}>
+        {TIERS.map(t => (
+          <div key={t.id} style={cardStyle(tier === t.id)} onClick={() => setTier(t.id)}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: C.cream, marginBottom: 4 }}>{t.label}</div>
+            <div style={{ fontSize: 11, color: C.gold }}>Access: {t.courses[vertical]}</div>
+          </div>
+        ))}
+      </div>
+
+      <SDivider label="3. Seat Count"/>
+      <div style={{ marginBottom: 14 }}>
+        <FField label="Total Seats">
+          <input type="number" value={seats} onChange={e => setSeats(parseInt(e.target.value) || 1)} style={IS} min={1} max={10000}/>
+        </FField>
+      </div>
+
+      <MFooter onClose={onClose} onConfirm={save} label="Save & Cascade Changes" isPending={isPending}/>
+    </Modal>
+  )
+}
+
+function OrgsPage({ orgs, onToast, onAddOrg, onAddUser, onDeleteOrg, onEditAdmin, onEditOrg }: { orgs:SAOrg[]; onToast:(m:string)=>void; onAddOrg:()=>void; onAddUser:()=>void; onDeleteOrg:(o:SAOrg)=>void; onEditAdmin:(o:{id:string;name:string;admin_email:string|null})=>void; onEditOrg:(o:SAOrg)=>void }) {
   const [query, setQuery] = useState('')
   const [segF, setSegF]   = useState('All Verticals')
   const [tierF, setTierF] = useState('All Tiers')
@@ -938,6 +1017,7 @@ function OrgsPage({ orgs, onToast, onAddOrg, onAddUser, onDeleteOrg, onEditAdmin
               <TD><Pill v={o.status as PillV} label={o.status}/></TD>
               <TD muted><span style={{ fontSize:11 }}>{o.admin_email??'—'}</span></TD>
               <TD><div style={{ display:'flex', gap:6 }}>
+                <Btn variant="ghost" size="sm" onClick={()=>onEditOrg(o)}>Edit</Btn>
                 <Btn variant="ghost" size="sm" onClick={()=>onEditAdmin({ id:o.id, name:o.name, admin_email:o.admin_email })}>Edit Admin</Btn>
                 <Btn variant="ghost" size="sm" onClick={onAddUser}>+ User</Btn>
                 <Btn variant="danger" size="sm" onClick={()=>onDeleteOrg(o)}>Delete</Btn>
@@ -1798,6 +1878,7 @@ export function SuperAdminDashboard({ adminName, stats, bypassUsers, bypassOrgs,
   const [editTarget, setEditTarget] = useState<EditTarget>(null)
   const [editUser, setEditUser]   = useState<EditUser>(null)
   const [editOrgAdmin, setEditOrgAdmin] = useState<{ id: string; name: string; admin_email: string | null } | null>(null)
+  const [editOrgTarget, setEditOrgTarget] = useState<SAOrg | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const router = useRouter()
 
@@ -1939,8 +2020,8 @@ export function SuperAdminDashboard({ adminName, stats, bypassUsers, bypassOrgs,
 
           <div className="sa-content" style={{ padding:28, flex:1 }}>
             {page==='overview'      && <OverviewPage stats={stats} bypassUsers={bypassUsers} auditLog={auditLog} orgs={orgs} onNav={setPage} onAddUser={()=>setModalUser(true)} onAddOrg={()=>setModalOrg(true)}/>}
-            {page==='bypass'        && <BypassPage bypassUsers={bypassUsers} bypassOrgs={bypassOrgs} onEdit={setEditTarget} onToast={showToast} onAddUser={()=>setModalUser(true)} onAddOrg={()=>setModalOrg(true)} onEditAdmin={setEditOrgAdmin}/>}
-            {page==='orgs'          && <OrgsPage orgs={orgs} onToast={showToast} onAddOrg={()=>setModalOrg(true)} onAddUser={()=>setModalUser(true)} onDeleteOrg={setDeleteOrgTarget} onEditAdmin={setEditOrgAdmin}/>}
+            {page==='bypass'        && <BypassPage bypassUsers={bypassUsers} bypassOrgs={bypassOrgs} onEdit={setEditTarget} onToast={showToast} onAddUser={()=>setModalUser(true)} onAddOrg={()=>setModalOrg(true)} onEditAdmin={setEditOrgAdmin} onEditOrg={setEditOrgTarget}/>}
+            {page==='orgs'          && <OrgsPage orgs={orgs} onToast={showToast} onAddOrg={()=>setModalOrg(true)} onAddUser={()=>setModalUser(true)} onDeleteOrg={setDeleteOrgTarget} onEditAdmin={setEditOrgAdmin} onEditOrg={setEditOrgTarget}/>}
             {page==='users'         && <UsersPage users={users} onToast={showToast} onAddUser={()=>setModalUser(true)} onInviteUser={()=>setModalInvite(true)} onEdit={setEditUser} onDelete={setDeleteTarget}/>}
             {page==='courses'       && <CoursesPage orgs={orgs} users={users} onToast={showToast}/>}
             {page==='cms'           && <CourseManagerPage onToast={showToast}/>}
@@ -1961,6 +2042,7 @@ export function SuperAdminDashboard({ adminName, stats, bypassUsers, bypassOrgs,
       <EditBypassModal    open={!!editTarget}    onClose={()=>setEditTarget(null)}    onSuccess={m=>{showToast(m);router.refresh()}} target={editTarget}/>
       <EditUserModal      open={!!editUser}      onClose={()=>setEditUser(null)}      onSuccess={m=>{showToast(m);router.refresh()}} user={editUser} orgOptions={orgOptions}/>
       <EditOrgAdminModal  open={!!editOrgAdmin}  onClose={()=>setEditOrgAdmin(null)}  onSuccess={m=>{showToast(m);router.refresh()}} org={editOrgAdmin}/>
+      <EditOrgModal       open={!!editOrgTarget} onClose={()=>setEditOrgTarget(null)} onSuccess={m=>{showToast(m);router.refresh()}} org={editOrgTarget}/>
 
       {toastVis && (
         <div style={{ position:'fixed', bottom:28, right:28, background:C.dark3, border:`1px solid ${C.border2}`, borderRadius:5, padding:'12px 18px', fontSize:12.5, display:'flex', alignItems:'center', gap:8, boxShadow:'0 8px 32px rgba(0,0,0,0.5)', zIndex:300, animation:'toastIn 0.25s ease' }}>
