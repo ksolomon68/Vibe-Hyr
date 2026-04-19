@@ -794,8 +794,8 @@ export async function validateOrgAdminEmail(
 
   if (!profile) {
     return {
-      valid: false,
-      error: 'No account found with this email. The user must have a Vibe Hyr account before being assigned as an org admin.',
+      valid: true,
+      warning: 'This email is not registered yet. A new account will be created.',
     }
   }
 
