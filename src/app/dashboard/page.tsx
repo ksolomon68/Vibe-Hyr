@@ -56,7 +56,8 @@ export default async function DashboardPage() {
   const tier             = profile?.membership_tier ?? 'free'
   const vertical         = profile?.institution_type ?? 'individual'
   const isSuperAdmin     = profile?.is_super_admin ?? false
-  const isOrgAdmin       = profile?.role === 'admin'
+  const isBypassed       = profile?.is_bypassed ?? false
+  const isOrgAdmin       = ['admin', 'institution_admin', 'leader'].includes(profile?.role ?? '')
 
   // ── Stats queries (shared across all user types) ───────────────────────────
   const [
@@ -168,14 +169,14 @@ export default async function DashboardPage() {
 
   // Personal courses
   const personalCourses = COURSES.map(course => {
-    const hasAccess = isSuperAdmin || TIER_RANK[tier] >= TIER_RANK[course.tier] || grantedSlugs.has(course.slug)
+    const hasAccess = isSuperAdmin || isBypassed || TIER_RANK[tier] >= TIER_RANK[course.tier] || grantedSlugs.has(course.slug)
     const progress  = personalProgress.find(p => p.course_id === course.id)?.progress_percent ?? 0
     const courseTier: PersonalTier = course.tier === 'elite' ? 'reality-master' : 'architect'
     return { ...course, hasAccess, progress, courseTier }
   })
 
   // Business tracks
-  const allowedTracks = isSuperAdmin
+  const allowedTracks = (isSuperAdmin || isBypassed)
     ? TRACKS.map(t => t.id)
     : BUSINESS_TIER_ACCESS[tier] ?? ['common-sense-in-the-workplace']
 
@@ -202,7 +203,7 @@ export default async function DashboardPage() {
     const done     = completedModules.length
     const pct      = total ? Math.round((done / total) * 100) : 0
     const programTier = PROGRAM_TIERS[program.slug] ?? 'free'
-    const hasAccess = isSuperAdmin || TIER_RANK[tier] >= TIER_RANK[programTier] || grantedSlugs.has(program.slug)
+    const hasAccess = isSuperAdmin || isBypassed || TIER_RANK[tier] >= TIER_RANK[programTier] || grantedSlugs.has(program.slug)
     // Find first incomplete module
     const nextModule = program.modules.find(m => !completedModules.includes(m.id)) ?? program.modules[0]
     const href = nextModule ? `/educators/${program.slug}?module=${nextModule.id}` : `/educators/${program.slug}`
@@ -217,7 +218,7 @@ export default async function DashboardPage() {
     const total     = course.lessonCount
     const done      = completedLessons.length
     const pct       = total ? Math.round((done / total) * 100) : 0
-    const hasAccess  = isSuperAdmin || TIER_RANK[tier] >= TIER_RANK[course.tierRequired] || grantedSlugs.has(course.id)
+    const hasAccess  = isSuperAdmin || isBypassed || TIER_RANK[tier] >= TIER_RANK[course.tierRequired] || grantedSlugs.has(course.id)
     const href = `/leadership/${course.id}`
     const courseTier: PersonalTier = course.tierRequired === 'elite' ? 'reality-master' : 'architect'
     return { 
@@ -242,7 +243,13 @@ export default async function DashboardPage() {
           <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange" />
           <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-6">
             <div>
-              <div className="label mb-3">Member Dashboard</div>
+              <div className="label mb-3">
+                {isSuperAdmin     ? 'Super Admin Dashboard'  :
+                 vertical === 'business'   ? 'Workplace Dashboard'   :
+                 vertical === 'education'  ? 'Educator Dashboard'    :
+                 vertical === 'leadership' ? 'Leadership Dashboard'  :
+                                             'Personal Dashboard'}
+              </div>
               <h1 className="font-display text-[clamp(2.5rem,5vw,4.5rem)] leading-[0.95] tracking-[0.02em]">
                 WELCOME BACK,<br />
                 <span className="text-orange-DEFAULT">
