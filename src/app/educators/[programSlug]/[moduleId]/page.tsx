@@ -49,7 +49,15 @@ export default async function EducationModulePage({
     videoUrl = lessonRow?.youtube_url ?? null
   }
 
-  const [{ data: catalogEntry }, { data: progressData }] = await Promise.all([
+  const [{ data: accessGrant }, { data: catalogEntry }, { data: progressData }] = await Promise.all([
+    // Primary: explicit course_access grant (bypass users + org-granted access)
+    supabase
+      .from('course_access')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('course_slug', program.id)
+      .maybeSingle(),
+    // Fallback: course_catalog RLS (future paid-access path)
     supabase
       .from('course_catalog')
       .select('id')
@@ -61,7 +69,7 @@ export default async function EducationModulePage({
       .eq('user_id', user.id),
   ])
 
-  if (!catalogEntry) {
+  if (!accessGrant && !catalogEntry) {
     return (
       <CourseLockedScreen
         reason="tier_required"

@@ -27,14 +27,22 @@ export default async function EducatorProgramPage({ params }: { params: { progra
   let completedModules: string[] = []
 
   if (user) {
-    // Check authoritative catalog access
+    // Primary: check explicit course_access grant (covers bypass users + org-granted access)
+    const { data: accessGrant } = await supabase
+      .from('course_access')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('course_slug', program.id)
+      .maybeSingle()
+
+    // Fallback: check course_catalog RLS (for future paid-access path)
     const { data: catalogEntry } = await supabase
       .from('course_catalog')
       .select('id')
       .eq('slug', program.slug)
       .maybeSingle()
-    
-    canAccess = !!catalogEntry;
+
+    canAccess = !!accessGrant || !!catalogEntry;
 
     if (canAccess) {
       const { data: prog } = await supabase

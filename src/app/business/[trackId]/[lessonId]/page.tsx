@@ -58,16 +58,24 @@ export default async function LessonPage({ params }: PageProps) {
     }
   }
 
-  // ── DB-level access gate (RLS enforces membership_type + sub_tier) ──────────
-  // course_catalog query returns null if the user's entitlements don't match —
-  // this is the authoritative security check, not a client-side UI hint.
-  const { data: catalogEntry } = await supabase
-    .from('course_catalog')
-    .select('id')
-    .eq('slug', params.trackId)
-    .maybeSingle()
+  // ── DB-level access gate ──────────────────────────────────────────────────
+  const [{ data: accessGrant }, { data: catalogEntry }] = await Promise.all([
+    // Primary: explicit course_access grant (bypass users + org-granted access)
+    supabase
+      .from('course_access')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('course_slug', params.trackId)
+      .maybeSingle(),
+    // Fallback: course_catalog RLS (future paid-access path)
+    supabase
+      .from('course_catalog')
+      .select('id')
+      .eq('slug', params.trackId)
+      .maybeSingle(),
+  ])
 
-  if (!catalogEntry) {
+  if (!accessGrant && !catalogEntry) {
     return (
       <CourseLockedScreen
         reason="tier_required"

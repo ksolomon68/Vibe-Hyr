@@ -101,6 +101,7 @@ export async function addBypassUser(data: {
   const { error: upsertErr } = await admin.from('profiles').upsert({
     id: userId, email: data.email,
     full_name: `${data.firstName} ${data.lastName}`,
+    membership_type: data.institutionType,
     membership_tier: data.membershipTier,
     institution_type: data.institutionType,
     org_id: data.orgId || null,

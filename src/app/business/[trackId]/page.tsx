@@ -27,14 +27,22 @@ export default async function BusinessTrackPage({ params }: { params: { trackId:
   let completedLessons: string[] = []
 
   if (user) {
-    // Check authoritative catalog access
+    // Primary: check explicit course_access grant (covers bypass users + org-granted access)
+    const { data: accessGrant } = await supabase
+      .from('course_access')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('course_slug', track.id)
+      .maybeSingle()
+
+    // Fallback: course_catalog RLS (future paid-access path)
     const { data: catalogEntry } = await supabase
       .from('course_catalog')
       .select('id')
       .eq('slug', track.id)
       .maybeSingle()
-    
-    canAccess = !!catalogEntry;
+
+    canAccess = !!accessGrant || !!catalogEntry;
 
     if (canAccess) {
       const { data: prog } = await supabase
