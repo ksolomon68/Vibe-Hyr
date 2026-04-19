@@ -763,9 +763,9 @@ function OverviewPage({ stats, bypassUsers, auditLog, orgs, onNav, onAddUser, on
   )
 }
 
-function BypassPage({ bypassUsers, bypassOrgs, onEdit, onToast, onAddUser, onAddOrg, onEditAdmin }: {
+function BypassPage({ bypassUsers, bypassOrgs, onEdit, onToast, onAddUser, onAddOrg, onEditOrg }: {
   bypassUsers: BypassUser[]; bypassOrgs: BypassOrg[]
-  onEditAdmin: (o:{id:string;name:string;admin_email:string|null})=>void
+  onEditOrg: (o: BypassOrg)=>void
   onEdit: (t: EditTarget)=>void; onToast: (m:string)=>void; onAddUser:()=>void; onAddOrg:()=>void
 }) {
   const [tab, setTab] = useState<'users'|'orgs'>('users')
