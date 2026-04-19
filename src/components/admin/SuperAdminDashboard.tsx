@@ -28,20 +28,20 @@ export interface SuperAdminStats {
 
 export interface BypassUser {
   id: string; full_name: string | null; email: string
-  institution_type: string; org_id: string | null; org_name: string | null
+  vertical: string; institution_type: string; org_id: string | null; org_name: string | null
   membership_tier: string; bypass_reason: string | null
   bypass_expiry: string | null; bypass_notes: string | null; created_at: string
 }
 
 export interface BypassOrg {
-  id: string; name: string; segment: string; tier: string
+  id: string; name: string; vertical: string; tier: string
   seats_purchased: number; seats_used: number
   admin_email: string | null; bypass_reason: string | null
   bypass_expiry: string | null; status: string; created_at: string
 }
 
 export interface SAOrg {
-  id: string; name: string; segment: string; tier: string
+  id: string; name: string; vertical: string; tier: string
   seats_purchased: number; seats_used: number
   is_bypassed: boolean; bypass_reason: string | null
   mrr: number; status: string; admin_email: string | null; created_at: string
@@ -49,13 +49,13 @@ export interface SAOrg {
 
 export interface SAUser {
   id: string; full_name: string | null; email: string
-  institution_type: string; org_id: string | null; org_name: string | null
+  vertical: string; institution_type: string; org_id: string | null; org_name: string | null
   membership_tier: string; is_bypassed: boolean; bypass_reason: string | null
   role: string; updated_at: string; created_at: string
 }
 
 export interface AuditEntry {
-  id: string; admin_email: string; action: string; target_type: string
+  id: string; admin_email: string; action: string; target_type: string; vertical?: string
   target_name: string | null; details: string | null; created_at: string
 }
 
@@ -100,18 +100,18 @@ function tierPill(tier: string) {
   if (tier === 'architect') return <Pill v="architect" label="Architect"/>
   return                           <Pill v="seeker"    label="Seeker"/>
 }
-function segPill(seg: string) {
-  if (seg === 'education' || seg === 'educator') return <Pill v="edu" label="Educator"/>
-  if (seg === 'business' || seg === 'corporate' || seg === 'smb') return <Pill v="biz" label="Business"/>
-  if (seg === 'leadership') return <Pill v="gold" label="Leadership"/>
-  if (seg === 'personal') return <Pill v="ind" label="Personal"/>
-  return                         <Pill v="ind" label={seg}/>
+function segPill(v: string) {
+  if (v === 'education') return <Pill v="edu" label="Education"/>
+  if (v === 'business')  return <Pill v="biz" label="Business"/>
+  if (v === 'leadership') return <Pill v="gold" label="Leadership"/>
+  return <Pill v="ind" label={v}/>
 }
 function typePill(type: string) {
+  if (type === 'personal' || type === 'individual') return <Pill v="ind" label="Individual"/>
   if (type === 'education') return <Pill v="edu" label="Education"/>
   if (type === 'business')  return <Pill v="biz" label="Business"/>
   if (type === 'leadership') return <Pill v="gold" label="Leadership"/>
-  return                           <Pill v="ind" label="Individual"/>
+  return <Pill v="ind" label={type}/>
 }
 
 function Tag({ bypass, label }: { bypass?: boolean; label: string }) {
@@ -309,7 +309,7 @@ function AddUserModal({ open, onClose, onSuccess, orgOptions }: {
     startTransition(async () => {
       const res = await addBypassUser({ 
         firstName: form.firstName, lastName: form.lastName, email: form.email, 
-        institutionType: selectedRole.vertical, 
+        vertical: selectedRole.vertical, 
         orgId: form.orgId || null, 
         membershipTier: selectedRole.membership_tier, 
         role: selectedRole.role,
@@ -551,7 +551,7 @@ function EditBypassModal({ open, onClose, onSuccess, target }: { open:boolean; o
 // EDIT USER MODAL
 // ══════════════════════════════════════════════════════════════════════════════
 
-type EditUser = { id: string; full_name: string | null; email: string; membership_tier: string; institution_type: string; org_id: string | null } | null
+type EditUser = { id: string; full_name: string | null; email: string; membership_tier: string; vertical: string; org_id: string | null } | null
 
 function EditUserModal({ open, onClose, onSuccess, user, orgOptions }: {
   open: boolean; onClose: ()=>void; onSuccess: (m: string)=>void
@@ -559,13 +559,13 @@ function EditUserModal({ open, onClose, onSuccess, user, orgOptions }: {
 }) {
   const [tab, setTab]           = useState<'profile'|'password'>('profile')
   const [isPending, startTrans] = useTransition()
-  const [form, setForm]         = useState({ fullName:'', email:'', membershipTier:'free', institutionType:'individual', orgId:'' })
+  const [form, setForm]         = useState({ fullName:'', email:'', membershipTier:'free', vertical:'personal', orgId:'' })
   const [pw, setPw]             = useState('')
   const [confirmPw, setConfirmPw] = useState('')
   
   useEffect(() => {
     if (user && open) {
-      setForm({ fullName: user.full_name??'', email: user.email, membershipTier: user.membership_tier, institutionType: user.institution_type, orgId: user.org_id??'' })
+      setForm({ fullName: user.full_name??'', email: user.email, membershipTier: user.membership_tier, vertical: user.vertical, orgId: user.org_id??'' })
       setPw(''); setConfirmPw('')
     }
   }, [user, open])
@@ -584,7 +584,7 @@ function EditUserModal({ open, onClose, onSuccess, user, orgOptions }: {
     startTrans(async () => {
       const res = await updateUserProfile(user!.id, user!.full_name??user!.email, {
         fullName: form.fullName, email: form.email,
-        membershipTier: form.membershipTier, institutionType: form.institutionType,
+        membershipTier: form.membershipTier, vertical: form.vertical,
         orgId: form.orgId || null
       })
       if (res.success) { onClose(); onSuccess('User profile updated.') }
@@ -707,7 +707,7 @@ function OverviewPage({ stats, bypassUsers, auditLog, orgs, onNav, onAddUser, on
             {bypassUsers.slice(0,5).map(u=>(
               <TR key={u.id}>
                 <TName name={u.full_name??'—'} sub={u.email}/>
-                <TD>{typePill(u.institution_type)}</TD>
+                <TD>{typePill(u.vertical)}</TD>
                 <TD>{tierPill(u.membership_tier)}</TD>
                 <TD><Tag bypass label={u.bypass_reason??'—'}/></TD>
                 <TD muted>{timeAgo(u.created_at)}</TD>
@@ -806,7 +806,7 @@ function BypassPage({ bypassUsers, bypassOrgs, onEdit, onToast, onAddUser, onAdd
               {filteredUsers.map(u=>(
                 <TR key={u.id}>
                   <TName name={u.full_name??'—'} sub={u.email}/>
-                  <TD>{typePill(u.institution_type)}</TD>
+                  <TD>{typePill(u.vertical)}</TD>
                   <TD muted>{u.org_name??'—'}</TD>
                   <TD>{tierPill(u.membership_tier)}</TD>
                   <TD><Tag bypass label={u.bypass_reason??'—'}/></TD>
@@ -834,7 +834,7 @@ function BypassPage({ bypassUsers, bypassOrgs, onEdit, onToast, onAddUser, onAdd
               {filteredOrgs.map(o=>(
                 <TR key={o.id}>
                   <TName name={o.name} sub={o.admin_email??'—'}/>
-                  <TD>{segPill(o.segment)}</TD>
+                  <TD>{segPill(o.vertical)}</TD>
                   <TD>{tierPill(o.tier)}</TD>
                   <TD>{o.seats_purchased} seats</TD>
                   <TD><Tag bypass label={o.bypass_reason??'—'}/></TD>
@@ -873,7 +873,7 @@ function EditOrganizationModal({ open, onClose, onSuccess, org }: {
 
   useEffect(() => {
     if (open && org) {
-      setForm({ name: org.name, email: org.admin_email ?? '', fullName: '', vertical: org.segment, tier: org.tier })
+      setForm({ name: org.name, email: org.admin_email ?? '', fullName: '', vertical: org.vertical, tier: org.tier })
       setErr('')
       // fetch course access for org
       supabase.from('course_access').select('course_slug').eq('org_id', org.id).then(({ data }) => {
@@ -944,7 +944,7 @@ function OrgsPage({ orgs, onToast, onAddOrg, onAddUser, onDeleteOrg, onEditOrg }
 
   const filtered = orgs.filter(o => {
     const q = `${o.name} ${o.admin_email}`.toLowerCase().includes(query.toLowerCase())
-    const s = segF==='All Verticals' || o.segment===segF
+    const s = segF==='All Verticals' || o.vertical===segF
     const t = tierF==='All Tiers' || o.tier===tierF
     return q && s && t
   })
@@ -999,7 +999,7 @@ function UsersPage({ users, onToast, onAddUser, onInviteUser, onEdit, onDelete }
 
   const filtered = users.filter(u => {
     const q = `${u.full_name} ${u.email} ${u.org_name}`.toLowerCase().includes(query.toLowerCase())
-    const t = typeF==='All Types' || u.institution_type===typeF
+    const t = typeF==='All Types' || u.vertical===typeF
     const tier = tierF==='All Tiers' || u.membership_tier===tierF
     return q && t && tier
   })
@@ -1038,14 +1038,14 @@ function UsersPage({ users, onToast, onAddUser, onInviteUser, onEdit, onDelete }
             const isSendingReset = resetingId === u.id
             return (
               <TR key={u.id}>
-                <TName name={u.full_name??'—'} sub={u.email} badge={u.role==='institution_admin'?'Org Admin':undefined}/>
-                <TD>{typePill(u.institution_type)}</TD>
+                <TName name={u.full_name??'—'} sub={u.email} badge={u.role==='admin'?'Admin':undefined}/>
+                <TD>{typePill(u.vertical)}</TD>
                 <TD muted>{u.org_name??'—'}</TD>
                 <TD>{tierPill(u.membership_tier)}</TD>
                 <TD><Tag bypass={u.is_bypassed} label={u.is_bypassed?'Bypassed':'Paid'}/></TD>
                 <TD>{s==='bypassed'?<Pill v="bypassed" label="Bypassed"/>:s==='active'?<Pill v="active" label="Active"/>:<Pill v="inactive" label="Inactive"/>}</TD>
                 <TD><div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
-                  <Btn variant="ghost" size="sm" onClick={()=>onEdit({ id:u.id, full_name:u.full_name, email:u.email, membership_tier:u.membership_tier, institution_type:u.institution_type, org_id:u.org_id })}>Edit</Btn>
+                  <Btn variant="ghost" size="sm" onClick={()=>onEdit({ id:u.id, full_name:u.full_name, email:u.email, membership_tier:u.membership_tier, vertical:u.vertical, org_id:u.org_id })}>Edit</Btn>
                   <Btn
                     variant="gold"
                     size="sm"
@@ -1196,7 +1196,7 @@ function InviteUserModal({ open, onClose, onSuccess, orgOptions }: {
   orgOptions: { id:string; name:string }[]
 }) {
   const [isPending, startTransition] = useTransition()
-  const [form, setForm] = useState({ email:'', role:'personal', institutionType:'individual', orgId:'', membershipTier:'free' })
+  const [form, setForm] = useState({ email:'', role:'personal', vertical:'individual', orgId:'', membershipTier:'free' })
   const set = (k: string, v: string) => setForm(f=>({...f,[k]:v}))
 
   function submit() {
@@ -1205,7 +1205,7 @@ function InviteUserModal({ open, onClose, onSuccess, orgOptions }: {
       const res = await inviteUserBySuperAdmin({
         email: form.email.trim().toLowerCase(),
         role: form.role,
-        institutionType: form.institutionType,
+        vertical: form.vertical,
         orgId: form.orgId || null,
         membershipTier: form.membershipTier,
       })
@@ -1219,8 +1219,8 @@ function InviteUserModal({ open, onClose, onSuccess, orgOptions }: {
       <SDivider label="User Details"/>
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom:14 }}>
         <FField label="Email Address" span2><input type="email" value={form.email} onChange={e=>set('email',e.target.value)} style={IS} placeholder="user@domain.com"/></FField>
-        <FField label="Institution Type">
-          <select value={form.institutionType} onChange={e=>set('institutionType',e.target.value)} style={IS}>
+        <FField label="Vertical">
+          <select value={form.vertical} onChange={e=>set('vertical',e.target.value)} style={IS}>
             <option value="individual">Individual</option>
             <option value="education">Education</option>
             <option value="business">Business</option>
@@ -1233,7 +1233,7 @@ function InviteUserModal({ open, onClose, onSuccess, orgOptions }: {
             <option value="business">Business</option>
             <option value="educator">Educator</option>
             <option value="leader">Leadership</option>
-            <option value="institution_admin">Institution Admin</option>
+            <option value="admin">Admin</option>
           </select>
         </FField>
         <FField label="Membership Tier">

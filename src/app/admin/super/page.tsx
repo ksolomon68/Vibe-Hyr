@@ -129,7 +129,7 @@ export default async function SuperAdminPage() {
     bypass_expiry: string | null; bypass_notes: string | null; created_at: string;
   }) => ({
     id: u.id, full_name: u.full_name, email: u.email,
-    vertical: u.institution_type, org_id: u.org_id,
+    vertical: u.institution_type, institution_type: u.institution_type, org_id: u.org_id,
     org_name: u.org_id ? orgNameMap[u.org_id] ?? null : null,
     membership_tier: u.membership_tier,
     bypass_reason: u.bypass_reason, bypass_expiry: u.bypass_expiry,
@@ -173,7 +173,7 @@ export default async function SuperAdminPage() {
     bypass_reason: string | null; role: string; updated_at: string; created_at: string;
   }) => ({
     id: u.id, full_name: u.full_name, email: u.email,
-    vertical: u.institution_type, org_id: u.org_id,
+    vertical: u.institution_type, institution_type: u.institution_type, org_id: u.org_id,
     org_name: u.org_id ? orgNameMap[u.org_id] ?? null : null,
     membership_tier: u.membership_tier, is_bypassed: u.is_bypassed,
     bypass_reason: u.bypass_reason, role: u.role,
