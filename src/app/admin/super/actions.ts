@@ -87,7 +87,7 @@ export async function addBypassUser(data: {
     id: userId, email: data.email,
     full_name: `${data.firstName} ${data.lastName}`,
     membership_tier: data.membershipTier,
-    institution_type: data.institutionType,
+    vertical: data.institutionType,
     org_id: data.orgId || null,
     role: data.role,
     is_bypassed: true,
@@ -251,7 +251,6 @@ export async function addBypassOrg(data: {
         org_id:           org.id,
         institution_id:   org.id,
         institution_type: data.vertical,
-        membership_type:  data.vertical,
         role:             adminRole,
         is_bypassed:      data.bypassPayment,
         bypass_reason:    data.bypassPayment ? data.bypassReason : null,
@@ -259,11 +258,14 @@ export async function addBypassOrg(data: {
         bypass_notes:     data.bypassPayment ? data.bypassNotes : null,
         bypass_added_by:  data.bypassPayment ? sa.userId : null,
       })
+
       if (profileErr) {
-        console.error('[addBypassOrg] profile upsert failed:', profileErr.message)
-        // If we fail here, we still want to try creating the membership if possible, 
-        // but it's likely a constraint error that will affect both.
-        return { success: false, error: `Failed to configure org admin profile: ${profileErr.message}` }
+        console.error('[addBypassOrg] profile configuration failed:', profileErr)
+        // Check for specific constraint errors
+        if (profileErr.code === '23514') {
+          return { success: false, error: `Invalid role selected for this vertical. Database rejected '${adminRole}'. Please run the latest migration.` }
+        }
+        return { success: false, error: `Database error configuring admin profile: ${profileErr.message}` }
       }
 
       console.log(`[addBypassOrg] Profile configured for ${data.adminEmail} (Role: ${adminRole})`)
@@ -282,8 +284,10 @@ export async function addBypassOrg(data: {
 
       console.log(`[addBypassOrg] Admin linked to organization: ${org.id}`)
 
-      // Update org seats_used
-      await admin.from('organizations').update({ seats_used: 1 }).eq('id', org.id)
+      // Stamp admin_email on the org row so the dashboard can display it
+      await admin.from('organizations')
+        .update({ seats_used: 1, admin_email: data.adminEmail })
+        .eq('id', org.id)
       
       const defaultRole = BYPASS_ROLES.find(r => r.vertical === data.vertical && r.membership_tier === data.tier)
       if (defaultRole && defaultRole.access.length > 0) {
@@ -301,7 +305,7 @@ export async function addBypassOrg(data: {
           appUrl = appUrl.startsWith('localhost') || appUrl.startsWith('127.0.0.1') ? `http://${appUrl}` : `https://${appUrl}`
 
           const { data: linkData, error: lErr } = await admin.auth.admin.generateLink({
-            type: 'recovery',
+            type: 'invite',
             email: data.adminEmail,
             options: { redirectTo: `${appUrl}/auth/reset-password` },
           })
@@ -545,7 +549,7 @@ export async function updateUserProfile(
     full_name: data.fullName,
     email: data.email,
     membership_tier: data.membershipTier,
-    institution_type: data.institutionType,
+    vertical: data.institutionType,
     org_id: data.orgId || null,
   }).eq('id', userId)
   if (profileErr) return { success: false, error: profileErr.message }
@@ -633,7 +637,7 @@ export async function inviteUserBySuperAdmin(data: {
       redirectTo: `${appUrl}/auth/callback?next=/auth/reset-password`,
       data: {
         org_id:           data.orgId,
-        institution_type: data.institutionType,
+        vertical:         data.institutionType,
         role:             data.role,
         membership_tier:  data.membershipTier,
       },
@@ -653,10 +657,9 @@ export async function inviteUserBySuperAdmin(data: {
         id:               inviteData.user.id,
         email:            data.email,
         org_id:           data.orgId,
-        institution_type: data.institutionType as 'individual' | 'education' | 'business' | 'leadership',
+        vertical:         data.institutionType,
         role:             data.role,
         membership_tier:  data.membershipTier,
-        membership_type:  data.institutionType === 'individual' ? 'personal' : data.institutionType,
       },
       { onConflict: 'id' }
     )
@@ -776,7 +779,7 @@ export async function updateOrgAdmin(
       .from('profiles')
       .select('id')
       .eq('org_id', orgId)
-      .eq('role', 'institution_admin')
+      .eq('role', 'admin')
       .limit(1)
       .maybeSingle()
     if (profileAdmin) adminUserId = profileAdmin.id
@@ -866,7 +869,7 @@ export async function updateOrganizationComplete(
       .from('profiles')
       .select('id')
       .eq('org_id', orgId)
-      .eq('role', 'institution_admin')
+      .eq('role', 'admin')
       .limit(1)
       .maybeSingle()
     if (profileAdmin) adminUserId = profileAdmin.id
@@ -886,8 +889,7 @@ export async function updateOrganizationComplete(
         email: emailNorm,
         full_name: nameNorm,
         membership_tier: data.tier,
-        institution_type: data.vertical,
-        membership_type: data.vertical,
+        vertical: data.vertical,
       }).eq('id', adminUserId)
 
       // Update organization_members row
