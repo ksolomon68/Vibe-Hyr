@@ -7,10 +7,12 @@ import { Crown, ArrowRight } from 'lucide-react'
 import type { MembershipTier } from '@/types'
 
 interface CourseCompletionBannerProps {
-  courseName:       string
-  courseOrderIndex: number
-  userTier:         MembershipTier
-  isLoggedIn:       boolean
+  courseName:         string
+  courseOrderIndex:   number
+  userTier:           MembershipTier
+  isLoggedIn:         boolean
+  certificateNumber?: string   // auto-issued cert number
+  shareToken?:        string   // cert share token
 }
 
 interface Particle {
@@ -40,6 +42,8 @@ export function CourseCompletionBanner({
   courseOrderIndex,
   userTier,
   isLoggedIn,
+  certificateNumber,
+  shareToken,
 }: CourseCompletionBannerProps) {
   const [visible,   setVisible]   = useState(false)
   const [particles, setParticles] = useState<Particle[]>([])
@@ -122,6 +126,41 @@ export function CourseCompletionBanner({
               You&apos;ve completed <strong className="text-white">{courseName}</strong>.
               {' '}Your reality is being architected.
             </p>
+
+            {/* ── Certificate CTA ── */}
+            {certificateNumber && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.4 }}
+                className="mt-6 p-5 bg-[#C9A84C]/10 border border-[#C9A84C]/40 rounded-lg max-w-sm mx-auto"
+              >
+                <p className="font-mono text-[0.55rem] tracking-[0.2em] uppercase text-[#C9A84C] mb-1">
+                  Your Certificate Is Ready
+                </p>
+                <p className="font-mono text-[0.58rem] text-[#888] mb-4">
+                  {certificateNumber}
+                </p>
+                <div className="flex gap-3 justify-center flex-wrap">
+                  <a
+                    href="/dashboard/certificates"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#E8621A] text-white font-bold text-xs tracking-widest uppercase hover:opacity-90 transition-opacity"
+                  >
+                    View Certificate
+                  </a>
+                  {shareToken && (
+                    <a
+                      href={`/certificate/${shareToken}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-[#C9A84C]/50 text-[#C9A84C] font-bold text-xs tracking-widest uppercase hover:bg-[#C9A84C]/10 transition-colors"
+                    >
+                      Share Certificate
+                    </a>
+                  )}
+                </div>
+              </motion.div>
+            )}
 
             {/* Upsell for Architect on Course 3 */}
             {showUpsell && (

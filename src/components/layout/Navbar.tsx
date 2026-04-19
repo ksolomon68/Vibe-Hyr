@@ -237,29 +237,37 @@ export function Navbar() {
                       <span className="nav-dropdown-label">My Courses</span>
                       <span className="nav-dropdown-desc">Progress &amp; learning</span>
                     </Link>
-                    <Link href="/dashboard" className="nav-dropdown-item">
-                      <span className="nav-dropdown-label flex items-center gap-1.5">
-                        🔥 Daily Check-In
-                        {profile?.checkin_streak && profile.checkin_streak > 0 ? (
-                          <span style={{
-                            background: 'var(--orange)',
-                            color: '#000',
-                            fontSize: '0.55rem',
-                            fontWeight: 700,
-                            padding: '1px 5px',
-                            borderRadius: '20px',
-                            letterSpacing: '0.05em',
-                          }}>
-                            {profile.checkin_streak}d
+                    <Link href="/dashboard/certificates" className="nav-dropdown-item">
+                      <span className="nav-dropdown-label">Certificates</span>
+                      <span className="nav-dropdown-desc">Download &amp; share</span>
+                    </Link>
+                    {(profile.role === 'personal' || profile.role === 'leader') && (
+                      <>
+                        <Link href="/dashboard" className="nav-dropdown-item">
+                          <span className="nav-dropdown-label flex items-center gap-1.5">
+                            🔥 Daily Check-In
+                            {profile?.checkin_streak && profile.checkin_streak > 0 ? (
+                              <span style={{
+                                background: 'var(--orange)',
+                                color: '#000',
+                                fontSize: '0.55rem',
+                                fontWeight: 700,
+                                padding: '1px 5px',
+                                borderRadius: '20px',
+                                letterSpacing: '0.05em',
+                              }}>
+                                {profile.checkin_streak}d
+                              </span>
+                            ) : null}
                           </span>
-                        ) : null}
-                      </span>
-                      <span className="nav-dropdown-desc">Set your neural state</span>
-                    </Link>
-                    <Link href="/dashboard/mental-diet" className="nav-dropdown-item">
-                      <span className="nav-dropdown-label">📊 Mental Diet</span>
-                      <span className="nav-dropdown-desc">Track your daily compliance</span>
-                    </Link>
+                          <span className="nav-dropdown-desc">Set your neural state</span>
+                        </Link>
+                        <Link href="/dashboard/mental-diet" className="nav-dropdown-item">
+                          <span className="nav-dropdown-label">📊 Mental Diet</span>
+                          <span className="nav-dropdown-desc">Track your daily compliance</span>
+                        </Link>
+                      </>
+                    )}
                     <Link href="/journal" className="nav-dropdown-item">
                       <span className="nav-dropdown-label">Nightly Journal</span>
                       <span className="nav-dropdown-desc">Revise &amp; rewire</span>
@@ -295,10 +303,6 @@ export function Navbar() {
                         <Link href="/admin/super" className="nav-dropdown-item">
                           <span className="nav-dropdown-label" style={{ color: 'var(--orange)' }}>Platform Management</span>
                           <span className="nav-dropdown-desc">Users, orgs &amp; settings</span>
-                        </Link>
-                        <Link href="/admin/users" className="nav-dropdown-item">
-                          <span className="nav-dropdown-label" style={{ color: 'var(--orange)' }}>Manage Users</span>
-                          <span className="nav-dropdown-desc">All platform users</span>
                         </Link>
                         <Link href="/admin/super" className="nav-dropdown-item">
                           <span className="nav-dropdown-label" style={{ color: 'var(--orange)' }}>Global Analytics</span>
@@ -435,14 +439,22 @@ export function Navbar() {
                     <span className="nav-dropdown-label">My Courses</span>
                     <span className="nav-dropdown-desc">Progress &amp; learning</span>
                   </Link>
-                  <Link href="/dashboard" onClick={() => setOpen(false)} className="nav-dropdown-item">
-                    <span className="nav-dropdown-label">🔥 Daily Check-In</span>
-                    <span className="nav-dropdown-desc">Set your neural state</span>
+                  <Link href="/dashboard/certificates" onClick={() => setOpen(false)} className="nav-dropdown-item">
+                    <span className="nav-dropdown-label">Certificates</span>
+                    <span className="nav-dropdown-desc">Download &amp; share</span>
                   </Link>
-                  <Link href="/dashboard/mental-diet" onClick={() => setOpen(false)} className="nav-dropdown-item">
-                    <span className="nav-dropdown-label">📊 Mental Diet</span>
-                    <span className="nav-dropdown-desc">Track your daily compliance</span>
-                  </Link>
+                  {(profile?.role === 'personal' || profile?.role === 'leader') && (
+                    <>
+                      <Link href="/dashboard" onClick={() => setOpen(false)} className="nav-dropdown-item">
+                        <span className="nav-dropdown-label">🔥 Daily Check-In</span>
+                        <span className="nav-dropdown-desc">Set your neural state</span>
+                      </Link>
+                      <Link href="/dashboard/mental-diet" onClick={() => setOpen(false)} className="nav-dropdown-item">
+                        <span className="nav-dropdown-label">📊 Mental Diet</span>
+                        <span className="nav-dropdown-desc">Track your daily compliance</span>
+                      </Link>
+                    </>
+                  )}
                   <Link href="/journal" onClick={() => setOpen(false)} className="nav-dropdown-item">
                     <span className="nav-dropdown-label">Nightly Journal</span>
                     <span className="nav-dropdown-desc">Revise &amp; rewire</span>
@@ -478,10 +490,6 @@ export function Navbar() {
                       <Link href="/admin/super" onClick={() => setOpen(false)} className="nav-dropdown-item">
                         <span className="nav-dropdown-label" style={{ color: 'var(--orange)' }}>Platform Management</span>
                         <span className="nav-dropdown-desc">Users, orgs &amp; settings</span>
-                      </Link>
-                      <Link href="/admin/users" onClick={() => setOpen(false)} className="nav-dropdown-item">
-                        <span className="nav-dropdown-label" style={{ color: 'var(--orange)' }}>Manage Users</span>
-                        <span className="nav-dropdown-desc">All platform users</span>
                       </Link>
                     </>
                   )}

@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 }
 
 const TIER_GATE_COPY: Record<string, { label: string; price: string; desc: string }> = {
-  architect: { label: 'Architect',     price: '$19/mo', desc: 'Unlock Courses 2 & 3, the full Revision Journal, SATS audio library, and community access.' },
+  architect: { label: 'Architect',     price: '$19/mo', desc: 'Unlock Courses 2 & 3, the full Revision Journal and SATS diagnostics, and community access.' },
   elite:     { label: 'Reality Master', price: '$29/mo', desc: 'The complete system — all 4 courses, monthly Life Mastery Score, live Q&As, and every tool.' },
 }
 

@@ -14,6 +14,7 @@ import {
   sendPasswordResetEmail,
   inviteUserBySuperAdmin,
   updateOrgAdmin,
+  toggleCertificateStatus
 } from '@/app/admin/super/actions'
 import { CourseManagerPage } from './CourseManagerPage'
 
@@ -1427,22 +1428,273 @@ function DeleteOrgModal({ open, onClose, onSuccess, org }: { open:boolean; onClo
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+// CERTIFICATES ADMIN PAGE
+// ══════════════════════════════════════════════════════════════════════════════
+
+interface AdminCert {
+  id: string; user_id: string; course_id: string; vertical: string
+  certificate_number: string; member_name: string; course_title: string
+  issued_at: string; share_token: string; is_valid: boolean
+}
+
+function CertificatesAdminPage({ onToast }: { onToast: (m: string) => void }) {
+  const [certs, setCerts]   = useState<AdminCert[]>([])
+  const [loading, setLoading] = useState(true)
+  const [query, setQuery]   = useState('')
+  const [vFilter, setVFilter] = useState('All')
+  const [isPending, startTrans] = useTransition()
+  const router = useRouter()
+  const supabase = createClient()
+
+  useEffect(() => {
+    ;(async () => {
+      const { data } = await supabase
+        .from('certificates')
+        .select('*')
+        .order('issued_at', { ascending: false })
+      setCerts(data ?? [])
+      setLoading(false)
+    })()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  function toggleValid(cert: AdminCert) {
+    if (cert.is_valid) {
+      if (!window.confirm('Revoke this certificate? The shareable link will stop working immediately.')) {
+        return
+      }
+    }
+    startTrans(async () => {
+      const res = await toggleCertificateStatus(cert.id, cert.is_valid, cert.certificate_number)
+      if (!res.success) {
+        onToast(`Error: ${res.error}`)
+        return
+      }
+      setCerts(prev => prev.map(c => c.id === cert.id ? { ...c, is_valid: !c.is_valid } : c))
+      onToast(cert.is_valid ? 'Certificate revoked.' : 'Certificate reinstated.')
+      router.refresh()
+    })
+  }
+
+  const VERTICALS = ['All', 'personal', 'business', 'education', 'leadership']
+  const filtered = certs.filter(c => {
+    const q = query.toLowerCase()
+    const matchQ = `${c.member_name} ${c.course_title} ${c.certificate_number}`.toLowerCase().includes(q)
+    const matchV = vFilter === 'All' || c.vertical === vFilter
+    return matchQ && matchV
+  })
+
+  return (
+    <div>
+      <Notice icon="🎓">All platform certificates. Revoke revokes immediately — the public share link will show "Certificate Not Found".</Notice>
+      <div style={{ display:'flex', gap:10, marginBottom:14 }}>
+        <SearchInput placeholder="Search certificates..." value={query} onChange={setQuery}/>
+        <FilterSel value={vFilter} onChange={setVFilter} options={VERTICALS}/>
+      </div>
+      <Card>
+        {loading
+          ? <div style={{ padding:'32px',textAlign:'center',color:C.muted }}>Loading…</div>
+          : <Tbl cols={['Member','Course','Vertical','Number','Issued','Status','Actions']}>
+              {filtered.map(cert => (
+                <TR key={cert.id}>
+                  <TName name={cert.member_name} sub={cert.user_id.slice(0,8)+'…'}/>
+                  <TD>{cert.course_title}</TD>
+                  <TD>{segPill(cert.vertical)}</TD>
+                  <TD muted><span style={{fontFamily:'monospace',fontSize:11}}>{cert.certificate_number}</span></TD>
+                  <TD muted>{formatDate(cert.issued_at)}</TD>
+                  <TD>
+                    <Pill
+                      v={cert.is_valid ? 'active' : 'inactive'}
+                      label={cert.is_valid ? 'Valid' : 'Revoked'}
+                    />
+                  </TD>
+                  <TD>
+                    <div style={{display:'flex',gap:6}}>
+                      <Btn variant="ghost" size="sm" onClick={() => {
+                        window.open(`/certificate/${cert.share_token}`, '_blank')
+                      }}>View</Btn>
+                      <Btn
+                        variant={cert.is_valid ? 'danger' : 'success'}
+                        size="sm"
+                        onClick={() => toggleValid(cert)}
+                        disabled={isPending}
+                      >
+                        {cert.is_valid ? 'Revoke' : 'Reinstate'}
+                      </Btn>
+                    </div>
+                  </TD>
+                </TR>
+              ))}
+              {filtered.length === 0 && !loading && (
+                <TR><td colSpan={7} style={{padding:'20px 12px',textAlign:'center',color:C.muted,fontSize:12}}>No certificates found.</td></TR>
+              )}
+            </Tbl>
+        }
+      </Card>
+    </div>
+  )
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// CERT SETTINGS PAGE (Signature Upload)
+// ══════════════════════════════════════════════════════════════════════════════
+
+function CertSettingsPage({ onToast }: { onToast: (m: string) => void }) {
+  const [sigUrl, setSigUrl]     = useState<string | null>(null)
+  const [preview, setPreview]   = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [loading, setLoading]   = useState(true)
+  const supabase = createClient()
+
+  useEffect(() => {
+    ;(async () => {
+      const { data } = await supabase
+        .from('platform_settings')
+        .select('value')
+        .eq('key', 'founder_signature_url')
+        .maybeSingle()
+      setSigUrl(data?.value ?? null)
+      setLoading(false)
+    })()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate: PNG / SVG only, max 2 MB
+    const validTypes = ['image/png', 'image/svg+xml']
+    if (!validTypes.includes(file.type)) {
+      onToast('Error: PNG or SVG only.')
+      return
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      onToast('Error: File must be under 2 MB.')
+      return
+    }
+
+    // Local preview
+    const reader = new FileReader()
+    reader.onload = (ev) => setPreview(ev.target?.result as string)
+    reader.readAsDataURL(file)
+
+    setUploading(true)
+    try {
+      // Upload to Supabase Storage: bucket 'certificate-assets'
+      const storagePath = 'signature/founder-signature.png'
+      const { error: upErr } = await supabase.storage
+        .from('certificate-assets')
+        .upload(storagePath, file, { upsert: true, contentType: file.type })
+
+      if (upErr) throw upErr
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('certificate-assets')
+        .getPublicUrl(storagePath)
+
+      // Upsert to platform_settings
+      const { error: dbErr } = await supabase
+        .from('platform_settings')
+        .upsert(
+          { key: 'founder_signature_url', value: publicUrl, updated_at: new Date().toISOString() },
+          { onConflict: 'key' }
+        )
+
+      if (dbErr) throw dbErr
+
+      setSigUrl(publicUrl)
+      onToast('Signature updated. It will appear on all future certificates.')
+    } catch (err: unknown) {
+      onToast(`Upload failed: ${err instanceof Error ? err.message : 'Unknown error'}`)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const currentSig = preview ?? sigUrl
+
+  return (
+    <div style={{ maxWidth: 600 }}>
+      <Notice icon="✍">The founder signature appears on all issued certificates. Upload a high-res PNG with transparent background (recommended: 400×120px).</Notice>
+
+      <Card>
+        <SecHd title="Founder Signature" sub="Displayed on every certificate. Supports PNG with transparency."/>
+
+        {loading
+          ? <div style={{ color:C.muted, fontSize:12 }}>Loading current signature…</div>
+          : (
+            <>
+              {currentSig && (
+                <div style={{ marginBottom:20, padding:16, background:C.dark5, borderRadius:4, border:`1px solid ${C.border}` }}>
+                  <div style={{ fontSize:11, color:C.muted, marginBottom:8, letterSpacing:'0.15em', textTransform:'uppercase' }}>
+                    Current Signature
+                  </div>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={currentSig}
+                    alt="Founder signature"
+                    style={{ maxWidth:280, maxHeight:80, objectFit:'contain', filter:'invert(1) brightness(0.7)' }}
+                  />
+                </div>
+              )}
+
+              <div style={{ marginBottom:14 }}>
+                <label
+                  htmlFor="sig-upload"
+                  style={{
+                    display:'inline-flex', alignItems:'center', gap:8,
+                    padding:'10px 22px', background:C.orange, color:'#fff',
+                    borderRadius:4, cursor: uploading ? 'wait' : 'pointer',
+                    fontFamily:"'DM Sans',sans-serif", fontWeight:600,
+                    fontSize:12, letterSpacing:'0.1em', textTransform:'uppercase',
+                    opacity: uploading ? 0.7 : 1, transition:'opacity 0.2s',
+                  }}
+                >
+                  {uploading ? 'Uploading…' : '⬆ Upload Signature PNG'}
+                </label>
+                <input
+                  id="sig-upload"
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={handleFileChange}
+                  disabled={uploading}
+                  style={{ display:'none' }}
+                />
+              </div>
+
+              {!currentSig && (
+                <div style={{ fontSize:12, color:C.muted, lineHeight:1.6 }}>
+                  No signature uploaded yet. Upload a PNG for it to appear on all future certificates.
+                </div>
+              )}
+            </>
+          )
+        }
+      </Card>
+    </div>
+  )
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 // MAIN SHELL
 // ══════════════════════════════════════════════════════════════════════════════
 
-type PageId = 'overview'|'bypass'|'orgs'|'users'|'courses'|'cms'|'progress'|'activity'|'settings'
+type PageId = 'overview'|'bypass'|'orgs'|'users'|'courses'|'cms'|'progress'|'activity'|'settings'|'certificates'|'cert-settings'
 
 
 const META: Record<PageId,{title:string;crumb:string}> = {
-  overview: { title:'Platform Overview',   crumb:'Vibe Hyr Super Admin — Overview' },
-  bypass:   { title:'Bypass Manager',       crumb:'Super Admin — Bypass Manager' },
-  orgs:     { title:'All Organizations',    crumb:'Super Admin — Organizations' },
-  users:    { title:'All Users',            crumb:'Super Admin — Users' },
-  courses:  { title:'Course Access Control',crumb:'Super Admin — Course Access' },
-  cms:      { title:'Course Manager',       crumb:'Super Admin — Course Content CMS' },
-  progress: { title:'Course Progress',      crumb:'Super Admin — Course Progress' },
-  activity: { title:'Audit Log',            crumb:'Super Admin — Audit Log' },
-  settings: { title:'Platform Settings',    crumb:'Super Admin — Settings' },
+  overview:      { title:'Platform Overview',     crumb:'Vibe Hyr Super Admin — Overview' },
+  bypass:        { title:'Bypass Manager',         crumb:'Super Admin — Bypass Manager' },
+  orgs:          { title:'All Organizations',      crumb:'Super Admin — Organizations' },
+  users:         { title:'All Users',              crumb:'Super Admin — Users' },
+  courses:       { title:'Course Access Control',  crumb:'Super Admin — Course Access' },
+  cms:           { title:'Course Manager',         crumb:'Super Admin — Course Content CMS' },
+  progress:      { title:'Course Progress',        crumb:'Super Admin — Course Progress' },
+  activity:      { title:'Audit Log',              crumb:'Super Admin — Audit Log' },
+  settings:      { title:'Platform Settings',      crumb:'Super Admin — Settings' },
+  certificates:  { title:'Certificates',           crumb:'Super Admin — Certificate Management' },
+  'cert-settings': { title:'Certificate Settings', crumb:'Super Admin — Signature & Branding' },
 }
 
 export function SuperAdminDashboard({ adminName, stats, bypassUsers, bypassOrgs, orgs, users, auditLog, orgOptions }: Props) {
@@ -1488,11 +1740,13 @@ export function SuperAdminDashboard({ adminName, stats, bypassUsers, bypassOrgs,
       { id:'bypass'   as PageId, icon:'⚡', label:'Bypass Manager' },
     ]},
     { label:'Platform', items:[
-      { id:'courses'  as PageId, icon:'◆', label:'Course Access' },
-      { id:'cms'      as PageId, icon:'✎', label:'Course Manager' },
-      { id:'progress' as PageId, icon:'◉', label:'Course Progress' },
-      { id:'activity' as PageId, icon:'↷', label:'Audit Log' },
-      { id:'settings' as PageId, icon:'✦', label:'Platform Settings' },
+      { id:'courses'       as PageId, icon:'◆', label:'Course Access' },
+      { id:'cms'           as PageId, icon:'✎', label:'Course Manager' },
+      { id:'progress'      as PageId, icon:'◉', label:'Course Progress' },
+      { id:'certificates'  as PageId, icon:'🎓', label:'Certificates' },
+      { id:'cert-settings' as PageId, icon:'✍', label:'Cert Settings' },
+      { id:'activity'      as PageId, icon:'↷', label:'Audit Log' },
+      { id:'settings'      as PageId, icon:'✦', label:'Platform Settings' },
     ]},
   ]
 
@@ -1595,15 +1849,17 @@ export function SuperAdminDashboard({ adminName, stats, bypassUsers, bypassOrgs,
           </div>
 
           <div className="sa-content" style={{ padding:28, flex:1 }}>
-            {page==='overview' && <OverviewPage stats={stats} bypassUsers={bypassUsers} auditLog={auditLog} orgs={orgs} onNav={setPage} onAddUser={()=>setModalUser(true)} onAddOrg={()=>setModalOrg(true)}/>}
-            {page==='bypass'   && <BypassPage bypassUsers={bypassUsers} bypassOrgs={bypassOrgs} onEdit={setEditTarget} onToast={showToast} onAddUser={()=>setModalUser(true)} onAddOrg={()=>setModalOrg(true)} onEditAdmin={setEditOrgAdmin}/>}
-            {page==='orgs'     && <OrgsPage orgs={orgs} onToast={showToast} onAddOrg={()=>setModalOrg(true)} onAddUser={()=>setModalUser(true)} onDeleteOrg={setDeleteOrgTarget} onEditAdmin={setEditOrgAdmin}/>}
-            {page==='users'    && <UsersPage users={users} onToast={showToast} onAddUser={()=>setModalUser(true)} onInviteUser={()=>setModalInvite(true)} onEdit={setEditUser} onDelete={setDeleteTarget}/>}
-            {page==='courses'  && <CoursesPage orgs={orgs} users={users} onToast={showToast}/>}
-            {page==='cms'      && <CourseManagerPage onToast={showToast}/>}
-            {page==='progress' && <CourseProgressPage/>}
-            {page==='activity' && <ActivityPage auditLog={auditLog} onToast={showToast}/>}
-            {page==='settings' && <SettingsPage onToast={showToast}/>}
+            {page==='overview'      && <OverviewPage stats={stats} bypassUsers={bypassUsers} auditLog={auditLog} orgs={orgs} onNav={setPage} onAddUser={()=>setModalUser(true)} onAddOrg={()=>setModalOrg(true)}/>}
+            {page==='bypass'        && <BypassPage bypassUsers={bypassUsers} bypassOrgs={bypassOrgs} onEdit={setEditTarget} onToast={showToast} onAddUser={()=>setModalUser(true)} onAddOrg={()=>setModalOrg(true)} onEditAdmin={setEditOrgAdmin}/>}
+            {page==='orgs'          && <OrgsPage orgs={orgs} onToast={showToast} onAddOrg={()=>setModalOrg(true)} onAddUser={()=>setModalUser(true)} onDeleteOrg={setDeleteOrgTarget} onEditAdmin={setEditOrgAdmin}/>}
+            {page==='users'         && <UsersPage users={users} onToast={showToast} onAddUser={()=>setModalUser(true)} onInviteUser={()=>setModalInvite(true)} onEdit={setEditUser} onDelete={setDeleteTarget}/>}
+            {page==='courses'       && <CoursesPage orgs={orgs} users={users} onToast={showToast}/>}
+            {page==='cms'           && <CourseManagerPage onToast={showToast}/>}
+            {page==='progress'      && <CourseProgressPage/>}
+            {page==='activity'      && <ActivityPage auditLog={auditLog} onToast={showToast}/>}
+            {page==='settings'      && <SettingsPage onToast={showToast}/>}
+            {page==='certificates'  && <CertificatesAdminPage onToast={showToast}/>}
+            {page==='cert-settings' && <CertSettingsPage onToast={showToast}/>}
           </div>
         </div>
       </div>

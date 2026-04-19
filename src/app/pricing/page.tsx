@@ -374,7 +374,7 @@ export default function PricingPage() {
                   <div className="price-floor">{billing === 'annual' ? 'Annual' : 'Monthly'} floor ${(billing === 'annual' ? curPricing.architect.floor : Math.round(curPricing.architect.minSeats * curPricing.architect.prices[1])).toLocaleString()}</div>
                   <hr className="tier-divider my-6" />
                   <ul className="feature-list">
-                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Courses 1–3 (RAS, Law of Assumption, SATS)</li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />The Educator Reset, Vibrational Leadership, Co-Regulation Mastery</li>
                     <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Full Revision Journal</li>
                     <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />SATS Diagnostics Engine</li>
                     <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Core Community Access</li>

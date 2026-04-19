@@ -74,53 +74,43 @@ export default async function ManageUsersPage() {
     }
   }
 
-  if (!isSuperAdmin && !isOrgAdmin) redirect('/dashboard')
+  // Super admins manage users exclusively through /admin/super — redirect them.
+  if (isSuperAdmin) redirect('/admin/super')
+
+  if (!isOrgAdmin) redirect('/dashboard')
 
   let users: UserRow[]  = []
   let orgs:  OrgRow[]   = []
   let myOrg: OrgRow | null = null
 
-  if (isSuperAdmin) {
-    const [{ data: allUsers }, { data: allOrgs }] = await Promise.all([
-      adminSupabase
-        .from('profiles')
-        .select('id, email, full_name, role, membership_tier, institution_type, org_id, created_at')
-        .order('role').order('email'),
-      adminSupabase
-        .from('organizations')
-        .select('id, name, seats_purchased'),
-    ])
-    users = (allUsers ?? []) as UserRow[]
-    orgs  = (allOrgs  ?? []) as OrgRow[]
-  } else {
-    if (!myOrgId) redirect('/dashboard')
+  // Only org admins reach this point — fetch their org's members only.
+  if (!myOrgId) redirect('/dashboard')
 
-    const [{ data: orgMembers }, { data: orgData }] = await Promise.all([
-      adminSupabase
-        .from('organization_members')
-        .select('user_id, email, full_name, role, status, created_at, profiles(membership_tier, institution_type, org_id)')
-        .eq('org_id', myOrgId)
-        .order('email'),
-      adminSupabase
-        .from('organizations')
-        .select('id, name, seats_purchased')
-        .eq('id', myOrgId)
-        .single(),
-    ])
-    const orgUsers = (orgMembers ?? []).map((m: any) => ({
-      id:               m.user_id,
-      email:            m.email,
-      full_name:        m.full_name,
-      role:             m.role === 'admin' ? 'institution_admin' : (m.profiles?.role ?? m.role),
-      membership_tier:  m.profiles?.membership_tier ?? 'free',
-      institution_type: m.profiles?.institution_type ?? null,
-      org_id:           myOrgId,
-      created_at:       m.created_at,
-    }))
-    users  = (orgUsers ?? []) as UserRow[]
-    myOrg  = orgData as OrgRow | null
-    if (myOrg) orgs = [myOrg]
-  }
+  const [{ data: orgMembers }, { data: orgData }] = await Promise.all([
+    adminSupabase
+      .from('organization_members')
+      .select('user_id, email, full_name, role, status, created_at, profiles(membership_tier, institution_type, org_id)')
+      .eq('org_id', myOrgId)
+      .order('email'),
+    adminSupabase
+      .from('organizations')
+      .select('id, name, seats_purchased')
+      .eq('id', myOrgId)
+      .single(),
+  ])
+  const orgUsers = (orgMembers ?? []).map((m: any) => ({
+    id:               m.user_id,
+    email:            m.email,
+    full_name:        m.full_name,
+    role:             m.role === 'admin' ? 'institution_admin' : (m.profiles?.role ?? m.role),
+    membership_tier:  m.profiles?.membership_tier ?? 'free',
+    institution_type: m.profiles?.institution_type ?? null,
+    org_id:           myOrgId,
+    created_at:       m.created_at,
+  }))
+  users  = (orgUsers ?? []) as UserRow[]
+  myOrg  = orgData as OrgRow | null
+  if (myOrg) orgs = [myOrg]
 
   const orgMap = Object.fromEntries(orgs.map(o => [o.id, o.name]))
 
@@ -133,15 +123,13 @@ export default async function ManageUsersPage() {
           {/* Header */}
           <div className="mb-8">
             <p className="font-mono text-[0.6rem] tracking-[0.3em] uppercase text-orange mb-2">
-              {isSuperAdmin ? 'Super Admin' : 'Institution Admin'}
+              Institution Admin
             </p>
             <h1 className="font-display text-4xl md:text-5xl text-white mb-3">
               Manage Users
             </h1>
             <p className="text-grey-DEFAULT text-lg">
-              {isSuperAdmin
-                ? `${users.length} total platform users`
-                : `${users.length} users in your organization`}
+              {users.length} users in your organization
             </p>
           </div>
 

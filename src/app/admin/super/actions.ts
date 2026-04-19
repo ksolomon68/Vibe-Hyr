@@ -1266,3 +1266,34 @@ export async function syncPersonalCourses(
   revalidatePath('/admin/super')
   return { success: true, seeded }
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// CERTIFICATES CMS ACTIONS
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── Toggle Certificate Validity (Revoke / Reinstate) ──────────────────────────
+
+export async function toggleCertificateStatus(
+  certId: string,
+  currentStatus: boolean,
+  certNumber: string
+): Promise<ActionResult> {
+  const sa = await requireSuperAdmin()
+  if (!sa) return { success: false, error: 'Unauthorized' }
+
+  const admin = createAdminClient()
+  const newStatus = !currentStatus
+
+  const { error } = await admin
+    .from('certificates')
+    .update({ is_valid: newStatus })
+    .eq('id', certId)
+
+  if (error) return { success: false, error: error.message }
+
+  const actionName = newStatus ? 'REINSTATED' : 'REVOKED'
+  await logAudit(sa.userId, sa.email, `CERTIFICATE_${actionName}`, 'certificate', certId, certNumber, null)
+  
+  revalidatePath('/admin/super')
+  return { success: true }
+}

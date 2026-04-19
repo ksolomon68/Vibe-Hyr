@@ -10,6 +10,7 @@ interface Props {
   sectionLabel?: string  // e.g. 'PERSONAL', 'BUSINESS', 'EDUCATION'
   backHref?: string      // override the secondary "go back" link
   backLabel?: string     // override the secondary link label
+  adminEmail?: string    // institution admin email for institution_blocked screens
 }
 
 export function CourseLockedScreen({
@@ -18,6 +19,7 @@ export function CourseLockedScreen({
   sectionLabel = 'PERSONAL',
   backHref,
   backLabel,
+  adminEmail,
 }: Props) {
   const isInstitutionBlocked = reason === 'institution_blocked'
   const resolvedBackHref  = backHref  ?? `/personal/${courseSlug}`
@@ -125,6 +127,28 @@ export function CourseLockedScreen({
             >
               Administrator Contact Required
             </p>
+            {/* Primary action — contact admin or support */}
+            <a
+              href={`mailto:${adminEmail ?? 'support@vibehyr.com'}?subject=Course%20Access%20Request&body=Hi%2C%0A%0AI%20would%20like%20to%20request%20access%20to%20a%20course%20that%20is%20currently%20unavailable%20on%20my%20plan.%0A%0AThanks`}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                background: 'var(--orange, #E8621A)',
+                color: '#fff',
+                padding: '0.85rem 2rem',
+                borderRadius: '6px',
+                fontFamily: 'var(--font-ibm-mono, "IBM Plex Mono", monospace)',
+                fontSize: '0.75rem',
+                letterSpacing: '0.16em',
+                textTransform: 'uppercase',
+                textDecoration: 'none',
+                fontWeight: 600,
+                transition: 'opacity 0.2s',
+              }}
+            >
+              {adminEmail ? 'Contact Your Administrator' : 'Contact Support'}
+            </a>
             <Link
               href="/dashboard"
               style={{
@@ -132,8 +156,8 @@ export function CourseLockedScreen({
                 alignItems: 'center',
                 gap: '0.5rem',
                 fontFamily: 'var(--font-ibm-mono, "IBM Plex Mono", monospace)',
-                fontSize: '0.72rem',
-                letterSpacing: '0.16em',
+                fontSize: '0.7rem',
+                letterSpacing: '0.15em',
                 textTransform: 'uppercase',
                 color: 'rgba(247,242,234,0.5)',
                 textDecoration: 'none',

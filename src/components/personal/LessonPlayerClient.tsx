@@ -18,6 +18,7 @@ import { CourseCompletionBanner } from '@/components/personal/CourseCompletionBa
 import { useCourseProgress } from '@/hooks/useCourseProgress'
 import { useLessonNotes } from '@/hooks/useLessonNotes'
 import { cn, formatDuration, getTierLabel } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
 import type { Course, Lesson, Quiz, MembershipTier, AssumptionLab as AssumptionLabType } from '@/types'
 import toast from 'react-hot-toast'
 
@@ -56,6 +57,10 @@ export function LessonPlayerClient({
   const [quizPassed, setQuizPassed] = useState(() => initialPassed.includes(quiz?.id ?? ''))
   const { content: lessonNotes, handleChange: handleNotesChange, saving: notesSaving, saved: notesSaved } = useLessonNotes(lesson.id)
 
+  // Certificate state — populated when the final lesson is marked complete
+  const [certNumber,    setCertNumber]    = useState<string | null>(null)
+  const [certShareToken, setCertShareToken] = useState<string | null>(null)
+
   const { loading: progressLoading, markComplete, markIncomplete, isComplete, completedIds, percentDone, isAllComplete } =
     useCourseProgress(course.id, lessons.length)
 
@@ -83,6 +88,7 @@ export function LessonPlayerClient({
       icon: '✓',
       style: { background: '#0A0804', color: '#F0EAE0', border: '1px solid #22c55e' },
     })
+
     if (nextLesson) {
       router.push(`/personal/${course.slug}/${nextLesson.id}`)
     } else {
@@ -104,6 +110,21 @@ export function LessonPlayerClient({
     toast.success('Quiz passed — lesson complete! ✦')
     setActiveTab('lesson')
   }
+
+  // ── Fetch Certificate if all complete ──
+  useEffect(() => {
+    if (allDone && !certNumber && isLoggedIn) {
+      const supabase = createClient()
+      supabase.rpc('get_user_certificate', { p_course_id: course.id })
+        .then(({ data }) => {
+          if (data) {
+            setCertNumber(data.certificate_number)
+            setCertShareToken(data.share_token)
+          }
+        })
+        .catch(() => {})
+    }
+  }, [allDone, certNumber, course.id, isLoggedIn])
 
   // Auto-open quiz tab if lesson has a quiz and it's not passed
   useEffect(() => {
@@ -449,6 +470,8 @@ export function LessonPlayerClient({
                 courseOrderIndex={course.order_index}
                 userTier={userTier}
                 isLoggedIn={isLoggedIn}
+                certificateNumber={certNumber ?? undefined}
+                shareToken={certShareToken ?? undefined}
               />
             )}
 
