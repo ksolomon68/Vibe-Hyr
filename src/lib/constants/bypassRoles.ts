@@ -13,7 +13,7 @@ export const BYPASS_ROLES: BypassRole[] = [
   // ── PERSONAL ──────────────────────────────
   {
     label: 'Seeker (Free)',
-    vertical: 'personal',
+    vertical: 'individual',
     membership_type: 'personal',
     membership_tier: 'free',
     role: 'personal',
@@ -21,7 +21,7 @@ export const BYPASS_ROLES: BypassRole[] = [
   },
   {
     label: 'Architect',
-    vertical: 'personal',
+    vertical: 'individual',
     membership_type: 'personal',
     membership_tier: 'architect',
     role: 'personal',
@@ -29,7 +29,7 @@ export const BYPASS_ROLES: BypassRole[] = [
   },
   {
     label: 'Reality Master (Elite)',
-    vertical: 'personal',
+    vertical: 'individual',
     membership_type: 'personal',
     membership_tier: 'elite',
     role: 'personal',
