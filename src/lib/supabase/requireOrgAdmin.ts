@@ -53,19 +53,37 @@ export async function requireOrgAdmin(): Promise<OrgAdminResult> {
     }
   }
 
-  // 2. Look up admin membership — always via service-role to bypass RLS
+  // 2. Resolve org ID — always via service-role to bypass RLS
   const admin = createAdminClient()
 
-  const { data: membership, error: memberErr } = await admin
+  let resolvedOrgId: string | null = null
+
+  // 2a. New flow: active admin row in organization_members
+  const { data: membership } = await admin
     .from('organization_members')
-    .select('org_id, role, status')
+    .select('org_id')
     .eq('user_id', user.id)
     .eq('role',    'admin')
     .eq('status',  'active')
     .limit(1)
-    .single()
+    .maybeSingle()
 
-  if (memberErr || !membership) {
+  if (membership?.org_id) {
+    resolvedOrgId = membership.org_id
+  } else {
+    // 2b. Legacy flow: profiles.role = 'admin' with org_id set directly
+    const { data: profile } = await admin
+      .from('profiles')
+      .select('role, org_id')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    if (profile?.role === 'admin' && profile?.org_id) {
+      resolvedOrgId = profile.org_id
+    }
+  }
+
+  if (!resolvedOrgId) {
     return {
       ctx:   null,
       error: NextResponse.json(
@@ -75,11 +93,11 @@ export async function requireOrgAdmin(): Promise<OrgAdminResult> {
     }
   }
 
-  // 3. Verify organization type (education | business only)
+  // 3. Fetch organization record
   const { data: org, error: orgErr } = await admin
     .from('organizations')
     .select('id, name, vertical, tier, seats_purchased, seats_used')
-    .eq('id', membership.org_id)
+    .eq('id', resolvedOrgId)
     .single()
 
   if (orgErr || !org) {
