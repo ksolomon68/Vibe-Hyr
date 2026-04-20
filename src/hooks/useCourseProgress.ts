@@ -99,7 +99,8 @@ export function useCourseProgress(courseId: string, totalLessons: number) {
   // ── Derived values ─────────────────────────────────────────────────────────
   const isComplete    = (lessonId: string) => completedSet.has(lessonId)
   const completedIds  = Array.from(completedSet)
-  const percentDone   = totalLessons > 0 ? Math.round((completedSet.size / totalLessons) * 100) : 0
+  // Clamp to [0, 100] — completedSet can have stale IDs from previous lesson counts
+  const percentDone   = totalLessons > 0 ? Math.min(100, Math.max(0, Math.round((completedSet.size / totalLessons) * 100))) : 0
   const isAllComplete = totalLessons > 0 && completedSet.size >= totalLessons
 
   return { loading, markComplete, markIncomplete, isComplete, percentDone, completedIds, isAllComplete }

@@ -62,3 +62,61 @@ export const SLUG_TO_COURSE_ID: Record<string, string> = {
   'leadership_course_3': 'leadership_course_3',
   'leadership_course_4': 'leadership_course_4',
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Next-course navigation
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Slugs must match actual page-route params used in each vertical's URL.
+// Personal uses long-form slugs from lib/data/courses.ts → /personal/[slug]
+// Others use short-form IDs consistent with their routing conventions.
+const VERTICAL_SEQUENCE: Record<string, { slugs: string[]; base: string }> = {
+  individual: {
+    slugs: [
+      'programming-the-gatekeeper',
+      'mastery-of-the-law-of-assumption',
+      'subconscious-reprogramming-sats',
+      'navigating-the-echo-theory-delay',
+    ],
+    base: '/personal',
+  },
+  business: {
+    slugs: [
+      'common-sense-in-the-workplace',
+      'from-reaction-to-response',
+      'know-yourself-lead-yourself',
+      'the-high-frequency-team',
+    ],
+    base: '/workplace',
+  },
+  education: {
+    slugs: ['ed01', 'ed02', 'ed03', 'ed04'],
+    base: '/educators',
+  },
+  leadership: {
+    slugs: [
+      'leadership-the-internal-authority',
+      'leadership-visionary-architecture',
+      'leadership-bridge-of-incidents',
+      'leadership-echo-theory-mastery',
+    ],
+    base: '/leadership',
+  },
+}
+
+/**
+ * Returns the path for the next course in sequence, or null if this is the
+ * last course (caller should fall back to the vertical overview page).
+ */
+export function getNextCoursePath(currentSlug: string, vertical: string): string | null {
+  const seq = VERTICAL_SEQUENCE[vertical]
+  if (!seq) return null
+  const idx = seq.slugs.indexOf(currentSlug)
+  if (idx === -1 || idx >= seq.slugs.length - 1) return null
+  return `${seq.base}/${seq.slugs[idx + 1]}`
+}
+
+/** Returns the vertical overview path (fallback when no next course exists). */
+export function getVerticalOverviewPath(vertical: string): string {
+  return VERTICAL_SEQUENCE[vertical]?.base ?? '/dashboard'
+}

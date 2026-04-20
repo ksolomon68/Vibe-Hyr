@@ -5,12 +5,15 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { Crown, ArrowRight } from 'lucide-react'
 import type { MembershipTier } from '@/types'
+import { getNextCoursePath, getVerticalOverviewPath } from '@/lib/constants/courses'
 
 interface CourseCompletionBannerProps {
   courseName:         string
   courseOrderIndex:   number
   userTier:           MembershipTier
   isLoggedIn:         boolean
+  currentSlug:        string
+  vertical:           string
   certificateNumber?: string   // auto-issued cert number
   shareToken?:        string   // cert share token
 }
@@ -42,6 +45,8 @@ export function CourseCompletionBanner({
   courseOrderIndex,
   userTier,
   isLoggedIn,
+  currentSlug,
+  vertical,
   certificateNumber,
   shareToken,
 }: CourseCompletionBannerProps) {
@@ -55,6 +60,10 @@ export function CourseCompletionBanner({
 
   // Upsell: Architect tier completing Course 3
   const showUpsell = userTier === 'architect' && courseOrderIndex === 3
+
+  // Next course navigation
+  const nextPath     = getNextCoursePath(currentSlug, vertical)
+  const fallbackPath = getVerticalOverviewPath(vertical)
 
   return (
     <AnimatePresence>
@@ -159,6 +168,23 @@ export function CourseCompletionBanner({
                     </a>
                   )}
                 </div>
+              </motion.div>
+            )}
+
+            {/* ── Explore Next Course CTA ── */}
+            {!showUpsell && isLoggedIn && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6, duration: 0.4 }}
+                className="mt-8 flex justify-center"
+              >
+                <Link
+                  href={nextPath ?? fallbackPath}
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-[#E8621A] text-white font-bold text-xs tracking-widest uppercase hover:bg-[#E8621A]/90 transition-colors"
+                >
+                  {nextPath ? 'Explore Next Course' : 'View All Courses'} <ArrowRight size={12} />
+                </Link>
               </motion.div>
             )}
 

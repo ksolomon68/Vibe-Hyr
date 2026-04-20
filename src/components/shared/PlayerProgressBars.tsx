@@ -14,8 +14,9 @@ export function PlayerProgressBars({
   currentTotal,
   overallPct,
 }: PlayerProgressBarsProps) {
-  const pct1 = currentTotal > 0 ? Math.round((currentCompleted / currentTotal) * 100) : 0
-  const pct2 = Math.min(100, Math.max(0, Math.round(overallPct)))
+  const pct1          = currentTotal > 0 ? Math.min(100, Math.max(0, Math.round((currentCompleted / currentTotal) * 100))) : 0
+  const pct2          = Math.min(100, Math.max(0, Math.round(overallPct)))
+  const displayCount  = Math.min(currentCompleted, currentTotal)
 
   const barRow = (label: string, pct: number, right: React.ReactNode, thick = true) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -39,7 +40,7 @@ export function PlayerProgressBars({
 
   return (
     <div style={{ marginBottom: 24 }}>
-      {barRow(`This ${itemLabel}`, pct1, `${currentCompleted}/${currentTotal}`, true)}
+      {barRow(`This ${itemLabel}`, pct1, `${displayCount}/${currentTotal}`, true)}
       <div style={{ height: 8 }} />
       {barRow('Overall', pct2, `${pct2}%`, false)}
     </div>

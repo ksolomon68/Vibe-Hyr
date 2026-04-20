@@ -1347,12 +1347,7 @@ function CourseProgressPage() {
       // Aggregate progress: group by (user_id, course_id), count rows
       let query = supabase
         .from('course_progress')
-        .select(`
-          course_id,
-          user_id,
-          completed_at,
-          profiles!inner ( email )
-        `, { count: 'exact' })
+        .select('course_id, user_id, completed_at', { count: 'exact' })
         .order('completed_at', { ascending: false })
 
       if (courseFilter !== 'all') {
@@ -1363,12 +1358,21 @@ function CourseProgressPage() {
 
       if (qErr) throw qErr
 
+      // Fetch emails separately (no FK in schema cache between course_progress and profiles)
+      const userIds = Array.from(new Set((data ?? []).map((r: any) => r.user_id).filter(Boolean)))
+      let emailMap: Record<string, string> = {}
+      if (userIds.length > 0) {
+        const { data: profileRows } = await supabase
+          .from('profiles').select('id, email').in('id', userIds)
+        ;(profileRows ?? []).forEach((p: any) => { emailMap[p.id] = p.email })
+      }
+
       // Build aggregated rows grouped by (user_id + course_id)
       const map = new Map<string, ProgressRow>()
       for (const r of (data ?? []) as any[]) {
         const key = `${r.user_id}::${r.course_id}`
         const existing = map.get(key)
-        const email = r.profiles?.email ?? '—'
+        const email = emailMap[r.user_id] ?? '—'
         if (existing) {
           existing.lessons_completed += 1
           if (r.completed_at && (!existing.last_activity || r.completed_at > existing.last_activity)) {
@@ -1390,7 +1394,8 @@ function CourseProgressPage() {
       const TOTALS: Record<string, number> = { c1: 12, c2: 10, c3: 10, c4: 8 }
       const aggregated = Array.from(map.values()).map(row => {
         const total = TOTALS[row.course_id] ?? 10
-        return { ...row, total_lessons: total, pct: Math.round((row.lessons_completed / total) * 100) }
+        const pct   = Math.min(100, Math.max(0, Math.round((row.lessons_completed / total) * 100)))
+        return { ...row, total_lessons: total, pct }
       })
 
       // Client-side paginate

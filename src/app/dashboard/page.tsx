@@ -382,39 +382,41 @@ export default async function DashboardPage() {
                       {personalCourses.map((course, i) => (
                         <div
                           key={i}
-                          className="flex items-center gap-5 p-5 bg-black-2 border border-white/8 hover:border-orange/30 transition-all font-sans"
+                          className="flex items-center gap-4 p-4 sm:p-5 bg-black-2 border border-white/8 hover:border-orange/30 transition-all font-sans"
                         >
-                          <div className="font-display text-3xl text-orange/20 leading-none w-12 flex-shrink-0">
+                          <div className="font-display text-2xl sm:text-3xl text-orange/20 leading-none w-10 sm:w-12 flex-shrink-0">
                             {String(course.order_index).padStart(2, '0')}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-display text-base tracking-[0.04em] text-white leading-tight mb-0.5 truncate">
-                              {course.title}
-                            </p>
-                            <p className="font-body text-xs italic text-grey-dark truncate">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="font-display text-sm sm:text-base tracking-[0.04em] text-white leading-tight truncate">
+                                {course.title}
+                              </p>
+                              <div className="flex-shrink-0">
+                                {course.hasAccess ? (
+                                  <Link
+                                    href={`/personal/${course.slug}`}
+                                    className="font-mono text-[0.58rem] tracking-widest uppercase text-orange hover:text-orange-light transition-colors flex items-center gap-1"
+                                  >
+                                    Open <ArrowRight size={10} />
+                                  </Link>
+                                ) : (
+                                  <PersonalUpgradeButton
+                                    tier={course.courseTier}
+                                    className="font-mono text-[0.58rem] tracking-widest uppercase text-grey-dark hover:text-orange transition-colors"
+                                  >
+                                    Upgrade →
+                                  </PersonalUpgradeButton>
+                                )}
+                              </div>
+                            </div>
+                            <p className="font-body text-xs italic text-grey-dark truncate mt-0.5">
                               {course.subtitle}
                             </p>
                             {course.hasAccess && (
                               <div className="mt-2 h-px bg-black-4">
                                 <div className="h-px bg-orange" style={{ width: `${course.progress}%` }} />
                               </div>
-                            )}
-                          </div>
-                          <div className="flex-shrink-0">
-                            {course.hasAccess ? (
-                              <Link
-                                href={`/personal/${course.slug}`}
-                                className="font-mono text-[0.58rem] tracking-widest uppercase text-orange hover:text-orange-light transition-colors flex items-center gap-1"
-                              >
-                                Open <ArrowRight size={10} />
-                              </Link>
-                            ) : (
-                              <PersonalUpgradeButton
-                                tier={course.courseTier}
-                                className="font-mono text-[0.58rem] tracking-widest uppercase text-grey-dark hover:text-orange transition-colors"
-                              >
-                                Upgrade →
-                              </PersonalUpgradeButton>
                             )}
                           </div>
                         </div>
@@ -433,36 +435,38 @@ export default async function DashboardPage() {
                       {businessTracks.map((track, i) => (
                         <div
                           key={i}
-                          className="flex items-center gap-5 p-5 bg-black-2 border border-white/8 hover:border-orange/30 transition-all font-sans"
+                          className="flex items-center gap-4 p-4 sm:p-5 bg-black-2 border border-white/8 hover:border-orange/30 transition-all font-sans"
                         >
-                          <div className="font-display text-3xl text-orange/20 leading-none w-12 flex-shrink-0">
+                          <div className="font-display text-2xl sm:text-3xl text-orange/20 leading-none w-10 sm:w-12 flex-shrink-0">
                             {track.num}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-display text-base tracking-[0.04em] text-white leading-tight mb-0.5 truncate">
-                              {track.title}
-                            </p>
-                            <p className="font-body text-xs italic text-grey-dark truncate">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="font-display text-sm sm:text-base tracking-[0.04em] text-white leading-tight truncate">
+                                {track.title}
+                              </p>
+                              <div className="flex-shrink-0">
+                                {track.hasAccess ? (
+                                  <Link
+                                    href={track.href}
+                                    className="font-mono text-[0.58rem] tracking-widest uppercase text-orange hover:text-orange-light transition-colors flex items-center gap-1"
+                                  >
+                                    {track.progress > 0 ? 'Continue' : 'Start'} <ArrowRight size={10} />
+                                  </Link>
+                                ) : (
+                                  <span className="font-mono text-[0.58rem] tracking-widest uppercase text-grey-dark">
+                                    Locked
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <p className="font-body text-xs italic text-grey-dark truncate mt-0.5">
                               {track.subtitle}
                             </p>
                             {track.hasAccess && (
                               <div className="mt-2 h-px bg-black-4">
                                 <div className="h-px bg-orange" style={{ width: `${track.progress}%` }} />
                               </div>
-                            )}
-                          </div>
-                          <div className="flex-shrink-0">
-                            {track.hasAccess ? (
-                              <Link
-                                href={track.href}
-                                className="font-mono text-[0.58rem] tracking-widest uppercase text-orange hover:text-orange-light transition-colors flex items-center gap-1"
-                              >
-                                {track.progress > 0 ? 'Continue' : 'Start'} <ArrowRight size={10} />
-                              </Link>
-                            ) : (
-                              <span className="font-mono text-[0.58rem] tracking-widest uppercase text-grey-dark">
-                                Locked
-                              </span>
                             )}
                           </div>
                         </div>
@@ -481,36 +485,38 @@ export default async function DashboardPage() {
                       {educationPrograms.map((program, i) => (
                         <div
                           key={i}
-                          className="flex items-center gap-5 p-5 bg-black-2 border border-white/8 hover:border-orange/30 transition-all font-sans"
+                          className="flex items-center gap-4 p-4 sm:p-5 bg-black-2 border border-white/8 hover:border-orange/30 transition-all font-sans"
                         >
-                          <div className="font-display text-3xl text-orange/20 leading-none w-12 flex-shrink-0">
+                          <div className="font-display text-2xl sm:text-3xl text-orange/20 leading-none w-10 sm:w-12 flex-shrink-0">
                             {program.num}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-display text-base tracking-[0.04em] text-white leading-tight mb-0.5 truncate">
-                              {program.title}
-                            </p>
-                            <p className="font-body text-xs italic text-grey-dark truncate">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="font-display text-sm sm:text-base tracking-[0.04em] text-white leading-tight truncate">
+                                {program.title}
+                              </p>
+                              <div className="flex-shrink-0">
+                                {program.hasAccess ? (
+                                  <Link
+                                    href={program.href}
+                                    className="font-mono text-[0.58rem] tracking-widest uppercase text-orange hover:text-orange-light transition-colors flex items-center gap-1"
+                                  >
+                                    {program.progress > 0 ? 'Continue' : 'Start'} <ArrowRight size={10} />
+                                  </Link>
+                                ) : (
+                                  <span className="font-mono text-[0.58rem] tracking-widest uppercase text-grey-dark">
+                                    Locked
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <p className="font-body text-xs italic text-grey-dark truncate mt-0.5">
                               {program.subtitle}
                             </p>
                             {program.hasAccess && (
                               <div className="mt-2 h-px bg-black-4">
                                 <div className="h-px bg-orange" style={{ width: `${program.progress}%` }} />
                               </div>
-                            )}
-                          </div>
-                          <div className="flex-shrink-0">
-                            {program.hasAccess ? (
-                              <Link
-                                href={program.href}
-                                className="font-mono text-[0.58rem] tracking-widest uppercase text-orange hover:text-orange-light transition-colors flex items-center gap-1"
-                              >
-                                {program.progress > 0 ? 'Continue' : 'Start'} <ArrowRight size={10} />
-                              </Link>
-                            ) : (
-                              <span className="font-mono text-[0.58rem] tracking-widest uppercase text-grey-dark">
-                                Locked
-                              </span>
                             )}
                           </div>
                         </div>
@@ -529,36 +535,38 @@ export default async function DashboardPage() {
                       {leadershipCourses.map((course, i) => (
                         <div
                           key={i}
-                          className="flex items-center gap-5 p-5 bg-black-2 border border-white/8 hover:border-orange/30 transition-all font-sans"
+                          className="flex items-center gap-4 p-4 sm:p-5 bg-black-2 border border-white/8 hover:border-orange/30 transition-all font-sans"
                         >
-                          <div className="font-display text-3xl text-orange/20 leading-none w-12 flex-shrink-0">
+                          <div className="font-display text-2xl sm:text-3xl text-orange/20 leading-none w-10 sm:w-12 flex-shrink-0">
                             {String(course.num).padStart(2, '0')}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-display text-base tracking-[0.04em] text-white leading-tight mb-0.5 truncate">
-                              {course.title}
-                            </p>
-                            <p className="font-body text-xs italic text-grey-dark truncate">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="font-display text-sm sm:text-base tracking-[0.04em] text-white leading-tight truncate">
+                                {course.title}
+                              </p>
+                              <div className="flex-shrink-0">
+                                {course.hasAccess ? (
+                                  <Link
+                                    href={course.href}
+                                    className="font-mono text-[0.58rem] tracking-widest uppercase text-orange hover:text-orange-light transition-colors flex items-center gap-1"
+                                  >
+                                    {course.progress > 0 ? 'Continue' : 'Start'} <ArrowRight size={10} />
+                                  </Link>
+                                ) : (
+                                  <span className="font-mono text-[0.58rem] tracking-widest uppercase text-grey-dark">
+                                    Locked
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <p className="font-body text-xs italic text-grey-dark truncate mt-0.5">
                               {course.subtitle}
                             </p>
                             {course.hasAccess && (
                               <div className="mt-2 h-px bg-black-4">
                                 <div className="h-px bg-orange" style={{ width: `${course.progress}%` }} />
                               </div>
-                            )}
-                          </div>
-                          <div className="flex-shrink-0">
-                            {course.hasAccess ? (
-                              <Link
-                                href={course.href}
-                                className="font-mono text-[0.58rem] tracking-widest uppercase text-orange hover:text-orange-light transition-colors flex items-center gap-1"
-                              >
-                                {course.progress > 0 ? 'Continue' : 'Start'} <ArrowRight size={10} />
-                              </Link>
-                            ) : (
-                              <span className="font-mono text-[0.58rem] tracking-widest uppercase text-grey-dark">
-                                Locked
-                              </span>
                             )}
                           </div>
                         </div>
