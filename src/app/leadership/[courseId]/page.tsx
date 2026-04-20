@@ -23,12 +23,23 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-// Previous course ID for progressive gating
 const LEADERSHIP_PREV: Record<string, string | null> = {
   leadership_course_1: null,
   leadership_course_2: 'leadership_course_1',
   leadership_course_3: 'leadership_course_2',
   leadership_course_4: 'leadership_course_3',
+}
+
+const TIER_ACCESS: Record<string, string[]> = {
+  free:      ['leadership_course_1'],
+  architect: ['leadership_course_1', 'leadership_course_2', 'leadership_course_3'],
+  elite:     ['leadership_course_1', 'leadership_course_2', 'leadership_course_3', 'leadership_course_4'],
+}
+
+const TIER_LABELS: Record<string, string> = {
+  free:      'Seeker',
+  architect: 'Architect',
+  elite:     'Reality Master',
 }
 
 export default async function CourseDetailPage({ params }: PageProps) {
@@ -44,9 +55,9 @@ export default async function CourseDetailPage({ params }: PageProps) {
   let userTier     = 'free'
   let prevCourseComplete = true
 
-  if (user) {
-    const prevCourseId = LEADERSHIP_PREV[params.courseId] ?? null
+  const prereqId = LEADERSHIP_PREV[params.courseId] ?? null
 
+  if (user) {
     const [progressRes, profileRes] = await Promise.all([
       supabase
         .from('leadership_progress')
@@ -66,38 +77,23 @@ export default async function CourseDetailPage({ params }: PageProps) {
     userTier         = profileRes.data?.membership_tier ?? 'free'
 
     // Check prerequisite completion (skip for admins/bypassed)
-    if (prevCourseId && !isSuperAdmin && !isBypassed) {
+    if (prereqId && !isSuperAdmin && !isBypassed) {
       const { data: prevProg } = await supabase
         .from('course_progress')
         .select('completed_at')
         .eq('user_id', user.id)
-        .eq('course_id', prevCourseId)
+        .eq('course_id', prereqId)
         .maybeSingle()
       prevCourseComplete = !!prevProg?.completed_at
     }
   }
 
-  const nextLesson = course.lessons.find(l => !completedLessons.includes(l.id)) ?? course.lessons[0]
-  const hasStarted = completedLessons.length > 0
-  const isComplete = completedLessons.length >= course.lessons.length
-
-  // DB tier values: free, architect, elite
-  const TIER_ACCESS: Record<string, string[]> = {
-    free:      ['leadership_course_1'],
-    architect: ['leadership_course_1', 'leadership_course_2', 'leadership_course_3'],
-    elite:     ['leadership_course_1', 'leadership_course_2', 'leadership_course_3', 'leadership_course_4'],
-  }
-
+  const nextLesson  = course.lessons.find(l => !completedLessons.includes(l.id)) ?? course.lessons[0]
+  const hasStarted  = completedLessons.length > 0
+  const isComplete  = completedLessons.length >= course.lessons.length
   const tierGrant   = (TIER_ACCESS[userTier] ?? []).includes(params.courseId) || isSuperAdmin || isBypassed
   const canAccess   = tierGrant && prevCourseComplete
-  const prevCourseId = LEADERSHIP_PREV[params.courseId] ?? null
-  const prevCourse  = prevCourseId ? COURSES.find(c => c.id === prevCourseId) : null
-
-  const tierLabels: Record<string, string> = {
-    free:          'Seeker',
-    architect:     'Architect',
-    elite:         'Reality Master',
-  }
+  const prevCourse  = prereqId ? COURSES.find(c => c.id === prereqId) : null
 
   return (
     <>
@@ -121,7 +117,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
                 className="font-mono text-[0.5rem] tracking-[0.25em] uppercase px-2 py-0.5 border"
                 style={{ color: course.color, borderColor: `${course.color}40` }}
               >
-                {tierLabels[course.tierRequired] ?? course.tierRequired}
+                {TIER_LABELS[course.tierRequired] ?? course.tierRequired}
               </span>
               <span className="font-mono text-[0.5rem] tracking-widest text-white/30">
                 {course.durationEstimate} · {course.lessons.length} lessons
@@ -150,12 +146,12 @@ export default async function CourseDetailPage({ params }: PageProps) {
                 href={`/leadership/${course.id}/${nextLesson.id}`}
                 className="btn-orange inline-flex items-center gap-2"
               >
-                {isComplete ? 'Review Course' : hasStarted ? 'Continue Course' : 'Begin Course'} <ArrowRight size={14} />
+                {isComplete ? 'Review Course' : hasStarted ? 'Continue Course' : 'Begin Course'}{' '}
+                <ArrowRight size={14} />
               </Link>
             ) : tierGrant && !prevCourseComplete && prevCourse ? (
               <div className="flex flex-col gap-3">
-                <p className="font-mono text-[0.55rem] tracking-[0.2em] uppercase text-[#C9A84C] flex items-center gap-2">
-                  <ChevronLeft size={10} className="rotate-180" />
+                <p className="font-mono text-[0.55rem] tracking-[0.2em] uppercase text-[#C9A84C]">
                   Complete Course {prevCourse.num} to unlock this course
                 </p>
                 <Link
@@ -178,53 +174,55 @@ export default async function CourseDetailPage({ params }: PageProps) {
               Lessons
             </p>
             <div className="space-y-3">
-              {course.lessons.map((lesson, i) => canAccess ? (
-                <Link
-                  key={lesson.id}
-                  href={`/leadership/${course.id}/${lesson.id}`}
-                  className="flex items-start gap-5 p-5 border border-white/8 bg-[#141008] hover:border-[#E8621A]/40 transition-colors group"
-                >
-                  <div
-                    className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold font-mono"
-                    style={{ backgroundColor: `${course.color}14`, color: course.color, border: `1px solid ${course.color}30` }}
+              {course.lessons.map((lesson, i) =>
+                canAccess ? (
+                  <Link
+                    key={lesson.id}
+                    href={`/leadership/${course.id}/${lesson.id}`}
+                    className="flex items-start gap-5 p-5 border border-white/8 bg-[#141008] hover:border-[#E8621A]/40 transition-colors group"
                   >
-                    {String(i + 1).padStart(2, '0')}
+                    <div
+                      className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold font-mono"
+                      style={{ backgroundColor: `${course.color}14`, color: course.color, border: `1px solid ${course.color}30` }}
+                    >
+                      {String(i + 1).padStart(2, '0')}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-display text-xl text-white group-hover:text-[#E8621A] transition-colors mb-1">
+                        {lesson.title}
+                      </h3>
+                      <p className="font-body text-sm text-white/40 leading-relaxed line-clamp-2">
+                        {lesson.description}
+                      </p>
+                      {lesson.keyConcepts.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {lesson.keyConcepts.map((c, j) => (
+                            <span
+                              key={j}
+                              className="font-mono text-[0.48rem] tracking-[0.15em] uppercase px-2 py-0.5 border border-white/10 text-white/30"
+                            >
+                              {c}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <ArrowRight size={14} className="text-white/20 group-hover:text-[#E8621A] transition-colors flex-shrink-0 mt-1" />
+                  </Link>
+                ) : (
+                  <div
+                    key={lesson.id}
+                    className="flex items-start gap-5 p-5 border border-white/4 bg-[#141008]/50 opacity-40 cursor-not-allowed select-none"
+                  >
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-mono border border-white/10 text-white/20">
+                      {String(i + 1).padStart(2, '0')}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-display text-xl text-white/30 mb-1">{lesson.title}</h3>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-display text-xl text-white group-hover:text-[#E8621A] transition-colors mb-1">
-                      {lesson.title}
-                    </h3>
-                    <p className="font-body text-sm text-white/40 leading-relaxed line-clamp-2">
-                      {lesson.description}
-                    </p>
-                    {lesson.keyConcepts.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-3">
-                        {lesson.keyConcepts.map((c, j) => (
-                          <span
-                            key={j}
-                            className="font-mono text-[0.48rem] tracking-[0.15em] uppercase px-2 py-0.5 border border-white/10 text-white/30"
-                          >
-                            {c}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <ArrowRight size={14} className="text-white/20 group-hover:text-[#E8621A] transition-colors flex-shrink-0 mt-1" />
-                </Link>
-              ) : (
-                <div
-                  key={lesson.id}
-                  className="flex items-start gap-5 p-5 border border-white/4 bg-[#141008]/50 opacity-40 cursor-not-allowed"
-                >
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-mono bg-white/4 text-white/20">
-                    {String(i + 1).padStart(2, '0')}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-display text-xl text-white/30 mb-1">{lesson.title}</h3>
-                  </div>
-                </div>
-              ))
+                )
+              )}
             </div>
           </div>
 
