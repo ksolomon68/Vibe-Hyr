@@ -35,8 +35,7 @@ export async function GET(req: NextRequest) {
   let query = admin
     .from('organization_members')
     .select(
-      `id, email, full_name, role, status, invited_at, joined_at, created_at,
-       profiles:user_id ( id, avatar_url, membership_tier )`,
+      'id, user_id, email, full_name, role, status, invited_at, joined_at, created_at',
       { count: 'exact' }
     )
     .eq('org_id', ctx.orgId)
@@ -56,8 +55,24 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: fetchErr.message }, { status: 500 })
   }
 
+  // Fetch profiles separately to avoid FK schema-cache join error
+  const userIds = (data ?? []).map((m: any) => m.user_id).filter(Boolean)
+  let profileMap: Record<string, { id: string; avatar_url?: string; membership_tier?: string }> = {}
+  if (userIds.length > 0) {
+    const { data: profileRows } = await admin
+      .from('profiles')
+      .select('id, avatar_url, membership_tier')
+      .in('id', userIds)
+    ;(profileRows ?? []).forEach((p: any) => { profileMap[p.id] = p })
+  }
+
+  const members = (data ?? []).map((m: any) => ({
+    ...m,
+    profiles: m.user_id ? (profileMap[m.user_id] ?? null) : null,
+  }))
+
   return NextResponse.json({
-    members:     data ?? [],
+    members,
     total:       count ?? 0,
     page,
     totalPages:  Math.ceil((count ?? 0) / limit),
