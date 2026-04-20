@@ -45,6 +45,12 @@ export default async function CoursePage({ params }: { params: { slug: string } 
   let isSuperAdmin = false
   let isBypassed   = false
 
+  // Previous course ID in the personal sequence (null = no prerequisite)
+  const PERSONAL_PREV: Record<string, string | null> = { c01: null, c02: 'c01', c03: 'c02', c04: 'c03' }
+  const prevCourseId = PERSONAL_PREV[course.id] ?? null
+
+  let prevCourseComplete = true  // assume true until we prove otherwise
+
   if (user) {
     const [{ data: profile }, { data: progress }] = await Promise.all([
       supabase.from('profiles').select('membership_tier, membership_type, role, is_super_admin, is_bypassed').eq('id', user.id).single(),
@@ -57,12 +63,24 @@ export default async function CoursePage({ params }: { params: { slug: string } 
     isSuperAdmin    = !!profile?.is_super_admin
     isBypassed      = !!profile?.is_bypassed
     completedLessons = progress?.completed_lessons ?? []
+
+    // Check prerequisite course completion (skip for admins/bypassed)
+    if (prevCourseId && !isSuperAdmin && !isBypassed) {
+      const { data: prevProg } = await supabase
+        .from('course_progress')
+        .select('completed_at')
+        .eq('user_id', user.id)
+        .eq('course_id', prevCourseId)
+        .maybeSingle()
+      prevCourseComplete = !!prevProg?.completed_at
+    }
   }
 
   const courseRoute = getCourseRoute(membershipType, role)
 
-  const lessons    = await getLessonsWithDBFallback(course.id, course.order_index)
-  const canAccess  = hasAccess(userTier, course.tier) || isSuperAdmin || isBypassed
+  const lessons   = await getLessonsWithDBFallback(course.id, course.order_index)
+  const tierGrant = hasAccess(userTier, course.tier) || isSuperAdmin || isBypassed
+  const canAccess = tierGrant && prevCourseComplete
   const totalMins  = lessons.reduce((s, l) => s + Math.ceil(l.duration_seconds / 60), 0)
   const pct        = lessons.length
     ? Math.round((completedLessons.length / lessons.length) * 100)
@@ -171,6 +189,21 @@ export default async function CoursePage({ params }: { params: { slug: string } 
                     <Play size={13} />
                     {pct === 0 ? 'Start Course' : pct === 100 ? 'Review Course' : 'Continue'}
                   </Link>
+                ) : tierGrant && !prevCourseComplete ? (
+                  // Tier OK but prerequisite not complete
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-2 mb-3 text-[#C9A84C]">
+                      <Lock size={13} />
+                      <span className="font-mono text-[0.55rem] tracking-[0.2em] uppercase">Complete Course {course.order_index - 1} First</span>
+                    </div>
+                    <Link
+                      href={`/personal/${COURSES.find(c => c.id === prevCourseId)?.slug ?? ''}`}
+                      className="w-full text-center flex items-center justify-center gap-2 px-4 py-2.5 border border-[#C9A84C]/40 text-[#C9A84C] font-mono text-[0.6rem] tracking-widest uppercase hover:bg-[#C9A84C]/10 transition-colors"
+                    >
+                      <ArrowRight size={12} />
+                      Go to Course {course.order_index - 1}
+                    </Link>
+                  </div>
                 ) : (
                   <PersonalUpgradeButton
                     tier={courseTier}

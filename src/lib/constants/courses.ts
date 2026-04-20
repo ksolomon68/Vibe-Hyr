@@ -120,3 +120,56 @@ export function getNextCoursePath(currentSlug: string, vertical: string): string
 export function getVerticalOverviewPath(vertical: string): string {
   return VERTICAL_SEQUENCE[vertical]?.base ?? '/dashboard'
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Direct-to-Lesson-01 paths (for post-completion auto-transition)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const FIRST_LESSON_PATH: Record<string, string> = {
+  // Personal — /personal/[slug]/[lessonId]
+  'programming-the-gatekeeper':       '/personal/programming-the-gatekeeper/c01-l01',
+  'mastery-of-the-law-of-assumption':  '/personal/mastery-of-the-law-of-assumption/c02-l01',
+  'subconscious-reprogramming-sats':   '/personal/subconscious-reprogramming-sats/c03-l01',
+  'navigating-the-echo-theory-delay':  '/personal/navigating-the-echo-theory-delay/c04-l01',
+
+  // Business — /business/[trackId]/[lessonId]
+  'common-sense-in-the-workplace': '/business/common-sense-in-the-workplace/the-awareness-gap',
+  'from-reaction-to-response':     '/business/from-reaction-to-response/the-reactivity-spectrum',
+  'know-yourself-lead-yourself':   '/business/know-yourself-lead-yourself/identity-architecture',
+  'the-high-frequency-team':       '/business/the-high-frequency-team/team-frequency-mapping',
+
+  // Education — /educators/[programId]/[moduleId]
+  'ed01': '/educators/ed01/ed01-m01',
+  'ed02': '/educators/ed02/ed02-m01',
+  'ed03': '/educators/ed03/ed03-m01',
+  'ed04': '/educators/ed04/ed04-m01',
+
+  // Leadership — /leadership/[courseId]/[lessonId]
+  'leadership-the-internal-authority': '/leadership/leadership_course_1/the-responsibility-formula',
+  'leadership-visionary-architecture':  '/leadership/leadership_course_2/the-neuroscience-of-sats',
+  'leadership-bridge-of-incidents':     '/leadership/leadership_course_3/walking-the-bridge',
+  'leadership-echo-theory-mastery':     '/leadership/leadership_course_4/echo-theory-defined',
+  // canonical IDs (for lookup from course.id)
+  'leadership_course_1': '/leadership/leadership_course_1/the-responsibility-formula',
+  'leadership_course_2': '/leadership/leadership_course_2/the-neuroscience-of-sats',
+  'leadership_course_3': '/leadership/leadership_course_3/walking-the-bridge',
+  'leadership_course_4': '/leadership/leadership_course_4/echo-theory-defined',
+}
+
+/**
+ * Returns the direct URL to Lesson 01 of the next course in sequence.
+ * Preferred over getNextCoursePath for post-completion CTAs.
+ */
+export function getNextCourseLesson01Path(currentSlug: string, vertical: string): string | null {
+  const seq = VERTICAL_SEQUENCE[vertical]
+  if (!seq) return null
+  const idx = seq.slugs.indexOf(currentSlug)
+  if (idx === -1 || idx >= seq.slugs.length - 1) return null
+  const nextSlug = seq.slugs[idx + 1]
+  return FIRST_LESSON_PATH[nextSlug] ?? `${seq.base}/${nextSlug}`
+}
+
+/** Returns the direct URL to Lesson 01 for a given course slug (any vertical). */
+export function getLesson01Path(courseSlug: string): string | null {
+  return FIRST_LESSON_PATH[courseSlug] ?? null
+}

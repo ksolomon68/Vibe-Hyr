@@ -23,25 +23,63 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
+// Previous course ID for progressive gating
+const LEADERSHIP_PREV: Record<string, string | null> = {
+  leadership_course_1: null,
+  leadership_course_2: 'leadership_course_1',
+  leadership_course_3: 'leadership_course_2',
+  leadership_course_4: 'leadership_course_3',
+}
+
 export default async function CourseDetailPage({ params }: PageProps) {
   const course = COURSES.find(c => c.id === params.courseId)
   if (!course) return notFound()
 
-  // Fetch progress to determine next uncompleted lesson
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
+
   let completedLessons: string[] = []
+  let isSuperAdmin = false
+  let isBypassed   = false
+  let userTier     = 'free'
+  let prevCourseComplete = true
+
   if (user) {
-    const { data } = await supabase
-      .from('leadership_progress')
-      .select('lesson_id')
-      .eq('user_id', user.id)
-      .eq('course_id', params.courseId)
-    completedLessons = (data ?? []).map((r: { lesson_id: string }) => r.lesson_id)
+    const prevCourseId = LEADERSHIP_PREV[params.courseId] ?? null
+
+    const [progressRes, profileRes] = await Promise.all([
+      supabase
+        .from('leadership_progress')
+        .select('lesson_id')
+        .eq('user_id', user.id)
+        .eq('course_id', params.courseId),
+      supabase
+        .from('profiles')
+        .select('membership_tier, is_super_admin, is_bypassed')
+        .eq('id', user.id)
+        .single(),
+    ])
+
+    completedLessons = (progressRes.data ?? []).map((r: { lesson_id: string }) => r.lesson_id)
+    isSuperAdmin     = !!profileRes.data?.is_super_admin
+    isBypassed       = !!profileRes.data?.is_bypassed
+    userTier         = profileRes.data?.membership_tier ?? 'free'
+
+    // Check prerequisite completion (skip for admins/bypassed)
+    if (prevCourseId && !isSuperAdmin && !isBypassed) {
+      const { data: prevProg } = await supabase
+        .from('course_progress')
+        .select('completed_at')
+        .eq('user_id', user.id)
+        .eq('course_id', prevCourseId)
+        .maybeSingle()
+      prevCourseComplete = !!prevProg?.completed_at
+    }
   }
-  const nextLesson  = course.lessons.find(l => !completedLessons.includes(l.id)) ?? course.lessons[0]
-  const hasStarted  = completedLessons.length > 0
-  const isComplete  = completedLessons.length >= course.lessons.length
+
+  const nextLesson = course.lessons.find(l => !completedLessons.includes(l.id)) ?? course.lessons[0]
+  const hasStarted = completedLessons.length > 0
+  const isComplete = completedLessons.length >= course.lessons.length
 
   // DB tier values: free, architect, elite
   const TIER_ACCESS: Record<string, string[]> = {
@@ -49,6 +87,11 @@ export default async function CourseDetailPage({ params }: PageProps) {
     architect: ['leadership_course_1', 'leadership_course_2', 'leadership_course_3'],
     elite:     ['leadership_course_1', 'leadership_course_2', 'leadership_course_3', 'leadership_course_4'],
   }
+
+  const tierGrant   = (TIER_ACCESS[userTier] ?? []).includes(params.courseId) || isSuperAdmin || isBypassed
+  const canAccess   = tierGrant && prevCourseComplete
+  const prevCourseId = LEADERSHIP_PREV[params.courseId] ?? null
+  const prevCourse  = prevCourseId ? COURSES.find(c => c.id === prevCourseId) : null
 
   const tierLabels: Record<string, string> = {
     free:          'Seeker',
@@ -102,12 +145,31 @@ export default async function CourseDetailPage({ params }: PageProps) {
               {course.description}
             </p>
 
-            <Link
-              href={`/leadership/${course.id}/${nextLesson.id}`}
-              className="btn-orange inline-flex items-center gap-2"
-            >
-              {isComplete ? 'Review Course' : hasStarted ? 'Continue Course' : 'Begin Course'} <ArrowRight size={14} />
-            </Link>
+            {canAccess ? (
+              <Link
+                href={`/leadership/${course.id}/${nextLesson.id}`}
+                className="btn-orange inline-flex items-center gap-2"
+              >
+                {isComplete ? 'Review Course' : hasStarted ? 'Continue Course' : 'Begin Course'} <ArrowRight size={14} />
+              </Link>
+            ) : tierGrant && !prevCourseComplete && prevCourse ? (
+              <div className="flex flex-col gap-3">
+                <p className="font-mono text-[0.55rem] tracking-[0.2em] uppercase text-[#C9A84C] flex items-center gap-2">
+                  <ChevronLeft size={10} className="rotate-180" />
+                  Complete Course {prevCourse.num} to unlock this course
+                </p>
+                <Link
+                  href={`/leadership/${prevCourse.id}`}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 border border-[#C9A84C]/40 text-[#C9A84C] font-mono text-[0.6rem] tracking-widest uppercase hover:bg-[#C9A84C]/10 transition-colors"
+                >
+                  Go to {prevCourse.title} <ArrowRight size={12} />
+                </Link>
+              </div>
+            ) : (
+              <p className="font-mono text-[0.55rem] tracking-[0.2em] uppercase text-white/30">
+                Upgrade your membership to access this course
+              </p>
+            )}
           </div>
 
           {/* Lessons list */}
@@ -116,7 +178,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
               Lessons
             </p>
             <div className="space-y-3">
-              {course.lessons.map((lesson, i) => (
+              {course.lessons.map((lesson, i) => canAccess ? (
                 <Link
                   key={lesson.id}
                   href={`/leadership/${course.id}/${lesson.id}`}
@@ -150,7 +212,19 @@ export default async function CourseDetailPage({ params }: PageProps) {
                   </div>
                   <ArrowRight size={14} className="text-white/20 group-hover:text-[#E8621A] transition-colors flex-shrink-0 mt-1" />
                 </Link>
-              ))}
+              ) : (
+                <div
+                  key={lesson.id}
+                  className="flex items-start gap-5 p-5 border border-white/4 bg-[#141008]/50 opacity-40 cursor-not-allowed"
+                >
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-mono bg-white/4 text-white/20">
+                    {String(i + 1).padStart(2, '0')}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-display text-xl text-white/30 mb-1">{lesson.title}</h3>
+                  </div>
+                </div>
+              ))
             </div>
           </div>
 

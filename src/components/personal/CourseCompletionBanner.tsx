@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { Crown, ArrowRight } from 'lucide-react'
 import type { MembershipTier } from '@/types'
-import { getNextCoursePath, getVerticalOverviewPath } from '@/lib/constants/courses'
+import { getNextCourseLesson01Path, getVerticalOverviewPath } from '@/lib/constants/courses'
 
 interface CourseCompletionBannerProps {
   courseName:         string
@@ -61,8 +61,8 @@ export function CourseCompletionBanner({
   // Upsell: Architect tier completing Course 3
   const showUpsell = userTier === 'architect' && courseOrderIndex === 3
 
-  // Next course navigation
-  const nextPath     = getNextCoursePath(currentSlug, vertical)
+  // Next course navigation — link directly to Lesson 01
+  const nextPath     = getNextCourseLesson01Path(currentSlug, vertical)
   const fallbackPath = getVerticalOverviewPath(vertical)
 
   return (
