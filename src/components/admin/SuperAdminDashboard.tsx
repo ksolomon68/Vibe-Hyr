@@ -1800,10 +1800,149 @@ function CertSettingsPage({ onToast }: { onToast: (m: string) => void }) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+// HELP CENTER PAGE
+// ══════════════════════════════════════════════════════════════════════════════
+
+const FAQS = [
+  {
+    q: 'How do I add a new user to the platform?',
+    a: 'Use the "+ User" button in the top-right header to open the Add User modal. You can create a bypass user (no payment required) by filling in their details and selecting a membership tier. Alternatively, use the "Invite User" option to send them an email invitation through the standard flow.',
+  },
+  {
+    q: 'What is Bypass mode and when should I use it?',
+    a: 'Bypass mode grants a user or organization full platform access without requiring payment. Use it for pilot programs, partnership agreements, staff accounts, or promotional access. You can set an expiry date so access automatically lapses, and a reason is always logged for audit purposes.',
+  },
+  {
+    q: 'How do I change a user\'s membership tier?',
+    a: 'Go to All Users, find the user, and click the edit (pencil) icon. In the Edit Profile modal you can update their tier (Seeker → Architect → Reality Master), vertical, organization assignment, and contact details. Changes take effect immediately.',
+  },
+  {
+    q: 'What are the platform verticals?',
+    a: 'Vibe Hyr has four verticals: Individual (personal growth courses at /personal), Business (workplace training at /business), Education (educator programs at /educators), and Leadership (leadership series at /leadership). A user\'s vertical determines which course sections they can access.',
+  },
+  {
+    q: 'How does course access work for each tier?',
+    a: 'For business users: Seeker = Track 1 only, Architect = Tracks 1–3, Reality Master = all 4 tracks. Education and Leadership users get access to all programs in their vertical. Super admins and bypassed users always have full access regardless of tier.',
+  },
+  {
+    q: 'How do I add an organization and link an admin to it?',
+    a: 'Click "+ Org" in the header. Fill in the organization name, vertical, tier, seat count, and the admin\'s details. The system will create the org, create (or find) the admin user account, link them in organization_members, and optionally send an onboarding email.',
+  },
+  {
+    q: 'How do I reset a user\'s password?',
+    a: 'Open the user\'s edit modal (pencil icon in All Users), go to the Security tab, and use "Send Password Reset Email" to trigger a branded reset link. You can also set a password directly from the same tab if needed.',
+  },
+  {
+    q: 'What happens when I delete a user or organization?',
+    a: 'Deletion is permanent. For users, their Supabase Auth account and profile row are both removed. For organizations, all associated user accounts and membership records are also deleted in a cascading sweep. Always confirm before proceeding — this cannot be undone.',
+  },
+  {
+    q: 'What is the Audit Log?',
+    a: 'The Audit Log (Activity page) records every super admin action: user creation, tier changes, bypasses, deletions, password resets, course access overrides, and more. Each entry shows the admin who acted, what was done, the target, and the timestamp.',
+  },
+  {
+    q: 'How do I revoke a bypass without deleting the user?',
+    a: 'Go to Bypass Manager, find the user or organization, and click "Revoke". This removes the bypass flag and clears the bypass reason/expiry. The account remains active — it will simply follow normal access rules going forward.',
+  },
+  {
+    q: 'How do I seed or update course content?',
+    a: 'Go to Course Manager (CMS). Use the "Sync" buttons at the top of each vertical to seed lessons from the curriculum files into the database. Use force-sync to overwrite existing lessons with updated content. Individual lessons can also be edited inline.',
+  },
+  {
+    q: 'Why can\'t a user access their courses after being added?',
+    a: 'The most common causes are: (1) their vertical doesn\'t match the course section, (2) their membership tier is too low for the track, or (3) their org_id wasn\'t set correctly. Edit their profile to verify vertical and tier. Bypass mode can be used to grant immediate full access while troubleshooting.',
+  },
+]
+
+function HelpCenterPage({ onToast }: { onToast: (m: string) => void }) {
+  const [openIdx, setOpenIdx] = useState<number | null>(null)
+  const [form, setForm] = useState({ senderName: '', senderEmail: '', subject: '', message: '' })
+  const [sending, setSending] = useState(false)
+
+  async function submitContact(e: React.FormEvent) {
+    e.preventDefault()
+    if (!form.senderName.trim() || !form.senderEmail.trim() || !form.message.trim()) {
+      onToast('Name, email, and message are required.')
+      return
+    }
+    setSending(true)
+    const { sendSupportMessage } = await import('@/app/admin/super/actions')
+    const res = await sendSupportMessage(form)
+    setSending(false)
+    if (res.success) {
+      onToast('Message sent to super admin.')
+      setForm({ senderName: '', senderEmail: '', subject: '', message: '' })
+    } else {
+      onToast(res.error ?? 'Failed to send message.')
+    }
+  }
+
+  const IS: React.CSSProperties = { width:'100%', background:'#1A1208', border:`1px solid #2E2416`, borderRadius:4, padding:'9px 12px', color:'#F7F2EA', fontSize:13, outline:'none' }
+
+  return (
+    <div style={{ maxWidth:780, margin:'0 auto' }}>
+      <SecHd title="Help Center" sub="Answers to common questions and direct support" />
+
+      {/* FAQ accordion */}
+      <Card>
+        <div style={{ fontSize:11, letterSpacing:3, textTransform:'uppercase', color:C.muted, marginBottom:16 }}>Frequently Asked Questions</div>
+        <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
+          {FAQS.map((faq, i) => (
+            <div key={i} style={{ border:`1px solid ${openIdx===i ? C.border2 : C.border}`, borderRadius:4, overflow:'hidden', transition:'border-color 0.15s' }}>
+              <button
+                onClick={() => setOpenIdx(openIdx === i ? null : i)}
+                style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, padding:'12px 16px', background: openIdx===i ? 'rgba(232,98,26,0.06)' : 'transparent', border:'none', cursor:'pointer', textAlign:'left', color:C.cream }}
+              >
+                <span style={{ fontSize:13, fontWeight:500 }}>{faq.q}</span>
+                <span style={{ fontSize:16, color:C.orange, flexShrink:0, transition:'transform 0.2s', transform: openIdx===i ? 'rotate(45deg)' : 'none' }}>+</span>
+              </button>
+              {openIdx === i && (
+                <div style={{ padding:'0 16px 14px', fontSize:13, color:C.muted2, lineHeight:1.7, borderTop:`1px solid ${C.border}` }}>
+                  <div style={{ paddingTop:12 }}>{faq.a}</div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* Contact form */}
+      <Card style={{ marginTop:20 }}>
+        <div style={{ fontSize:11, letterSpacing:3, textTransform:'uppercase', color:C.muted, marginBottom:4 }}>Contact Support</div>
+        <div style={{ fontSize:12, color:C.muted2, marginBottom:18 }}>Can't find your answer above? Send a message directly to the super admin.</div>
+        <form onSubmit={submitContact}>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
+            <FField label="Your Name">
+              <input value={form.senderName} onChange={e=>setForm(f=>({...f,senderName:e.target.value}))} style={IS} placeholder="Full name" />
+            </FField>
+            <FField label="Your Email">
+              <input type="email" value={form.senderEmail} onChange={e=>setForm(f=>({...f,senderEmail:e.target.value}))} style={IS} placeholder="you@example.com" />
+            </FField>
+          </div>
+          <div style={{ marginBottom:12 }}>
+            <FField label="Subject">
+              <input value={form.subject} onChange={e=>setForm(f=>({...f,subject:e.target.value}))} style={IS} placeholder="Brief summary of your issue" />
+            </FField>
+          </div>
+          <div style={{ marginBottom:16 }}>
+            <FField label="Message">
+              <textarea value={form.message} onChange={e=>setForm(f=>({...f,message:e.target.value}))} style={{ ...IS, minHeight:110, resize:'vertical' }} placeholder="Describe your issue in detail..." />
+            </FField>
+          </div>
+          <Btn variant="primary" size="sm" disabled={sending} onClick={()=>{}}>
+            {sending ? 'Sending…' : 'Send Message →'}
+          </Btn>
+        </form>
+      </Card>
+    </div>
+  )
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 // MAIN SHELL
 // ══════════════════════════════════════════════════════════════════════════════
 
-type PageId = 'overview'|'bypass'|'orgs'|'users'|'courses'|'cms'|'progress'|'activity'|'settings'|'certificates'|'cert-settings'
+type PageId = 'overview'|'bypass'|'orgs'|'users'|'courses'|'cms'|'progress'|'activity'|'settings'|'certificates'|'cert-settings'|'help'
 
 
 const META: Record<PageId,{title:string;crumb:string}> = {
@@ -1818,6 +1957,7 @@ const META: Record<PageId,{title:string;crumb:string}> = {
   settings:      { title:'Platform Settings',      crumb:'Super Admin — Settings' },
   certificates:  { title:'Certificates',           crumb:'Super Admin — Certificate Management' },
   'cert-settings': { title:'Certificate Settings', crumb:'Super Admin — Signature & Branding' },
+  help:          { title:'Help Center',            crumb:'Super Admin — Help & Support' },
 }
 
 export function SuperAdminDashboard({ adminName, stats, bypassUsers, bypassOrgs, orgs, users, auditLog, orgOptions }: Props) {
@@ -1870,6 +2010,7 @@ export function SuperAdminDashboard({ adminName, stats, bypassUsers, bypassOrgs,
       { id:'cert-settings' as PageId, icon:'✍', label:'Cert Settings' },
       { id:'activity'      as PageId, icon:'↷', label:'Audit Log' },
       { id:'settings'      as PageId, icon:'✦', label:'Platform Settings' },
+      { id:'help'          as PageId, icon:'?', label:'Help Center' },
     ]},
   ]
 
@@ -1983,6 +2124,7 @@ export function SuperAdminDashboard({ adminName, stats, bypassUsers, bypassOrgs,
             {page==='settings'      && <SettingsPage onToast={showToast}/>}
             {page==='certificates'  && <CertificatesAdminPage onToast={showToast}/>}
             {page==='cert-settings' && <CertSettingsPage onToast={showToast}/>}
+            {page==='help'          && <HelpCenterPage onToast={showToast}/>}
           </div>
         </div>
       </div>

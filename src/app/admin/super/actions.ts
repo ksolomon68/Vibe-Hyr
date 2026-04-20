@@ -1556,7 +1556,46 @@ export async function toggleCertificateStatus(
 
   const actionName = newStatus ? 'REINSTATED' : 'REVOKED'
   await logAudit(sa.userId, sa.email, `CERTIFICATE_${actionName}`, 'certificate', certId, certNumber, null)
-  
+
   revalidatePath('/admin/super')
   return { success: true }
+}
+
+// ── Help Center: Send Support Message to Super Admin ─────────────────────────
+
+export async function sendSupportMessage(data: {
+  senderName: string
+  senderEmail: string
+  subject: string
+  message: string
+}): Promise<ActionResult> {
+  if (!data.senderName.trim() || !data.senderEmail.trim() || !data.message.trim()) {
+    return { success: false, error: 'Name, email, and message are required.' }
+  }
+
+  const SUPER_ADMIN_EMAIL = process.env.SUPER_ADMIN_EMAIL ?? 'k.solomon@live.com'
+
+  try {
+    await sendEmail({
+      to: SUPER_ADMIN_EMAIL,
+      subject: `[Vibe Hyr Support] ${data.subject || 'New Support Request'}`,
+      html: `
+        <div style="font-family:sans-serif;max-width:600px;margin:0 auto;background:#0E0C08;color:#F7F2EA;padding:32px;border-radius:8px;">
+          <div style="font-size:22px;font-weight:700;letter-spacing:2px;margin-bottom:4px;">
+            <span style="color:#E8621A;">VIBE</span>HYR — Support Request
+          </div>
+          <div style="font-size:11px;color:#888;letter-spacing:1px;text-transform:uppercase;margin-bottom:24px;">Platform Help Center</div>
+          <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+            <tr><td style="padding:8px 0;color:#888;font-size:12px;width:100px;">From</td><td style="padding:8px 0;font-size:13px;">${data.senderName} &lt;${data.senderEmail}&gt;</td></tr>
+            <tr><td style="padding:8px 0;color:#888;font-size:12px;">Subject</td><td style="padding:8px 0;font-size:13px;">${data.subject || '—'}</td></tr>
+          </table>
+          <div style="background:#1A1208;border-left:3px solid #E8621A;padding:16px 20px;border-radius:0 4px 4px 0;font-size:14px;line-height:1.7;white-space:pre-wrap;">${data.message}</div>
+          <div style="margin-top:24px;font-size:11px;color:#555;">Sent from Vibe Hyr Admin Help Center · ${new Date().toUTCString()}</div>
+        </div>
+      `,
+    })
+    return { success: true }
+  } catch (err: any) {
+    return { success: false, error: 'Failed to send message. Please try again.' }
+  }
 }

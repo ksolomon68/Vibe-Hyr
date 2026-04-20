@@ -89,7 +89,7 @@ export default async function ManageUsersPage() {
   const [{ data: orgMembers }, { data: orgData }] = await Promise.all([
     adminSupabase
       .from('organization_members')
-      .select('user_id, email, full_name, role, status, created_at, profiles(membership_tier, vertical, org_id)')
+      .select('user_id, email, full_name, role, status, created_at')
       .eq('org_id', myOrgId)
       .order('email'),
     adminSupabase
@@ -98,13 +98,25 @@ export default async function ManageUsersPage() {
       .eq('id', myOrgId)
       .single(),
   ])
+
+  // Fetch profile data separately to avoid missing FK relationship error
+  const memberIds = (orgMembers ?? []).map((m: any) => m.user_id).filter(Boolean)
+  let profileMap: Record<string, { membership_tier: string; vertical: string | null }> = {}
+  if (memberIds.length > 0) {
+    const { data: profileRows } = await adminSupabase
+      .from('profiles')
+      .select('id, membership_tier, vertical')
+      .in('id', memberIds)
+    ;(profileRows ?? []).forEach((p: any) => { profileMap[p.id] = { membership_tier: p.membership_tier ?? 'free', vertical: p.vertical ?? null } })
+  }
+
   const orgUsers = (orgMembers ?? []).map((m: any) => ({
     id:               m.user_id,
     email:            m.email,
     full_name:        m.full_name,
-    role:             m.profiles?.role ?? m.role,
-    membership_tier:  m.profiles?.membership_tier ?? 'free',
-    vertical:         m.profiles?.vertical ?? null,
+    role:             m.role,
+    membership_tier:  profileMap[m.user_id]?.membership_tier ?? 'free',
+    vertical:         profileMap[m.user_id]?.vertical ?? null,
     org_id:           myOrgId,
     created_at:       m.created_at,
   }))
