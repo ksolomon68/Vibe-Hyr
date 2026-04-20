@@ -7,7 +7,7 @@ import { sendEmail } from '@/lib/email/resend'
 import { bypassWelcomeTemplate, institutionInviteTemplate, passwordResetTemplate } from '@/lib/email/templates'
 import { BYPASS_ROLES } from '@/lib/constants/bypassRoles'
 
-type ActionResult = { success: boolean; error?: string }
+type ActionResult = { success: boolean; error?: string; warning?: string }
 
 // ── Auth helper ───────────────────────────────────────────────────────────────
 
@@ -263,30 +263,44 @@ export async function addBypassOrg(data: {
 
   if (profileErr) return { success: false, error: `[Step 3 - Profile] ${profileErr.message}` }
 
-  // 4. Add to organization_members table — this surfaces the admin in the dashboard.
-  //
-  // CRITICAL: The actual DB unique constraint is UNIQUE(org_id, email) per 20260317_manage_members.sql.
-  // onConflict must match that constraint — NOT (org_id,user_id) which doesn't have a unique index.
-  //
-  // We upsert on (org_id, email) first, then do a follow-up UPDATE to stamp user_id.
-  // This handles: (a) brand-new rows, (b) previously invited rows where user_id was null.
-  const { error: memErr } = await admin.from('organization_members').upsert({
-    org_id: org.id,
-    user_id: adminUserId,
-    email: data.adminEmail,
-    full_name: `${data.adminFirstName} ${data.adminLastName}`,
-    role: 'admin',
-    status: 'active',
-    joined_at: new Date().toISOString(),
-  }, { onConflict: 'org_id,email' })
-
-  if (memErr) return { success: false, error: `[Step 4 - Member] ${memErr.message}` }
-
-  // Follow-up: stamp user_id in case the row existed without one (pre-signup invite case).
-  await admin.from('organization_members')
-    .update({ user_id: adminUserId, status: 'active', role: 'admin', joined_at: new Date().toISOString() })
+  // 4. Add to organization_members — explicit check → insert/update pattern.
+  //    Avoids onConflict entirely (which requires a named unique constraint that
+  //    may not exist depending on which migrations have been applied to the live DB).
+  const { data: existingMember } = await admin
+    .from('organization_members')
+    .select('id')
     .eq('org_id', org.id)
     .eq('email', data.adminEmail)
+    .maybeSingle()
+
+  if (existingMember) {
+    // Row already exists (prior invite or duplicate call) — update it in place
+    const { error: memUpdateErr } = await admin
+      .from('organization_members')
+      .update({
+        user_id: adminUserId,
+        full_name: `${data.adminFirstName} ${data.adminLastName}`,
+        role: 'admin',
+        status: 'active',
+        joined_at: new Date().toISOString(),
+      })
+      .eq('id', existingMember.id)
+    if (memUpdateErr) return { success: false, error: `[Step 4 - Member Update] ${memUpdateErr.message}` }
+  } else {
+    // Brand new row — insert fresh
+    const { error: memInsertErr } = await admin
+      .from('organization_members')
+      .insert({
+        org_id: org.id,
+        user_id: adminUserId,
+        email: data.adminEmail,
+        full_name: `${data.adminFirstName} ${data.adminLastName}`,
+        role: 'admin',
+        status: 'active',
+        joined_at: new Date().toISOString(),
+      })
+    if (memInsertErr) return { success: false, error: `[Step 4 - Member Insert] ${memInsertErr.message}` }
+  }
 
   // 5. Grant Course Access based on BYPASS_ROLES
   const defaultRole = BYPASS_ROLES.find(r => r.vertical === data.vertical && r.membership_tier === data.tier)
@@ -300,7 +314,8 @@ export async function addBypassOrg(data: {
     await admin.from('course_access').upsert(grants, { onConflict: 'user_id,course_slug' })
   }
 
-  // 6. Send Onboarding Email
+  // 6. Send Onboarding Email — runs AFTER all DB steps succeed
+  let emailStatus = 'not_sent'
   if (data.sendOnboarding) {
     try {
       let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
@@ -308,11 +323,14 @@ export async function addBypassOrg(data: {
       if (appUrl.includes('0.0.0.0')) appUrl = appUrl.replace('0.0.0.0', 'localhost')
       appUrl = appUrl.startsWith('localhost') || appUrl.startsWith('127.0.0.1') ? `http://${appUrl}` : `https://${appUrl}`
 
-      const { data: linkData } = await admin.auth.admin.generateLink({
+      const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
         type: 'recovery',
         email: data.adminEmail,
         options: { redirectTo: `${appUrl}/auth/reset-password` },
       })
+      if (linkErr) {
+        console.error('[addBypassOrg] generateLink failed:', linkErr.message)
+      }
 
       const setupUrl = linkData?.properties?.action_link
         ? `${appUrl}/auth/enroll?link=${encodeURIComponent(linkData.properties.action_link)}`
@@ -323,19 +341,26 @@ export async function addBypassOrg(data: {
         subject: `Welcome to ${data.name} on Vibe Hyr`,
         html: institutionInviteTemplate(`${data.adminFirstName} ${data.adminLastName}`, data.name, adminRole, setupUrl),
       })
+      emailStatus = 'sent'
     } catch (emailErr: any) {
-      console.error('[addBypassOrg] Email send failed (non-fatal):', emailErr?.message)
-      // Non-fatal: org + admin were created successfully; just log the email failure.
+      // Non-fatal: org + admin created successfully. Surface the error in the success message.
+      emailStatus = `failed: ${emailErr?.message ?? 'unknown error'}`
+      console.error('[addBypassOrg] Onboarding email failed:', emailErr?.message)
     }
   }
 
   await logAudit(sa.userId, sa.email, 'ORG_CREATED', 'organization', org.id,
     data.name,
-    `Vertical: ${data.vertical} · Tier: ${data.tier} · Admin: ${data.adminEmail} · Bypass: ${data.bypassPayment}`
+    `Vertical: ${data.vertical} · Tier: ${data.tier} · Admin: ${data.adminEmail} · Bypass: ${data.bypassPayment} · Email: ${emailStatus}`
   )
 
   revalidatePath('/admin/super')
-  return { success: true }
+  return {
+    success: true,
+    ...(emailStatus.startsWith('failed') && {
+      warning: `Organization and admin created successfully, but the welcome email could not be sent (${emailStatus}). You may need to manually notify the admin.`
+    }),
+  }
 }
 
 // ── Revoke User Bypass ────────────────────────────────────────────────────────
