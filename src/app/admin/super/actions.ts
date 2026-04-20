@@ -245,12 +245,17 @@ export async function addBypassOrg(data: {
   // For leadership vertical, use 'leader'. All other org admins use 'admin'.
   const adminRole = data.vertical === 'leadership' ? 'leader' : 'admin'
 
+  // membership_type = the VERTICAL (education/business/leadership) — used by RLS policies
+  // membership_tier = the ACCESS TIER (free/architect/elite)
+  // Both must be set explicitly. The old sync trigger was writing the tier value into
+  // membership_type which conflicts with the RLS policy expectations.
   const { error: profileErr } = await admin.from('profiles').upsert({
     id: adminUserId,
     email: data.adminEmail,
     full_name: `${data.adminFirstName} ${data.adminLastName}`,
-    membership_tier: data.tier,
-    vertical: data.vertical,
+    membership_tier: data.tier,       // e.g. 'elite'
+    membership_type: data.vertical,   // e.g. 'education' — vertical identifier for RLS
+    vertical: data.vertical,          // e.g. 'education' — standardized column
     org_id: org.id,
     role: adminRole,
     is_bypassed: data.bypassPayment,
