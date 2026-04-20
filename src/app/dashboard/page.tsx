@@ -277,7 +277,7 @@ export default async function DashboardPage() {
   return (
     <>
       <Navbar />
-      <main className="pt-[68px] min-h-screen">
+      <main className="pt-[68px] min-h-screen overflow-x-clip">
         {/* Header */}
         <section className="py-12 px-6 md:px-14 border-b-2 border-orange/20 relative">
           <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange" />
@@ -428,8 +428,8 @@ export default async function DashboardPage() {
                             {String(course.order_index).padStart(2, '0')}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-2">
-                              <p className="font-display text-sm sm:text-base tracking-[0.04em] text-white leading-tight truncate">
+                            <div className="flex items-center justify-between gap-2 overflow-hidden">
+                              <p className="font-display text-sm sm:text-base tracking-[0.04em] text-white leading-tight truncate min-w-0 flex-1">
                                 {course.title}
                               </p>
                               <div className="flex-shrink-0">
@@ -481,8 +481,8 @@ export default async function DashboardPage() {
                             {track.num}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-2">
-                              <p className="font-display text-sm sm:text-base tracking-[0.04em] text-white leading-tight truncate">
+                            <div className="flex items-center justify-between gap-2 overflow-hidden">
+                              <p className="font-display text-sm sm:text-base tracking-[0.04em] text-white leading-tight truncate min-w-0 flex-1">
                                 {track.title}
                               </p>
                               <div className="flex-shrink-0">
@@ -531,8 +531,8 @@ export default async function DashboardPage() {
                             {program.num}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-2">
-                              <p className="font-display text-sm sm:text-base tracking-[0.04em] text-white leading-tight truncate">
+                            <div className="flex items-center justify-between gap-2 overflow-hidden">
+                              <p className="font-display text-sm sm:text-base tracking-[0.04em] text-white leading-tight truncate min-w-0 flex-1">
                                 {program.title}
                               </p>
                               <div className="flex-shrink-0">
@@ -581,8 +581,8 @@ export default async function DashboardPage() {
                             {String(course.num).padStart(2, '0')}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-2">
-                              <p className="font-display text-sm sm:text-base tracking-[0.04em] text-white leading-tight truncate">
+                            <div className="flex items-center justify-between gap-2 overflow-hidden">
+                              <p className="font-display text-sm sm:text-base tracking-[0.04em] text-white leading-tight truncate min-w-0 flex-1">
                                 {course.title}
                               </p>
                               <div className="flex-shrink-0">
