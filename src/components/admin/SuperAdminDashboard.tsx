@@ -16,7 +16,8 @@ import {
   sendPasswordResetEmail,
   inviteUserBySuperAdmin,
   updateOrganizationComplete,
-  toggleCertificateStatus
+  toggleCertificateStatus,
+  sendSupportMessage,
 } from '@/app/admin/super/actions'
 import { CourseManagerPage } from './CourseManagerPage'
 
@@ -1866,7 +1867,6 @@ function HelpCenterPage({ onToast }: { onToast: (m: string) => void }) {
       return
     }
     setSending(true)
-    const { sendSupportMessage } = await import('@/app/admin/super/actions')
     const res = await sendSupportMessage(form)
     setSending(false)
     if (res.success) {

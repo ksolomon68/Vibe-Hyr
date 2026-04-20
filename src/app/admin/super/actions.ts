@@ -82,12 +82,18 @@ export async function addBypassUser(data: {
     userId = authData.user!.id
   }
 
+  const membershipTypeMap: Record<string, string> = {
+    individual: 'personal', education: 'education',
+    business: 'business', leadership: 'leadership',
+  }
+
   // Upsert profile with bypass flags
   const { error: upsertErr } = await admin.from('profiles').upsert({
     id: userId, email: data.email,
     full_name: `${data.firstName} ${data.lastName}`,
     membership_tier: data.membershipTier,
     vertical: data.vertical,
+    membership_type: membershipTypeMap[data.vertical] ?? 'personal',
     org_id: data.orgId || null,
     role: data.role,
     is_bypassed: true,
@@ -682,12 +688,17 @@ export async function inviteUserBySuperAdmin(data: {
   }
 
   if (inviteData?.user) {
+    const mtMap: Record<string, string> = {
+      individual: 'personal', education: 'education',
+      business: 'business', leadership: 'leadership',
+    }
     await admin.from('profiles').upsert(
       {
         id:               inviteData.user.id,
         email:            data.email,
         org_id:           data.orgId,
         vertical:         data.vertical,
+        membership_type:  mtMap[data.vertical] ?? 'personal',
         role:             data.role,
         membership_tier:  data.membershipTier,
       },
