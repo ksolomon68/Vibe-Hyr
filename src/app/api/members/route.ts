@@ -170,17 +170,23 @@ export async function POST(req: NextRequest) {
   if (inviteErr) {
     const msg = inviteErr.message.toLowerCase()
     if (msg.includes('already registered') || msg.includes('already been registered')) {
-      // Find the existing auth user by listing — acceptable for infrequent admin op
-      const { data: { users } } = await admin.auth.admin.listUsers({ perPage: 1000 })
-      const found = users.find(u => u.email === emailNorm)
-      if (found) {
-        userId = found.id
-        // Re-check this user isn't already in the org under a different email casing
+      // PERF: listUsers() causes 504 timeouts. Lookup the ID from profiles table instead.
+      const { data: pFound, error: pErr } = await admin
+        .from('profiles')
+        .select('id')
+        .eq('email', emailNorm)
+        .maybeSingle()
+      
+      if (pErr) return NextResponse.json({ error: pErr.message }, { status: 500 })
+      
+      if (pFound) {
+        userId = pFound.id
+        // Re-check this user isn't already in the org
         const { data: profileCheck } = await admin
           .from('organization_members')
           .select('id')
           .eq('org_id',  ctx.orgId)
-          .eq('user_id', found.id)
+          .eq('user_id', pFound.id)
           .maybeSingle()
         if (profileCheck) {
           return NextResponse.json(

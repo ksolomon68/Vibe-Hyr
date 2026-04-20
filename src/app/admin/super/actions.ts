@@ -63,18 +63,18 @@ export async function addBypassUser(data: {
   })
 
   if (authErr) {
-    if (authErr.message.includes('already registered')) {
-      // Robust retrieval: check Auth list if profile missing
-      const { data: { users } } = await admin.auth.admin.listUsers({ perPage: 1000 })
-      const found = users.find(u => u.email?.toLowerCase() === data.email.toLowerCase())
-      if (found) {
-        userId = found.id
-      } else {
-        // Fallback to profile check (should have worked if trigger ran)
-        const { data: existing } = await admin.from('profiles').select('id').eq('email', data.email).single()
-        if (!existing) return { success: false, error: 'User exists in Auth but could not retrieve ID.' }
-        userId = existing.id
-      }
+    if (authErr.message.toLowerCase().includes('already registered') || authErr.message.toLowerCase().includes('already exists')) {
+      // PERF: listUsers() is a major performance bottleneck that causes 504 timeouts.
+      // We lookup the ID from the profiles table instead, which is indexed by email.
+      const { data: existing, error: pErr } = await admin
+        .from('profiles')
+        .select('id')
+        .eq('email', data.email.toLowerCase().trim())
+        .maybeSingle()
+      
+      if (pErr) return { success: false, error: `User ID lookup failed: ${pErr.message}` }
+      if (!existing) return { success: false, error: 'User exists in Auth but no profile was found.' }
+      userId = existing.id
     } else {
       return { success: false, error: authErr.message }
     }
@@ -226,19 +226,25 @@ export async function addBypassOrg(data: {
   })
 
   if (authErr) {
-    if (authErr.message.includes('already registered')) {
-      // If user exists, find their ID
-      const { data: { users } } = await admin.auth.admin.listUsers()
-      const existingUser = users.find(u => u.email?.toLowerCase() === data.adminEmail.toLowerCase())
-      adminUserId = existingUser?.id || null
+    if (authErr.message.toLowerCase().includes('already registered') || authErr.message.toLowerCase().includes('already exists')) {
+      // PERF: Do NOT use listUsers() here. It's extremely slow and causes 504 timeouts.
+      // Lookup the ID directly from the profiles table which is indexed by email.
+      const { data: p, error: pErr } = await admin
+        .from('profiles')
+        .select('id')
+        .eq('email', data.adminEmail.toLowerCase().trim())
+        .maybeSingle()
+      
+      if (pErr) return { success: false, error: `[Step 2] User lookup failed: ${pErr.message}` }
+      adminUserId = p?.id || null
     } else {
-      return { success: false, error: `Auth Error: ${authErr.message}` }
+      return { success: false, error: `[Step 2] Auth Error: ${authErr.message}` }
     }
   } else {
     adminUserId = authData.user!.id
   }
 
-  if (!adminUserId) return { success: false, error: '[Step 2] Could not create or find admin user.' }
+  if (!adminUserId) return { success: false, error: '[Step 2] Could not create or find admin user ID.' }
 
   // 3. Upsert Profile & Link to Org
   // IMPORTANT: role must be 'admin' — 'institution_admin' was removed in 20260419_unify_admin_role.sql
