@@ -49,29 +49,43 @@ export default async function InstitutionalAdminPage() {
 
   if (!org) redirect('/dashboard')
 
-  // Fetch org members via organization_members (works for both legacy and new-flow admins)
+  // Fetch org members — no FK join to avoid schema cache error
   const { data: memberships } = await adminClient
     .from('organization_members')
-    .select('user_id, email, full_name, role, status, created_at, profiles(membership_tier)')
+    .select('user_id, email, full_name, role, status, created_at')
     .eq('org_id', org.id)
     .order('full_name')
 
+  // Fetch membership_tier separately
+  const memberIds = (memberships ?? []).map((m: any) => m.user_id).filter(Boolean)
+  let tierMap: Record<string, string> = {}
+  if (memberIds.length > 0) {
+    const { data: profileRows } = await adminClient
+      .from('profiles')
+      .select('id, membership_tier')
+      .in('id', memberIds)
+    ;(profileRows ?? []).forEach((p: any) => { tierMap[p.id] = p.membership_tier ?? 'free' })
+  }
+
   const members = (memberships ?? []).map((m: any) => ({
-    id:             m.user_id,
-    email:          m.email,
-    full_name:      m.full_name,
-    role:           m.role,
-    membership_tier: m.profiles?.membership_tier ?? 'free',
-    updated_at:     m.created_at,
+    id:              m.user_id,
+    email:           m.email,
+    full_name:       m.full_name,
+    role:            m.role,
+    membership_tier: tierMap[m.user_id] ?? 'free',
+    updated_at:      m.created_at,
   }))
 
   const adminName = adminProfile?.full_name ?? adminProfile?.email ?? 'Admin'
+
+  const adminEmail = adminProfile?.email ?? ''
 
   return (
     <InstitutionalAdminDashboard
       org={org}
       members={members}
       adminName={adminName}
+      adminEmail={adminEmail}
     />
   )
 }

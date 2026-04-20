@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { editUser, removeUser, inviteUserDirect } from '@/app/admin/users/actions'
+import { sendSupportMessage } from '@/app/admin/super/actions'
 import { OrgUserManagement } from '@/components/admin/OrgUserManagement'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -36,6 +37,7 @@ interface Props {
   org: Org
   members: Member[]
   adminName: string
+  adminEmail: string
 }
 
 // ─── CSS token helpers ────────────────────────────────────────────────────────
@@ -702,9 +704,174 @@ function SettingsPage({ org, onToast }: { org: Org; onToast: (m: string) => void
   )
 }
 
+// ─── Help Center ─────────────────────────────────────────────────────────────
+
+const FAQS = [
+  { q: 'How do I add a new user to my organisation?', a: 'Go to the Users & Seats tab and click "+ Add User". Enter their name and email, assign courses, then click "Add & Send Invite". They\'ll receive a branded invitation email with a link to set their password.' },
+  { q: 'What happens when I reach my seat limit?', a: 'Once all purchased seats are filled, the Add User button is disabled. You must either remove an existing user or contact us to upgrade your plan and purchase additional seats.' },
+  { q: 'How do I assign or change courses for a specific user?', a: 'In the Users & Seats tab, find the user in the table and click the "Courses" action button. A modal will appear with a checklist of all available courses — toggle them on or off and click "Save Access".' },
+  { q: 'Can I change a user\'s role after they\'ve joined?', a: 'Yes. Click "Edit" next to any user in the Users tab to open the edit modal. You can update their display name, role (e.g. Admin, Educator, Business), and membership tier.' },
+  { q: 'What does "Pending" status mean for a user?', a: 'A user shows as Pending when they haven\'t yet set their full name in their profile. This typically means they received the invitation but haven\'t completed their first login or profile setup.' },
+  { q: 'What does "Inactive" status mean?', a: 'A user is marked Inactive if they haven\'t had any account activity in the last 14 days. Their access is not removed — this is purely a dashboard indicator to help you identify users who may need re-engagement.' },
+  { q: 'How do I remove a user and what happens to their data?', a: 'Click "Remove" next to the user in the Users tab and confirm the dialog. Their access to all assigned courses and the platform is revoked immediately. Their profile data is retained in your org records.' },
+  { q: 'How are billing cycles handled?', a: 'Billing is seat-based and charged monthly. Volume discounts apply automatically at 25, 50, and 100+ seats. You can view your current plan, seat count, and billing email in the Billing & Payments tab.' },
+  { q: 'How do I track my team\'s course progress?', a: 'The Course Progress & Engagement tab shows tier breakdown across your team members and which courses each tier has access to. Individual lesson-level progress is being rolled out in a future update.' },
+  { q: 'What is the difference between the Architect and Reality Master tiers?', a: 'Architect unlocks Courses 1–3, the full Revision Journal, and SATS diagnostics. Reality Master (Elite) includes all 4 courses, the complete Assumption Lab, monthly live Q&As, and the full audio SATS library.' },
+  { q: 'How do I reset a user\'s password?', a: 'Users can reset their own password via the "Forgot Password" link on the login page. You cannot set passwords on their behalf, but you can contact support to trigger a password reset email for a specific user.' },
+  { q: 'Can I export my user list?', a: 'An Export CSV button is available in the Users tab. Full export functionality including course completion data is in active development. Contact support if you need a data export urgently.' },
+]
+
+function HelpCenterPage({ orgName, adminName, adminEmail, onToast }: { orgName: string; adminName: string; adminEmail: string; onToast: (m: string) => void }) {
+  const [openIdx, setOpenIdx]   = useState<number | null>(null)
+  const [subject, setSubject]   = useState('')
+  const [message, setMessage]   = useState('')
+  const [sending, setSending]   = useState(false)
+  const [sent,    setSent]      = useState(false)
+
+  async function handleSend(e: React.FormEvent) {
+    e.preventDefault()
+    if (!subject.trim() || !message.trim()) { onToast('Please fill in subject and message.'); return }
+    setSending(true)
+    try {
+      const res = await sendSupportMessage({
+        senderName:  adminName,
+        senderEmail: adminEmail,
+        subject:     `[Institutional Admin — ${orgName}] ${subject.trim()}`,
+        message:     message.trim(),
+      })
+      if (!res.success) throw new Error(res.error ?? 'Failed to send')
+      setSent(true)
+      setSubject('')
+      setMessage('')
+      onToast('✦ Message sent to Vibe Hyr support.')
+    } catch (err: any) {
+      onToast(`Error: ${err.message}`)
+    } finally {
+      setSending(false)
+    }
+  }
+
+  const inputStyle: React.CSSProperties = {
+    background: C.dark4, border: `1px solid ${C.border}`, color: C.cream,
+    fontFamily: 'inherit', fontSize: 13, padding: '10px 14px', borderRadius: 4,
+    outline: 'none', width: '100%', boxSizing: 'border-box' as const,
+  }
+
+  return (
+    <div>
+      {/* FAQ section */}
+      <div style={{ marginBottom: 36 }}>
+        <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, letterSpacing: 2, marginBottom: 4 }}>Frequently Asked Questions</div>
+        <div style={{ fontSize: 12, color: C.muted, marginBottom: 20 }}>Quick answers for institution admins.</div>
+        <div style={{ background: C.dark3, border: `1px solid ${C.border}`, borderRadius: 8, overflow: 'hidden' }}>
+          {FAQS.map((faq, i) => (
+            <div key={i} style={{ borderBottom: i < FAQS.length - 1 ? `1px solid ${C.border}` : 'none' }}>
+              <button
+                onClick={() => setOpenIdx(openIdx === i ? null : i)}
+                style={{
+                  width: '100%', textAlign: 'left', background: 'none', border: 'none',
+                  padding: '16px 20px', cursor: 'pointer', color: C.cream,
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+                }}
+              >
+                <span style={{ fontSize: 13, fontWeight: 500 }}>{faq.q}</span>
+                <span style={{ color: C.orange, fontSize: 16, flexShrink: 0, lineHeight: 1 }}>
+                  {openIdx === i ? '−' : '+'}
+                </span>
+              </button>
+              {openIdx === i && (
+                <div style={{ padding: '0 20px 16px', fontSize: 13, color: C.muted, lineHeight: 1.7 }}>
+                  {faq.a}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Contact form */}
+      <div style={{ background: C.dark3, border: `1px solid ${C.border}`, borderRadius: 8, padding: 28 }}>
+        <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, letterSpacing: 2, marginBottom: 4 }}>Contact Support</div>
+        <div style={{ fontSize: 12, color: C.muted, marginBottom: 24 }}>
+          Can't find what you need? Send a message directly to the Vibe Hyr support team.
+        </div>
+
+        {sent ? (
+          <div style={{ textAlign: 'center', padding: '32px 0' }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>✦</div>
+            <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, letterSpacing: 2, marginBottom: 8 }}>Message Sent</div>
+            <div style={{ fontSize: 13, color: C.muted, marginBottom: 20 }}>
+              Our support team will get back to you within 1–2 business days.
+            </div>
+            <button
+              onClick={() => setSent(false)}
+              style={{ background: 'transparent', border: `1px solid ${C.borderB}`, color: C.cream, fontFamily: 'inherit', fontSize: 12, fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', padding: '10px 24px', borderRadius: 4, cursor: 'pointer' }}
+            >
+              Send Another
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleSend} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: C.muted, marginBottom: 6 }}>Your Name</label>
+                <input type="text" value={adminName} readOnly style={{ ...inputStyle, color: C.muted }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: C.muted, marginBottom: 6 }}>Organisation</label>
+                <input type="text" value={orgName} readOnly style={{ ...inputStyle, color: C.muted }} />
+              </div>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: C.muted, marginBottom: 6 }}>Subject</label>
+              <select
+                value={subject}
+                onChange={e => setSubject(e.target.value)}
+                style={inputStyle}
+              >
+                <option value="">Select a topic…</option>
+                <option value="Billing & Plan Upgrade">Billing &amp; Plan Upgrade</option>
+                <option value="User Access Issue">User Access Issue</option>
+                <option value="Course Assignment">Course Assignment</option>
+                <option value="Technical Problem">Technical Problem</option>
+                <option value="Data Export Request">Data Export Request</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: C.muted, marginBottom: 6 }}>Message</label>
+              <textarea
+                value={message}
+                onChange={e => setMessage(e.target.value)}
+                placeholder="Describe your issue or question in detail…"
+                rows={5}
+                style={{ ...inputStyle, resize: 'vertical' as const, minHeight: 120 }}
+              />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                type="submit"
+                disabled={sending || !subject || !message.trim()}
+                style={{
+                  background: sending || !subject || !message.trim() ? 'rgba(232,98,26,0.4)' : C.orange,
+                  border: 'none', color: '#fff', fontFamily: 'inherit', fontSize: 12, fontWeight: 700,
+                  letterSpacing: 1, textTransform: 'uppercase', padding: '11px 28px', borderRadius: 4,
+                  cursor: sending || !subject || !message.trim() ? 'default' : 'pointer',
+                }}
+              >
+                {sending ? 'Sending…' : 'Send Message'}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ─── Shell / Main export ──────────────────────────────────────────────────────
 
-type Tab = 'dashboard' | 'users' | 'progress' | 'payments' | 'settings'
+type Tab = 'dashboard' | 'users' | 'progress' | 'payments' | 'settings' | 'help'
 
 const TAB_TITLES: Record<Tab, string> = {
   dashboard: 'Dashboard Overview',
@@ -712,9 +879,10 @@ const TAB_TITLES: Record<Tab, string> = {
   progress:  'Course Progress & Engagement',
   payments:  'Billing & Payments',
   settings:  'Institution Settings',
+  help:      'Help Center',
 }
 
-export function InstitutionalAdminDashboard({ org, members, adminName }: Props) {
+export function InstitutionalAdminDashboard({ org, members, adminName, adminEmail }: Props) {
   const [tab, setTab]               = useState<Tab>('dashboard')
   const [toast, setToast]           = useState('')
   const [toastVis, setToastVis]     = useState(false)
@@ -867,7 +1035,7 @@ export function InstitutionalAdminDashboard({ org, members, adminName }: Props) 
             ))}
 
             <div style={{ fontSize:9, letterSpacing:3, textTransform:'uppercase', color:C.muted, padding:'12px 12px 6px' }}>Support</div>
-            <button onClick={() => showToast('Opening help center...')} className="inst-nav-item" style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:6, fontSize:13, color:C.muted, background:'transparent', border:'none', width:'100%', textAlign:'left', cursor:'pointer', marginBottom:2 }}>
+            <button onClick={() => { setTab('help'); setSidebarOpen(false) }} className="inst-nav-item" style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:6, fontSize:13, color: tab === 'help' ? C.cream : C.muted, background: tab === 'help' ? 'linear-gradient(90deg,rgba(232,98,26,0.2),transparent)' : 'transparent', border:'none', borderLeft: tab === 'help' ? `2px solid ${C.orange}` : '2px solid transparent', width:'100%', textAlign:'left', cursor:'pointer', marginBottom:2 }}>
               <span style={{ width:16, textAlign:'center' }}>○</span> Help Center
             </button>
           </div>
@@ -905,6 +1073,7 @@ export function InstitutionalAdminDashboard({ org, members, adminName }: Props) 
             {tab === 'progress'  && <ProgressPage members={members} />}
             {tab === 'payments'  && <PaymentsPage org={org} onToast={showToast} />}
             {tab === 'settings'  && <SettingsPage org={org} onToast={showToast} />}
+            {tab === 'help'      && <HelpCenterPage orgName={org.name} adminName={adminName} adminEmail={adminEmail} onToast={showToast} />}
           </div>
         </div>
       </div>
