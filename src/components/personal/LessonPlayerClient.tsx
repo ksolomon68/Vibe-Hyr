@@ -477,6 +477,8 @@ export function LessonPlayerClient({
                 courseOrderIndex={course.order_index}
                 userTier={userTier}
                 isLoggedIn={isLoggedIn}
+                currentSlug={course.slug}
+                vertical="individual"
                 certificateNumber={certNumber ?? undefined}
                 shareToken={certShareToken ?? undefined}
               />
