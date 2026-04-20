@@ -56,7 +56,7 @@ export default async function EducatorProgramPage({ params }: { params: { progra
       <CourseLockedScreen
         reason="tier_required"
         courseSlug={program.slug}
-        sectionLabel="EDUCATION"
+        sectionLabel="EDUCATOR"
         backHref="/educators"
         backLabel="Back to Programs"
       />

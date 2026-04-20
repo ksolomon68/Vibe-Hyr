@@ -71,7 +71,7 @@ export default async function EducationModulePage({
       <CourseLockedScreen
         reason="tier_required"
         courseSlug={params.programSlug}
-        sectionLabel="EDUCATION"
+        sectionLabel="EDUCATOR"
         backHref="/educators"
         backLabel="Back to Programs"
       />
