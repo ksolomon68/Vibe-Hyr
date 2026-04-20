@@ -49,19 +49,24 @@ export default async function EducationModulePage({
     videoUrl = lessonRow?.youtube_url ?? null
   }
 
-  const [{ data: catalogEntry }, { data: progressData }] = await Promise.all([
+  const [{ data: profile }, { data: progressData }] = await Promise.all([
     supabase
-      .from('course_catalog')
-      .select('id')
-      .eq('slug', params.programSlug)
-      .maybeSingle(),
+      .from('profiles')
+      .select('vertical, is_super_admin, is_bypassed')
+      .eq('id', user.id)
+      .single(),
     supabase
       .from('education_progress')
       .select('module_id')
       .eq('user_id', user.id),
   ])
 
-  if (!catalogEntry) {
+  const isSuperAdmin = profile?.is_super_admin ?? false
+  const isBypassed   = profile?.is_bypassed ?? false
+  const isEducator   = profile?.vertical === 'education'
+  const canAccess    = isSuperAdmin || isBypassed || isEducator
+
+  if (!canAccess) {
     return (
       <CourseLockedScreen
         reason="tier_required"

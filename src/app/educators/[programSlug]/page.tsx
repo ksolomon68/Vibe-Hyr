@@ -27,14 +27,17 @@ export default async function EducatorProgramPage({ params }: { params: { progra
   let completedModules: string[] = []
 
   if (user) {
-    // Check authoritative catalog access
-    const { data: catalogEntry } = await supabase
-      .from('course_catalog')
-      .select('id')
-      .eq('slug', program.slug)
-      .maybeSingle()
-    
-    canAccess = !!catalogEntry;
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('vertical, is_super_admin, is_bypassed')
+      .eq('id', user.id)
+      .single()
+
+    const isSuperAdmin = profile?.is_super_admin ?? false
+    const isBypassed   = profile?.is_bypassed ?? false
+    const isEducator   = profile?.vertical === 'education'
+
+    canAccess = isSuperAdmin || isBypassed || isEducator
 
     if (canAccess) {
       const { data: prog } = await supabase
@@ -42,7 +45,7 @@ export default async function EducatorProgramPage({ params }: { params: { progra
         .select('module_id')
         .eq('user_id', user.id)
         .eq('program_id', program.id)
-      
+
       completedModules = prog?.map(p => p.module_id) ?? []
     }
   }
