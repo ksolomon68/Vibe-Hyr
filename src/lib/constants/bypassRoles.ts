@@ -14,7 +14,7 @@ export const BYPASS_ROLES: BypassRole[] = [
   {
     label: 'Seeker (Free)',
     vertical: 'individual',
-    membership_type: 'personal',
+    membership_type: 'individual',
     membership_tier: 'free',
     role: 'personal',
     access: ['programming-the-gatekeeper'],
@@ -22,7 +22,7 @@ export const BYPASS_ROLES: BypassRole[] = [
   {
     label: 'Architect',
     vertical: 'individual',
-    membership_type: 'personal',
+    membership_type: 'individual',
     membership_tier: 'architect',
     role: 'personal',
     access: ['programming-the-gatekeeper', 'law-of-assumption', 'sats-reprogramming'],
@@ -30,7 +30,7 @@ export const BYPASS_ROLES: BypassRole[] = [
   {
     label: 'Reality Master (Elite)',
     vertical: 'individual',
-    membership_type: 'personal',
+    membership_type: 'individual',
     membership_tier: 'elite',
     role: 'personal',
     access: ['programming-the-gatekeeper', 'law-of-assumption', 'sats-reprogramming', 'echo-theory-delay'],

@@ -83,7 +83,7 @@ export async function addBypassUser(data: {
   }
 
   const membershipTypeMap: Record<string, string> = {
-    individual: 'personal', education: 'education',
+    individual: 'individual', education: 'education',
     business: 'business', leadership: 'leadership',
   }
 
@@ -689,7 +689,7 @@ export async function inviteUserBySuperAdmin(data: {
 
   if (inviteData?.user) {
     const mtMap: Record<string, string> = {
-      individual: 'personal', education: 'education',
+      individual: 'individual', education: 'education',
       business: 'business', leadership: 'leadership',
     }
     await admin.from('profiles').upsert(
