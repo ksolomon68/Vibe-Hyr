@@ -153,10 +153,50 @@ export default async function DashboardPage() {
   // Map DB tier to PersonalTier for checkout modal
   const upgradeTier: PersonalTier = tier === 'free' ? 'architect' : 'reality-master'
 
+  // ── Compute "Continue Course" deep link from live progress data ───────────────
+  let continueHref = '/personal'
+  if (vertical === 'business') {
+    let found = false
+    for (const track of TRACKS) {
+      const doneInTrack = workplaceProgress.filter(p => p.track_id === track.id).map(p => p.lesson_id)
+      if (doneInTrack.length > 0) {
+        const nextLesson = track.lessons.find(l => !doneInTrack.includes(l.id))
+        continueHref = nextLesson ? `/business/${track.id}/${nextLesson.id}` : `/business/${track.id}`
+        found = true; break
+      }
+    }
+    if (!found) continueHref = '/business'
+  } else if (vertical === 'education') {
+    let found = false
+    for (const program of PROGRAMS) {
+      const doneMods = educationProgress.filter(p => p.program_id === program.id).map(p => p.module_id)
+      if (doneMods.length > 0) {
+        const nextModule = program.modules.find(m => !doneMods.includes(m.id))
+        continueHref = nextModule
+          ? `/educators/${program.slug}/${nextModule.id}`
+          : `/educators/${program.slug}`
+        found = true; break
+      }
+    }
+    if (!found) continueHref = '/educators'
+  } else if (vertical === 'leadership') {
+    const inProgressCourseId = leadershipProgress[0]?.course_id
+    continueHref = inProgressCourseId ? `/leadership/${inProgressCourseId}` : '/leadership'
+  } else {
+    // individual — map course_id (e.g. 'c01') to its slug
+    const inProgress = personalProgress.find(p =>
+      (p.progress_percent ?? 0) > 0 && (p.progress_percent ?? 0) < 100
+    ) ?? personalProgress[0]
+    if (inProgress) {
+      const courseObj = COURSES.find(c => c.id === inProgress.course_id || c.slug === inProgress.course_id)
+      if (courseObj) continueHref = `/personal/${courseObj.slug}`
+    }
+  }
+
   const QUICK_LINKS = [
     { href: '/journal',   icon: BookOpen, label: "Tonight's Revision", desc: 'Open the nightly journal' },
     {
-      href: vertical === 'education' ? '/educators' : vertical === 'business' ? '/business' : vertical === 'leadership' ? '/leadership' : '/personal',
+      href: continueHref,
       icon: Target,
       label: 'Continue Course',
       desc: 'Pick up where you left off',

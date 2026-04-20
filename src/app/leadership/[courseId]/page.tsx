@@ -8,6 +8,7 @@ import { ArrowRight, ChevronLeft } from 'lucide-react'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { COURSES } from '@/lib/leadership/curriculum'
+import { createClient } from '@/lib/supabase/server'
 
 interface PageProps {
   params: { courseId: string }
@@ -22,9 +23,25 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-export default function CourseDetailPage({ params }: PageProps) {
+export default async function CourseDetailPage({ params }: PageProps) {
   const course = COURSES.find(c => c.id === params.courseId)
   if (!course) return notFound()
+
+  // Fetch progress to determine next uncompleted lesson
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  let completedLessons: string[] = []
+  if (user) {
+    const { data } = await supabase
+      .from('leadership_progress')
+      .select('lesson_id')
+      .eq('user_id', user.id)
+      .eq('course_id', params.courseId)
+    completedLessons = (data ?? []).map((r: { lesson_id: string }) => r.lesson_id)
+  }
+  const nextLesson  = course.lessons.find(l => !completedLessons.includes(l.id)) ?? course.lessons[0]
+  const hasStarted  = completedLessons.length > 0
+  const isComplete  = completedLessons.length >= course.lessons.length
 
   // DB tier values: free, architect, elite
   const TIER_ACCESS: Record<string, string[]> = {
@@ -86,10 +103,10 @@ export default function CourseDetailPage({ params }: PageProps) {
             </p>
 
             <Link
-              href={`/leadership/${course.id}/${course.lessons[0].id}`}
+              href={`/leadership/${course.id}/${nextLesson.id}`}
               className="btn-orange inline-flex items-center gap-2"
             >
-              Begin Course <ArrowRight size={14} />
+              {isComplete ? 'Review Course' : hasStarted ? 'Continue Course' : 'Begin Course'} <ArrowRight size={14} />
             </Link>
           </div>
 
