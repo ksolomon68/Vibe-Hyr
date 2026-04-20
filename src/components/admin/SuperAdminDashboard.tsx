@@ -414,6 +414,7 @@ function AddOrgModal({ open, onClose, onSuccess }: { open: boolean; onClose: ()=
   }
 
   function submit() {
+    if (isPending) return // Prevent double-submission
     if (form.adminEmail && !emailValidated) {
       setEmailError('Click "Check" to validate the admin email before submitting.')
       return
