@@ -111,6 +111,12 @@ export function WorkplaceLessonPlayerWrapper({
         { user_id: userId, track_id: trackId, completed_at: new Date().toISOString() },
         { onConflict: "user_id,track_id" }
       );
+      // Issue downloadable certificate
+      fetch("/api/certificates/issue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ courseId: trackId }),
+      }).catch((err) => console.error("[certificates/issue business]", err));
       // Fire-and-forget branded completion email via server route
       fetch("/api/email/track-complete", {
         method: "POST",

@@ -110,6 +110,12 @@ export function LeadershipLessonPlayerWrapper({
         },
         { onConflict: "user_id,course_id" }
       );
+      // Issue downloadable certificate
+      fetch("/api/certificates/issue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ courseId }),
+      }).catch((err) => console.error("[certificates/issue leadership]", err));
       // Fire-and-forget completion email
       fetch("/api/email/track-complete", {
         method: "POST",

@@ -491,7 +491,7 @@ export default async function DashboardPage() {
                                     href={track.href}
                                     className="font-mono text-[0.58rem] tracking-widest uppercase text-orange hover:text-orange-light transition-colors flex items-center gap-1"
                                   >
-                                    {track.progress > 0 ? 'Continue' : 'Start'} <ArrowRight size={10} />
+                                    {track.progress >= 100 ? 'Review' : track.progress > 0 ? 'Continue' : 'Start'} <ArrowRight size={10} />
                                   </Link>
                                 ) : (
                                   <span className="font-mono text-[0.58rem] tracking-widest uppercase text-grey-dark">
@@ -541,7 +541,7 @@ export default async function DashboardPage() {
                                     href={program.href}
                                     className="font-mono text-[0.58rem] tracking-widest uppercase text-orange hover:text-orange-light transition-colors flex items-center gap-1"
                                   >
-                                    {program.progress > 0 ? 'Continue' : 'Start'} <ArrowRight size={10} />
+                                    {program.progress >= 100 ? 'Review' : program.progress > 0 ? 'Continue' : 'Start'} <ArrowRight size={10} />
                                   </Link>
                                 ) : (
                                   <span className="font-mono text-[0.58rem] tracking-widest uppercase text-grey-dark">
@@ -591,7 +591,7 @@ export default async function DashboardPage() {
                                     href={course.href}
                                     className="font-mono text-[0.58rem] tracking-widest uppercase text-orange hover:text-orange-light transition-colors flex items-center gap-1"
                                   >
-                                    {course.progress > 0 ? 'Continue' : 'Start'} <ArrowRight size={10} />
+                                    {course.progress >= 100 ? 'Review' : course.progress > 0 ? 'Continue' : 'Start'} <ArrowRight size={10} />
                                   </Link>
                                 ) : (
                                   <span className="font-mono text-[0.58rem] tracking-widest uppercase text-grey-dark">

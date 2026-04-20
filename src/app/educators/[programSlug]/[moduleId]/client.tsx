@@ -73,12 +73,13 @@ export default function EducationPageClient({
     // Check if all modules are now complete → award certification
     const isProgramComplete = program.modules.every(m => newCompleted.includes(m.id))
     if (isProgramComplete) {
+      // Upsert education_certifications (legacy record)
       const { data: existing } = await supabase
         .from('education_certifications')
         .select('id')
         .eq('user_id', userId)
         .eq('program_id', program.id)
-        .single()
+        .maybeSingle()
       if (!existing) {
         await supabase.from('education_certifications').insert({
           user_id:    userId,
@@ -86,6 +87,12 @@ export default function EducationPageClient({
           cert_title: program.certTitle,
         })
       }
+      // Issue downloadable certificate into the shared certificates table
+      fetch('/api/certificates/issue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ courseId: program.id }),
+      }).catch(err => console.error('[certificates/issue educator]', err))
     }
   }
 
