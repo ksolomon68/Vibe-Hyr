@@ -17,19 +17,25 @@ export default async function CertificatesPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
-  const [certRes, profileRes] = await Promise.all([
+  const [certRes, profileRes, settingsRes] = await Promise.all([
     supabase.from('certificates').select('*').eq('user_id', user.id).order('issued_at', { ascending: false }),
-    supabase.from('profiles').select('vertical').eq('id', user.id).single()
+    supabase.from('profiles').select('vertical').eq('id', user.id).single(),
+    supabase.from('platform_settings').select('value').eq('key', 'founder_signature_url').maybeSingle()
   ])
 
   const certificates = certRes.data ?? []
   const vertical = profileRes.data?.vertical ?? 'personal'
+  const signatureUrl = settingsRes.data?.value ?? null
 
   return (
     <>
       <Navbar />
       <main className="pt-[68px] min-h-screen" style={{ background: '#0a0a0a' }}>
-        <CertificateDashboard certificates={certificates} vertical={vertical} />
+        <CertificateDashboard 
+          certificates={certificates} 
+          vertical={vertical} 
+          signatureUrl={signatureUrl}
+        />
       </main>
       <Footer />
     </>

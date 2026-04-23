@@ -23,6 +23,7 @@ interface Certificate {
 interface Props {
   certificates: Certificate[]
   vertical?: string
+  signatureUrl?: string | null
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -44,7 +45,7 @@ function formatDate(iso: string) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Main component
 // ─────────────────────────────────────────────────────────────────────────────
-export function CertificateDashboard({ certificates, vertical = 'personal' }: Props) {
+export function CertificateDashboard({ certificates, vertical = 'personal', signatureUrl = null }: Props) {
   const [downloading, setDownloading] = useState<string | null>(null)
   const [copied,      setCopied]      = useState<string | null>(null)
 
@@ -57,13 +58,16 @@ export function CertificateDashboard({ certificates, vertical = 'personal' }: Pr
   async function handleDownload(cert: Certificate) {
     setDownloading(cert.id)
     setPreviewCert(cert)
-    // Wait one tick for the hidden template to mount
-    await new Promise(r => setTimeout(r, 80))
+    // Increased timeout to 1s to ensure fonts and images (signatures) are fully rendered for html2canvas
+    await new Promise(r => setTimeout(r, 1000))
     try {
+      if (!signatureUrl) {
+        console.warn('[CertificateDashboard] No signatureUrl provided for capture.')
+      }
       const filename = `${cert.member_name.replace(/\s+/g, '-')}-${cert.certificate_number}.pdf`
       await generateCertificatePDF('certificate-template', filename)
     } catch (e) {
-      console.error(e)
+      console.error('[CertificateDashboard] PDF Generation Failed:', e)
     } finally {
       setDownloading(null)
       setPreviewCert(null)
@@ -228,7 +232,7 @@ export function CertificateDashboard({ certificates, vertical = 'personal' }: Pr
             courseTitle={previewCert.course_title}
             certificateNumber={previewCert.certificate_number}
             issuedAt={previewCert.issued_at}
-            signatureUrl={null}
+            signatureUrl={signatureUrl}
           />
         </div>
       )}

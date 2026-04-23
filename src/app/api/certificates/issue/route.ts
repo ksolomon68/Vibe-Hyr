@@ -18,8 +18,11 @@ export async function POST(req: NextRequest) {
   }
 
   const canonicalCourseId = SLUG_TO_COURSE_ID[courseId] ?? courseId
+  console.log('[certificates/issue] Request for:', { courseId, canonicalCourseId })
+  
   const meta = COURSE_TITLES[canonicalCourseId]
   if (!meta) {
+    console.error('[certificates/issue] Unknown course ID:', canonicalCourseId)
     return NextResponse.json({ error: `Unknown course: ${courseId}` }, { status: 400 })
   }
 

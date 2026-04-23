@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ChevronLeft, ChevronRight, PanelRight, CheckCircle, Circle, Lock,
-  Menu, X, Loader2, ArrowRight,
+  Menu, X, Loader2, ArrowRight, FileText,
 } from 'lucide-react'
 import { VideoPlayer } from '@/components/personal/VideoPlayer'
 import { LessonContent } from '@/components/personal/LessonContent'
@@ -486,12 +486,20 @@ export default function LeadershipLessonPlayer({
                         Next Lesson <ChevronRight size={14} />
                       </Link>
                     ) : (
+                    <div className="flex items-center gap-3">
+                      <Link
+                        href="/dashboard/certificates"
+                        className="btn-outline-orange flex items-center gap-2"
+                      >
+                        <FileText size={14} /> Download Certificate
+                      </Link>
                       <Link
                         href="/leadership"
                         className="btn-orange flex items-center gap-2"
                       >
                         <CheckCircle size={14} /> Course Complete
                       </Link>
+                    </div>
                     )
                   ) : (
                     <button

@@ -39,22 +39,34 @@ export const COURSE_TITLES: Record<string, { title: string; vertical: string }> 
  */
 export const SLUG_TO_COURSE_ID: Record<string, string> = {
   // Personal (slug → course_id)
-  'programming-the-gatekeeper': 'personal_course_1',
-  'law-of-assumption':          'personal_course_2',
-  'sats-reprogramming':         'personal_course_3',
-  'echo-theory-delay':          'personal_course_4',
+  'programming-the-gatekeeper':        'personal_course_1',
+  'mastery-of-the-law-of-assumption': 'personal_course_2',
+  'subconscious-reprogramming-sats':  'personal_course_3',
+  'navigating-the-echo-theory-delay': 'personal_course_4',
 
-  // Business (slug → course_id)
+  // Business (slug or short ID → course_id)
   'common-sense-in-the-workplace': 'business_course_1',
   'from-reaction-to-response':     'business_course_2',
   'know-yourself-lead-yourself':   'business_course_3',
   'the-high-frequency-team':       'business_course_4',
+  'b01': 'business_course_1',
+  'b02': 'business_course_2',
+  'b03': 'business_course_3',
+  'b04': 'business_course_4',
 
-  // Education (id-style → course_id)
+  // Education (slug, id-style, or numeric → course_id)
+  'the-educator-reset':       'education_course_1',
+  'vibrational-leadership':   'education_course_2',
+  'co-regulation-mastery':    'education_course_3',
+  'echo-theory-for-educators':'education_course_4',
   'ed01': 'education_course_1',
   'ed02': 'education_course_2',
   'ed03': 'education_course_3',
   'ed04': 'education_course_4',
+  '9':  'education_course_1',
+  '10': 'education_course_2',
+  '11': 'education_course_3',
+  '12': 'education_course_4',
 
   // Leadership (already canonical)
   'leadership_course_1': 'leadership_course_1',
@@ -87,7 +99,7 @@ const VERTICAL_SEQUENCE: Record<string, { slugs: string[]; base: string }> = {
       'know-yourself-lead-yourself',
       'the-high-frequency-team',
     ],
-    base: '/workplace',
+    base: '/business',
   },
   education: {
     slugs: ['ed01', 'ed02', 'ed03', 'ed04'],
@@ -95,10 +107,10 @@ const VERTICAL_SEQUENCE: Record<string, { slugs: string[]; base: string }> = {
   },
   leadership: {
     slugs: [
-      'leadership-the-internal-authority',
-      'leadership-visionary-architecture',
-      'leadership-bridge-of-incidents',
-      'leadership-echo-theory-mastery',
+      'leadership_course_1',
+      'leadership_course_2',
+      'leadership_course_3',
+      'leadership_course_4',
     ],
     base: '/leadership',
   },
@@ -133,10 +145,10 @@ const FIRST_LESSON_PATH: Record<string, string> = {
   'navigating-the-echo-theory-delay':  '/personal/navigating-the-echo-theory-delay/c04-l01',
 
   // Business — /business/[trackId]/[lessonId]
-  'common-sense-in-the-workplace': '/business/common-sense-in-the-workplace/the-awareness-gap',
-  'from-reaction-to-response':     '/business/from-reaction-to-response/the-reactivity-spectrum',
-  'know-yourself-lead-yourself':   '/business/know-yourself-lead-yourself/identity-architecture',
-  'the-high-frequency-team':       '/business/the-high-frequency-team/team-frequency-mapping',
+  'common-sense-in-the-workplace': '/business/common-sense-in-the-workplace/b01-l01',
+  'from-reaction-to-response':     '/business/from-reaction-to-response/b02-l01',
+  'know-yourself-lead-yourself':   '/business/know-yourself-lead-yourself/b03-l01',
+  'the-high-frequency-team':       '/business/the-high-frequency-team/b04-l01',
 
   // Education — /educators/[programId]/[moduleId]
   'ed01': '/educators/ed01/ed01-m01',
@@ -145,10 +157,10 @@ const FIRST_LESSON_PATH: Record<string, string> = {
   'ed04': '/educators/ed04/ed04-m01',
 
   // Leadership — /leadership/[courseId]/[lessonId]
-  'leadership-the-internal-authority': '/leadership/leadership_course_1/the-responsibility-formula',
-  'leadership-visionary-architecture':  '/leadership/leadership_course_2/the-neuroscience-of-sats',
-  'leadership-bridge-of-incidents':     '/leadership/leadership_course_3/walking-the-bridge',
-  'leadership-echo-theory-mastery':     '/leadership/leadership_course_4/echo-theory-defined',
+  'leadership_course_1': '/leadership/leadership_course_1/the-responsibility-formula',
+  'leadership_course_2': '/leadership/leadership_course_2/the-neuroscience-of-sats',
+  'leadership_course_3': '/leadership/leadership_course_3/walking-the-bridge',
+  'leadership_course_4': '/leadership/leadership_course_4/echo-theory-defined',
   // canonical IDs (for lookup from course.id)
   'leadership_course_1': '/leadership/leadership_course_1/the-responsibility-formula',
   'leadership_course_2': '/leadership/leadership_course_2/the-neuroscience-of-sats',

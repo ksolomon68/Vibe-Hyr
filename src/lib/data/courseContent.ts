@@ -39,8 +39,16 @@ function toEmbedUrl(youtubeUrl: string): string {
 
 // ── course_id integer → course string id ─────────────────────────────────────
 function numToStringId(n: number): string {
+  // 1-4: Personal (c01-c04)
+  if (n >= 1 && n <= 4) return `c0${n}`
+  // 5-8: Business (b01-b04)
+  if (n >= 5 && n <= 8) return `b0${n - 4}`
+  // 9-12: Education (ed01-ed04)
+  if (n >= 9 && n <= 12) return `ed0${n - 8}`
+  // 13-16: Leadership
   if (n >= 13 && n <= 16) return `leadership_course_${n - 12}`
-  return `c0${n}`
+  
+  return `unknown_${n}`
 }
 
 type DbLessonRow = {
@@ -69,9 +77,25 @@ function getApproxDurationSeconds(type: string, content: string | null): number 
 }
 
 function dbRowToLesson(row: DbLessonRow): Lesson {
+  const courseIdStr = numToStringId(row.course_id);
+  
+  // Predictable ID format for verticals that use sequence-based routing
+  let lessonId = slugify(row.title);
+  
+  if (courseIdStr.startsWith('c0')) {
+    // Personal: c01-l01, c01-l02...
+    lessonId = `${courseIdStr}-l${row.sort_order.toString().padStart(2, '0')}`;
+  } else if (courseIdStr.startsWith('ed0')) {
+    // Education: ed01-m01, ed01-m02...
+    lessonId = `${courseIdStr}-m${row.sort_order.toString().padStart(2, '0')}`;
+  } else if (courseIdStr.startsWith('b0')) {
+    // Business: b01-l01, b01-l02...
+    lessonId = `${courseIdStr}-l${row.sort_order.toString().padStart(2, '0')}`;
+  }
+
   return {
-    id:               slugify(row.title),
-    course_id:        numToStringId(row.course_id),
+    id:               lessonId,
+    course_id:        courseIdStr,
     order_index:      row.sort_order,
     title:            row.title,
     description:      '',

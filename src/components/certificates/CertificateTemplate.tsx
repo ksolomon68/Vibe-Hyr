@@ -196,11 +196,11 @@ export function CertificateTemplate({
               <img
                 src={signatureUrl}
                 alt="Founder signature"
-                style={{ maxWidth: 120, maxHeight: 50, objectFit: 'contain', filter: 'invert(1) brightness(0.85)' }}
+                style={{ maxWidth: 120, maxHeight: 50, objectFit: 'contain' }}
                 crossOrigin="anonymous"
               />
             ) : (
-              <div style={{ height: 50, width: 120, borderBottom: '1px solid rgba(255,255,255,0.15)' }} />
+              <div style={{ height: 40, width: 120, borderBottom: '1px solid rgba(255,255,255,0.1)' }} />
             )}
             <div style={{ fontSize: 13, color: '#fff', fontWeight: 500, letterSpacing: '0.04em' }}>
               Keisha Solomon

@@ -4,7 +4,7 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowRight, ChevronLeft } from 'lucide-react'
+import { ArrowRight, ChevronLeft, FileText } from 'lucide-react'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { COURSES } from '@/lib/leadership/curriculum'
@@ -142,13 +142,23 @@ export default async function CourseDetailPage({ params }: PageProps) {
             </p>
 
             {canAccess ? (
-              <Link
-                href={`/leadership/${course.id}/${nextLesson.id}`}
-                className="btn-orange inline-flex items-center gap-2"
-              >
-                {isComplete ? 'Review Course' : hasStarted ? 'Continue Course' : 'Begin Course'}{' '}
-                <ArrowRight size={14} />
-              </Link>
+              <div className="flex flex-wrap gap-4">
+                <Link
+                  href={`/leadership/${course.id}/${nextLesson.id}`}
+                  className="btn-orange inline-flex items-center gap-2"
+                >
+                  {isComplete ? 'Review Course' : hasStarted ? 'Continue Course' : 'Begin Course'}{' '}
+                  <ArrowRight size={14} />
+                </Link>
+                {isComplete && (
+                  <Link
+                    href="/dashboard/certificates"
+                    className="btn-outline-orange inline-flex items-center gap-2"
+                  >
+                    <FileText size={14} /> Download Certificate
+                  </Link>
+                )}
+              </div>
             ) : tierGrant && !prevCourseComplete && prevCourse ? (
               <div className="flex flex-col gap-3">
                 <p className="font-mono text-[0.55rem] tracking-[0.2em] uppercase text-[#C9A84C]">

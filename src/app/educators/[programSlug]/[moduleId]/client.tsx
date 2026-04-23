@@ -46,6 +46,7 @@ export default function EducationPageClient({
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [activeTab, setActiveTab]     = useState<Tab>('lesson')
   const [completedIds, setCompletedIds] = useState<string[]>(initialCompleted)
+  const [markingComplete, setMarkingComplete] = useState(false)
 
   const { content: lessonNotes, handleChange: handleNotesChange, saving: notesSaving, saved: notesSaved } =
     useLessonNotes(module.id)
@@ -73,6 +74,8 @@ export default function EducationPageClient({
     // Check if all modules are now complete → award certification
     const isProgramComplete = program.modules.every(m => newCompleted.includes(m.id))
     if (isProgramComplete) {
+      console.log('[educators/saveProgress] Program complete, issuing certificate:', program.id)
+      
       // Upsert education_certifications (legacy record)
       const { data: existing } = await supabase
         .from('education_certifications')
@@ -80,6 +83,7 @@ export default function EducationPageClient({
         .eq('user_id', userId)
         .eq('program_id', program.id)
         .maybeSingle()
+      
       if (!existing) {
         await supabase.from('education_certifications').insert({
           user_id:    userId,
@@ -87,19 +91,37 @@ export default function EducationPageClient({
           cert_title: program.certTitle,
         })
       }
+
       // Issue downloadable certificate into the shared certificates table
-      fetch('/api/certificates/issue', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ courseId: program.id }),
-      }).catch(err => console.error('[certificates/issue educator]', err))
+      try {
+        const res = await fetch('/api/certificates/issue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ courseId: program.id }),
+        })
+        if (!res.ok) {
+          const errData = await res.json()
+          console.error('[certificates/issue educator] API error:', errData)
+        }
+      } catch (err) {
+        console.error('[certificates/issue educator] Fetch error:', err)
+      }
     }
   }
 
   async function handleMarkComplete() {
-    await saveProgress(module.id)
-    if (nextModule) router.push(`/educators/${program.slug}/${nextModule.id}`)
-    else router.push(`/educators/${program.slug}`)
+    setMarkingComplete(true)
+    try {
+      await saveProgress(module.id)
+      if (nextModule) {
+        router.push(`/educators/${program.slug}/${nextModule.id}`)
+      } else {
+        router.push(`/educators/${program.slug}`)
+      }
+    } catch (err) {
+      console.error('[educators/handleMarkComplete] Error:', err)
+      setMarkingComplete(false)
+    }
   }
 
   return (
@@ -381,11 +403,21 @@ export default function EducationPageClient({
                   ) : (
                     <button
                       onClick={handleMarkComplete}
-                      className="btn-orange flex items-center gap-2"
+                      disabled={markingComplete}
+                      className="btn-orange flex items-center gap-2 min-w-[140px] justify-center"
                     >
-                      <CheckCircle size={14} />
-                      Mark Complete
-                      {nextModule && <ChevronRight size={12} />}
+                      {markingComplete ? (
+                        <>
+                          <Loader2 size={14} className="animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle size={14} />
+                          Mark Complete
+                          {nextModule && <ChevronRight size={12} />}
+                        </>
+                      )}
                     </button>
                   )}
                 </div>

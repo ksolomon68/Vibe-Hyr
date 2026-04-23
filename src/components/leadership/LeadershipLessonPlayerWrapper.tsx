@@ -81,10 +81,13 @@ export function LeadershipLessonPlayerWrapper({
   const handleComplete = useCallback(async (courseId: string, lessonId: string) => {
     if (!userId) return;
 
+    const currentCompleted = progress[courseId] ?? [];
+    const newCompleted = [...new Set([...currentCompleted, lessonId])];
+    
     // Optimistically update local state
     setProgress(prev => ({
       ...prev,
-      [courseId]: [...(prev[courseId] ?? []), lessonId],
+      [courseId]: newCompleted,
     }));
 
     // Upsert to DB
@@ -100,7 +103,7 @@ export function LeadershipLessonPlayerWrapper({
 
     // Check course completion
     const lessonCount = COURSE_LESSON_COUNTS[courseId] ?? 0;
-    const newCount    = (progress[courseId]?.length ?? 0) + 1;
+    const newCount    = newCompleted.length;
     if (newCount >= lessonCount) {
       await supabase.from("leadership_course_completions").upsert(
         {

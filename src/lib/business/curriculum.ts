@@ -49,7 +49,7 @@ export const TRACKS: Track[] = [
     description: "The foundational track. Before de-escalation, self-mastery, or team cohesion is possible, every professional needs a baseline level of emotional awareness, communication clarity, and personal vibe hygiene.",
     lessons: [
       {
-        id: "the-awareness-gap",
+        id: "b01-l01",
         num: "01",
         title: "The Awareness Gap",
         duration: "20 min",
@@ -96,7 +96,7 @@ export const TRACKS: Track[] = [
         ],
       },
       {
-        id: "emotional-signals-at-work",
+        id: "b01-l02",
         num: "02",
         title: "Emotional Signals at Work",
         duration: "22 min",
@@ -122,7 +122,7 @@ export const TRACKS: Track[] = [
         ],
       },
       {
-        id: "communication-architecture",
+        id: "b01-l03",
         num: "03",
         title: "Communication Architecture",
         duration: "25 min",
@@ -147,7 +147,7 @@ export const TRACKS: Track[] = [
         ],
       },
       {
-        id: "trigger-mapping",
+        id: "b01-l04",
         num: "04",
         title: "Trigger Mapping",
         duration: "20 min",
@@ -172,7 +172,7 @@ export const TRACKS: Track[] = [
         ],
       },
       {
-        id: "vibe-hygiene",
+        id: "b01-l05",
         num: "05",
         title: "Vibe Hygiene",
         duration: "18 min",
@@ -197,7 +197,7 @@ export const TRACKS: Track[] = [
         ],
       },
       {
-        id: "live-integration-session",
+        id: "b01-l06",
         num: "06",
         title: "Live Integration Session",
         duration: "60 min",
@@ -222,7 +222,7 @@ export const TRACKS: Track[] = [
     description: "Conflict isn't the problem. Unconscious escalation is. This track installs a five-stage Escalation Ladder.",
     lessons: [
        {
-        id: "the-reactivity-spectrum",
+        id: "b02-l01",
         num: "01",
         title: "The Reactivity Spectrum",
         duration: "18 min",
@@ -240,7 +240,7 @@ export const TRACKS: Track[] = [
         ],
       },
       {
-        id: "the-escalation-ladder",
+        id: "b02-l02",
         num: "02",
         title: "The Escalation Ladder",
         duration: "22 min",
@@ -258,7 +258,7 @@ export const TRACKS: Track[] = [
         ],
       },
       {
-        id: "stage-1-intervention",
+        id: "b02-l03",
         num: "03",
         title: "Stage 1 Intervention",
         duration: "20 min",
@@ -276,7 +276,7 @@ export const TRACKS: Track[] = [
         ],
       },
       {
-        id: "pattern-interrupts",
+        id: "b02-l04",
         num: "04",
         title: "Pattern Interrupts",
         duration: "22 min",
@@ -294,7 +294,7 @@ export const TRACKS: Track[] = [
         ],
       },
       {
-        id: "response-protocols",
+        id: "b02-l05",
         num: "05",
         title: "Response Protocols",
         duration: "20 min",
@@ -312,7 +312,7 @@ export const TRACKS: Track[] = [
         ],
       },
       {
-        id: "live-de-escalation-workshop",
+        id: "b02-l06",
         num: "06",
         title: "Live De-Escalation Workshop",
         duration: "60 min",
@@ -337,7 +337,7 @@ export const TRACKS: Track[] = [
     description: "Leadership begins with self-knowledge. This track uses neuroscience and the Law of Assumption.",
     lessons: [
        {
-        id: "identity-architecture",
+        id: "b03-l01",
         num: "01",
         title: "Identity Architecture",
         duration: "22 min",
@@ -355,7 +355,7 @@ export const TRACKS: Track[] = [
         ],
       },
       {
-        id: "the-four-archetypes",
+        id: "b03-l02",
         num: "02",
         title: "The Four Archetypes",
         duration: "25 min",
@@ -373,7 +373,7 @@ export const TRACKS: Track[] = [
         ],
       },
       {
-        id: "the-assumption-audit",
+        id: "b03-l03",
         num: "03",
         title: "The Assumption Audit",
         duration: "22 min",
@@ -391,7 +391,7 @@ export const TRACKS: Track[] = [
         ],
       },
       {
-        id: "the-90-day-shift-plan",
+        id: "b03-l04",
         num: "04",
         title: "The 90-Day Shift Plan",
         duration: "25 min",
@@ -403,7 +403,7 @@ export const TRACKS: Track[] = [
         quiz: [{ q: "The 90-Day Shift moves through how many phases?", options: ["Two", "Three", "Four", "One"], correct: 1 }],
       },
       {
-        id: "revision-and-the-law-of-assumption",
+        id: "b03-l05",
         num: "05",
         title: "Revision and the Law of Assumption",
         duration: "22 min",
@@ -415,7 +415,7 @@ export const TRACKS: Track[] = [
         quiz: [{ q: "Revision works by:", options: ["Pretending past events didn't happen", "Neurologically reconsolidating memory with an updated self-assumption", "Affirmations", "Visualization only"], correct: 1 }],
       },
       {
-        id: "live-self-mastery-session",
+        id: "b03-l06",
         num: "06",
         title: "Live Self-Mastery Session",
         duration: "60 min",
@@ -440,7 +440,7 @@ export const TRACKS: Track[] = [
     description: "High performance is a byproduct of high frequency. This track builds the team architecture for sustained excellence.",
     lessons: [
        {
-        id: "team-frequency-mapping",
+        id: "b04-l01",
         num: "01",
         title: "Team Frequency Mapping",
         duration: "18 min",
@@ -458,7 +458,7 @@ export const TRACKS: Track[] = [
         ],
       },
       {
-        id: "collective-assumptions",
+        id: "b04-l02",
         num: "02",
         title: "Collective Assumptions",
         duration: "22 min",
@@ -470,7 +470,7 @@ export const TRACKS: Track[] = [
         quiz: [{ q: "A team's collective assumption most directly determines:", options: ["Task assignment", "Meeting frequency", "Collective performance ceiling", "Leadership hierarchy"], correct: 2 }],
       },
       {
-        id: "the-accountability-architecture",
+        id: "b04-l03",
         num: "03",
         title: "The Accountability Architecture",
         duration: "25 min",
@@ -482,7 +482,7 @@ export const TRACKS: Track[] = [
         quiz: [{ q: "Intrinsic accountability differs from imposed accountability because:", options: ["It requires external pressure", "It is built into team identity rather than requiring monitoring", "It uses punishment", "It is performance-based"], correct: 1 }],
       },
       {
-        id: "communication-at-high-frequency",
+        id: "b04-l04",
         num: "04",
         title: "Communication at High Frequency",
         duration: "22 min",
@@ -494,7 +494,7 @@ export const TRACKS: Track[] = [
         quiz: [{ q: "High-frequency teams resolve friction faster because:", options: ["They avoid conflict", "Low friction-to-resolution ratio: fast resolution protocols, not fewer conflicts", "Leadership is stronger", "They communicate less"], correct: 1 }],
       },
       {
-        id: "sustaining-team-excellence",
+        id: "b04-l05",
         num: "05",
         title: "Sustaining Team Excellence",
         duration: "20 min",
@@ -506,7 +506,7 @@ export const TRACKS: Track[] = [
         quiz: [{ q: "Team frequency drift is best addressed by:", options: ["Replacing team members", "Performance improvement plans", "Proactive maintenance rhythms — preventing drift before it becomes visible", "Retreats only"], correct: 2 }],
       },
       {
-        id: "live-team-excellence-workshop",
+        id: "b04-l06",
         num: "06",
         title: "Live Team Excellence Workshop",
         duration: "60 min",
