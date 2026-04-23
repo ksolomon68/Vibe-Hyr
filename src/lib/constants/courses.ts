@@ -161,11 +161,6 @@ const FIRST_LESSON_PATH: Record<string, string> = {
   'leadership_course_2': '/leadership/leadership_course_2/the-neuroscience-of-sats',
   'leadership_course_3': '/leadership/leadership_course_3/walking-the-bridge',
   'leadership_course_4': '/leadership/leadership_course_4/echo-theory-defined',
-  // canonical IDs (for lookup from course.id)
-  'leadership_course_1': '/leadership/leadership_course_1/the-responsibility-formula',
-  'leadership_course_2': '/leadership/leadership_course_2/the-neuroscience-of-sats',
-  'leadership_course_3': '/leadership/leadership_course_3/walking-the-bridge',
-  'leadership_course_4': '/leadership/leadership_course_4/echo-theory-defined',
 }
 
 /**
