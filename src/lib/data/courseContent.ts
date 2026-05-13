@@ -14,7 +14,7 @@
  *   4 = c04  Echo Theory Delay
  */
 
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getLessonsForCourse as getStaticLessons } from '@/lib/data/lessons'
 import type { Lesson } from '@/types'
 
@@ -122,7 +122,7 @@ export async function getLessonsWithDBFallback(
   courseStringId: string,
   courseOrderIndex: number,
 ): Promise<Lesson[]> {
-  const supabase = createClient()
+  const supabase = createAdminClient()
 
   const { data, error } = await supabase
     .from('course_lessons')
