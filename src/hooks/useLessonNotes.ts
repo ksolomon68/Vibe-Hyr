@@ -22,7 +22,7 @@ export function useLessonNotes(lessonId: string) {
         .select('content')
         .eq('user_id', user.id)
         .eq('lesson_id', lessonId)
-        .single()
+        .maybeSingle()
 
       if (data) setContent(data.content)
       setLoaded(true)
