@@ -20,12 +20,14 @@ interface WrapperProps {
   initialCourseId?: string;
   initialLessonId?: string;
   initialLessons?:  Lesson[];
+  isGuest?:         boolean;
 }
 
 export function LeadershipLessonPlayerWrapper({
   initialCourseId = "leadership_course_1",
   initialLessonId = "the-responsibility-formula",
   initialLessons = [],
+  isGuest = false,
 }: WrapperProps) {
   const supabase = createClient();
   const router   = useRouter();
@@ -41,7 +43,12 @@ export function LeadershipLessonPlayerWrapper({
     async function init() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        router.replace(`/auth/login?redirect=/leadership/${initialCourseId}/${initialLessonId}`);
+        if (!isGuest) {
+          router.replace(`/auth/login?redirect=/leadership/${initialCourseId}/${initialLessonId}`);
+          return;
+        }
+        // Guest preview: render with no progress
+        setLoading(false);
         return;
       }
 

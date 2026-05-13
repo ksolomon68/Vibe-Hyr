@@ -25,7 +25,7 @@ interface Props {
   initialModuleIdx:  number
   program:           EducationProgram
   module:            EducationModule
-  userId:            string
+  userId:            string | null
   initialCompleted:  string[]
   videoUrl?:         string | null
 }
@@ -62,6 +62,7 @@ export default function EducationPageClient({
     : 0
 
   async function saveProgress(moduleId: string) {
+    if (!userId) return
     const supabase = createClient()
     const newCompleted = [...new Set([...completedIds, moduleId])]
     setCompletedIds(newCompleted)
@@ -400,6 +401,10 @@ export default function EducationPageClient({
                         <CheckCircle size={14} /> Program Complete
                       </Link>
                     )
+                  ) : !userId ? (
+                    <Link href="/auth/signup" className="btn-orange flex items-center gap-2">
+                      Sign Up to Track Progress <ChevronRight size={14} />
+                    </Link>
                   ) : (
                     <button
                       onClick={handleMarkComplete}

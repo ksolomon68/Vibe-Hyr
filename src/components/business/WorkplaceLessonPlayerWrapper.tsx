@@ -18,6 +18,7 @@ interface WrapperProps {
   initialTrackId?: string;
   initialLessonId?: string;
   dbLessonContent?: string | null;
+  isGuest?:         boolean;
 }
 
 // Tier access rules:
@@ -34,6 +35,7 @@ export function WorkplaceLessonPlayerWrapper({
   initialTrackId = "common-sense-in-the-workplace",
   initialLessonId = "the-awareness-gap",
   dbLessonContent,
+  isGuest = false,
 }: WrapperProps) {
   const supabase = createClient();
   const router   = useRouter();
@@ -48,7 +50,11 @@ export function WorkplaceLessonPlayerWrapper({
   useEffect(() => {
     async function init() {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { router.replace("/auth/login?redirect=/business"); return; }
+      if (!user) {
+        if (!isGuest) { router.replace("/auth/login?redirect=/business"); return; }
+        setLoading(false);
+        return;
+      }
 
       const uid = user.id;
       setUserId(uid);

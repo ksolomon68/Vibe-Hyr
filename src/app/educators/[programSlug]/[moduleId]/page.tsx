@@ -15,6 +15,8 @@ const PROGRAM_COURSE_ID: Record<string, number> = {
   'ed04': 12,
 }
 
+const PREVIEW_LESSON = { programSlug: 'the-educator-reset', moduleId: 'ed01-m01' }
+
 export default async function EducationModulePage({
   params,
 }: {
@@ -23,7 +25,12 @@ export default async function EducationModulePage({
   const supabase = createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/auth/login?redirect=/educators/' + params.programSlug + '/' + params.moduleId)
+
+  const isPreview = params.programSlug === PREVIEW_LESSON.programSlug && params.moduleId === PREVIEW_LESSON.moduleId
+
+  if (!user && !isPreview) {
+    redirect('/auth/login?redirect=/educators/' + params.programSlug + '/' + params.moduleId)
+  }
 
   const pIdx = PROGRAMS.findIndex(p => p.slug === params.programSlug)
   if (pIdx === -1) redirect('/educators')
@@ -34,8 +41,7 @@ export default async function EducationModulePage({
 
   const module = program.modules[mIdx]
 
-  // ── DB-level access gate (RLS enforces membership_type + sub_tier) ──────────
-  // Fetch video URL from course_lessons for this module
+  // ── Fetch video URL ─────────────────────────────────────────────────────────
   const courseId = PROGRAM_COURSE_ID[program.id]
   let videoUrl: string | null = null
   if (courseId) {
@@ -49,45 +55,61 @@ export default async function EducationModulePage({
     videoUrl = lessonRow?.youtube_url ?? null
   }
 
-  const [{ data: profile }, { data: progressData }] = await Promise.all([
-    supabase
-      .from('profiles')
-      .select('vertical, is_super_admin, is_bypassed')
-      .eq('id', user.id)
-      .single(),
-    supabase
-      .from('education_progress')
-      .select('module_id')
-      .eq('user_id', user.id),
-  ])
+  // ── Access gate + progress (authenticated users only) ──────────────────────
+  if (user) {
+    const [{ data: profile }, { data: progressData }] = await Promise.all([
+      supabase
+        .from('profiles')
+        .select('vertical, is_super_admin, is_bypassed')
+        .eq('id', user.id)
+        .single(),
+      supabase
+        .from('education_progress')
+        .select('module_id')
+        .eq('user_id', user.id),
+    ])
 
-  const isSuperAdmin = profile?.is_super_admin ?? false
-  const isBypassed   = profile?.is_bypassed ?? false
-  const isEducator   = profile?.vertical === 'education'
-  const canAccess    = isSuperAdmin || isBypassed || isEducator
+    const isSuperAdmin = profile?.is_super_admin ?? false
+    const isBypassed   = profile?.is_bypassed ?? false
+    const isEducator   = profile?.vertical === 'education'
+    const canAccess    = isSuperAdmin || isBypassed || isEducator
 
-  if (!canAccess) {
+    if (!canAccess) {
+      return (
+        <CourseLockedScreen
+          reason="tier_required"
+          courseSlug={params.programSlug}
+          sectionLabel="EDUCATOR"
+          backHref="/educators"
+          backLabel="Back to Programs"
+        />
+      )
+    }
+
+    const initialCompleted = progressData?.map(p => p.module_id) ?? []
+
     return (
-      <CourseLockedScreen
-        reason="tier_required"
-        courseSlug={params.programSlug}
-        sectionLabel="EDUCATOR"
-        backHref="/educators"
-        backLabel="Back to Programs"
+      <EducationPageClient
+        initialProgramIdx={pIdx}
+        initialModuleIdx={mIdx}
+        program={program}
+        module={module}
+        userId={user.id}
+        initialCompleted={initialCompleted}
+        videoUrl={videoUrl}
       />
     )
   }
 
-  const initialCompleted = progressData?.map(p => p.module_id) ?? []
-
+  // Guest preview
   return (
     <EducationPageClient
       initialProgramIdx={pIdx}
       initialModuleIdx={mIdx}
       program={program}
       module={module}
-      userId={user.id}
-      initialCompleted={initialCompleted}
+      userId={null}
+      initialCompleted={[]}
       videoUrl={videoUrl}
     />
   )

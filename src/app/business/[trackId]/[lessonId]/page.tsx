@@ -31,11 +31,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
+const PREVIEW_LESSON = { trackId: 'common-sense-in-the-workplace', lessonId: 'b01-l01' }
+
 export default async function LessonPage({ params }: PageProps) {
   const supabase = createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect(`/auth/login?redirect=/business/${params.trackId}/${params.lessonId}`)
+
+  const isPreview = params.trackId === PREVIEW_LESSON.trackId && params.lessonId === PREVIEW_LESSON.lessonId
+
+  if (!user && !isPreview) {
+    redirect(`/auth/login?redirect=/business/${params.trackId}/${params.lessonId}`)
+  }
 
   const track = TRACKS.find(t => t.id === params.trackId)
   if (!track) return notFound()
@@ -58,39 +65,41 @@ export default async function LessonPage({ params }: PageProps) {
     }
   }
 
-  // ── Access gate: profile-based tier + vertical check ────────────────
-  const BUSINESS_TIER_ACCESS: Record<string, string[]> = {
-    free:      ['common-sense-in-the-workplace'],
-    architect: ['common-sense-in-the-workplace', 'from-reaction-to-response', 'know-yourself-lead-yourself'],
-    elite:     ['common-sense-in-the-workplace', 'from-reaction-to-response', 'know-yourself-lead-yourself', 'the-high-frequency-team'],
-  }
+  // ── Access gate: profile-based tier + vertical check (authenticated only) ──
+  if (user) {
+    const BUSINESS_TIER_ACCESS: Record<string, string[]> = {
+      free:      ['common-sense-in-the-workplace'],
+      architect: ['common-sense-in-the-workplace', 'from-reaction-to-response', 'know-yourself-lead-yourself'],
+      elite:     ['common-sense-in-the-workplace', 'from-reaction-to-response', 'know-yourself-lead-yourself', 'the-high-frequency-team'],
+    }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('membership_tier, vertical, is_super_admin, is_bypassed')
-    .eq('id', user.id)
-    .single()
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('membership_tier, vertical, is_super_admin, is_bypassed')
+      .eq('id', user.id)
+      .single()
 
-  const tier         = profile?.membership_tier ?? 'free'
-  const isSuperAdmin = !!profile?.is_super_admin
-  const isBypassed   = !!profile?.is_bypassed
-  const instType     = profile?.vertical ?? 'personal'
-  const allowed      = (isSuperAdmin || isBypassed)
-    ? Object.values(BUSINESS_TIER_ACCESS).at(-1)!
-    : (BUSINESS_TIER_ACCESS[tier] ?? BUSINESS_TIER_ACCESS['free'])
+    const tier         = profile?.membership_tier ?? 'free'
+    const isSuperAdmin = !!profile?.is_super_admin
+    const isBypassed   = !!profile?.is_bypassed
+    const instType     = profile?.vertical ?? 'personal'
+    const allowed      = (isSuperAdmin || isBypassed)
+      ? Object.values(BUSINESS_TIER_ACCESS).at(-1)!
+      : (BUSINESS_TIER_ACCESS[tier] ?? BUSINESS_TIER_ACCESS['free'])
 
-  const canAccess = isSuperAdmin || isBypassed || (instType === 'business' && allowed.includes(params.trackId))
+    const canAccess = isSuperAdmin || isBypassed || (instType === 'business' && allowed.includes(params.trackId))
 
-  if (!canAccess) {
-    return (
-      <CourseLockedScreen
-        reason="tier_required"
-        courseSlug={params.trackId}
-        sectionLabel="BUSINESS"
-        backHref="/business"
-        backLabel="Back to Training"
-      />
-    )
+    if (!canAccess) {
+      return (
+        <CourseLockedScreen
+          reason="tier_required"
+          courseSlug={params.trackId}
+          sectionLabel="BUSINESS"
+          backHref="/business"
+          backLabel="Back to Training"
+        />
+      )
+    }
   }
 
   return (
@@ -98,6 +107,7 @@ export default async function LessonPage({ params }: PageProps) {
       initialTrackId={params.trackId}
       initialLessonId={params.lessonId}
       dbLessonContent={dbLessonContent}
+      isGuest={!user}
     />
   )
 }
