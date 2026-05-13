@@ -1,6 +1,9 @@
 // app/leadership/[courseId]/[lessonId]/page.tsx
 // Dynamic lesson route for the Leadership vertical.
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 import { redirect, notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'

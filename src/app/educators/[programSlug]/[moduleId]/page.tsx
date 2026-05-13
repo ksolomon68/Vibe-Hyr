@@ -1,6 +1,9 @@
 // app/educators/[programSlug]/[moduleId]/page.tsx
 // Access is enforced server-side via course_catalog RLS policies.
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
