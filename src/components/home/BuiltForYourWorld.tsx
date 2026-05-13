@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Building2, GraduationCap, CheckCircle } from 'lucide-react'
+import { Building2, GraduationCap, Crown, CheckCircle } from 'lucide-react'
 
 const CARDS = [
   {
@@ -30,6 +30,19 @@ const CARDS = [
     cta:  'Explore Educator Programs',
     href: '/educators',
   },
+  {
+    icon:    Crown,
+    tag:     'Leadership',
+    heading: 'For Leaders & Executives',
+    body:    'Build the internal architecture of leaders who move people without pushing. Replace authority-by-position with identity-level influence that compounds across every team it touches.',
+    features: [
+      'Develop Identity-Level Authority',
+      'Create High-Performance Culture',
+      'Lead from Aligned Conviction',
+    ],
+    cta:  'Explore Leadership Programs',
+    href: '/leadership',
+  },
 ]
 
 export function BuiltForYourWorld() {
@@ -51,7 +64,7 @@ export function BuiltForYourWorld() {
         <div className="orange-rule">✦</div>
 
         {/* Two cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
           {CARDS.map(({ icon: Icon, tag, heading, body, features, cta, href }) => (
             <article
               key={tag}
@@ -103,7 +116,7 @@ export function BuiltForYourWorld() {
 
               {/* Corner accent */}
               <div className="absolute bottom-0 right-0 font-display text-[4rem] text-orange-DEFAULT/5 leading-none select-none pointer-events-none pr-4 pb-2">
-                {tag === 'Workplace' ? '⬡' : '◈'}
+                {tag === 'Workplace' ? '⬡' : tag === 'Leadership' ? '♛' : '◈'}
               </div>
             </article>
           ))}
