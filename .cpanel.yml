@@ -10,4 +10,4 @@ deployment:
     - /bin/cp package-lock.json $DEPLOYPATH/
     - /bin/cp next.config.js $DEPLOYPATH/
     - /bin/cp server.js $DEPLOYPATH/
-    - /bin/cp .gitattributes $DEPLOYPATH/
+    - /bin/cp .htaccess /home/vibehyr/public_html/.htaccess
