@@ -3,16 +3,11 @@
 // Called from your pricing page when user clicks "Purchase".
 
 import { NextRequest, NextResponse } from 'next/server'
-import { stripe } from '@/lib/stripe/client'
+import { getStripe } from '@/lib/stripe/client'
 import type Stripe from 'stripe'
 import { TIER_CONFIG, calculatePrice } from '@/lib/stripe/config'
 import type { Tier, Segment, BillingCycle } from '@/lib/stripe/config'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { getSupabaseAdmin } from '@/lib/supabase/admin'
 
 export async function POST(req: NextRequest) {
   try {
@@ -58,7 +53,7 @@ export async function POST(req: NextRequest) {
     // Skip org check for individuals
     if (!isIndividual) {
       // Check if org domain already exists
-      const { data: existingOrg } = await supabase
+      const { data: existingOrg } = await getSupabaseAdmin()
         .from('organizations')
         .select('id')
         .eq('domain', orgDomain.toLowerCase())
@@ -74,7 +69,7 @@ export async function POST(req: NextRequest) {
 
     // Create or retrieve Stripe customer
     let customerId: string
-    const { data: existingCustomer } = await supabase
+    const { data: existingCustomer } = await getSupabaseAdmin()
       .from('stripe_customers')
       .select('stripe_customer_id')
       .eq('user_id', userId)
@@ -83,7 +78,7 @@ export async function POST(req: NextRequest) {
     if (existingCustomer?.stripe_customer_id) {
       customerId = existingCustomer.stripe_customer_id
     } else {
-      const customer = await stripe.customers.create({
+      const customer = await getStripe().customers.create({
         email: adminEmail || undefined,
         name: isIndividual ? 'Individual Subscriber' : orgName,
         metadata: {
@@ -95,7 +90,7 @@ export async function POST(req: NextRequest) {
       customerId = customer.id
 
       // Save customer mapping
-      await supabase.from('stripe_customers').insert({
+      await getSupabaseAdmin().from('stripe_customers').insert({
         user_id: userId,
         stripe_customer_id: customerId,
       })
@@ -160,7 +155,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const session = await stripe.checkout.sessions.create(sessionParams)
+    const session = await getStripe().checkout.sessions.create(sessionParams)
 
     return NextResponse.json({ url: session.url, sessionId: session.id })
   } catch (error: any) {

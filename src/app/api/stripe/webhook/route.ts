@@ -3,10 +3,10 @@
 // CRITICAL: This must be a raw body handler — no JSON parsing middleware.
 
 import { NextRequest, NextResponse } from 'next/server'
-import { stripe } from '@/lib/stripe/client'
+import { getStripe } from '@/lib/stripe/client'
 import { TIER_CONFIG } from '@/lib/stripe/config'
 import type { Tier } from '@/lib/stripe/config'
-import { createClient } from '@supabase/supabase-js'
+import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import Stripe from 'stripe'
 import { sendEmail } from '@/lib/email/resend'
 import {
@@ -15,19 +15,13 @@ import {
   subscriptionCancelledTemplate,
 } from '@/lib/email/templates'
 
-// Use service role — this runs server-side only, bypasses RLS
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
 export async function POST(req: NextRequest) {
   const body = await req.text()
   const sig = req.headers.get('stripe-signature')!
 
   let event: Stripe.Event
   try {
-    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
+    event = getStripe().webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
   } catch (err: any) {
     console.error('[webhook] Signature verification failed:', err.message)
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
@@ -107,11 +101,11 @@ async function provisionAccess(session: Stripe.Checkout.Session) {
 
   // 1. Get the subscription ID from Stripe
   const subscriptionId = session.subscription as string
-  const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+  const subscription = await getStripe().subscriptions.retrieve(subscriptionId)
   const periodEnd = new Date(subscription.current_period_end * 1000)
 
   // 2. Create the organization
-  const { data: org, error: orgError } = await supabase
+  const { data: org, error: orgError } = await getSupabaseAdmin()
     .from('organizations')
     .insert({
       name: orgName,
@@ -135,7 +129,7 @@ async function provisionAccess(session: Stripe.Checkout.Session) {
   }
 
   // 3. Create subscription record
-  await supabase.from('subscriptions').insert({
+  await getSupabaseAdmin().from('subscriptions').insert({
     org_id: org.id,
     tier,
     segment,
@@ -149,7 +143,7 @@ async function provisionAccess(session: Stripe.Checkout.Session) {
   })
 
   // 4. Add admin as first org member
-  await supabase.from('organization_members').insert({
+  await getSupabaseAdmin().from('organization_members').insert({
     org_id: org.id,
     user_id: userId,
     role: 'admin',
@@ -163,14 +157,14 @@ async function provisionAccess(session: Stripe.Checkout.Session) {
     course_slug: courseSlug,
     granted_by: userId,
   }))
-  await supabase.from('course_access').insert(courseAccess)
+  await getSupabaseAdmin().from('course_access').insert(courseAccess)
 
   // 6. Send branded welcome email
   const recipientEmail = adminEmail || (
-    await supabase.from('profiles').select('email').eq('id', userId).single()
+    await getSupabaseAdmin().from('profiles').select('email').eq('id', userId).single()
   ).data?.email
   if (recipientEmail) {
-    const { data: profile } = await supabase
+    const { data: profile } = await getSupabaseAdmin()
       .from('profiles').select('full_name').eq('id', userId).single()
     let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
     // Bulletproof sanitization: remove quotes, remove ALL existing protocol prefixes, and trailing slashes
@@ -197,10 +191,10 @@ async function provisionAccess(session: Stripe.Checkout.Session) {
 // ─────────────────────────────────────────────────────────────────────────────
 async function handleRenewal(invoice: Stripe.Invoice) {
   const subscriptionId = invoice.subscription as string
-  const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+  const subscription = await getStripe().subscriptions.retrieve(subscriptionId)
   const periodEnd = new Date(subscription.current_period_end * 1000)
 
-  await supabase
+  await getSupabaseAdmin()
     .from('organizations')
     .update({
       status: 'active',
@@ -208,7 +202,7 @@ async function handleRenewal(invoice: Stripe.Invoice) {
     })
     .eq('stripe_subscription_id', subscriptionId)
 
-  await supabase
+  await getSupabaseAdmin()
     .from('subscriptions')
     .update({
       status: 'active',
@@ -226,7 +220,7 @@ async function handleRenewal(invoice: Stripe.Invoice) {
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
   const subscriptionId = invoice.subscription as string
 
-  const { data: org } = await supabase
+  const { data: org } = await getSupabaseAdmin()
     .from('organizations')
     .update({ status: 'payment_failed' })
     .eq('stripe_subscription_id', subscriptionId)
@@ -235,14 +229,14 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
 
   // Send payment-failed email to org admin
   if (org) {
-    const { data: adminMember } = await supabase
+    const { data: adminMember } = await getSupabaseAdmin()
       .from('organization_members')
       .select('user_id')
       .eq('org_id', org.id)
       .eq('role', 'admin')
       .single()
     if (adminMember) {
-      const { data: profile } = await supabase
+      const { data: profile } = await getSupabaseAdmin()
         .from('profiles')
         .select('email, full_name')
         .eq('id', adminMember.user_id)
@@ -282,7 +276,7 @@ async function revokeAccess(sub: Stripe.Subscription) {
   const subscriptionId = sub.id
 
   // Get the org with tier info for the email
-  const { data: org } = await supabase
+  const { data: org } = await getSupabaseAdmin()
     .from('organizations')
     .select('id, tier')
     .eq('stripe_subscription_id', subscriptionId)
@@ -291,31 +285,31 @@ async function revokeAccess(sub: Stripe.Subscription) {
   if (!org) return
 
   // Deactivate org and all members
-  await supabase
+  await getSupabaseAdmin()
     .from('organizations')
     .update({ status: 'cancelled' })
     .eq('id', org.id)
 
-  await supabase
+  await getSupabaseAdmin()
     .from('organization_members')
     .update({ is_active: false })
     .eq('org_id', org.id)
 
   // Remove course access
-  await supabase
+  await getSupabaseAdmin()
     .from('course_access')
     .delete()
     .eq('org_id', org.id)
 
   // Send cancellation email to org admin
-  const { data: adminMember } = await supabase
+  const { data: adminMember } = await getSupabaseAdmin()
     .from('organization_members')
     .select('user_id')
     .eq('org_id', org.id)
     .eq('role', 'admin')
     .single()
   if (adminMember) {
-    const { data: profile } = await supabase
+    const { data: profile } = await getSupabaseAdmin()
       .from('profiles')
       .select('email, full_name')
       .eq('id', adminMember.user_id)
@@ -355,7 +349,7 @@ async function handleSubscriptionUpdate(sub: Stripe.Subscription) {
   const newSeats = sub.items.data[0]?.quantity ?? 0
 
   // Get org
-  const { data: org } = await supabase
+  const { data: org } = await getSupabaseAdmin()
     .from('organizations')
     .select('id, tier, seats_used')
     .eq('stripe_subscription_id', subscriptionId)
@@ -364,14 +358,14 @@ async function handleSubscriptionUpdate(sub: Stripe.Subscription) {
   if (!org) return
 
   // Update seat count
-  await supabase
+  await getSupabaseAdmin()
     .from('organizations')
     .update({ seats_purchased: newSeats })
     .eq('id', org.id)
 
   // If seats were reduced below current usage, flag for admin review
   if (newSeats < org.seats_used) {
-    await supabase
+    await getSupabaseAdmin()
       .from('organizations')
       .update({ status: 'over_seat_limit' })
       .eq('id', org.id)
