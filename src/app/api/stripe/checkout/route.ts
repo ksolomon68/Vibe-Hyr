@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Stripe from 'stripe'
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-04-10' })
+import { getStripe } from '@/lib/stripe/client'
 
 const PRICE_IDS: Record<string, string> = {
   architect: process.env.NEXT_PUBLIC_STRIPE_ARCHITECT_PRICE_ID!,
@@ -21,7 +19,7 @@ export async function POST(req: NextRequest) {
   // Re-apply protocol
   appUrl = appUrl.startsWith('localhost') || appUrl.startsWith('127.0.0.1') ? `http://${appUrl}` : `https://${appUrl}`
 
-  const session = await stripe.checkout.sessions.create({
+  const session = await getStripe().checkout.sessions.create({
     mode:               'subscription',
     payment_method_types: ['card'],
     line_items:         [{ price: priceId, quantity: 1 }],

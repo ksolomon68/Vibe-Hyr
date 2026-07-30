@@ -3,14 +3,9 @@
 // Uses the Supabase Admin API to create the recovery link so we own the email HTML.
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email/resend'
 import { passwordResetTemplate } from '@/lib/email/templates'
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
 
 export async function POST(req: NextRequest) {
   try {
@@ -30,7 +25,7 @@ export async function POST(req: NextRequest) {
     // Re-apply protocol
     appUrl = appUrl.startsWith('localhost') || appUrl.startsWith('127.0.0.1') ? `http://${appUrl}` : `https://${appUrl}`
 
-    const { data, error } = await supabaseAdmin.auth.admin.generateLink({
+    const { data, error } = await getSupabaseAdmin().auth.admin.generateLink({
       type: 'recovery',
       email,
       options: {

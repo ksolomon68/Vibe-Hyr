@@ -4,13 +4,8 @@
 // cancel subscription, or upgrade seats.
 
 import { NextRequest, NextResponse } from 'next/server'
-import { stripe } from '@/lib/stripe/client'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { getStripe } from '@/lib/stripe/client'
+import { getSupabaseAdmin } from '@/lib/supabase/admin'
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,7 +16,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Get Stripe customer ID from profiles table
-    const { data: profile, error } = await supabase
+    const { data: profile, error } = await getSupabaseAdmin()
       .from('profiles')
       .select('stripe_customer_id')
       .eq('id', userId)
@@ -38,7 +33,7 @@ export async function POST(req: NextRequest) {
     // Re-apply protocol
     appUrl = appUrl.startsWith('localhost') || appUrl.startsWith('127.0.0.1') ? `http://${appUrl}` : `https://${appUrl}`
 
-    const session = await stripe.billingPortal.sessions.create({
+    const session = await getStripe().billingPortal.sessions.create({
       customer: profile.stripe_customer_id,
       return_url: `${appUrl}/account`,
     })

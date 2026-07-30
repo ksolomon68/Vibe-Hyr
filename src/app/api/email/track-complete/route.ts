@@ -2,14 +2,9 @@
 // Called from WorkplaceLessonPlayerWrapper when a user completes all lessons in a track.
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email/resend'
 import { trackCompleteTemplate } from '@/lib/email/templates'
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
 
 const TRACK_NAMES: Record<string, string> = {
   t1: 'Common Sense in the Workplace',
@@ -29,7 +24,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'userId and trackId are required' }, { status: 400 })
     }
 
-    const { data: profile } = await supabaseAdmin
+    const { data: profile } = await getSupabaseAdmin()
       .from('profiles')
       .select('email, full_name')
       .eq('id', userId)
