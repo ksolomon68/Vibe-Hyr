@@ -9,7 +9,4 @@ deployment:
     - /bin/cp package.json $DEPLOYPATH/
     - /bin/cp package-lock.json $DEPLOYPATH/
     - /bin/cp next.config.js $DEPLOYPATH/
-    - /bin/cp postcss.config.js $DEPLOYPATH/
-    - /bin/cp tailwind.config.ts $DEPLOYPATH/
-    - /bin/cp tsconfig.json $DEPLOYPATH/
-    - /usr/local/bin/npm install --prefix $DEPLOYPATH --production
+    - /bin/cp .gitattributes $DEPLOYPATH/
