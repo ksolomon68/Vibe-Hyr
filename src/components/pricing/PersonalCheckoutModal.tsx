@@ -94,17 +94,13 @@ export function PersonalCheckoutModal({
   const rowBorder = `1px solid ${INK}10`
 
   const handleCheckout = async () => {
-    if (!userId) {
-      window.location.href = `/auth/signup?redirect=/pricing`
-      return
-    }
     await startCheckout({
       tier:         initialTier,
       billingCycle: billing,
-      userId,
+      userId:       userId ?? undefined,
       segment:      'individual',
       seats:        1,
-      adminEmail:   userEmail,
+      adminEmail:   userEmail || undefined,
     })
   }
 

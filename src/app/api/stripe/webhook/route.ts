@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
 // ─────────────────────────────────────────────────────────────────────────────
 async function provisionAccess(session: Stripe.Checkout.Session) {
   const meta = session.metadata!
-  const {
+  let {
     tier,
     segment,
     billingCycle,
@@ -100,10 +100,43 @@ async function provisionAccess(session: Stripe.Checkout.Session) {
     orgDomain,
     adminEmail,
     userId,
+    is_guest,
   } = meta as Record<string, string>
 
   const seatsNum = parseInt(seats)
   const tierConfig = TIER_CONFIG[tier as Tier]
+
+  // If guest, create the user in Supabase
+  const checkoutEmail = adminEmail || session.customer_details?.email || session.customer_email
+  if (is_guest === 'true' || userId === 'GUEST') {
+    if (!checkoutEmail) throw new Error('No email found for guest checkout')
+    
+    // Check if user already exists in auth.users by trying to invite them
+    // inviteUserByEmail will send a password setup link, which is perfect for new users
+    const { data: inviteData, error: inviteErr } = await supabase.auth.admin.inviteUserByEmail(checkoutEmail, {
+      data: { full_name: orgName !== 'Individual' ? orgName : 'New Member', selected_plan: tier }
+    })
+    
+    if (inviteErr) {
+      console.error('[provisionAccess] Error inviting user:', inviteErr)
+      // If user already exists, we might need to find their ID
+      const { data: users } = await supabase.auth.admin.listUsers()
+      const existingUser = users.users.find(u => u.email === checkoutEmail)
+      if (existingUser) {
+        userId = existingUser.id
+      } else {
+        throw inviteErr
+      }
+    } else {
+      userId = inviteData.user.id
+      
+      // Save customer mapping
+      await supabase.from('stripe_customers').insert({
+        user_id: userId,
+        stripe_customer_id: session.customer as string,
+      })
+    }
+  }
 
   // 1. Get the subscription ID from Stripe
   const subscriptionId = session.subscription as string

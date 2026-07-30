@@ -66,13 +66,22 @@ function SignupForm() {
 
     if (plan !== 'free' && data.user) {
       // Redirect to Stripe checkout (handled via API route)
-      const res = await fetch('/api/stripe/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan, userId: data.user.id }),
-      })
-      const { url } = await res.json()
-      if (url) { window.location.href = url; return }
+      try {
+        const res = await fetch('/api/stripe/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ plan, userId: data.user.id }),
+        })
+        const json = await res.json()
+        if (json.url) { window.location.href = json.url; return }
+        toast.error(json.error || 'Could not start checkout. Please contact support.')
+        setLoading(false)
+        return
+      } catch {
+        toast.error('Checkout unavailable — please try again or contact support.')
+        setLoading(false)
+        return
+      }
     }
 
     toast.success('Account created! Check your email to verify. ✦')

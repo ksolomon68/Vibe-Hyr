@@ -73,32 +73,34 @@ export async function POST(req: NextRequest) {
     }
 
     // Create or retrieve Stripe customer
-    let customerId: string
-    const { data: existingCustomer } = await supabase
-      .from('stripe_customers')
-      .select('stripe_customer_id')
-      .eq('user_id', userId)
-      .single()
+    let customerId: string | undefined
+    if (userId) {
+      const { data: existingCustomer } = await supabase
+        .from('stripe_customers')
+        .select('stripe_customer_id')
+        .eq('user_id', userId)
+        .single()
 
-    if (existingCustomer?.stripe_customer_id) {
-      customerId = existingCustomer.stripe_customer_id
-    } else {
-      const customer = await stripe.customers.create({
-        email: adminEmail || undefined,
-        name: isIndividual ? 'Individual Subscriber' : orgName,
-        metadata: {
-          userId,
-          orgDomain: isIndividual ? 'individual' : orgDomain.toLowerCase(),
-          segment,
-        },
-      })
-      customerId = customer.id
+      if (existingCustomer?.stripe_customer_id) {
+        customerId = existingCustomer.stripe_customer_id
+      } else {
+        const customer = await stripe.customers.create({
+          email: adminEmail || undefined,
+          name: isIndividual ? 'Individual Subscriber' : orgName,
+          metadata: {
+            userId,
+            orgDomain: isIndividual ? 'individual' : orgDomain.toLowerCase(),
+            segment,
+          },
+        })
+        customerId = customer.id
 
-      // Save customer mapping
-      await supabase.from('stripe_customers').insert({
-        user_id: userId,
-        stripe_customer_id: customerId,
-      })
+        // Save customer mapping
+        await supabase.from('stripe_customers').insert({
+          user_id: userId,
+          stripe_customer_id: customerId,
+        })
+      }
     }
 
     let appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://vibehyr.com').trim()
@@ -110,7 +112,7 @@ export async function POST(req: NextRequest) {
 
     // Build the Stripe Checkout Session
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
-      customer: customerId,
+      ...(customerId ? { customer: customerId } : { customer_creation: 'always', customer_email: adminEmail || undefined }),
       payment_method_types: ['card'],
       line_items: [
         {
@@ -129,7 +131,7 @@ export async function POST(req: NextRequest) {
           orgName: isIndividual ? 'Individual' : orgName,
           orgDomain: isIndividual ? 'individual' : orgDomain.toLowerCase(),
           adminEmail: isIndividual ? '' : adminEmail,
-          userId,
+          userId: userId || 'GUEST',
           volumeDiscount: pricing.discount.toFixed(2),
         },
       },
@@ -147,7 +149,8 @@ export async function POST(req: NextRequest) {
         orgName: isIndividual ? 'Individual' : orgName,
         orgDomain: isIndividual ? 'individual' : orgDomain.toLowerCase(),
         adminEmail: isIndividual ? '' : adminEmail,
-        userId,
+        userId: userId || 'GUEST',
+        is_guest: userId ? 'false' : 'true',
       },
     }
 

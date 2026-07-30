@@ -15,7 +15,7 @@ interface CheckoutParams {
   orgName?: string
   orgDomain?: string
   adminEmail?: string
-  userId: string
+  userId?: string
 }
 
 export function useCheckout() {

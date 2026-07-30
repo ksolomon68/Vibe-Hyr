@@ -151,11 +151,6 @@ export function CartPanel({
   const cycleLabel = panelBilling === 'annual' ? 'year' : 'month'
 
   const handleCheckout = () => {
-    if (!userId) {
-      alert('Please log in or create an account before purchasing.')
-      window.location.href = '/auth/login?redirect=/pricing'
-      return
-    }
     if (!orgName || !orgDomain || !adminEmail) {
       alert('Please fill out all organization details.')
       return
@@ -168,7 +163,7 @@ export function CartPanel({
       orgName,
       orgDomain,
       adminEmail,
-      userId,
+      userId: userId ?? undefined,
     })
   }
 
