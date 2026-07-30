@@ -1,0 +1,2 @@
+# Force LF line endings for cPanel deployment config
+.cpanel.yml text eol=lf

@@ -1,0 +1,1 @@
+"use strict";exports.id=9658,exports.ids=[9658],exports.modules={19658:(e,s,t)=>{t.d(s,{createAdminClient:()=>o});var r=t(37857);function o(){return(0,r.eI)("https://dwpmujyycpgibpsculfd.supabase.co",process.env.SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:!1,autoRefreshToken:!1}})}}};

@@ -1,0 +1,8 @@
+Options -MultiViews
+RewriteEngine On
+
+# Proxy all requests to the Node.js app
+RewriteRule ^(.*)$ http://localhost:%{ENV:PORT}/$1 [P,L]
+
+# Required for mod_proxy
+ProxyPassReverse / http://localhost:%{ENV:PORT}/
