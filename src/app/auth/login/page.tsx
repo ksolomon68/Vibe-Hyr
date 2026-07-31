@@ -15,6 +15,7 @@ function LoginForm() {
   const router      = useRouter()
   const searchParams = useSearchParams()
   const redirect    = searchParams.get('redirect') ?? '/dashboard'
+  const isCheckoutSuccess = searchParams.get('checkout') === 'success'
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -82,6 +83,14 @@ function LoginForm() {
           <p className="font-body italic text-grey-DEFAULT mb-8">
             Continue building your reality.
           </p>
+
+          {isCheckoutSuccess && (
+            <div className="mb-6 p-4 rounded-sm border border-orange-DEFAULT bg-orange-DEFAULT/10">
+              <p className="font-body text-sm text-orange-DEFAULT">
+                <strong>Purchase successful!</strong> Please check your email for the secure link to set up your password and access your account.
+              </p>
+            </div>
+          )}
 
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
             <div>
