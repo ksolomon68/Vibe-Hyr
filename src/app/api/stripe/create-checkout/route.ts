@@ -134,7 +134,7 @@ export async function POST(req: NextRequest) {
       allow_promotion_codes: true,
       // Collect billing address for invoicing
       billing_address_collection: 'required',
-      success_url: `${appUrl}/auth/login?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${appUrl}/api/stripe/checkout-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/pricing?checkout=cancelled`,
       metadata: {
         tier,
