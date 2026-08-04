@@ -62,13 +62,6 @@ const nextConfig = {
       { source: '/workplace/:path*', destination: '/business/:path*',  permanent: true },
     ]
   },
-  // Low-memory host: cap build parallelism so the compiler doesn't spawn one
-  // worker process per CPU, each with its own heap. Slower build, far less
-  // peak memory.
-  experimental: {
-    cpus: 1,
-    workerThreads: false,
-  },
 }
 
 module.exports = withPWA(nextConfig)
