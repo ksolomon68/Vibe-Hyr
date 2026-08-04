@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
 
     // Build the Stripe Checkout Session
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
-      ...(customerId ? { customer: customerId } : { customer_creation: 'always', customer_email: adminEmail || undefined }),
+      ...(customerId ? { customer: customerId } : { customer_email: adminEmail || undefined }),
       payment_method_types: ['card'],
       line_items: [
         {
