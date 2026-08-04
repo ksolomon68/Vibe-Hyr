@@ -118,6 +118,7 @@ export default function PricingPage() {
   const [panelTier,    setPanelTier]    = useState<Tier>('architect')
   const [panelBilling, setPanelBilling] = useState<Billing>('annual')
   const [panelSegment, setPanelSegment] = useState<Segment>('corporate')
+  const [panelVertical, setPanelVertical] = useState<'education' | 'business' | 'leadership'>('business')
 
   // Individual handlers
   const handlePersonalPlan = (tier: PersonalTier) => {
@@ -126,10 +127,11 @@ export default function PricingPage() {
   }
 
   // Org handlers
-  const handleOpenPanel = (tier: Tier, segment: Segment) => {
+  const handleOpenPanel = (tier: Tier, segment: Segment, vertical: 'education' | 'business' | 'leadership') => {
     setPanelTier(tier)
     setPanelSegment(segment)
     setPanelBilling(billing)
+    setPanelVertical(vertical)
     setPanelOpen(true)
   }
 
@@ -357,7 +359,7 @@ export default function PricingPage() {
                     <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Core Content Library</li>
                     <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Basic Progress Tracking</li>
                   </ul>
-                  <button className="btn-outline-orange w-full text-center mt-6" onClick={() => handleOpenPanel('seeker', track === 'education' ? 'university' : 'corporate')}>
+                  <button className="btn-outline-orange w-full text-center mt-6" onClick={() => handleOpenPanel('seeker', track === 'education' ? 'university' : 'corporate', track === 'education' ? 'education' : 'business')}>
                     GET STARTED
                   </button>
                 </div>
@@ -380,7 +382,7 @@ export default function PricingPage() {
                     <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Core Community Access</li>
                     <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Academic / Leadership Tracker</li>
                   </ul>
-                  <button className="btn-orange w-full text-center mt-6" onClick={() => handleOpenPanel('architect', track === 'education' ? 'university' : 'corporate')}>
+                  <button className="btn-orange w-full text-center mt-6" onClick={() => handleOpenPanel('architect', track === 'education' ? 'university' : 'corporate', track === 'education' ? 'education' : 'business')}>
                     GET STARTED
                   </button>
                 </div>
@@ -403,7 +405,7 @@ export default function PricingPage() {
                     <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Dedicated Reality Architect</li>
                     <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Custom Institutional Onboarding</li>
                   </ul>
-                  <button className="btn-outline-orange w-full text-center mt-6" onClick={() => handleOpenPanel('reality-master', track === 'education' ? 'university' : 'corporate')}>
+                  <button className="btn-outline-orange w-full text-center mt-6" onClick={() => handleOpenPanel('reality-master', track === 'education' ? 'university' : 'corporate', track === 'education' ? 'education' : 'business')}>
                     GET STARTED
                   </button>
                 </div>
@@ -518,7 +520,7 @@ export default function PricingPage() {
                     <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Ownership Audit Quiz</li>
                     <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Community Blueprint Lab</li>
                   </ul>
-                  <button className="btn-outline-orange w-full text-center mt-6" onClick={() => handleOpenPanel('seeker', 'corporate')}>
+                  <button className="btn-outline-orange w-full text-center mt-6" onClick={() => handleOpenPanel('seeker', 'corporate', 'leadership')}>
                     GET STARTED
                   </button>
                 </div>
@@ -541,7 +543,7 @@ export default function PricingPage() {
                     <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Private Consistency Protocol</li>
                     <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Bridge Forum — Leadership Cohort</li>
                   </ul>
-                  <button className="btn-orange w-full text-center mt-6" onClick={() => handleOpenPanel('architect', 'corporate')}>
+                  <button className="btn-orange w-full text-center mt-6" onClick={() => handleOpenPanel('architect', 'corporate', 'leadership')}>
                     GET STARTED
                   </button>
                 </div>
@@ -564,7 +566,7 @@ export default function PricingPage() {
                     <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Dedicated Reality Architect</li>
                     <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Diamond size={12} style={{ color: '#E8621A', flexShrink: 0 }} />Custom Institutional Onboarding</li>
                   </ul>
-                  <button className="btn-outline-orange w-full text-center mt-6" onClick={() => handleOpenPanel('reality-master', 'corporate')}>
+                  <button className="btn-outline-orange w-full text-center mt-6" onClick={() => handleOpenPanel('reality-master', 'corporate', 'leadership')}>
                     GET STARTED
                   </button>
                 </div>
@@ -646,6 +648,7 @@ export default function PricingPage() {
         initialTier={panelTier}
         initialBilling={panelBilling}
         initialSegment={panelSegment}
+        vertical={panelVertical}
       />
     </>
   )

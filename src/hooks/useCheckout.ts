@@ -16,6 +16,7 @@ interface CheckoutParams {
   orgDomain?: string
   adminEmail?: string
   userId?: string
+  vertical?: 'education' | 'business' | 'leadership'
 }
 
 export function useCheckout() {

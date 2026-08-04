@@ -624,6 +624,7 @@ export default function EducationPage() {
         initialTier={panelTier}
         initialSegment="university"
         initialBilling="annual"
+        vertical="education"
       />
       <PersonalCheckoutModal
         isOpen={modalOpen}
