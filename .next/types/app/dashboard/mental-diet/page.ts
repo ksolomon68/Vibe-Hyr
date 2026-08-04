@@ -1,4 +1,4 @@
-// File: C:\Users\KSOLO\OneDrive\Documents\vibehyr\website\Vibe-Hyr\src\app\dashboard\mental-diet\page.tsx
+// File: /home/user/Vibe-Hyr/src/app/dashboard/mental-diet/page.tsx
 import * as entry from '../../../../../src/app/dashboard/mental-diet/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
