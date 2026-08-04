@@ -20,6 +20,15 @@ const PROGRAM_COURSE_ID: Record<string, number> = {
 
 const PREVIEW_LESSON = { programSlug: 'the-educator-reset', moduleId: 'ed01-m01' }
 
+// Mirrors TIER_CONFIG in lib/stripe/config.ts — which educator programs each
+// paid tier unlocks. Institutional Seeker is paid (unlike individual Seeker,
+// which is free); there is no free tier for the educator vertical.
+const EDUCATOR_TIER_ACCESS: Record<string, string[]> = {
+  free:      ['the-educator-reset'],
+  architect: ['the-educator-reset', 'vibrational-leadership', 'co-regulation-mastery'],
+  elite:     ['the-educator-reset', 'vibrational-leadership', 'co-regulation-mastery', 'the-retained-educator'],
+}
+
 export default async function EducationModulePage({
   params,
 }: {
@@ -60,27 +69,36 @@ export default async function EducationModulePage({
 
   // ── Access gate + progress (authenticated users only) ──────────────────────
   if (user) {
-    const [{ data: profile }, { data: progressData }] = await Promise.all([
+    const [{ data: profile }, { data: progressData }, { data: directGrant }] = await Promise.all([
       supabase
         .from('profiles')
-        .select('vertical, is_super_admin, is_bypassed')
+        .select('membership_tier, vertical, is_super_admin, is_bypassed')
         .eq('id', user.id)
         .single(),
       supabase
         .from('education_progress')
         .select('module_id')
         .eq('user_id', user.id),
+      supabase
+        .from('course_access')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('course_slug', program.slug)
+        .maybeSingle(),
     ])
 
-    const isSuperAdmin = profile?.is_super_admin ?? false
-    const isBypassed   = profile?.is_bypassed ?? false
-    const isEducator   = profile?.vertical === 'education'
-    const canAccess    = isSuperAdmin || isBypassed || isEducator
+    const isSuperAdmin   = profile?.is_super_admin ?? false
+    const isBypassed     = profile?.is_bypassed ?? false
+    const hasDirectGrant = !!directGrant
+    const tier           = profile?.membership_tier ?? 'free'
+    const isEducator     = profile?.vertical === 'education'
+    const tierUnlocked   = isEducator && (EDUCATOR_TIER_ACCESS[tier] ?? EDUCATOR_TIER_ACCESS['free']).includes(program.slug)
+    const canAccess       = isSuperAdmin || isBypassed || hasDirectGrant || tierUnlocked
 
-    if (!canAccess) {
+    if (!canAccess && !isPreview) {
       return (
         <CourseLockedScreen
-          reason="tier_required"
+          reason={isEducator ? 'tier_required' : 'wrong_vertical'}
           courseSlug={params.programSlug}
           sectionLabel="EDUCATOR"
           backHref="/educators"
