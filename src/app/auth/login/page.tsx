@@ -16,6 +16,7 @@ function LoginForm() {
   const searchParams = useSearchParams()
   const redirect    = searchParams.get('redirect') ?? '/dashboard'
   const isCheckoutSuccess = searchParams.get('checkout') === 'success'
+  const checkoutEmail = searchParams.get('email')
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -87,7 +88,8 @@ function LoginForm() {
           {isCheckoutSuccess && (
             <div className="mb-6 p-4 rounded-sm border border-orange-DEFAULT bg-orange-DEFAULT/10">
               <p className="font-body text-sm text-orange-DEFAULT">
-                <strong>Purchase successful!</strong> Please check your email for the secure link to set up your password and access your account.
+                <strong>Purchase successful!</strong> We couldn't sign you in automatically — please check your email
+                {checkoutEmail ? ` (${checkoutEmail})` : ''} for a secure link to set up your password and access your account.
               </p>
             </div>
           )}
