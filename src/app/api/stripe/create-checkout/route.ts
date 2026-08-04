@@ -6,8 +6,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getStripe } from '@/lib/stripe/client'
 import type Stripe from 'stripe'
 import { TIER_CONFIG, calculatePrice } from '@/lib/stripe/config'
-import type { Tier, Segment, BillingCycle } from '@/lib/stripe/config'
+import type { Tier, Segment, BillingCycle, Vertical } from '@/lib/stripe/config'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+
+const VALID_VERTICALS: Vertical[] = ['education', 'business', 'leadership']
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,6 +23,7 @@ export async function POST(req: NextRequest) {
       orgDomain,
       adminEmail,
       userId, // Supabase user ID of the purchaser (optional)
+      vertical,
     } = body as {
       tier: Tier
       segment: Segment
@@ -30,12 +33,22 @@ export async function POST(req: NextRequest) {
       orgDomain: string
       adminEmail: string
       userId?: string
+      vertical?: Vertical
     }
 
     // Validate inputs
     const isIndividual = segment === 'individual'
     if (!tier || !segment || !billingCycle || !seats || (!isIndividual && (!orgName || !orgDomain || !adminEmail))) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+    // Institutional purchases must declare which vertical (education/business/
+    // leadership) they're for — this is what tier-gates course access after
+    // payment. Failing closed here (rather than silently defaulting) is the
+    // fix for a real bug: without it, provisioned orgs had no vertical set at
+    // all, and some vertical pages fell back to trusting profile flags with
+    // no tier check whatsoever.
+    if (!isIndividual && !VALID_VERTICALS.includes(vertical as Vertical)) {
+      return NextResponse.json({ error: 'Missing or invalid vertical for institutional checkout' }, { status: 400 })
     }
 
     const config = TIER_CONFIG[tier]
@@ -130,6 +143,7 @@ export async function POST(req: NextRequest) {
         metadata: {
           tier,
           segment,
+          vertical: isIndividual ? '' : (vertical as string),
           billingCycle,
           seats: seats.toString(),
           orgName: isIndividual ? 'Individual' : orgName,
@@ -148,6 +162,7 @@ export async function POST(req: NextRequest) {
       metadata: {
         tier,
         segment,
+        vertical: isIndividual ? '' : (vertical as string),
         billingCycle,
         seats: seats.toString(),
         orgName: isIndividual ? 'Individual' : orgName,

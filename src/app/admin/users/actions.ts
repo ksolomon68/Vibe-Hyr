@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email/resend'
 import { institutionInviteTemplate } from '@/lib/email/templates'
+import { TIER_TO_DB_TIER, type Tier } from '@/lib/stripe/config'
 
 // ─── Helper: resolve admin's org ID from either column ───────────────────────
 // The schema has two org-FK columns on profiles: org_id (used by invite flow)
@@ -99,6 +100,13 @@ export async function inviteUser(
 
   if (!org) return { error: 'Organization not found.' }
 
+  // organizations.tier uses Stripe/pricing names ('seeker'|'architect'|
+  // 'reality-master'); profiles.membership_tier uses DB names ('free'|
+  // 'architect'|'elite'). These must be converted, not copied — a bare copy
+  // silently locks out Seeker- and Reality-Master-tier invitees, since only
+  // 'architect' happens to spell the same in both schemes.
+  const dbTier = TIER_TO_DB_TIER[org.tier as Tier] ?? 'free'
+
   const { count: currentCount } = await adminSupabase
     .from('profiles')
     .select('id', { count: 'exact', head: true })
@@ -125,7 +133,7 @@ export async function inviteUser(
         org_id:           orgId,
         vertical:         vertical,
         role,
-        membership_tier:  org.tier,
+        membership_tier:  dbTier,
       },
     }
   )
@@ -147,7 +155,7 @@ export async function inviteUser(
         org_id:           orgId,
         vertical:         vertical as 'education' | 'business',
         role,
-        membership_tier:  org.tier,
+        membership_tier:  dbTier,
         membership_type:  membershipType,
       },
       { onConflict: 'id' }

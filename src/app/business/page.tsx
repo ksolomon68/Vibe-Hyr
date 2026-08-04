@@ -569,6 +569,7 @@ export default function WorkplaceTrainingPage() {
         initialTier={panelTier}
         initialSegment="corporate"
         initialBilling="annual"
+        vertical="business"
       />
       <PersonalCheckoutModal
         isOpen={modalOpen}

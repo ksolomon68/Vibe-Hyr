@@ -4,7 +4,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getStripe } from '@/lib/stripe/client'
-import { TIER_CONFIG } from '@/lib/stripe/config'
+import { TIER_CONFIG, TIER_TO_DB_TIER } from '@/lib/stripe/config'
 import type { Tier } from '@/lib/stripe/config'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import Stripe from 'stripe'
@@ -88,6 +88,7 @@ async function provisionAccess(session: Stripe.Checkout.Session) {
   let {
     tier,
     segment,
+    vertical,
     billingCycle,
     seats,
     orgName,
@@ -99,6 +100,8 @@ async function provisionAccess(session: Stripe.Checkout.Session) {
 
   const seatsNum = parseInt(seats)
   const tierConfig = TIER_CONFIG[tier as Tier]
+  const isIndividualPurchase = segment === 'individual'
+  const dbTier = TIER_TO_DB_TIER[tier as Tier] ?? 'free'
 
   // If guest, create the user in Supabase
   const checkoutEmail = adminEmail || session.customer_details?.email || session.customer_email
@@ -145,6 +148,7 @@ async function provisionAccess(session: Stripe.Checkout.Session) {
       domain: orgDomain.toLowerCase(),
       tier,
       segment,
+      vertical: isIndividualPurchase ? null : (vertical || null),
       seats_purchased: seatsNum,
       seats_used: 1, // admin takes first seat
       billing_cycle: billingCycle,
@@ -182,6 +186,21 @@ async function provisionAccess(session: Stripe.Checkout.Session) {
     role: 'admin',
     is_active: true,
   })
+
+  // 4b. Stamp the buyer's own profile with tier (+ org/vertical for
+  // institutional purchases) — previously never set here, which meant
+  // vertical-gated pages (e.g. /educators) had nothing reliable to check
+  // beyond the course_access grants below, and course-tier gates elsewhere
+  // (e.g. /personal, /leadership) that key off membership_tier saw every
+  // purchaser as still on the 'free' default.
+  await getSupabaseAdmin().from('profiles').update({
+    membership_tier: dbTier,
+    ...(isIndividualPurchase ? {} : {
+      org_id: org.id,
+      vertical,
+      membership_type: vertical,
+    }),
+  }).eq('id', userId)
 
   // 5. Grant course access to admin (based on tier)
   const courseAccess = tierConfig.courses.map((courseSlug) => ({

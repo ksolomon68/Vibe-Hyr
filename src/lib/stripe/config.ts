@@ -5,6 +5,20 @@
 export type Tier = 'seeker' | 'architect' | 'reality-master'
 export type BillingCycle = 'monthly' | 'annual'
 export type Segment = 'individual' | 'corporate' | 'university' | 'k12' | 'small-business'
+export type Vertical = 'education' | 'business' | 'leadership'
+
+// Stripe/pricing tier names ('seeker' | 'architect' | 'reality-master') vs. the
+// DB's profiles.membership_tier values ('free' | 'architect' | 'elite') used by
+// COURSE_ACCESS_MATRIX and every *_TIER_ACCESS gate in the app. These must be
+// converted at every write site — admin/users/actions.ts previously copied
+// organizations.tier straight into membership_tier with no conversion, which
+// silently locked out every Seeker- and Reality-Master-tier org member (only
+// 'architect' matched both naming schemes by coincidence).
+export const TIER_TO_DB_TIER: Record<Tier, 'free' | 'architect' | 'elite'> = {
+  seeker: 'free',
+  architect: 'architect',
+  'reality-master': 'elite',
+}
 
 export interface TierConfig {
   name: string

@@ -59,6 +59,7 @@ interface CartPanelProps {
   initialTier?:    Tier
   initialSegment?: Segment
   initialBilling?: Billing
+  vertical:        'education' | 'business' | 'leadership'
 }
 
 export function CartPanel({
@@ -67,6 +68,7 @@ export function CartPanel({
   initialTier    = 'architect',
   initialSegment = 'corporate',
   initialBilling = 'annual',
+  vertical,
 }: CartPanelProps) {
   // Normalize tier (e.g., 'elite' -> 'reality-master')
   const activeTier = useMemo(() => {
@@ -164,6 +166,7 @@ export function CartPanel({
       orgDomain,
       adminEmail,
       userId: userId ?? undefined,
+      vertical,
     })
   }
 
