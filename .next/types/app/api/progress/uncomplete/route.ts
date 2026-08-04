@@ -1,4 +1,4 @@
-// File: C:\Users\KSOLO\OneDrive\Documents\vibehyr\website\Vibe-Hyr\src\app\api\progress\uncomplete\route.ts
+// File: /home/user/Vibe-Hyr/src/app/api/progress/uncomplete/route.ts
 import * as entry from '../../../../../../src/app/api/progress/uncomplete/route.js'
 import type { NextRequest } from 'next/server.js'
 
