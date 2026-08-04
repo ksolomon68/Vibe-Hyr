@@ -10,4 +10,12 @@ set -e
 cd /home/vibehyr/vibehyr.com
 source /home/vibehyr/nodevenv/vibehyr.com/20/bin/activate
 npm install
+
+# Low-memory host: cap V8's heap so the compiler leaves headroom for
+# native/WASM allocations instead of exhausting all available memory
+# right before one of them. 1024 is the lowest value that built this
+# app successfully in testing — 512 OOM'd outright, so don't go lower
+# without re-testing. Raise it if the host has more RAM to spare, or
+# if pages/content grow enough that 1024 stops being enough.
+export NODE_OPTIONS="--max-old-space-size=1024"
 npm run build
