@@ -3,10 +3,16 @@ deployment:
   tasks:
     - export DEPLOYPATH=/home/vibehyr/vibehyr.com
     - /bin/mkdir -p $DEPLOYPATH
-    - /bin/cp -R .next $DEPLOYPATH/
     - /bin/cp -R public $DEPLOYPATH/
     - /bin/cp -R src $DEPLOYPATH/
     - /bin/cp package.json $DEPLOYPATH/
     - /bin/cp package-lock.json $DEPLOYPATH/
     - /bin/cp next.config.js $DEPLOYPATH/
+    - /bin/cp tailwind.config.ts $DEPLOYPATH/
+    - /bin/cp postcss.config.js $DEPLOYPATH/
+    - /bin/cp tsconfig.json $DEPLOYPATH/
+    - /bin/cp .env.production $DEPLOYPATH/
     - /bin/cp server.js $DEPLOYPATH/
+    - /bin/cp deploy-build.sh $DEPLOYPATH/
+    - /bin/chmod +x $DEPLOYPATH/deploy-build.sh
+    - nohup $DEPLOYPATH/deploy-build.sh > $DEPLOYPATH/build.log 2>&1 &
