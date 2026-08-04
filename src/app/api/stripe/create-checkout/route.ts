@@ -48,7 +48,6 @@ export async function POST(req: NextRequest) {
     }
 
     const pricing = calculatePrice(tier, segment, billingCycle, seats)
-    const priceId = config.stripePriceIds[billingCycle]
 
     // Skip org check for individuals
     if (!isIndividual) {
@@ -111,7 +110,17 @@ export async function POST(req: NextRequest) {
       payment_method_types: ['card'],
       line_items: [
         {
-          price: priceId,
+          price_data: {
+            currency: 'usd',
+            unit_amount: Math.round(pricing.perSeat * 100),
+            recurring: { interval: billingCycle === 'annual' ? 'year' : 'month' },
+            product_data: {
+              name: isIndividual
+                ? `${config.name} — Personal`
+                : `${config.name} — ${segment} (per seat)`,
+              description: config.sub,
+            },
+          },
           quantity: seats,
         },
       ],

@@ -9,7 +9,6 @@ export type Segment = 'individual' | 'corporate' | 'university' | 'k12' | 'small
 export interface TierConfig {
   name: string
   sub: string
-  stripePriceIds: Record<BillingCycle, string>
   perSeatPricing: Record<Segment, { monthly: number; annual: number }>
   minSeats: Record<Segment, number>
   annualFloor: Record<Segment, number>
@@ -22,19 +21,15 @@ export const TIER_CONFIG: Record<Tier, TierConfig> = {
   seeker: {
     name: 'SEEKER',
     sub: 'Foundational',
-    stripePriceIds: {
-      monthly: process.env.STRIPE_PRICE_SEEKER_MONTHLY!,
-      annual: process.env.STRIPE_PRICE_SEEKER_ANNUAL!,
-    },
     perSeatPricing: {
       individual:     { monthly: 0,     annual: 0 },
-      corporate:      { monthly: 5.65,  annual: 59 },
-      university:     { monthly: 2.25,  annual: 19 },
+      corporate:      { monthly: 2.90,  annual: 29 },
+      university:     { monthly: 1.90,  annual: 19 },
       k12:            { monthly: 1.40,  annual: 12 },
       'small-business': { monthly: 4.20, annual: 35 },
     },
     minSeats: { individual: 1, corporate: 25, university: 50, k12: 30, 'small-business': 5 },
-    annualFloor: { individual: 0, corporate: 1475, university: 950, k12: 360, 'small-business': 175 },
+    annualFloor: { individual: 0, corporate: 725, university: 950, k12: 360, 'small-business': 175 },
     courses: [
       'programming-the-gatekeeper',
       'the-educator-reset',
@@ -54,19 +49,15 @@ export const TIER_CONFIG: Record<Tier, TierConfig> = {
     name: 'ARCHITECT',
     sub: 'Comprehensive',
     popular: true,
-    stripePriceIds: {
-      monthly: process.env.STRIPE_PRICE_ARCHITECT_MONTHLY!,
-      annual: process.env.STRIPE_PRICE_ARCHITECT_ANNUAL!,
-    },
     perSeatPricing: {
-      individual:     { monthly: 27,    annual: 270 },
-      corporate:      { monthly: 5.65,  annual: 59 },
+      individual:     { monthly: 19,    annual: 205 },
+      corporate:      { monthly: 3.90,  annual: 39 },
       university:     { monthly: 3.90,  annual: 39 },
       k12:            { monthly: 2.40,  annual: 24 },
       'small-business': { monthly: 6.50, annual: 65 },
     },
     minSeats: { individual: 1, corporate: 25, university: 50, k12: 30, 'small-business': 5 },
-    annualFloor: { individual: 270, corporate: 1475, university: 1950, k12: 720, 'small-business': 325 },
+    annualFloor: { individual: 205, corporate: 975, university: 1950, k12: 720, 'small-business': 325 },
     courses: [
       'programming-the-gatekeeper',
       'mastery-law-of-assumption',
@@ -90,19 +81,15 @@ export const TIER_CONFIG: Record<Tier, TierConfig> = {
   'reality-master': {
     name: 'REALITY MASTER',
     sub: 'Elite',
-    stripePriceIds: {
-      monthly: process.env.STRIPE_PRICE_REALITYMASTER_MONTHLY!,
-      annual: process.env.STRIPE_PRICE_REALITYMASTER_ANNUAL!,
-    },
     perSeatPricing: {
-      individual:     { monthly: 67,    annual: 670 },
-      corporate:      { monthly: 9.48,  annual: 99 },
-      university:     { monthly: 6.90,  annual: 69 },
+      individual:     { monthly: 29,    annual: 313 },
+      corporate:      { monthly: 4.90,  annual: 49 },
+      university:     { monthly: 4.90,  annual: 49 },
       k12:            { monthly: 4.50,  annual: 45 },
       'small-business': { monthly: 11.00, annual: 110 },
     },
-    minSeats: { individual: 1, corporate: 50, university: 100, k12: 50, 'small-business': 10 },
-    annualFloor: { individual: 670, corporate: 4950, university: 6900, k12: 2250, 'small-business': 1100 },
+    minSeats: { individual: 1, corporate: 25, university: 50, k12: 50, 'small-business': 10 },
+    annualFloor: { individual: 313, corporate: 1225, university: 2450, k12: 2250, 'small-business': 1100 },
     courses: [
       'programming-the-gatekeeper',
       'mastery-law-of-assumption',
@@ -127,15 +114,20 @@ export const TIER_CONFIG: Record<Tier, TierConfig> = {
   },
 }
 
-export const VOLUME_DISCOUNTS: { minSeats: number; discount: number }[] = [
-  { minSeats: 500, discount: 0.25 },
-  { minSeats: 250, discount: 0.18 },
-  { minSeats: 100, discount: 0.10 },
-  { minSeats: 0,   discount: 0 },
-]
-
-export function getVolumeDiscount(seats: number): number {
-  return VOLUME_DISCOUNTS.find(d => seats >= d.minSeats)?.discount ?? 0
+// Matches the "Volume Pricing" table shown on /pricing for business/education:
+// two sequential 5% drops (1 - 0.95*0.95 = 0.0975, shown there as "~10%").
+export function getVolumeDiscount(seats: number, segment: Segment): number {
+  if (segment === 'corporate' || segment === 'small-business') {
+    if (seats >= 500) return 1 - 0.9025
+    if (seats >= 100) return 0.05
+    return 0
+  }
+  if (segment === 'university' || segment === 'k12') {
+    if (seats >= 500) return 1 - 0.9025
+    if (seats >= 250) return 0.05
+    return 0
+  }
+  return 0
 }
 
 export function calculatePrice(
@@ -149,7 +141,7 @@ export function calculatePrice(
   const minSeats = config.minSeats[segment]
   const floor = config.annualFloor[segment]
   const effectiveSeats = Math.max(seats, minSeats)
-  const volumeDiscount = getVolumeDiscount(effectiveSeats)
+  const volumeDiscount = getVolumeDiscount(effectiveSeats, segment)
 
   const perSeat = basePricePerSeat * (1 - volumeDiscount)
   const subtotal = basePricePerSeat * effectiveSeats
