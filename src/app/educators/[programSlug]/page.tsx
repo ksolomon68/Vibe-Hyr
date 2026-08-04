@@ -10,6 +10,15 @@ import {
 } from 'lucide-react'
 import { CourseLockedScreen } from '@/components/CourseLockedScreen'
 
+// Mirrors TIER_CONFIG in lib/stripe/config.ts — which educator programs each
+// paid tier unlocks. Institutional Seeker is paid (unlike individual Seeker,
+// which is free); there is no free tier for the educator vertical.
+const EDUCATOR_TIER_ACCESS: Record<string, string[]> = {
+  free:      ['the-educator-reset'],
+  architect: ['the-educator-reset', 'vibrational-leadership', 'co-regulation-mastery'],
+  elite:     ['the-educator-reset', 'vibrational-leadership', 'co-regulation-mastery', 'the-retained-educator'],
+}
+
 export async function generateMetadata({ params }: { params: { programSlug: string } }) {
   const program = PROGRAMS.find(p => p.slug === params.programSlug)
   if (!program) return {}
@@ -24,20 +33,33 @@ export default async function EducatorProgramPage({ params }: { params: { progra
   const { data: { user } } = await supabase.auth.getUser()
 
   let canAccess = false;
+  let accessReason: string | undefined;
   let completedModules: string[] = []
 
   if (user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('vertical, is_super_admin, is_bypassed')
-      .eq('id', user.id)
-      .single()
+    const [{ data: profile }, { data: directGrant }] = await Promise.all([
+      supabase
+        .from('profiles')
+        .select('membership_tier, vertical, is_super_admin, is_bypassed')
+        .eq('id', user.id)
+        .single(),
+      supabase
+        .from('course_access')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('course_slug', program.slug)
+        .maybeSingle(),
+    ])
 
-    const isSuperAdmin = profile?.is_super_admin ?? false
-    const isBypassed   = profile?.is_bypassed ?? false
-    const isEducator   = profile?.vertical === 'education'
+    const isSuperAdmin   = profile?.is_super_admin ?? false
+    const isBypassed     = profile?.is_bypassed ?? false
+    const hasDirectGrant = !!directGrant
+    const tier           = profile?.membership_tier ?? 'free'
+    const isEducator     = profile?.vertical === 'education'
+    const tierUnlocked   = isEducator && (EDUCATOR_TIER_ACCESS[tier] ?? EDUCATOR_TIER_ACCESS['free']).includes(program.slug)
 
-    canAccess = isSuperAdmin || isBypassed || isEducator
+    canAccess = isSuperAdmin || isBypassed || hasDirectGrant || tierUnlocked
+    if (!canAccess) accessReason = isEducator ? 'tier_required' : 'wrong_vertical'
 
     if (canAccess) {
       const { data: prog } = await supabase
@@ -54,7 +76,7 @@ export default async function EducatorProgramPage({ params }: { params: { progra
   if (user && !canAccess) {
     return (
       <CourseLockedScreen
-        reason="tier_required"
+        reason={accessReason as any || 'tier_required'}
         courseSlug={program.slug}
         sectionLabel="EDUCATOR"
         backHref="/educators"
