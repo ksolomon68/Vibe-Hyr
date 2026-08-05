@@ -91,7 +91,11 @@ export default async function CourseDetailPage({ params }: PageProps) {
   const nextLesson  = course.lessons.find(l => !completedLessons.includes(l.id)) ?? course.lessons[0]
   const hasStarted  = completedLessons.length > 0
   const isComplete  = completedLessons.length >= course.lessons.length
-  const tierGrant   = (TIER_ACCESS[userTier] ?? []).includes(params.courseId) || isSuperAdmin || isBypassed
+  // Must require `user` explicitly — userTier defaults to 'free' whether or
+  // not anyone is logged in, so without this guard a guest was treated
+  // identically to a logged-in free-tier member (unlocked Course 1),
+  // inconsistent with /educators and /business which require login here.
+  const tierGrant   = !!user && ((TIER_ACCESS[userTier] ?? []).includes(params.courseId) || isSuperAdmin || isBypassed)
   const canAccess   = tierGrant && prevCourseComplete
   const prevCourse  = prereqId ? COURSES.find(c => c.id === prereqId) : null
 
