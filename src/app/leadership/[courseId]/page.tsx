@@ -4,11 +4,12 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowRight, ChevronLeft, FileText } from 'lucide-react'
+import { Lock, Play, CheckCircle, Clock, BookOpen, FileText, ArrowRight } from 'lucide-react'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { COURSES } from '@/lib/leadership/curriculum'
 import { createClient } from '@/lib/supabase/server'
+import { cn } from '@/lib/utils'
 
 interface PageProps {
   params: { courseId: string }
@@ -88,9 +89,6 @@ export default async function CourseDetailPage({ params }: PageProps) {
     }
   }
 
-  const nextLesson  = course.lessons.find(l => !completedLessons.includes(l.id)) ?? course.lessons[0]
-  const hasStarted  = completedLessons.length > 0
-  const isComplete  = completedLessons.length >= course.lessons.length
   // Must require `user` explicitly — userTier defaults to 'free' whether or
   // not anyone is logged in, so without this guard a guest was treated
   // identically to a logged-in free-tier member (unlocked Course 1),
@@ -99,173 +97,220 @@ export default async function CourseDetailPage({ params }: PageProps) {
   const canAccess   = tierGrant && prevCourseComplete
   const prevCourse  = prereqId ? COURSES.find(c => c.id === prereqId) : null
 
+  const pct = course.lessons.length > 0
+    ? Math.round((completedLessons.length / course.lessons.length) * 100)
+    : 0
+  const hasStarted  = completedLessons.length > 0
+  const isComplete  = completedLessons.length >= course.lessons.length
+  const nextLesson  = course.lessons.find(l => !completedLessons.includes(l.id)) ?? course.lessons[0]
+
   return (
     <>
       <Navbar />
+      <main className="pt-[68px]">
 
-      <main className="bg-[#0E0C08] text-[#F7F2EA] min-h-screen px-6 md:px-16 pt-24 pb-24">
-        <div className="max-w-[900px] mx-auto">
+        {/* ── HERO ── */}
+        <section className="relative border-b-2 border-orange-DEFAULT/20 overflow-hidden bg-[#0E0C08]">
+          <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-DEFAULT" />
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 font-display text-[14rem] md:text-[22rem] leading-none text-white select-none pointer-events-none pr-8 opacity-10 md:opacity-5">
+            {String(course.num).padStart(2, '0')}
+          </div>
 
-          {/* Back link */}
-          <Link
-            href="/leadership"
-            className="inline-flex items-center gap-2 font-mono text-[0.6rem] tracking-[0.2em] uppercase text-white/30 hover:text-[#E8621A] transition-colors mb-10"
-          >
-            <ChevronLeft size={12} /> Leadership
-          </Link>
-
-          {/* Course header */}
-          <div className="mb-12">
-            <div className="flex items-center gap-3 mb-4 flex-wrap">
-              <span
-                className="font-mono text-[0.5rem] tracking-[0.25em] uppercase px-2 py-0.5 border"
-                style={{ color: course.color, borderColor: `${course.color}40` }}
-              >
+          <div className="max-w-7xl mx-auto px-6 md:px-14 py-16 relative z-10">
+            <div className="flex items-center gap-3 mb-6">
+              <Link href="/leadership" className="font-mono text-[0.58rem] tracking-[0.2em] uppercase text-grey-dark hover:text-orange-DEFAULT transition-colors">
+                ← Leadership
+              </Link>
+              <span className="text-grey-dark">/</span>
+              <span className="font-mono text-[0.55rem] tracking-[0.2em] uppercase px-2.5 py-1 border border-orange-DEFAULT text-orange-DEFAULT">
                 {TIER_LABELS[course.tierRequired] ?? course.tierRequired}
               </span>
-              <span className="font-mono text-[0.5rem] tracking-widest text-white/30">
-                {course.durationEstimate} · {course.lessons.length} lessons
-              </span>
             </div>
 
-            <div
-              className="w-14 h-14 rounded-full flex items-center justify-center font-display text-2xl mb-6"
-              style={{ backgroundColor: `${course.color}18`, color: course.color, border: `1px solid ${course.color}40` }}
-            >
-              {String(course.num).padStart(2, '0')}
-            </div>
+            <div className="grid lg:grid-cols-3 gap-12 items-start">
+              {/* Left: title + description */}
+              <div className="lg:col-span-2">
+                <p className="font-mono text-[0.6rem] tracking-[0.3em] uppercase text-orange-DEFAULT mb-3">
+                  Course {String(course.num).padStart(2, '0')} of 04
+                </p>
+                <h1 className="font-display text-[clamp(2.8rem,6vw,5.5rem)] leading-[0.93] tracking-[0.02em] mb-4 text-white">
+                  {course.title.split(' ').map((word, i) => (
+                    <span key={i} className={i === course.title.split(' ').length - 1 ? 'text-orange-DEFAULT' : ''}>
+                      {word}{' '}
+                    </span>
+                  ))}
+                </h1>
+                <p className="font-body text-xl italic text-grey-DEFAULT mb-5 leading-relaxed max-w-2xl">
+                  {course.subtitle}
+                </p>
+                <p className="font-body text-lg text-grey-DEFAULT leading-relaxed max-w-2xl">
+                  {course.description}
+                </p>
+              </div>
 
-            <h1 className="font-display text-[clamp(2.5rem,6vw,5rem)] leading-[0.95] text-white mb-2">
-              {course.title}
-            </h1>
-            <p className="font-mono text-[0.7rem] tracking-[0.15em] uppercase mb-6" style={{ color: course.color }}>
-              {course.subtitle}
-            </p>
-            <p className="font-body text-lg text-white/60 leading-relaxed max-w-2xl mb-8">
-              {course.description}
-            </p>
+              {/* Right: action card */}
+              <div className="bg-black-2 border-2 border-orange-DEFAULT p-7">
+                {user && pct > 0 && (
+                  <div className="mb-6 pb-6 border-b border-white/8">
+                    <div className="flex justify-between mb-2">
+                      <span className="font-mono text-[0.55rem] tracking-widest uppercase text-grey-dark">Progress</span>
+                      <span className="font-mono text-[0.55rem] tracking-widest text-orange-DEFAULT">{pct}%</span>
+                    </div>
+                    <div className="h-1 bg-black-4 rounded-full">
+                      <div className="h-1 bg-orange-DEFAULT rounded-full transition-all" style={{ width: `${pct}%` }} />
+                    </div>
+                    <p className="font-mono text-[0.52rem] tracking-widest text-grey-dark mt-1.5">
+                      {completedLessons.length} of {course.lessons.length} lessons complete
+                    </p>
+                  </div>
+                )}
 
-            {canAccess ? (
-              <div className="flex flex-wrap gap-4">
-                <Link
-                  href={`/leadership/${course.id}/${nextLesson.id}`}
-                  className="btn-orange inline-flex items-center gap-2"
-                >
-                  {isComplete ? 'Review Course' : hasStarted ? 'Continue Course' : 'Begin Course'}{' '}
-                  <ArrowRight size={14} />
-                </Link>
-                {isComplete && (
-                  <Link
-                    href="/dashboard/certificates"
-                    className="btn-outline-orange inline-flex items-center gap-2"
-                  >
-                    <FileText size={14} /> Download Certificate
+                <div className="grid grid-cols-3 gap-3 mb-6">
+                  {[
+                    { icon: BookOpen, val: course.lessons.length, label: 'Lessons' },
+                    { icon: Clock,    val: course.durationEstimate, label: 'Est. time' },
+                    { icon: CheckCircle, val: course.quiz.questions.length, label: 'Quiz Qs' },
+                  ].map(({ icon: Icon, val, label }) => (
+                    <div key={label} className="text-center">
+                      <Icon size={14} className="text-orange-DEFAULT mx-auto mb-1" />
+                      <span className="font-display text-xl text-white block leading-none">{val}</span>
+                      <span className="font-mono text-[0.5rem] tracking-widest text-grey-dark uppercase">{label}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {canAccess ? (
+                  <div className="flex flex-wrap gap-3">
+                    <Link
+                      href={`/leadership/${course.id}/${nextLesson?.id}`}
+                      className="btn-orange w-full text-center flex items-center justify-center gap-2"
+                    >
+                      <Play size={13} />
+                      {isComplete ? 'Review Course' : hasStarted ? 'Continue Course' : 'Begin Course'}
+                    </Link>
+                    {isComplete && (
+                      <Link
+                        href="/dashboard/certificates"
+                        className="btn-outline-orange w-full text-center flex items-center justify-center gap-2"
+                      >
+                        <FileText size={14} /> Download Certificate
+                      </Link>
+                    )}
+                  </div>
+                ) : tierGrant && !prevCourseComplete && prevCourse ? (
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-2 mb-3 text-[#C9A84C]">
+                      <Lock size={13} />
+                      <span className="font-mono text-[0.55rem] tracking-[0.2em] uppercase">Complete Course {prevCourse.num} First</span>
+                    </div>
+                    <Link
+                      href={`/leadership/${prevCourse.id}`}
+                      className="w-full text-center flex items-center justify-center gap-2 px-4 py-2.5 border border-[#C9A84C]/40 text-[#C9A84C] font-mono text-[0.6rem] tracking-widest uppercase hover:bg-[#C9A84C]/10 transition-colors"
+                    >
+                      <ArrowRight size={12} />
+                      Go to Course {prevCourse.num}
+                    </Link>
+                  </div>
+                ) : user ? (
+                  <p className="text-center font-mono text-[0.55rem] tracking-[0.2em] uppercase text-white/30">
+                    Upgrade your membership to access this course
+                  </p>
+                ) : (
+                  <Link href={`/auth/login?redirect=/leadership/${course.id}`} className="btn-outline w-full text-center block">
+                    Log In to Access
                   </Link>
                 )}
               </div>
-            ) : tierGrant && !prevCourseComplete && prevCourse ? (
-              <div className="flex flex-col gap-3">
-                <p className="font-mono text-[0.55rem] tracking-[0.2em] uppercase text-[#C9A84C]">
-                  Complete Course {prevCourse.num} to unlock this course
-                </p>
-                <Link
-                  href={`/leadership/${prevCourse.id}`}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 border border-[#C9A84C]/40 text-[#C9A84C] font-mono text-[0.6rem] tracking-widest uppercase hover:bg-[#C9A84C]/10 transition-colors"
-                >
-                  Go to {prevCourse.title} <ArrowRight size={12} />
-                </Link>
-              </div>
-            ) : (
-              <p className="font-mono text-[0.55rem] tracking-[0.2em] uppercase text-white/30">
-                Upgrade your membership to access this course
-              </p>
-            )}
-          </div>
-
-          {/* Lessons list */}
-          <div className="border-t border-white/8 pt-10">
-            <p className="font-mono text-[0.55rem] tracking-[0.3em] uppercase text-[#C9A84C] mb-6">
-              Lessons
-            </p>
-            <div className="space-y-3">
-              {course.lessons.map((lesson, i) =>
-                canAccess ? (
-                  <Link
-                    key={lesson.id}
-                    href={`/leadership/${course.id}/${lesson.id}`}
-                    className="flex items-start gap-5 p-5 border border-white/8 bg-[#141008] hover:border-[#E8621A]/40 transition-colors group"
-                  >
-                    <div
-                      className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold font-mono"
-                      style={{ backgroundColor: `${course.color}14`, color: course.color, border: `1px solid ${course.color}30` }}
-                    >
-                      {String(i + 1).padStart(2, '0')}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-display text-xl text-white group-hover:text-[#E8621A] transition-colors mb-1">
-                        {lesson.title}
-                      </h3>
-                      <p className="font-body text-sm text-white/40 leading-relaxed line-clamp-2">
-                        {lesson.description}
-                      </p>
-                      {lesson.keyConcepts.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mt-3">
-                          {lesson.keyConcepts.map((c, j) => (
-                            <span
-                              key={j}
-                              className="font-mono text-[0.48rem] tracking-[0.15em] uppercase px-2 py-0.5 border border-white/10 text-white/30"
-                            >
-                              {c}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <ArrowRight size={14} className="text-white/20 group-hover:text-[#E8621A] transition-colors flex-shrink-0 mt-1" />
-                  </Link>
-                ) : (
-                  <div
-                    key={lesson.id}
-                    className="flex items-start gap-5 p-5 border border-white/4 bg-[#141008]/50 opacity-40 cursor-not-allowed select-none"
-                  >
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-mono border border-white/10 text-white/20">
-                      {String(i + 1).padStart(2, '0')}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-display text-xl text-white/30 mb-1">{lesson.title}</h3>
-                    </div>
-                  </div>
-                )
-              )}
             </div>
           </div>
+        </section>
 
-          {/* Quiz preview */}
-          <div className="mt-10 p-6 border border-[#C9A84C]/30 bg-[#C9A84C]/5">
-            <p className="font-mono text-[0.55rem] tracking-[0.2em] uppercase text-[#C9A84C] mb-2">
-              Course Quiz — {course.quiz.title}
-            </p>
-            <p className="font-body text-sm text-white/50 mb-1">
-              {course.quiz.questions.length} questions · {course.quiz.passingScore}% to pass
-            </p>
-            <p className="font-body text-xs italic text-white/30">
-              Available after completing all lessons. Passing unlocks the next course.
-            </p>
+        {/* ── LESSON LIST ── */}
+        <section className="py-16 px-6 md:px-14 bg-black">
+          <div className="max-w-4xl mx-auto">
+            <div className="font-mono text-[0.65rem] tracking-[0.25em] uppercase text-grey-dark mb-6">Lessons</div>
+
+            <div className="flex flex-col gap-[2px] bg-orange-DEFAULT border-2 border-orange-DEFAULT">
+              {course.lessons.map((lesson, idx) => {
+                const done       = completedLessons.includes(lesson.id)
+                const locked     = !canAccess
+                const isCurrent  = nextLesson?.id === lesson.id && pct > 0 && pct < 100
+
+                return (
+                  <div key={lesson.id} className={cn('bg-black-2 transition-colors', locked ? 'opacity-60' : 'hover:bg-black-3', isCurrent && 'border-l-4 border-orange-DEFAULT bg-orange-DEFAULT/5')}>
+                    {locked ? (
+                      <div className="flex items-start gap-5 px-7 py-5 cursor-not-allowed">
+                        <span className="font-display text-2xl text-white/20 leading-none min-w-[36px] mt-0.5">
+                          {lesson.num}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-body text-lg text-grey-dark">{lesson.title}</p>
+                          <p className="font-body text-sm italic text-grey-dark mt-1 line-clamp-1">
+                            {lesson.description}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3 flex-shrink-0">
+                          <Lock size={13} className="text-grey-dark" />
+                        </div>
+                      </div>
+                    ) : (
+                      <Link href={`/leadership/${course.id}/${lesson.id}`} className="flex items-start gap-5 px-7 py-5 group">
+                        <span className="font-display text-2xl text-white/40 leading-none min-w-[36px] mt-0.5 group-hover:text-orange-DEFAULT transition-colors">
+                          {lesson.num}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className={cn('font-body text-lg transition-colors', done ? 'text-white' : 'text-white/80 group-hover:text-white')}>
+                            {lesson.title}
+                          </p>
+                          <p className="font-body text-sm italic text-grey-DEFAULT mt-1 line-clamp-2">
+                            {lesson.description}
+                          </p>
+                          {lesson.keyConcepts.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-3">
+                              {lesson.keyConcepts.slice(0, 3).map((c, j) => (
+                                <span key={j} className="font-mono text-[0.48rem] tracking-[0.15em] uppercase px-2 py-0.5 border border-white/10 text-white/30">
+                                  {c}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {done ? <CheckCircle size={15} className="text-orange-DEFAULT" /> : <Play size={13} className="text-grey-dark/50 group-hover:text-orange-DEFAULT transition-colors" />}
+                        </div>
+                      </Link>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Quiz preview */}
+            <div className="mt-10 p-6 border border-[#C9A84C]/30 bg-[#C9A84C]/5">
+              <p className="font-mono text-[0.55rem] tracking-[0.2em] uppercase text-[#C9A84C] mb-2">
+                Course Quiz — {course.quiz.title}
+              </p>
+              <p className="font-body text-sm text-white/50 mb-1">
+                {course.quiz.questions.length} questions · {course.quiz.passingScore}% to pass
+              </p>
+              <p className="font-body text-xs italic text-white/30">
+                Available after completing all lessons. Passing unlocks the next course.
+              </p>
+            </div>
+
+            {/* Assumption Lab preview */}
+            <div className="mt-6 p-6 border border-orange-DEFAULT/20 bg-orange-DEFAULT/5">
+              <p className="font-mono text-[0.55rem] tracking-[0.2em] uppercase text-orange-DEFAULT mb-2">
+                Assumption Lab — {course.assumptionLab.title}
+              </p>
+              <p className="font-body text-sm text-white/50 leading-relaxed">
+                {course.assumptionLab.prompt}
+              </p>
+            </div>
           </div>
+        </section>
 
-          {/* Assumption Lab preview */}
-          <div className="mt-6 p-6 border border-[#E8621A]/20 bg-[#E8621A]/5">
-            <p className="font-mono text-[0.55rem] tracking-[0.2em] uppercase text-[#E8621A] mb-2">
-              Assumption Lab — {course.assumptionLab.title}
-            </p>
-            <p className="font-body text-sm text-white/50 leading-relaxed">
-              {course.assumptionLab.prompt}
-            </p>
-          </div>
-
-        </div>
       </main>
-
       <Footer />
     </>
   )
