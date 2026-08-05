@@ -1,13 +1,13 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Lock } from 'lucide-react'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
-import { COURSES } from '@/lib/leadership/curriculum'
+import { COURSES, TIER_ACCESS } from '@/lib/leadership/curriculum'
 import { createClient } from '@/lib/supabase/client'
 import { getCourseRoute } from '@/lib/constants/verticalRoutes'
 
@@ -41,20 +41,33 @@ const PILLARS = [
   },
 ]
 
+const TIER_LABELS: Record<string, string> = {
+  free:      'Seeker',
+  architect: 'Architect',
+  elite:     'Reality Master',
+}
+
 export default function LeadershipPage() {
   const router = useRouter()
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [userTier, setUserTier] = useState('free')
+  const [hasFullAccess, setHasFullAccess] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return
+      setIsLoggedIn(true)
       supabase
         .from('profiles')
-        .select('membership_type')
+        .select('membership_type, membership_tier, is_super_admin, is_bypassed')
         .eq('id', user.id)
         .single()
         .then(({ data: profile }) => {
-          if (!profile?.membership_type) return
+          if (!profile) return
+          if (profile.membership_tier) setUserTier(profile.membership_tier)
+          setHasFullAccess(!!profile.is_super_admin || !!profile.is_bypassed)
+          if (!profile.membership_type) return
           const correctRoute = getCourseRoute(profile.membership_type, null)
           if (correctRoute !== '/leadership') {
             router.replace(correctRoute)
@@ -131,11 +144,8 @@ export default function LeadershipPage() {
 
             <div className="space-y-4">
               {COURSES.map((course, i) => {
-                const tierLabels: Record<string, string> = {
-                  seeker:        'Seeker',
-                  architect:     'Architect',
-                  reality_master:'Reality Master',
-                }
+                const hasAccess = hasFullAccess || (isLoggedIn && (TIER_ACCESS[userTier] ?? TIER_ACCESS.free).includes(course.id))
+
                 return (
                   <motion.div
                     key={course.id}
@@ -156,11 +166,12 @@ export default function LeadershipPage() {
                           className="font-mono text-[0.5rem] tracking-[0.25em] uppercase px-2 py-0.5 border"
                           style={{ color: course.color, borderColor: `${course.color}40` }}
                         >
-                          {tierLabels[course.tierRequired] ?? course.tierRequired}
+                          {TIER_LABELS[course.tierRequired] ?? course.tierRequired}
                         </span>
                         <span className="font-mono text-[0.5rem] tracking-widest text-white/30">
                           {course.durationEstimate}
                         </span>
+                        {!hasAccess && <Lock size={11} className="text-white/30" />}
                       </div>
                       <h3 className="font-display text-2xl text-white mb-1">{course.title}</h3>
                       <p className="font-mono text-[0.6rem] tracking-[0.15em] text-[#C9A84C] mb-2">
@@ -171,12 +182,28 @@ export default function LeadershipPage() {
                       </p>
                     </div>
 
-                    <Link
-                      href={`/leadership/${course.id}`}
-                      className="btn-outline-orange flex-shrink-0 flex items-center gap-2 whitespace-nowrap"
-                    >
-                      View Course <ArrowRight size={12} />
-                    </Link>
+                    {hasAccess ? (
+                      <Link
+                        href={`/leadership/${course.id}`}
+                        className="btn-outline-orange flex-shrink-0 flex items-center gap-2 whitespace-nowrap"
+                      >
+                        View Course <ArrowRight size={12} />
+                      </Link>
+                    ) : isLoggedIn ? (
+                      <Link
+                        href="/pricing"
+                        className="btn-outline-orange flex-shrink-0 flex items-center gap-2 whitespace-nowrap"
+                      >
+                        <Lock size={12} /> Upgrade to Unlock
+                      </Link>
+                    ) : (
+                      <Link
+                        href={`/auth/login?redirect=/leadership/${course.id}`}
+                        className="btn-outline-orange flex-shrink-0 flex items-center gap-2 whitespace-nowrap"
+                      >
+                        <Lock size={12} /> Log In to Access
+                      </Link>
+                    )}
                   </motion.div>
                 )
               })}
