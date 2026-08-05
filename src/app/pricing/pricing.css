@@ -9,6 +9,42 @@
     min-height: 100vh;
 }
 
+/* Track switcher (Individuals / Education / Business / Leadership) */
+.track-switcher-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+.track-switcher {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.track-switcher::-webkit-scrollbar { display: none; }
+.track-switcher-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+  padding: 14px 24px;
+  font-family: var(--font-dm, "DM Sans", sans-serif);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  border: 2px solid;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+@media (max-width: 480px) {
+  .track-switcher-btn {
+    padding: 12px 14px;
+    font-size: 0.65rem;
+    letter-spacing: 0.06em;
+  }
+}
+
 /* Pricing nav */
 .pricing-nav {
   display: flex; align-items: center; justify-content: space-between;

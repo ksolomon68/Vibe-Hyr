@@ -93,18 +93,9 @@ export default function PricingPage() {
   const [track, setTrack] = useState<Track>('individuals')
 
   const getTrackButtonStyle = (active: boolean) => ({
-    padding: '14px 24px',
-    fontFamily: 'var(--font-dm, "DM Sans", sans-serif)',
-    fontSize: '0.75rem',
-    fontWeight: 800,
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.12em',
-    border: '2px solid',
     borderColor: active ? '#E8621A' : 'rgba(255,255,255,0.25)',
     background: active ? '#E8621A' : 'rgba(255,255,255,0.12)',
     color: active ? '#fff' : '#0f172a',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
   })
 
   // ── Individual state ────────────────────────────────────────────────────
@@ -155,35 +146,37 @@ export default function PricingPage() {
           <h1>INVEST IN YOUR<br /><em>REALITY</em></h1>
           <p>Choose your path — solo practitioner or entire organization.</p>
 
-          <div className="flex items-center justify-center gap-0 mt-8">
-            <button
-              onClick={() => setTrack('individuals')}
-              className="transition-all"
-              style={getTrackButtonStyle(track === 'individuals')}
-            >
-              Individuals
-            </button>
-            <button
-              onClick={() => setTrack('education')}
-              className="transition-all"
-              style={getTrackButtonStyle(track === 'education')}
-            >
-              Education
-            </button>
-            <button
-              onClick={() => setTrack('business')}
-              className="transition-all"
-              style={getTrackButtonStyle(track === 'business')}
-            >
-              Business
-            </button>
-            <button
-              onClick={() => setTrack('leadership')}
-              className="transition-all"
-              style={getTrackButtonStyle(track === 'leadership')}
-            >
-              Leadership
-            </button>
+          <div className="track-switcher-wrap">
+            <div className="track-switcher">
+              <button
+                onClick={() => setTrack('individuals')}
+                className="track-switcher-btn transition-all"
+                style={getTrackButtonStyle(track === 'individuals')}
+              >
+                Individuals
+              </button>
+              <button
+                onClick={() => setTrack('education')}
+                className="track-switcher-btn transition-all"
+                style={getTrackButtonStyle(track === 'education')}
+              >
+                Education
+              </button>
+              <button
+                onClick={() => setTrack('business')}
+                className="track-switcher-btn transition-all"
+                style={getTrackButtonStyle(track === 'business')}
+              >
+                Business
+              </button>
+              <button
+                onClick={() => setTrack('leadership')}
+                className="track-switcher-btn transition-all"
+                style={getTrackButtonStyle(track === 'leadership')}
+              >
+                Leadership
+              </button>
+            </div>
           </div>
         </div>
 
