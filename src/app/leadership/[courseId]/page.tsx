@@ -10,6 +10,7 @@ import { Footer } from '@/components/layout/Footer'
 import { COURSES } from '@/lib/leadership/curriculum'
 import { createClient } from '@/lib/supabase/server'
 import { cn } from '@/lib/utils'
+import { CourseLockedScreen } from '@/components/CourseLockedScreen'
 
 interface PageProps {
   params: { courseId: string }
@@ -96,6 +97,20 @@ export default async function CourseDetailPage({ params }: PageProps) {
   const tierGrant   = !!user && ((TIER_ACCESS[userTier] ?? []).includes(params.courseId) || isSuperAdmin || isBypassed)
   const canAccess   = tierGrant && prevCourseComplete
   const prevCourse  = prereqId ? COURSES.find(c => c.id === prereqId) : null
+
+  // Mirrors /educators/[programSlug]: a logged-in user without tier access gets
+  // the shared full-page locked screen instead of an inline message.
+  if (user && !tierGrant) {
+    return (
+      <CourseLockedScreen
+        reason="tier_required"
+        courseSlug={course.id}
+        sectionLabel="LEADERSHIP"
+        backHref="/leadership"
+        backLabel="Back to Leadership"
+      />
+    )
+  }
 
   const pct = course.lessons.length > 0
     ? Math.round((completedLessons.length / course.lessons.length) * 100)
@@ -211,10 +226,6 @@ export default async function CourseDetailPage({ params }: PageProps) {
                       Go to Course {prevCourse.num}
                     </Link>
                   </div>
-                ) : user ? (
-                  <p className="text-center font-mono text-[0.55rem] tracking-[0.2em] uppercase text-white/30">
-                    Upgrade your membership to access this course
-                  </p>
                 ) : (
                   <Link href={`/auth/login?redirect=/leadership/${course.id}`} className="btn-outline w-full text-center block">
                     Log In to Access
