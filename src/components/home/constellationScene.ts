@@ -56,320 +56,232 @@ function pickColor(rim: boolean, spectrumTip: boolean, vNorm: number): [number, 
 
 type Cloud = { pos: Float32Array; col: Float32Array }
 
-/* ── Icon-silhouette-based volume ──────────────────────────────
-   Pure noise-displaced spheres only ever read as "blob on a stick" —
-   nothing in that method encodes what makes a brain a brain or a
-   bulb a bulb. Instead, sample real icon silhouettes (Lucide's Brain/
-   Lightbulb/Globe glyphs, the same geometry that read correctly in
-   the earlier 2D build) for x/y and recognisable internal texture,
-   then give each sampled point a "puffy" z-depth derived from a
-   blurred version of the plain silhouette — a poor man's distance
-   field, the same trick behind inflated/emoji-style icon renders.
-   That gets real 3D volume for the bloom to light without losing the
-   silhouette that actually makes the shape identifiable. */
+/* ── 3D Mathematical Shape Generators ──────────────────────────
+   Instead of sampling flat 2D canvas silhouettes, we generate
+   fully volumetric 3D structures with mathematical equations.
+   This gives the shapes real depth, structure, and fidelity
+   matching the reference screenshots. */
 
-const ICON_SIZE = 256
-
-function offscreenIcon(): CanvasRenderingContext2D {
-  const c = document.createElement('canvas')
-  c.width = ICON_SIZE
-  c.height = ICON_SIZE
-  return c.getContext('2d', { willReadFrequently: true })!
-}
-
-/** Sets up an icon-space (24×24) transform on a fresh ICON_SIZE canvas. */
-function iconCtx(scale: number, cx: number, cy: number): CanvasRenderingContext2D {
-  const c = offscreenIcon()
-  c.translate(ICON_SIZE / 2 - cx * scale, ICON_SIZE / 2 - cy * scale)
-  c.scale(scale, scale)
-  c.lineCap = 'round'
-  c.lineJoin = 'round'
-  c.strokeStyle = '#fff'
-  c.fillStyle = '#fff'
-  return c
-}
-
-type IconMasks = { detail: Uint8ClampedArray; puff: Uint8ClampedArray }
-
-function buildIconMasks(drawSilhouette: () => CanvasRenderingContext2D, drawDetail: () => CanvasRenderingContext2D): IconMasks {
-  const silhouette = drawSilhouette()
-  const blurred = offscreenIcon()
-  blurred.filter = 'blur(20px)'
-  blurred.drawImage(silhouette.canvas, 0, 0)
-  const puff = blurred.getImageData(0, 0, ICON_SIZE, ICON_SIZE).data
-
-  const detailCtx = drawDetail()
-  const detail = detailCtx.getImageData(0, 0, ICON_SIZE, ICON_SIZE).data
-
-  return { detail, puff }
-}
-
-type IconPoint = { u: number; v: number; z: number; rim: boolean }
-
-function sampleIcon(masks: IconMasks, n: number): IconPoint[] {
-  const pts: IconPoint[] = []
-  const maxAttempts = n * 300
-  let attempts = 0
-  while (pts.length < n && attempts < maxAttempts) {
-    attempts++
-    const mx = (Math.random() * ICON_SIZE) | 0
-    const my = (Math.random() * ICON_SIZE) | 0
-    const idx = (my * ICON_SIZE + mx) * 4 + 3
-    const a = masks.detail[idx] / 255
-    if (a < 0.04 || Math.random() > a) continue
-    pts.push({ u: mx / ICON_SIZE, v: my / ICON_SIZE, z: masks.puff[idx] / 255, rim: a > 0.85 })
-  }
-  while (pts.length < n) pts.push({ u: Math.random(), v: Math.random(), z: 0, rim: false })
-  return pts
-}
-
-/** Converts sampled icon points into a world-space point cloud: x/y
-    from silhouette position, z scattered through the puffy volume
-    thickness at that point (thin near edges, thick through the
-    middle) so the shape reads as an inflated solid, not a flat card. */
-function iconToCloud(pts: IconPoint[], worldSize: number, maxDepth: number, spectrumTip: boolean): Cloud {
-  const n = pts.length
+/** Brain: 3D bilateral hemispheres with wavy gyri folds and a stem */
+function buildBrain(n: number): Cloud {
   const pos = new Float32Array(n * 3)
   const col = new Float32Array(n * 3)
+  const r = 1.15
+
   for (let i = 0; i < n; i++) {
-    const p = pts[i]
-    const x = (p.u - 0.5) * worldSize
-    const y = (0.5 - p.v) * worldSize
-    const z = (Math.random() * 2 - 1) * Math.pow(p.z, 0.55) * maxDepth
+    let x = 0, y = 0, z = 0
+    let isRim = false
+
+    // 12% of points form the brain stem at the bottom
+    if (i < n * 0.12) {
+      const h = rand(0, 0.7)
+      const stemR = 0.15 * (1.0 - h * 0.3)
+      const theta = Math.random() * PI2
+      x = Math.cos(theta) * stemR
+      y = -0.5 - h
+      z = Math.sin(theta) * stemR
+    } else {
+      // 88% form the hemispheres
+      const hemisphere = Math.random() > 0.5 ? 1 : -1
+      const theta = Math.random() * Math.PI
+      const phi = Math.random() * PI2
+
+      // Base ellipsoid shape (elongated front-to-back, wider at back)
+      const baseR = r * (0.85 + 0.15 * Math.sin(theta))
+      const ex = baseR * Math.sin(theta) * Math.cos(phi) * 0.76 + hemisphere * 0.08
+      const ey = baseR * Math.cos(theta) * 0.8
+      const ez = baseR * Math.sin(theta) * Math.sin(phi) * 1.1
+
+      // Surface folding frequency and amplitude
+      const gX = Math.sin(ex * 12) * Math.cos(ey * 12) * Math.sin(ez * 12)
+      const gY = Math.cos(ex * 8) * Math.sin(ey * 10) * Math.cos(ez * 8)
+      const fold = (gX + gY) * 0.075
+
+      // Push points toward the surface to define the shell (rim)
+      const pct = Math.pow(Math.random(), 0.35)
+      x = ex + ex * fold * pct
+      y = ey + ey * fold * pct
+      z = ez + ez * fold * pct
+
+      if (pct > 0.72) isRim = true
+    }
+
     pos[i * 3] = x
-    pos[i * 3 + 1] = y
+    pos[i * 3 + 1] = y + 0.15 // Center offset
     pos[i * 3 + 2] = z
-    const rgb = pickColor(p.rim, spectrumTip, p.v)
+
+    // Core is white/silver, outer rim glows gold/orange
+    const rgb = pickColor(isRim, false, 0)
     col[i * 3] = rgb[0]
     col[i * 3 + 1] = rgb[1]
     col[i * 3 + 2] = rgb[2]
   }
+
   return { pos, col }
 }
 
-/* Hand-drawn silhouettes, not icon glyphs. Lucide's Brain/Lightbulb
-   marks are designed to read at 24px next to text — their notch and
-   neck are subtle, single-pixel-scale details that a point-cloud +
-   bloom render smooths straight into a plain ball. These paths are
-   drawn at cartoon-icon exaggeration instead: a wide, unmistakably
-   two-lobed dome cut by a deep central notch, on a long, clearly
-   separate stem/neck — verified to actually read as a silhouette in
-   isolation before being wired into the particle pipeline. */
-
-function iconCtxRaw(scale: number, tx: number, ty: number): CanvasRenderingContext2D {
-  const c = offscreenIcon()
-  c.translate(ICON_SIZE / 2 + tx * scale, ICON_SIZE / 2 + ty * scale)
-  c.scale(scale, scale)
-  c.lineCap = 'round'
-  c.lineJoin = 'round'
-  c.strokeStyle = '#fff'
-  c.fillStyle = '#fff'
-  return c
-}
-
-const BRAIN_SCALE = 0.58
-
-function traceBrainDome(c: CanvasRenderingContext2D) {
-  c.beginPath()
-  c.moveTo(-74, 36)
-  c.bezierCurveTo(-84, -16, -60, -60, -26, -54)
-  c.bezierCurveTo(-16, -64, 16, -64, 26, -54)
-  c.bezierCurveTo(60, -60, 84, -16, 74, 36)
-  c.bezierCurveTo(70, 60, 44, 72, 0, 72)
-  c.bezierCurveTo(-44, 72, -70, 60, -74, 36)
-  c.closePath()
-}
-function traceBrainStem(c: CanvasRenderingContext2D) {
-  c.beginPath()
-  c.moveTo(-17, 64)
-  c.bezierCurveTo(-15, 98, -8, 124, 0, 140)
-  c.bezierCurveTo(8, 124, 15, 98, 17, 64)
-  c.closePath()
-}
-function traceBrainNotch(c: CanvasRenderingContext2D) {
-  c.beginPath()
-  c.moveTo(-24, -60)
-  c.bezierCurveTo(-27, -32, -20, -6, 0, 10)
-  c.bezierCurveTo(20, -6, 27, -32, 24, -60)
-  c.bezierCurveTo(13, -72, -13, -72, -24, -60)
-  c.closePath()
-}
-
-function buildBrainMasks(): IconMasks {
-  return buildIconMasks(
-    () => {
-      const c = iconCtxRaw(BRAIN_SCALE, 0, -6)
-      traceBrainDome(c)
-      c.fill()
-      traceBrainStem(c)
-      c.fill()
-      c.globalCompositeOperation = 'destination-out'
-      traceBrainNotch(c)
-      c.fill()
-      c.globalCompositeOperation = 'source-over'
-      return c
-    },
-    () => {
-      const c = iconCtxRaw(BRAIN_SCALE, 0, -6)
-      c.globalAlpha = 0.25
-      traceBrainDome(c)
-      c.fill()
-      c.globalAlpha = 0.16
-      traceBrainStem(c)
-      c.fill()
-      c.globalCompositeOperation = 'destination-out'
-      c.globalAlpha = 1
-      traceBrainNotch(c)
-      c.fill()
-      c.globalCompositeOperation = 'source-over'
-
-      c.globalAlpha = 1
-      c.lineWidth = 4
-      traceBrainDome(c)
-      c.stroke()
-      traceBrainStem(c)
-      c.stroke()
-
-      c.globalAlpha = 0.5
-      for (const s of [0.88, 0.74, 0.6, 0.45]) {
-        c.save()
-        c.translate(0, 0)
-        c.scale(s, s)
-        c.lineWidth = 3 / s
-        traceBrainDome(c)
-        c.stroke()
-        c.restore()
-      }
-      return c
-    },
-  )
-}
-
-const BULB_SCALE = 0.58
-
-function traceBulbGlass(c: CanvasRenderingContext2D) {
-  c.beginPath()
-  c.moveTo(-20, 46)
-  c.bezierCurveTo(-60, 40, -78, -6, -60, -46)
-  c.bezierCurveTo(-42, -80, 42, -80, 60, -46)
-  c.bezierCurveTo(78, -6, 60, 40, 20, 46)
-  c.bezierCurveTo(24, 54, 24, 58, 20, 60)
-  c.lineTo(-20, 60)
-  c.bezierCurveTo(-24, 58, -24, 54, -20, 46)
-  c.closePath()
-}
-function traceBulbNeck(c: CanvasRenderingContext2D) {
-  c.beginPath()
-  c.moveTo(-18, 60)
-  c.bezierCurveTo(-18, 70, -16, 78, -12, 96)
-  c.bezierCurveTo(-10, 108, -8, 112, 0, 116)
-  c.bezierCurveTo(8, 112, 10, 108, 12, 96)
-  c.bezierCurveTo(16, 78, 18, 70, 18, 60)
-  c.closePath()
-}
-const BULB_THREADS = [70, 80, 90, 100]
-
-function buildLightbulbMasks(): IconMasks {
-  return buildIconMasks(
-    () => {
-      const c = iconCtxRaw(BULB_SCALE, 0, -30)
-      traceBulbGlass(c)
-      c.fill()
-      traceBulbNeck(c)
-      c.fill()
-      c.globalCompositeOperation = 'destination-out'
-      for (const y of BULB_THREADS) {
-        c.beginPath()
-        c.ellipse(0, y, 15, 2.5, 0, 0, Math.PI * 2)
-        c.fill()
-      }
-      c.globalCompositeOperation = 'source-over'
-      return c
-    },
-    () => {
-      const c = iconCtxRaw(BULB_SCALE, 0, -30)
-      c.globalAlpha = 0.25
-      traceBulbGlass(c)
-      c.fill()
-      c.globalAlpha = 0.2
-      traceBulbNeck(c)
-      c.fill()
-      c.globalCompositeOperation = 'destination-out'
-      c.globalAlpha = 1
-      for (const y of BULB_THREADS) {
-        c.beginPath()
-        c.ellipse(0, y, 15, 2.5, 0, 0, Math.PI * 2)
-        c.fill()
-      }
-      c.globalCompositeOperation = 'source-over'
-
-      c.globalAlpha = 1
-      c.lineWidth = 4
-      traceBulbGlass(c)
-      c.stroke()
-      traceBulbNeck(c)
-      c.stroke()
-
-      c.globalAlpha = 0.5
-      for (const s of [0.88, 0.74, 0.6, 0.45]) {
-        c.save()
-        c.scale(s, s)
-        c.lineWidth = 3 / s
-        traceBulbGlass(c)
-        c.stroke()
-        c.restore()
-      }
-      return c
-    },
-  )
-}
-
-function buildOrbMasks(): IconMasks {
-  const disc = new Path2D()
-  disc.arc(12, 12, 10, 0, Math.PI * 2)
-  const meridian = new Path2D('M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20')
-  const equator = new Path2D('M2 12h20')
-
-  return buildIconMasks(
-    () => {
-      const c = iconCtx(9.8, 12, 12)
-      c.fill(disc)
-      return c
-    },
-    () => {
-      const c = iconCtx(9.8, 12, 12)
-      c.globalAlpha = 0.25
-      c.fill(disc)
-      c.globalAlpha = 1
-      c.lineWidth = 0.65
-      c.stroke(disc)
-      c.globalAlpha = 0.5
-      for (const s of [0.86, 0.7, 0.54, 0.38]) {
-        c.save()
-        c.translate(12, 12)
-        c.scale(s, s)
-        c.translate(-12, -12)
-        c.lineWidth = 0.42 / s
-        c.stroke(disc)
-        c.restore()
-      }
-      c.globalAlpha = 1
-      c.lineWidth = 0.5
-      c.stroke(meridian)
-      c.stroke(equator)
-      return c
-    },
-  )
-}
-
-function buildBrain(n: number): Cloud {
-  return iconToCloud(sampleIcon(buildBrainMasks(), n), 2.7, 0.2, false)
-}
+/** Lightbulb: 3D glass bulb, filament loop, support wires, and screw base */
 function buildLightbulb(n: number): Cloud {
-  return iconToCloud(sampleIcon(buildLightbulbMasks(), n), 2.7, 0.22, true)
+  const pos = new Float32Array(n * 3)
+  const col = new Float32Array(n * 3)
+  const r = 1.1
+
+  for (let i = 0; i < n; i++) {
+    let x = 0, y = 0, z = 0
+    let isRim = false
+    let vNorm = 0.5
+
+    const randVal = Math.random()
+
+    if (randVal < 0.60) {
+      // 60% Glass envelope (spherical top tapering to neck)
+      const theta = Math.random() * Math.PI
+      const phi = Math.random() * PI2
+      
+      const bulbY = Math.cos(theta) * r
+      const bulbRad = bulbY > 0 
+        ? r * Math.sin(theta) * 0.95
+        : r * Math.sin(theta) * 0.95 * (1.0 + bulbY * 0.45) // taper down
+      
+      const shellPct = Math.pow(Math.random(), 0.25) // push to shell
+      x = Math.cos(phi) * bulbRad * shellPct
+      y = bulbY + 0.25
+      z = Math.sin(phi) * bulbRad * shellPct
+
+      vNorm = (y + 1.0) / 2.2
+      if (shellPct > 0.78) isRim = true
+    } 
+    else if (randVal < 0.82) {
+      // 22% Screw threads base
+      const h = rand(0, 0.55)
+      const baseR = 0.38 - h * 0.08
+      const phi = Math.random() * PI2
+      
+      // Thread helix displacement
+      const thread = 0.026 * Math.sin(phi * 5 + h * 55)
+      x = Math.cos(phi) * (baseR + thread)
+      y = -r * 0.65 - h + 0.25
+      z = Math.sin(phi) * (baseR + thread)
+
+      vNorm = (y + 1.0) / 2.2
+      isRim = true
+    } 
+    else if (randVal < 0.94) {
+      // 12% Glowing filament and support loops inside
+      const filamentType = Math.random()
+      if (filamentType < 0.65) {
+        // Coiled loop at the top
+        const tVal = rand(0, PI2)
+        const loopR = 0.28
+        x = Math.cos(tVal) * loopR
+        y = 0.45 + Math.sin(tVal * 12) * 0.028
+        z = Math.sin(tVal) * loopR
+      } else {
+        // Internal support wires
+        const wireSide = Math.random() > 0.5 ? 1 : -1
+        const h = rand(0, 0.75)
+        x = wireSide * 0.12 * (1.0 - h * 0.2)
+        y = -0.3 + h
+        z = 0
+      }
+      vNorm = (y + 1.0) / 2.2
+      isRim = Math.random() > 0.2 // filament glows brightly
+    } 
+    else {
+      // 6% Contact contact plate at the very bottom
+      const h = rand(0, 0.12)
+      const capR = 0.22 * (1.0 - h / 0.12)
+      const phi = Math.random() * PI2
+      x = Math.cos(phi) * capR
+      y = -r * 1.2 + 0.25 - h
+      z = Math.sin(phi) * capR
+      vNorm = 0.05
+    }
+
+    pos[i * 3] = x
+    pos[i * 3 + 1] = y
+    pos[i * 3 + 2] = z
+
+    const rgb = pickColor(isRim, true, vNorm)
+    col[i * 3] = rgb[0]
+    col[i * 3 + 1] = rgb[1]
+    col[i * 3 + 2] = rgb[2]
+  }
+
+  return { pos, col }
 }
+
+/** Globe/Orb: 3D spherical grid lines (meridians & parallels) with a glowing core */
 function buildOrb(n: number): Cloud {
-  return iconToCloud(sampleIcon(buildOrbMasks(), n), 2.4, 0.35, false)
+  const pos = new Float32Array(n * 3)
+  const col = new Float32Array(n * 3)
+  const r = 1.05
+
+  for (let i = 0; i < n; i++) {
+    let x = 0, y = 0, z = 0
+    let isRim = false
+    const randVal = Math.random()
+
+    if (randVal < 0.42) {
+      // 42% Longitude lines (meridians wrapping the sphere)
+      const numMeridians = 8
+      const meridianIdx = Math.floor(Math.random() * numMeridians)
+      const phi = (meridianIdx * Math.PI) / (numMeridians / 2)
+      
+      const theta = Math.random() * Math.PI
+      x = r * Math.sin(theta) * Math.cos(phi)
+      y = r * Math.cos(theta)
+      z = r * Math.sin(theta) * Math.sin(phi)
+      
+      isRim = true
+    } 
+    else if (randVal < 0.74) {
+      // 32% Latitude lines (parallels at constant heights)
+      const numParallels = 6
+      const parallelIdx = Math.floor(Math.random() * numParallels)
+      const latVal = -0.7 + (parallelIdx * 1.4) / (numParallels - 1)
+      const latY = latVal * r
+      
+      const parallelR = Math.sqrt(r * r - latY * latY)
+      const phi = Math.random() * PI2
+      
+      x = parallelR * Math.cos(phi)
+      y = latY
+      z = parallelR * Math.sin(phi)
+      
+      isRim = true
+    } 
+    else if (randVal < 0.88) {
+      // 14% Random points on the outer shell
+      const theta = Math.random() * Math.PI
+      const phi = Math.random() * PI2
+      x = r * Math.sin(theta) * Math.cos(phi)
+      y = r * Math.cos(theta)
+      z = r * Math.sin(theta) * Math.sin(phi)
+      
+      isRim = Math.random() > 0.4
+    } 
+    else {
+      // 12% Glowing center core (dense mini orb)
+      const theta = Math.random() * Math.PI
+      const phi = Math.random() * PI2
+      const coreR = Math.random() * 0.22
+      x = coreR * Math.sin(theta) * Math.cos(phi)
+      y = coreR * Math.cos(theta)
+      z = coreR * Math.sin(theta) * Math.sin(phi)
+    }
+
+    pos[i * 3] = x
+    pos[i * 3 + 1] = y
+    pos[i * 3 + 2] = z
+
+    const rgb = pickColor(isRim, false, 0)
+    col[i * 3] = rgb[0]
+    col[i * 3 + 1] = rgb[1]
+    col[i * 3 + 2] = rgb[2]
+  }
+
+  return { pos, col }
 }
 
 /** Small soft-edged outlined (hollow) triangle — the exact style from
