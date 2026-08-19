@@ -28,6 +28,7 @@ const RIM_LOWER_COLORS = ['#E8621A', '#E8621A', '#F0B429', '#8B5CF6', '#8B5CF6',
 const CORE_COLORS = ['#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#F0B429', '#8B5CF6', '#F97316']
 const AMBIENT_COLORS = ['#FFFFFF', '#FFFFFF', '#F0B429', '#F0B429', '#E8621A', '#8B5CF6', '#F97316', '#FB923C', '#FFB86B']
 
+const PI2 = Math.PI * 2
 const pick = (pool: string[]) => pool[(Math.random() * pool.length) | 0]
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
