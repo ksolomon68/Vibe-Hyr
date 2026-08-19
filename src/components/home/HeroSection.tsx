@@ -24,13 +24,12 @@ const STATS = [
    ────────────────────────────────────────────────────────────── */
 
 const SPARK_COLORS = [
-  '#8B5CF6', '#8B5CF6', '#8B5CF6',
+  '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF',
+  '#E8621A', '#E8621A', '#E8621A', '#E8621A',
   '#F0B429', '#F0B429', '#F0B429',
   '#14B8A6', '#14B8A6',
-  '#E8621A', '#E8621A',
   '#EC4899',
   '#3B82F6',
-  '#FFFFFF', '#FFFFFF',
 ]
 
 /* Masks are authored on a square 200×200 grid, rasterised at 2× */
@@ -48,14 +47,15 @@ function offscreen(): CanvasRenderingContext2D | null {
   return c.getContext('2d', { willReadFrequently: true })
 }
 
-/* Front-on two-hemisphere brain (Lucide "Brain" glyph), same treatment as
-   before: fill for mass, rim stroke, nested inward-scaled contours to
-   simulate cortical folds, plus the icon's own interior fold lines. */
+/* A single rounded dome (Lucide "Brain" glyph's two hemisphere paths,
+   fused with a bridging core so they read as one mass, not two lobes)
+   tapering into a spinal stem beneath — the "brain on a neck" silhouette
+   from the reference, not a side-profile skull. */
 function buildBrainMask(): Uint8ClampedArray {
   const c = offscreen()!
   c.scale(MASK / GRID, MASK / GRID)
-  const scale = (GRID * 0.86) / 24
-  c.translate(GRID / 2 - 12 * scale, GRID / 2 - 11.5 * scale)
+  const scale = (GRID * 0.78) / 24
+  c.translate(GRID / 2 - 12 * scale, GRID / 2 - 9.5 * scale)
   c.scale(scale, scale)
   c.lineCap = 'round'
   c.lineJoin = 'round'
@@ -75,18 +75,25 @@ function buildBrainMask(): Uint8ClampedArray {
     'M6 18a4 4 0 0 1-1.967-.516',
     'M19.967 17.484A4 4 0 0 1 18 18',
   ].map((d) => new Path2D(d))
+  const bridge = new Path2D()
+  bridge.ellipse(12, 10.5, 2.4, 7.2, 0, 0, Math.PI * 2)
+  const stem = new Path2D('M9.3 18.2C9.6 20.4 10.5 22.4 12 24C13.5 22.4 14.4 20.4 14.7 18.2Z')
 
-  c.globalAlpha = 0.2
+  c.globalAlpha = 0.62
   for (const p of hemis) c.fill(p)
+  c.fill(bridge)
+  c.globalAlpha = 0.5
+  c.fill(stem)
   c.globalAlpha = 0.75
   c.lineWidth = 0.55
   for (const p of hemis) c.stroke(p)
+  c.stroke(stem)
   c.globalAlpha = 0.9
   for (const s of [0.92, 0.82, 0.7, 0.56]) {
     c.save()
-    c.translate(12, 11.5)
+    c.translate(12, 10.5)
     c.scale(s, s)
-    c.translate(-12, -11.5)
+    c.translate(-12, -10.5)
     c.lineWidth = 0.42 / s
     for (const p of hemis) c.stroke(p)
     c.restore()
@@ -94,6 +101,9 @@ function buildBrainMask(): Uint8ClampedArray {
   c.globalAlpha = 1
   c.lineWidth = 0.5
   for (const p of folds) c.stroke(p)
+  c.lineWidth = 0.35
+  c.stroke(new Path2D('M11 18.6C11.2 20 11.6 21.2 12 22.2'))
+  c.stroke(new Path2D('M13 18.6C12.8 20 12.4 21.2 12 22.2'))
 
   return c.getImageData(0, 0, MASK, MASK).data
 }
@@ -196,7 +206,7 @@ function sampleMask(mask: Uint8ClampedArray, n: number): Home[] {
     const mx = (Math.random() * MASK) | 0
     const my = (Math.random() * MASK) | 0
     const a = mask[(my * MASK + mx) * 4 + 3] / 255
-    if (a < 0.04 || Math.random() > a * a * a) continue
+    if (a < 0.04 || Math.random() > a * a) continue
     pts.push({ u: mx / MASK, v: my / MASK })
   }
   while (pts.length < n) pts.push({ u: Math.random(), v: Math.random() })
