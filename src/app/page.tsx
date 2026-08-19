@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { BuiltForYourWorld } from '@/components/home/BuiltForYourWorld'
 import { CoursePreviewGrid } from '@/components/home/CoursePreviewGrid'
 import { RealityAssessmentSection } from '@/components/home/RealityAssessmentSection'
+import { AmbientEmberField } from '@/components/home/AmbientEmberField'
 
 const PILLARS = [
   { icon: Brain,    title: 'Structured Curriculum',  desc: '4 progressive courses moving from RAS programming to full Echo Theory mastery. Quiz-gated modules ensure real implementation.' },
@@ -21,6 +22,7 @@ const PILLARS = [
 export default function HomePage() {
   return (
     <>
+      <AmbientEmberField />
       <Navbar />
       <main>
         {/* Hero */}
