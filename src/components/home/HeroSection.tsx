@@ -23,13 +23,39 @@ const STATS = [
    only light source, no bloom or wash.
    ────────────────────────────────────────────────────────────── */
 
-const SPARK_COLORS = [
-  '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF',
-  '#E8621A', '#E8621A', '#E8621A', '#E8621A',
+/* Reference structure: the mass is white/silver at its core, with a
+   glowing orange (brand accent, not Dala's violet) rim where the
+   particle density is highest — outline strokes and gyri, not the fill.
+   A handful of teal/violet/magenta sparks scatter through for the
+   "never grayscale" full-spectrum rule, concentrated toward the lower
+   portion of each shape the way Dala's bulb fades into colour at its tip. */
+const RIM_COLORS = [
+  '#E8621A', '#E8621A', '#E8621A', '#E8621A', '#E8621A',
   '#F0B429', '#F0B429', '#F0B429',
+  '#FFFFFF',
+]
+const RIM_LOWER_COLORS = [
+  '#E8621A', '#E8621A',
+  '#F0B429',
+  '#8B5CF6', '#8B5CF6',
   '#14B8A6', '#14B8A6',
-  '#EC4899',
   '#3B82F6',
+  '#EC4899',
+]
+const CORE_COLORS = [
+  '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF',
+  '#F0B429',
+  '#8B5CF6',
+  '#14B8A6',
+]
+const AMBIENT_COLORS = [
+  '#FFFFFF', '#FFFFFF',
+  '#F0B429', '#F0B429',
+  '#E8621A',
+  '#8B5CF6',
+  '#14B8A6',
+  '#3B82F6',
+  '#EC4899',
 ]
 
 /* Masks are authored on a square 200×200 grid, rasterised at 2× */
@@ -37,7 +63,7 @@ const GRID = 200
 const MASK = GRID * 2
 
 type Shape = 'chaos' | 'brain' | 'lightbulb' | 'orb'
-type Home = { u: number; v: number }
+type Home = { u: number; v: number; rim: boolean }
 type Box = { x: number; y: number; w: number; h: number }
 
 function offscreen(): CanvasRenderingContext2D | null {
@@ -54,7 +80,7 @@ function offscreen(): CanvasRenderingContext2D | null {
 function buildBrainMask(): Uint8ClampedArray {
   const c = offscreen()!
   c.scale(MASK / GRID, MASK / GRID)
-  const scale = (GRID * 0.78) / 24
+  const scale = (GRID * 0.92) / 24
   c.translate(GRID / 2 - 12 * scale, GRID / 2 - 9.5 * scale)
   c.scale(scale, scale)
   c.lineCap = 'round'
@@ -79,10 +105,10 @@ function buildBrainMask(): Uint8ClampedArray {
   bridge.ellipse(12, 10.5, 2.4, 7.2, 0, 0, Math.PI * 2)
   const stem = new Path2D('M9.3 18.2C9.6 20.4 10.5 22.4 12 24C13.5 22.4 14.4 20.4 14.7 18.2Z')
 
-  c.globalAlpha = 0.62
+  c.globalAlpha = 0.88
   for (const p of hemis) c.fill(p)
   c.fill(bridge)
-  c.globalAlpha = 0.5
+  c.globalAlpha = 0.75
   c.fill(stem)
   c.globalAlpha = 0.75
   c.lineWidth = 0.55
@@ -114,7 +140,7 @@ function buildBrainMask(): Uint8ClampedArray {
 function buildLightbulbMask(): Uint8ClampedArray {
   const c = offscreen()!
   c.scale(MASK / GRID, MASK / GRID)
-  const scale = (GRID * 1.55) / 24
+  const scale = (GRID * 1.75) / 24
   c.translate(GRID / 2 - 12 * scale, GRID / 2 - 10.5 * scale)
   c.scale(scale, scale)
   c.lineCap = 'round'
@@ -127,7 +153,7 @@ function buildLightbulbMask(): Uint8ClampedArray {
   )
   const base = ['M9 18h6', 'M10 22h4'].map((d) => new Path2D(d))
 
-  c.globalAlpha = 0.22
+  c.globalAlpha = 0.85
   c.fill(bulb)
   c.globalAlpha = 0.78
   c.lineWidth = 0.6
@@ -155,7 +181,7 @@ function buildLightbulbMask(): Uint8ClampedArray {
 function buildOrbMask(): Uint8ClampedArray {
   const c = offscreen()!
   c.scale(MASK / GRID, MASK / GRID)
-  const scale = (GRID * 0.86) / 24
+  const scale = (GRID * 0.94) / 24
   c.translate(GRID / 2 - 12 * scale, GRID / 2 - 12 * scale)
   c.scale(scale, scale)
   c.lineCap = 'round'
@@ -168,7 +194,7 @@ function buildOrbMask(): Uint8ClampedArray {
   const meridian = new Path2D('M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20')
   const equator = new Path2D('M2 12h20')
 
-  c.globalAlpha = 0.2
+  c.globalAlpha = 0.8
   c.fill(disc)
   c.globalAlpha = 0.75
   c.lineWidth = 0.55
@@ -193,37 +219,57 @@ function buildOrbMask(): Uint8ClampedArray {
 
 const rand = (min: number, max: number) => min + Math.random() * (max - min)
 
-/** Cubic-weighted rejection sampling onto a shape's alpha mask, producing
-    N normalised (0..1) home points. Pads with uniform points if a sparse
-    mask can't fill the quota — keeps particle count identical across
-    every shape so the morph never gains or loses points mid-scroll. */
+/** Weighted rejection sampling onto a shape's alpha mask, producing N
+    normalised (0..1) home points, each flagged as "rim" (landed on a
+    stroke — outline, gyri, contour ring — the high-alpha structure) or
+    "core" (landed on the lower-alpha fill). Pads with uniform points if
+    a sparse mask can't fill the quota — keeps particle count identical
+    across every shape so the morph never gains or loses points. */
 function sampleMask(mask: Uint8ClampedArray, n: number): Home[] {
   const pts: Home[] = []
-  const maxAttempts = n * 80
+  const maxAttempts = n * 120
   let attempts = 0
   while (pts.length < n && attempts < maxAttempts) {
     attempts++
     const mx = (Math.random() * MASK) | 0
     const my = (Math.random() * MASK) | 0
     const a = mask[(my * MASK + mx) * 4 + 3] / 255
-    if (a < 0.04 || Math.random() > a * a) continue
-    pts.push({ u: mx / MASK, v: my / MASK })
+    if (a < 0.04 || Math.random() > a) continue
+    pts.push({ u: mx / MASK, v: my / MASK, rim: a > 0.7 })
   }
-  while (pts.length < n) pts.push({ u: Math.random(), v: Math.random() })
+  while (pts.length < n) pts.push({ u: Math.random(), v: Math.random(), rim: false })
   return pts
 }
 
 type Particle = {
   homes: Record<Shape, Home>
+  colorByShape: Record<Shape, string>
   ambient: boolean
   size: number
-  color: string
   baseAlpha: number
   rot: number
   rotSpeed: number
   phase: number
   twinkle: number
   filled: boolean
+}
+
+const pick = (pool: string[]) => pool[(Math.random() * pool.length) | 0]
+
+/** Rim glows gold/orange, core stays mostly white — the reference's
+    "single accent + white body" structure. Only the lightbulb carries
+    Dala's tip gradient (gold shoulders fading into violet/teal/blue at
+    the bottom); the chance ramps smoothly with vertical position so it
+    reads as a fade, not a hard-edged colour band. */
+function homeColor(home: Home, spectrumTip: boolean): string {
+  if (home.rim) {
+    if (spectrumTip) {
+      const tipChance = clamp01((home.v - 0.55) / 0.35)
+      if (Math.random() < tipChance) return pick(RIM_LOWER_COLORS)
+    }
+    return pick(RIM_COLORS)
+  }
+  return pick(CORE_COLORS)
 }
 
 function buildParticles(structured: number, ambient: number): Particle[] {
@@ -238,32 +284,39 @@ function buildParticles(structured: number, ambient: number): Particle[] {
   const particles: Particle[] = []
 
   for (let i = 0; i < structured; i++) {
+    const homes: Record<Shape, Home> = {
+      chaos: { u: Math.random(), v: Math.random(), rim: false },
+      brain: brainHomes[i],
+      lightbulb: bulbHomes[i],
+      orb: orbHomes[i],
+    }
     particles.push({
-      homes: {
-        chaos: { u: Math.random(), v: Math.random() },
-        brain: brainHomes[i],
-        lightbulb: bulbHomes[i],
-        orb: orbHomes[i],
+      homes,
+      colorByShape: {
+        chaos: pick(AMBIENT_COLORS),
+        brain: homeColor(homes.brain, false),
+        lightbulb: homeColor(homes.lightbulb, true),
+        orb: homeColor(homes.orb, false),
       },
       ambient: false,
       size: rand(1.2, 3.0),
-      color: SPARK_COLORS[(Math.random() * SPARK_COLORS.length) | 0],
-      baseAlpha: rand(0.35, 0.95),
+      baseAlpha: rand(0.4, 0.98),
       rot: Math.random() * Math.PI * 2,
       rotSpeed: rand(-0.0004, 0.0004),
       phase: Math.random() * Math.PI * 2,
       twinkle: rand(0.0004, 0.0016),
-      filled: Math.random() < 0.16,
+      filled: Math.random() < 0.2,
     })
   }
 
   for (let i = 0; i < ambient; i++) {
-    const home = { u: Math.random(), v: Math.random() }
+    const home: Home = { u: Math.random(), v: Math.random(), rim: false }
+    const color = pick(AMBIENT_COLORS)
     particles.push({
       homes: { chaos: home, brain: home, lightbulb: home, orb: home },
+      colorByShape: { chaos: color, brain: color, lightbulb: color, orb: color },
       ambient: true,
       size: rand(1, 2.2),
-      color: SPARK_COLORS[(Math.random() * SPARK_COLORS.length) | 0],
       baseAlpha: rand(0.08, 0.26),
       rot: Math.random() * Math.PI * 2,
       rotSpeed: rand(-0.0003, 0.0003),
@@ -281,15 +334,15 @@ function buildParticles(structured: number, ambient: number): Particle[] {
    mobile stacks everything into one centred column. */
 const BOX_DESKTOP: Record<Shape, Box> = {
   chaos:     { x: 0,    y: 0,    w: 1,    h: 1 },
-  brain:     { x: 0.48, y: 0.08, w: 0.47, h: 0.82 },
-  lightbulb: { x: 0.05, y: 0.06, w: 0.42, h: 0.86 },
-  orb:       { x: 0.08, y: 0.2,  w: 0.34, h: 0.62 },
+  brain:     { x: 0.49, y: 0.08, w: 0.44, h: 0.8 },
+  lightbulb: { x: 0.07, y: 0.06, w: 0.4,  h: 0.84 },
+  orb:       { x: 0.1,  y: 0.2,  w: 0.32, h: 0.6 },
 }
 const BOX_MOBILE: Record<Shape, Box> = {
   chaos:     { x: 0,    y: 0,    w: 1,    h: 1 },
-  brain:     { x: 0.14, y: 0.04, w: 0.72, h: 0.46 },
-  lightbulb: { x: 0.18, y: 0.02, w: 0.64, h: 0.5 },
-  orb:       { x: 0.22, y: 0.06, w: 0.56, h: 0.4 },
+  brain:     { x: 0.08, y: 0.0,  w: 0.84, h: 0.54 },
+  lightbulb: { x: 0.12, y: -0.02, w: 0.76, h: 0.6 },
+  orb:       { x: 0.16, y: 0.04, w: 0.68, h: 0.48 },
 }
 
 const KEYFRAMES: { t: number; shape: Shape }[] = [
@@ -316,8 +369,8 @@ function useConstellationStory(
     if (!ctx) return
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const structuredCount = window.innerWidth < 768 ? 650 : window.innerWidth < 1280 ? 950 : 1300
-    const ambientCount = window.innerWidth < 768 ? 60 : 130
+    const structuredCount = window.innerWidth < 768 ? 1800 : window.innerWidth < 1280 ? 2900 : 4200
+    const ambientCount = window.innerWidth < 768 ? 70 : 150
     const particles = buildParticles(structuredCount, ambientCount)
 
     let vw = 0
@@ -348,7 +401,7 @@ function useConstellationStory(
       return { shapeA: 'orb' as Shape, shapeB: 'orb' as Shape, localT: 0 }
     }
 
-    function drawTriangle(p: Particle, x: number, y: number, alpha: number) {
+    function drawTriangle(p: Particle, x: number, y: number, alpha: number, color: string) {
       if (!ctx) return
       ctx.globalAlpha = alpha
       ctx.beginPath()
@@ -361,10 +414,10 @@ function useConstellationStory(
       }
       ctx.closePath()
       if (p.filled) {
-        ctx.fillStyle = p.color
+        ctx.fillStyle = color
         ctx.fill()
       } else {
-        ctx.strokeStyle = p.color
+        ctx.strokeStyle = color
         ctx.stroke()
       }
     }
@@ -383,6 +436,7 @@ function useConstellationStory(
       const boxB = boxes[shapeB]
       const cx = vw / 2
       const cy = vh / 2
+      const colorShape = eased < 0.5 ? shapeA : shapeB
 
       for (const p of particles) {
         let x: number
@@ -420,7 +474,8 @@ function useConstellationStory(
 
         const flicker = reduceMotion ? 1 : 0.6 + 0.4 * Math.sin(t * p.twinkle + p.phase)
         if (!reduceMotion) p.rot += p.rotSpeed * 16
-        drawTriangle(p, x, y, p.baseAlpha * flicker)
+        const color = p.ambient ? p.colorByShape.chaos : p.colorByShape[colorShape]
+        drawTriangle(p, x, y, p.baseAlpha * flicker, color)
       }
 
       ctx.globalAlpha = 1
