@@ -32,6 +32,7 @@ const pick = (pool: string[]) => pool[(Math.random() * pool.length) | 0]
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 const smoothstep = (t: number) => t * t * (3 - 2 * t)
+const rand = (a: number, b: number) => a + Math.random() * (b - a)
 
 const colorCache = new Map<string, [number, number, number]>()
 function hex01(hex: string): [number, number, number] {
