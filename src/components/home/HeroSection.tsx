@@ -40,83 +40,34 @@ const GRID_H = 160
 const MASK_W = GRID_W * 2
 const MASK_H = GRID_H * 2
 
-/* Cerebral gyri — nested wandering folds above the Sylvian fissure.
-   Crucially these never cross: convolutions run roughly parallel and
-   terminate, so crossing connectors would read as a net rather than a brain.
-   The stubs keep the nesting from looking like a fingerprint. */
-const GYRI: number[][][] = [
-  [[24, 66], [27, 46], [38, 30], [58, 20], [82, 16], [106, 17], [128, 26], [145, 42], [152, 60], [151, 76]],
-  [[30, 75], [33, 55], [45, 39], [64, 29], [86, 25], [107, 27], [126, 36], [140, 51], [145, 67], [143, 81]],
-  [[38, 81], [42, 61], [54, 47], [71, 38], [90, 34], [108, 37], [123, 46], [133, 59], [136, 73], [133, 85]],
-  [[49, 86], [54, 69], [65, 56], [80, 48], [96, 45], [111, 48], [122, 57], [128, 69], [126, 81]],
-  [[61, 90], [67, 75], [78, 64], [91, 58], [103, 58], [113, 65], [118, 75], [116, 85]],
-  [[75, 90], [81, 79], [90, 71], [100, 70], [107, 76], [108, 85]],
-  // Stubs — short folds that branch and die, breaking the concentric read
-  [[34, 45], [44, 51], [40, 61]],
-  [[117, 29], [123, 39], [118, 49]],
-  [[147, 53], [140, 61], [145, 71]],
-  [[85, 19], [83, 31], [91, 39]],
-  [[62, 36], [70, 45], [63, 53]],
+/* Front-on brain silhouette (two hemispheres + connecting folds), taken
+   from Lucide's "Brain" icon glyph (24×24 viewBox) so the mask reads as an
+   unmistakable brain rather than an invented profile. The first two paths
+   are the left/right hemisphere outlines — the mass the constellation
+   fills. The rest are the interior fold lines (corpus callosum, cortical
+   creases) that give the gyri their texture once stroked. */
+const HEMISPHERE_PATHS = [
+  'M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z',
+  'M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z',
+]
+const FOLD_PATHS = [
+  'M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4',
+  'M17.599 6.5a3 3 0 0 0 .399-1.375',
+  'M6.003 5.125A3 3 0 0 0 6.401 6.5',
+  'M3.477 10.896a4 4 0 0 1 .585-.396',
+  'M19.938 10.5a4 4 0 0 1 .585.396',
+  'M6 18a4 4 0 0 1-1.967-.516',
+  'M19.967 17.484A4 4 0 0 1 18 18',
 ]
 
-/* Temporal lobe gyri — below the fissure, running with the lobe */
-const TEMPORAL_GYRI: number[][][] = [
-  [[46, 99], [65, 108], [89, 110], [110, 103]],
-  [[49, 108], [69, 116], [92, 117], [111, 110]],
-]
-
-/* Cerebellum — fine parallel striations, its signature texture */
-const CEREBELLUM: number[][][] = [
-  [[127, 104], [143, 102], [158, 108]],
-  [[126, 111], [144, 109], [160, 115]],
-  [[128, 118], [144, 116], [158, 122]],
-  [[132, 125], [145, 123], [154, 127]],
-]
-
-/* Fissures are carved OUT of the field, not drawn. The dark clefts are what
-   make the silhouette read as a brain instead of a lumpy mass. */
-const FISSURES: { pts: number[][]; width: number }[] = [
-  // Sylvian (lateral) fissure — separates the temporal lobe. The single
-  // most recognisable feature of a brain in profile.
-  { pts: [[40, 87], [62, 97], [88, 99], [110, 95], [123, 87]], width: 6 },
-  // Transverse fissure — separates cerebrum from cerebellum
-  { pts: [[116, 101], [133, 99], [152, 95]], width: 5 },
-  // Central sulcus — the cleft running down the crown
-  { pts: [[88, 16], [96, 40], [90, 62], [96, 80]], width: 5 },
-]
-
-/** Smooth curve through a list of points (quadratic midpoint interpolation). */
-function curveThrough(c: CanvasRenderingContext2D, pts: number[][]) {
-  if (pts.length < 2) return
-  c.beginPath()
-  c.moveTo(pts[0][0], pts[0][1])
-  for (let i = 1; i < pts.length - 1; i++) {
-    const mx = (pts[i][0] + pts[i + 1][0]) / 2
-    const my = (pts[i][1] + pts[i + 1][1]) / 2
-    c.quadraticCurveTo(pts[i][0], pts[i][1], mx, my)
-  }
-  const last = pts[pts.length - 1]
-  c.lineTo(last[0], last[1])
-  c.stroke()
-}
-
-/* Lateral view, facing left: frontal pole → crown → occipital → cerebellum →
-   brain stem → temporal lobe → back up through the frontotemporal notch. */
-function traceBrain(c: CanvasRenderingContext2D) {
-  c.beginPath()
-  c.moveTo(18, 62)
-  c.bezierCurveTo(20, 34, 48, 14, 80, 13)       // frontal pole up to superior frontal
-  c.bezierCurveTo(114, 10, 144, 26, 158, 52)    // crown, over to parietal
-  c.bezierCurveTo(170, 74, 166, 90, 152, 97)    // occipital
-  c.bezierCurveTo(168, 104, 166, 126, 144, 131) // cerebellum bulge
-  c.bezierCurveTo(134, 134, 126, 131, 121, 126) // cerebellum, lower edge
-  c.bezierCurveTo(122, 140, 114, 151, 105, 143) // brain stem descending
-  c.bezierCurveTo(101, 133, 100, 128, 96, 123)  // stem, back up
-  c.bezierCurveTo(78, 129, 56, 123, 44, 107)    // temporal lobe underside
-  c.bezierCurveTo(36, 99, 34, 91, 41, 86)       // temporal pole
-  c.bezierCurveTo(32, 80, 22, 74, 18, 62)       // frontotemporal notch
-  c.closePath()
-}
+/* Icon is authored on a 24×24 viewBox, centred roughly on (12, 11.5).
+   Scale it uniformly to fill most of the grid's shorter dimension. */
+const ICON_VB = 24
+const ICON_CX = 12
+const ICON_CY = 11.5
+const ICON_SCALE = (GRID_H * 0.92) / ICON_VB
+const ICON_OX = GRID_W / 2 - ICON_CX * ICON_SCALE
+const ICON_OY = GRID_H / 2 - ICON_CY * ICON_SCALE
 
 /** Renders the brain offscreen and returns its alpha map. */
 function buildBrainMask(): Uint8ClampedArray | null {
@@ -127,42 +78,46 @@ function buildBrainMask(): Uint8ClampedArray | null {
   if (!c) return null
 
   c.scale(MASK_W / GRID_W, MASK_H / GRID_H)
+  c.translate(ICON_OX, ICON_OY)
+  c.scale(ICON_SCALE, ICON_SCALE)
   c.lineCap = 'round'
   c.lineJoin = 'round'
   c.strokeStyle = '#fff'
   c.fillStyle = '#fff'
 
+  const hemispheres = HEMISPHERE_PATHS.map((d) => new Path2D(d))
+  const folds = FOLD_PATHS.map((d) => new Path2D(d))
+
   // Body — a whisper of interior fill so the mass isn't hollow
-  c.globalAlpha = 0.17
-  traceBrain(c)
-  c.fill()
+  c.globalAlpha = 0.2
+  for (const p of hemispheres) c.fill(p)
 
   // Silhouette rim — soft, so the shape emerges from density rather than
   // reading as a drawn outline
-  c.globalAlpha = 0.72
-  c.lineWidth = 3.6
-  traceBrain(c)
-  c.stroke()
+  c.globalAlpha = 0.75
+  c.lineWidth = 0.55
+  for (const p of hemispheres) c.stroke(p)
 
-  // Gyri — the densest structure, where the constellation concentrates
-  c.globalAlpha = 1
-  c.lineWidth = 4.6
-  for (const fold of GYRI) curveThrough(c, fold)
-  for (const fold of TEMPORAL_GYRI) curveThrough(c, fold)
-
-  // Cerebellum striations are finer and packed tighter than cerebral gyri
-  c.lineWidth = 3.2
-  for (const fold of CEREBELLUM) curveThrough(c, fold)
-
-  // Carve the fissures back out — the clefts are what make it read as a
-  // brain rather than a lumpy mass
-  c.globalCompositeOperation = 'destination-out'
-  c.globalAlpha = 1
-  for (const { pts, width } of FISSURES) {
-    c.lineWidth = width
-    curveThrough(c, pts)
+  // Nested inner contours — simulated gyri. Each hemisphere is stroked
+  // several more times, scaled slightly inward around the icon's centre,
+  // building up cortex-like folds without a hand-authored path per wrinkle.
+  c.globalAlpha = 0.9
+  const insets = [0.92, 0.82, 0.7, 0.56]
+  for (const s of insets) {
+    c.save()
+    c.translate(ICON_CX, ICON_CY)
+    c.scale(s, s)
+    c.translate(-ICON_CX, -ICON_CY)
+    c.lineWidth = 0.42 / s
+    for (const p of hemispheres) c.stroke(p)
+    c.restore()
   }
-  c.globalCompositeOperation = 'source-over'
+
+  // Interior fold lines — corpus callosum + cortical creases, at full
+  // density since these are the icon's own signature detail
+  c.globalAlpha = 1
+  c.lineWidth = 0.5
+  for (const p of folds) c.stroke(p)
 
   return c.getImageData(0, 0, MASK_W, MASK_H).data
 }
