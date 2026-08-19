@@ -14,11 +14,10 @@ const STATS = [
 
 /* ──────────────────────────────────────────────────────────────
    NEURAL CONSTELLATION — SCROLL STORY
-   A pinned, scroll-driven particle field that coalesces out of
-   chaos into a brain, explodes and reforms into a lightbulb, then
-   into an orb — each shape carrying its own copy block, mirroring
-   a scrollytelling hero (dispersed field → structured constellation
-   → shape-to-shape morph with a radial "burst" at each transition).
+   A pinned, scroll-driven particle field. The brain is fully formed
+   on load — it's the hero image — then explodes and reforms into a
+   lightbulb, then again into an orb, each shape carrying its own
+   copy block (a radial "burst" plays at every shape-to-shape morph).
    Full-spectrum chromatic particles (violet, amber, teal, magenta,
    blue, white) against a pure black void — the constellation is the
    only light source, no bloom or wash.
@@ -284,13 +283,11 @@ const BOX_MOBILE: Record<Shape, Box> = {
 }
 
 const KEYFRAMES: { t: number; shape: Shape }[] = [
-  { t: 0.0,  shape: 'chaos' },
-  { t: 0.08, shape: 'chaos' },
+  { t: 0.0,  shape: 'brain' },
   { t: 0.24, shape: 'brain' },
-  { t: 0.42, shape: 'brain' },
-  { t: 0.56, shape: 'lightbulb' },
-  { t: 0.74, shape: 'lightbulb' },
-  { t: 0.88, shape: 'orb' },
+  { t: 0.42, shape: 'lightbulb' },
+  { t: 0.64, shape: 'lightbulb' },
+  { t: 0.82, shape: 'orb' },
   { t: 1.0,  shape: 'orb' },
 ]
 
@@ -467,19 +464,18 @@ export function HeroSection() {
     return unsub
   }, [scrollYProgress])
 
-  const chaosOpacity = useTransform(scrollYProgress, holdRange(0.0, 0.08), [0, 1, 1, 0])
-  const brainOpacity = useTransform(scrollYProgress, holdRange(0.24, 0.42), [0, 1, 1, 0])
-  const bulbOpacity = useTransform(scrollYProgress, holdRange(0.56, 0.74), [0, 1, 1, 0])
-  const orbOpacity = useTransform(scrollYProgress, holdRange(0.88, 1.0, 0.03), [0, 1, 1, 1])
+  const brainOpacity = useTransform(scrollYProgress, holdRange(0, 0.24), [1, 1, 1, 0])
+  const bulbOpacity = useTransform(scrollYProgress, holdRange(0.42, 0.64), [0, 1, 1, 0])
+  const orbOpacity = useTransform(scrollYProgress, holdRange(0.82, 1.0, 0.03), [0, 1, 1, 1])
 
-  const leftScrim = useTransform(scrollYProgress, [0.1, 0.22, 0.46, 0.5], [0, 1, 1, 0])
-  const rightScrim = useTransform(scrollYProgress, [0.5, 0.54, 1, 1], [0, 1, 1, 1])
+  const leftScrim = useTransform(scrollYProgress, [0, 0.3, 0.38, 0.42], [1, 1, 1, 0])
+  const rightScrim = useTransform(scrollYProgress, [0.3, 0.38, 1, 1], [0, 1, 1, 1])
 
   return (
-    <section ref={wrapperRef} className="relative h-[420vh]">
+    <section ref={wrapperRef} className="relative h-[340vh]">
       <div className="sticky top-0 h-screen overflow-hidden dark-section-persistent">
 
-        {/* Neural constellation — chaos → brain → lightbulb → orb */}
+        {/* Neural constellation — brain → lightbulb → orb, brain visible on load */}
         <canvas
           ref={canvasRef}
           className="absolute inset-0 w-full h-full pointer-events-none"
@@ -504,15 +500,7 @@ export function HeroSection() {
           aria-hidden="true"
         />
 
-        {/* Stage 1 — chaos: dispersed field, eyebrow only */}
-        <motion.div
-          style={{ opacity: chaosOpacity }}
-          className="absolute inset-0 flex items-center justify-center px-6 text-center pointer-events-none"
-        >
-          <div className="label justify-center">The Architecture of Reality</div>
-        </motion.div>
-
-        {/* Stage 2 — brain: full hero copy, left column */}
+        {/* Stage 1 — brain: full hero copy, left column, visible on load */}
         <motion.div
           style={{ opacity: brainOpacity }}
           className="absolute inset-0 flex items-center px-6 md:px-14"
@@ -540,7 +528,7 @@ export function HeroSection() {
           </div>
         </motion.div>
 
-        {/* Stage 3 — lightbulb: insight copy, right column */}
+        {/* Stage 2 — lightbulb: insight copy, right column */}
         <motion.div
           style={{ opacity: bulbOpacity }}
           className="absolute inset-0 flex items-center px-6 md:px-14"
@@ -561,7 +549,7 @@ export function HeroSection() {
           </div>
         </motion.div>
 
-        {/* Stage 4 — orb: stats, right column */}
+        {/* Stage 3 — orb: stats, right column */}
         <motion.div
           style={{ opacity: orbOpacity }}
           className="absolute inset-0 flex items-center px-6 md:px-14"
