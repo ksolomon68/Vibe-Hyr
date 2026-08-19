@@ -24,9 +24,9 @@ import { useEffect } from 'react'
 export type Shape = 'brain' | 'lightbulb' | 'orb'
 
 const RIM_COLORS = ['#E8621A', '#E8621A', '#E8621A', '#E8621A', '#E8621A', '#F0B429', '#F0B429', '#F0B429', '#FFFFFF']
-const RIM_LOWER_COLORS = ['#E8621A', '#E8621A', '#F0B429', '#8B5CF6', '#8B5CF6', '#14B8A6', '#14B8A6', '#3B82F6', '#EC4899']
-const CORE_COLORS = ['#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#F0B429', '#8B5CF6', '#14B8A6']
-const AMBIENT_COLORS = ['#FFFFFF', '#FFFFFF', '#F0B429', '#F0B429', '#E8621A', '#8B5CF6', '#14B8A6', '#3B82F6', '#EC4899']
+const RIM_LOWER_COLORS = ['#E8621A', '#E8621A', '#F0B429', '#8B5CF6', '#8B5CF6', '#F97316', '#FB923C', '#E8621A', '#FFB86B']
+const CORE_COLORS = ['#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#F0B429', '#8B5CF6', '#F97316']
+const AMBIENT_COLORS = ['#FFFFFF', '#FFFFFF', '#F0B429', '#F0B429', '#E8621A', '#8B5CF6', '#F97316', '#FB923C', '#FFB86B']
 
 const pick = (pool: string[]) => pool[(Math.random() * pool.length) | 0]
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
@@ -372,23 +372,21 @@ function buildOrb(n: number): Cloud {
   return iconToCloud(sampleIcon(buildOrbMasks(), n), 2.4, 0.35, false)
 }
 
-/** Small soft-edged filled triangle — the brand's particle motif,
-    rendered as a canvas sprite so additive blending still glows where
-    points overlap densely. */
+/** Small soft-edged outlined (hollow) triangle — the exact style from
+    the reference site: visible stroked edge, transparent fill. */
 function makeTriangleSprite(): THREE.CanvasTexture {
-  const size = 64
+  const size = 96
   const c = document.createElement('canvas')
   c.width = size
   c.height = size
   const ctx = c.getContext('2d')!
   ctx.clearRect(0, 0, size, size)
-  ctx.fillStyle = '#ffffff'
-  ctx.shadowColor = '#ffffff'
-  ctx.shadowBlur = 3
-  ctx.beginPath()
+
   const cx = size / 2
   const cy = size / 2
-  const r = size * 0.36
+  const r = size * 0.38
+
+  ctx.beginPath()
   for (let k = 0; k < 3; k++) {
     const a = -Math.PI / 2 + (k * Math.PI * 2) / 3
     const px = cx + Math.cos(a) * r
@@ -397,7 +395,18 @@ function makeTriangleSprite(): THREE.CanvasTexture {
     else ctx.lineTo(px, py)
   }
   ctx.closePath()
+
+  // Very subtle fill (near transparent) so the triangle reads in additive blending
+  ctx.fillStyle = 'rgba(255,255,255,0.08)'
   ctx.fill()
+
+  // Sharp white outline
+  ctx.strokeStyle = '#ffffff'
+  ctx.lineWidth = 3.5
+  ctx.shadowColor = '#ffffff'
+  ctx.shadowBlur = 2
+  ctx.stroke()
+
   const tex = new THREE.CanvasTexture(c)
   tex.needsUpdate = true
   return tex
