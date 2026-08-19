@@ -97,21 +97,24 @@ function buildBrain(n: number, noise: NoiseFn): Cloud {
 
     if (i < domeCount) {
       let [dx, dy, dz] = sphereDir()
-      if (dy < -0.25) dy = -0.25 - (-0.25 - dy) * 0.4 // flatten the underside toward the stem
+      if (dy < -0.35) dy = -0.35 - (-0.35 - dy) * 0.22 // narrow, gentle taper toward the neck
       bump = fbm3(noise, dx * 2.2, dy * 2.2, dz * 2.2)
-      const fissure = Math.exp(-(dx * dx) / 0.09) * 0.34 // central longitudinal groove
-      const r = R * (1 + bump * 0.17) - fissure
-      x = dx * r
-      y = dy * r * 0.92 + 0.16
-      z = dz * r * 0.86
+      // Cleft only near the crown (dy > 0) — a groove carved through the
+      // whole front face read as a flat block, not a rounded dome.
+      const crownFade = clamp01(dy)
+      const fissure = Math.exp(-(dx * dx) / 0.07) * 0.18 * crownFade
+      const r = R * (1 + bump * 0.09) - fissure
+      x = dx * r * 0.95
+      y = dy * r * 0.98 + 0.1
+      z = dz * r * 0.92
     } else {
       const t = (i - domeCount) / Math.max(1, n - domeCount)
-      const stemR = 0.36 * (1 - t * 0.5)
+      const stemR = 0.2 * (1 - t * 0.45)
       const ang = Math.random() * Math.PI * 2
       const rad = Math.sqrt(Math.random()) * stemR
       x = Math.cos(ang) * rad
       z = Math.sin(ang) * rad
-      y = -0.14 - t * 0.95 // starts right where the flattened dome underside sits, no gap
+      y = -0.42 - t * 0.9 // starts right where the tapered dome underside sits, no gap
       bump = fbm3(noise, x * 3, y * 3, z * 3, 3, 2, 0.5)
     }
 
@@ -199,7 +202,7 @@ function makeTriangleSprite(): THREE.CanvasTexture {
   ctx.clearRect(0, 0, size, size)
   ctx.fillStyle = '#ffffff'
   ctx.shadowColor = '#ffffff'
-  ctx.shadowBlur = 9
+  ctx.shadowBlur = 3
   ctx.beginPath()
   const cx = size / 2
   const cy = size / 2
@@ -260,7 +263,7 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
     if (!canvas) return
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const structuredCount = window.innerWidth < 768 ? 2200 : window.innerWidth < 1280 ? 4200 : 6000
+    const structuredCount = window.innerWidth < 768 ? 2000 : window.innerWidth < 1280 ? 3600 : 5000
     const ambientCount = window.innerWidth < 768 ? 90 : 200
 
     const noise = createNoise3D()
@@ -296,9 +299,10 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
     structuredGeom.setAttribute('position', new THREE.BufferAttribute(livePos, 3))
     structuredGeom.setAttribute('color', new THREE.BufferAttribute(liveCol, 3))
     const structuredMat = new THREE.PointsMaterial({
-      size: 0.06,
+      size: 0.03,
       map: sprite,
       transparent: true,
+      opacity: 1,
       alphaTest: 0.02,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
@@ -327,7 +331,7 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
 
     const composer = new EffectComposer(renderer)
     composer.addPass(new RenderPass(scene, camera))
-    const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.6, 0.45, 0.32)
+    const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.85, 0.42, 0.28)
     composer.addPass(bloom)
     composer.addPass(new OutputPass())
 
