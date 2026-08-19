@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { motion } from 'framer-motion'
+import { motion, useScroll, useTransform } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 
@@ -13,248 +13,336 @@ const STATS = [
 ]
 
 /* ──────────────────────────────────────────────────────────────
-   NEURAL CONSTELLATION
-   Thousands of tiny outlined triangles forming an organic brain
-   shape on pure black, plus an ambient drifting particle field.
-   Palette is locked to the Vibe Hyr brand: orange family, gold,
-   muted beige, and a handful of cream sparks. No violets, no
-   full-spectrum colour — the void stays black, the accent stays
-   orange.
+   NEURAL CONSTELLATION — SCROLL STORY
+   A pinned, scroll-driven particle field that coalesces out of
+   chaos into a brain, explodes and reforms into a lightbulb, then
+   into an orb — each shape carrying its own copy block, mirroring
+   a scrollytelling hero (dispersed field → structured constellation
+   → shape-to-shape morph with a radial "burst" at each transition).
+   Full-spectrum chromatic particles (violet, amber, teal, magenta,
+   blue, white) against a pure black void — the constellation is the
+   only light source, no bloom or wash.
    ────────────────────────────────────────────────────────────── */
 
-/* Weighted by repetition — orange dominates, gold accents, rare cream sparks */
-const PARTICLE_COLORS = [
-  '#E8621A', '#E8621A', '#E8621A', '#E8621A',
-  '#F07840', '#F07840', '#F07840',
-  '#F59060', '#F59060',
-  '#FFB86B',
-  '#EAB308',
-  '#C9A84C',
-  '#dfbd8b',
-  '#FFFFFF',
+const SPARK_COLORS = [
+  '#8B5CF6', '#8B5CF6', '#8B5CF6',
+  '#F0B429', '#F0B429', '#F0B429',
+  '#14B8A6', '#14B8A6',
+  '#E8621A', '#E8621A',
+  '#EC4899',
+  '#3B82F6',
+  '#FFFFFF', '#FFFFFF',
 ]
 
-/* The mask is authored on a 200×160 grid and rasterised at 2× */
-const GRID_W = 200
-const GRID_H = 160
-const MASK_W = GRID_W * 2
-const MASK_H = GRID_H * 2
+/* Masks are authored on a square 200×200 grid, rasterised at 2× */
+const GRID = 200
+const MASK = GRID * 2
 
-/* Front-on brain silhouette (two hemispheres + connecting folds), taken
-   from Lucide's "Brain" icon glyph (24×24 viewBox) so the mask reads as an
-   unmistakable brain rather than an invented profile. The first two paths
-   are the left/right hemisphere outlines — the mass the constellation
-   fills. The rest are the interior fold lines (corpus callosum, cortical
-   creases) that give the gyri their texture once stroked. */
-const HEMISPHERE_PATHS = [
-  'M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z',
-  'M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z',
-]
-const FOLD_PATHS = [
-  'M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4',
-  'M17.599 6.5a3 3 0 0 0 .399-1.375',
-  'M6.003 5.125A3 3 0 0 0 6.401 6.5',
-  'M3.477 10.896a4 4 0 0 1 .585-.396',
-  'M19.938 10.5a4 4 0 0 1 .585.396',
-  'M6 18a4 4 0 0 1-1.967-.516',
-  'M19.967 17.484A4 4 0 0 1 18 18',
-]
+type Shape = 'chaos' | 'brain' | 'lightbulb' | 'orb'
+type Home = { u: number; v: number }
+type Box = { x: number; y: number; w: number; h: number }
 
-/* Icon is authored on a 24×24 viewBox, centred roughly on (12, 11.5).
-   Scale it uniformly to fill most of the grid's shorter dimension. */
-const ICON_VB = 24
-const ICON_CX = 12
-const ICON_CY = 11.5
-const ICON_SCALE = (GRID_H * 0.92) / ICON_VB
-const ICON_OX = GRID_W / 2 - ICON_CX * ICON_SCALE
-const ICON_OY = GRID_H / 2 - ICON_CY * ICON_SCALE
+function offscreen(): CanvasRenderingContext2D | null {
+  const c = document.createElement('canvas')
+  c.width = MASK
+  c.height = MASK
+  return c.getContext('2d', { willReadFrequently: true })
+}
 
-/** Renders the brain offscreen and returns its alpha map. */
-function buildBrainMask(): Uint8ClampedArray | null {
-  const off = document.createElement('canvas')
-  off.width = MASK_W
-  off.height = MASK_H
-  const c = off.getContext('2d', { willReadFrequently: true })
-  if (!c) return null
-
-  c.scale(MASK_W / GRID_W, MASK_H / GRID_H)
-  c.translate(ICON_OX, ICON_OY)
-  c.scale(ICON_SCALE, ICON_SCALE)
+/* Front-on two-hemisphere brain (Lucide "Brain" glyph), same treatment as
+   before: fill for mass, rim stroke, nested inward-scaled contours to
+   simulate cortical folds, plus the icon's own interior fold lines. */
+function buildBrainMask(): Uint8ClampedArray {
+  const c = offscreen()!
+  c.scale(MASK / GRID, MASK / GRID)
+  const scale = (GRID * 0.86) / 24
+  c.translate(GRID / 2 - 12 * scale, GRID / 2 - 11.5 * scale)
+  c.scale(scale, scale)
   c.lineCap = 'round'
   c.lineJoin = 'round'
   c.strokeStyle = '#fff'
   c.fillStyle = '#fff'
 
-  const hemispheres = HEMISPHERE_PATHS.map((d) => new Path2D(d))
-  const folds = FOLD_PATHS.map((d) => new Path2D(d))
+  const hemis = [
+    new Path2D('M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z'),
+    new Path2D('M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z'),
+  ]
+  const folds = [
+    'M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4',
+    'M17.599 6.5a3 3 0 0 0 .399-1.375',
+    'M6.003 5.125A3 3 0 0 0 6.401 6.5',
+    'M3.477 10.896a4 4 0 0 1 .585-.396',
+    'M19.938 10.5a4 4 0 0 1 .585.396',
+    'M6 18a4 4 0 0 1-1.967-.516',
+    'M19.967 17.484A4 4 0 0 1 18 18',
+  ].map((d) => new Path2D(d))
 
-  // Body — a whisper of interior fill so the mass isn't hollow
   c.globalAlpha = 0.2
-  for (const p of hemispheres) c.fill(p)
-
-  // Silhouette rim — soft, so the shape emerges from density rather than
-  // reading as a drawn outline
+  for (const p of hemis) c.fill(p)
   c.globalAlpha = 0.75
   c.lineWidth = 0.55
-  for (const p of hemispheres) c.stroke(p)
-
-  // Nested inner contours — simulated gyri. Each hemisphere is stroked
-  // several more times, scaled slightly inward around the icon's centre,
-  // building up cortex-like folds without a hand-authored path per wrinkle.
+  for (const p of hemis) c.stroke(p)
   c.globalAlpha = 0.9
-  const insets = [0.92, 0.82, 0.7, 0.56]
-  for (const s of insets) {
+  for (const s of [0.92, 0.82, 0.7, 0.56]) {
     c.save()
-    c.translate(ICON_CX, ICON_CY)
+    c.translate(12, 11.5)
     c.scale(s, s)
-    c.translate(-ICON_CX, -ICON_CY)
+    c.translate(-12, -11.5)
     c.lineWidth = 0.42 / s
-    for (const p of hemispheres) c.stroke(p)
+    for (const p of hemis) c.stroke(p)
     c.restore()
   }
-
-  // Interior fold lines — corpus callosum + cortical creases, at full
-  // density since these are the icon's own signature detail
   c.globalAlpha = 1
   c.lineWidth = 0.5
   for (const p of folds) c.stroke(p)
 
-  return c.getImageData(0, 0, MASK_W, MASK_H).data
+  return c.getImageData(0, 0, MASK, MASK).data
 }
 
-type Particle = {
-  x: number
-  y: number
-  size: number
-  color: string
-  alpha: number
-  rot: number
-  rotSpeed: number
-  phase: number
-  driftX: number
-  driftY: number
-  driftSpeed: number
-  twinkle: number
-  filled: boolean
-  depth: number
+/* Lightbulb glass (Lucide "Lightbulb" glyph, upper bulb only — the
+   filament/base lines below become the fold detail), scaled up so the
+   bulb dominates the frame the way the brain does. */
+function buildLightbulbMask(): Uint8ClampedArray {
+  const c = offscreen()!
+  c.scale(MASK / GRID, MASK / GRID)
+  const scale = (GRID * 1.55) / 24
+  c.translate(GRID / 2 - 12 * scale, GRID / 2 - 10.5 * scale)
+  c.scale(scale, scale)
+  c.lineCap = 'round'
+  c.lineJoin = 'round'
+  c.strokeStyle = '#fff'
+  c.fillStyle = '#fff'
+
+  const bulb = new Path2D(
+    'M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5',
+  )
+  const base = ['M9 18h6', 'M10 22h4'].map((d) => new Path2D(d))
+
+  c.globalAlpha = 0.22
+  c.fill(bulb)
+  c.globalAlpha = 0.78
+  c.lineWidth = 0.6
+  c.stroke(bulb)
+  c.globalAlpha = 0.9
+  for (const s of [0.9, 0.78, 0.64]) {
+    c.save()
+    c.translate(11, 9)
+    c.scale(s, s)
+    c.translate(-11, -9)
+    c.lineWidth = 0.4 / s
+    c.stroke(bulb)
+    c.restore()
+  }
+  c.globalAlpha = 1
+  c.lineWidth = 0.55
+  for (const p of base) c.stroke(p)
+
+  return c.getImageData(0, 0, MASK, MASK).data
+}
+
+/* Orb (Lucide "Globe" glyph) — a sphere with meridian + equator lines,
+   plus nested inset rings so it carries the same layered-contour density
+   as the other two shapes rather than reading as a flat ring of dots. */
+function buildOrbMask(): Uint8ClampedArray {
+  const c = offscreen()!
+  c.scale(MASK / GRID, MASK / GRID)
+  const scale = (GRID * 0.86) / 24
+  c.translate(GRID / 2 - 12 * scale, GRID / 2 - 12 * scale)
+  c.scale(scale, scale)
+  c.lineCap = 'round'
+  c.lineJoin = 'round'
+  c.strokeStyle = '#fff'
+  c.fillStyle = '#fff'
+
+  const disc = new Path2D()
+  disc.arc(12, 12, 10, 0, Math.PI * 2)
+  const meridian = new Path2D('M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20')
+  const equator = new Path2D('M2 12h20')
+
+  c.globalAlpha = 0.2
+  c.fill(disc)
+  c.globalAlpha = 0.75
+  c.lineWidth = 0.55
+  c.stroke(disc)
+  c.globalAlpha = 0.85
+  for (const s of [0.85, 0.68, 0.5, 0.32]) {
+    c.save()
+    c.translate(12, 12)
+    c.scale(s, s)
+    c.translate(-12, -12)
+    c.lineWidth = 0.4 / s
+    c.stroke(disc)
+    c.restore()
+  }
+  c.globalAlpha = 1
+  c.lineWidth = 0.5
+  c.stroke(meridian)
+  c.stroke(equator)
+
+  return c.getImageData(0, 0, MASK, MASK).data
 }
 
 const rand = (min: number, max: number) => min + Math.random() * (max - min)
 
-function makeParticle(x: number, y: number, ambient: boolean): Particle {
-  return {
-    x,
-    y,
-    size: ambient ? rand(1.1, 2.4) : rand(1.2, 3.0),
-    color: PARTICLE_COLORS[(Math.random() * PARTICLE_COLORS.length) | 0],
-    alpha: ambient ? rand(0.1, 0.34) : rand(0.32, 0.95),
-    rot: Math.random() * Math.PI * 2,
-    rotSpeed: rand(-0.0004, 0.0004),
-    phase: Math.random() * Math.PI * 2,
-    driftX: ambient ? rand(4, 14) : rand(1.5, 6),
-    driftY: ambient ? rand(4, 14) : rand(1.5, 6),
-    driftSpeed: rand(0.00012, 0.00042),
-    twinkle: rand(0.0004, 0.0016),
-    filled: Math.random() < 0.16,
-    depth: ambient ? rand(0.3, 1) : rand(0.15, 0.6),
+/** Cubic-weighted rejection sampling onto a shape's alpha mask, producing
+    N normalised (0..1) home points. Pads with uniform points if a sparse
+    mask can't fill the quota — keeps particle count identical across
+    every shape so the morph never gains or loses points mid-scroll. */
+function sampleMask(mask: Uint8ClampedArray, n: number): Home[] {
+  const pts: Home[] = []
+  const maxAttempts = n * 80
+  let attempts = 0
+  while (pts.length < n && attempts < maxAttempts) {
+    attempts++
+    const mx = (Math.random() * MASK) | 0
+    const my = (Math.random() * MASK) | 0
+    const a = mask[(my * MASK + mx) * 4 + 3] / 255
+    if (a < 0.04 || Math.random() > a * a * a) continue
+    pts.push({ u: mx / MASK, v: my / MASK })
   }
+  while (pts.length < n) pts.push({ u: Math.random(), v: Math.random() })
+  return pts
 }
 
-type Box = { x: number; y: number; w: number; h: number }
-type Field = { particles: Particle[] }
+type Particle = {
+  homes: Record<Shape, Home>
+  ambient: boolean
+  size: number
+  color: string
+  baseAlpha: number
+  rot: number
+  rotSpeed: number
+  phase: number
+  twinkle: number
+  filled: boolean
+}
 
-function buildField(w: number, h: number, stage: Box, mask: Uint8ClampedArray): Field {
+function buildParticles(structured: number, ambient: number): Particle[] {
+  const brainMask = buildBrainMask()
+  const bulbMask = buildLightbulbMask()
+  const orbMask = buildOrbMask()
+
+  const brainHomes = sampleMask(brainMask, structured)
+  const bulbHomes = sampleMask(bulbMask, structured)
+  const orbHomes = sampleMask(orbMask, structured)
+
   const particles: Particle[] = []
 
-  // Fit the brain inside the stage without distorting it
-  const scale = Math.min(stage.w / MASK_W, stage.h / MASK_H)
-  const boxW = MASK_W * scale
-  const boxH = MASK_H * scale
-  const boxX = stage.x + (stage.w - boxW) / 2
-  const boxY = stage.y + (stage.h - boxH) / 2
-
-  const target = Math.max(520, Math.min(2600, Math.round((boxW * boxH) / 95)))
-  let placed = 0
-  let attempts = 0
-  const maxAttempts = target * 60
-
-  while (placed < target && attempts < maxAttempts) {
-    attempts++
-    const u = Math.random()
-    const v = Math.random()
-    const mx = Math.min(MASK_W - 1, (u * MASK_W) | 0)
-    const my = Math.min(MASK_H - 1, (v * MASK_H) | 0)
-    const a = mask[(my * MASK_W + mx) * 4 + 3] / 255
-    // Cubic weighting pushes the cloud onto the gyri and rim, leaving the
-    // interior sparse — the structure is what reads, not the mass
-    if (a < 0.04 || Math.random() > a * a * a) continue
-    placed++
-    const p = makeParticle(boxX + u * boxW, boxY + v * boxH, false)
-    p.alpha *= 0.5 + a * 0.6
-    particles.push(p)
+  for (let i = 0; i < structured; i++) {
+    particles.push({
+      homes: {
+        chaos: { u: Math.random(), v: Math.random() },
+        brain: brainHomes[i],
+        lightbulb: bulbHomes[i],
+        orb: orbHomes[i],
+      },
+      ambient: false,
+      size: rand(1.2, 3.0),
+      color: SPARK_COLORS[(Math.random() * SPARK_COLORS.length) | 0],
+      baseAlpha: rand(0.35, 0.95),
+      rot: Math.random() * Math.PI * 2,
+      rotSpeed: rand(-0.0004, 0.0004),
+      phase: Math.random() * Math.PI * 2,
+      twinkle: rand(0.0004, 0.0016),
+      filled: Math.random() < 0.16,
+    })
   }
 
-  const ambient = Math.max(40, Math.min(170, Math.round((w * h) / 9000)))
   for (let i = 0; i < ambient; i++) {
-    particles.push(makeParticle(Math.random() * w, Math.random() * h, true))
+    const home = { u: Math.random(), v: Math.random() }
+    particles.push({
+      homes: { chaos: home, brain: home, lightbulb: home, orb: home },
+      ambient: true,
+      size: rand(1, 2.2),
+      color: SPARK_COLORS[(Math.random() * SPARK_COLORS.length) | 0],
+      baseAlpha: rand(0.08, 0.26),
+      rot: Math.random() * Math.PI * 2,
+      rotSpeed: rand(-0.0003, 0.0003),
+      phase: Math.random() * Math.PI * 2,
+      twinkle: rand(0.0003, 0.0012),
+      filled: Math.random() < 0.1,
+    })
   }
 
-  return { particles }
+  return particles
 }
 
-function useNeuralConstellation(
-  ref: React.RefObject<HTMLCanvasElement>,
-  stageRef: React.RefObject<HTMLDivElement>,
+/* Where each shape sits in the pinned viewport, as fractions. Desktop
+   alternates left/right so the shape never sits under its own copy;
+   mobile stacks everything into one centred column. */
+const BOX_DESKTOP: Record<Shape, Box> = {
+  chaos:     { x: 0,    y: 0,    w: 1,    h: 1 },
+  brain:     { x: 0.48, y: 0.08, w: 0.47, h: 0.82 },
+  lightbulb: { x: 0.05, y: 0.06, w: 0.42, h: 0.86 },
+  orb:       { x: 0.08, y: 0.2,  w: 0.34, h: 0.62 },
+}
+const BOX_MOBILE: Record<Shape, Box> = {
+  chaos:     { x: 0,    y: 0,    w: 1,    h: 1 },
+  brain:     { x: 0.14, y: 0.04, w: 0.72, h: 0.46 },
+  lightbulb: { x: 0.18, y: 0.02, w: 0.64, h: 0.5 },
+  orb:       { x: 0.22, y: 0.06, w: 0.56, h: 0.4 },
+}
+
+const KEYFRAMES: { t: number; shape: Shape }[] = [
+  { t: 0.0,  shape: 'chaos' },
+  { t: 0.08, shape: 'chaos' },
+  { t: 0.24, shape: 'brain' },
+  { t: 0.42, shape: 'brain' },
+  { t: 0.56, shape: 'lightbulb' },
+  { t: 0.74, shape: 'lightbulb' },
+  { t: 0.88, shape: 'orb' },
+  { t: 1.0,  shape: 'orb' },
+]
+
+const smoothstep = (t: number) => t * t * (3 - 2 * t)
+const lerp = (a: number, b: number, t: number) => a + (b - a) * t
+const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
+
+function useConstellationStory(
+  canvasRef: React.RefObject<HTMLCanvasElement>,
+  progressRef: React.MutableRefObject<number>,
 ) {
   useEffect(() => {
-    if (!ref.current) return
-    const rawCtx = ref.current.getContext('2d')
-    if (!rawCtx) return
-    const rawMask = buildBrainMask()
-    if (!rawMask) return
-
-    // Non-nullable aliases so the render closures below stay type-safe
-    const el: HTMLCanvasElement = ref.current
-    const ctx: CanvasRenderingContext2D = rawCtx
-    const mask: Uint8ClampedArray = rawMask
+    const el = canvasRef.current
+    if (!el) return
+    const ctx = el.getContext('2d')
+    if (!ctx) return
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const finePointer = window.matchMedia('(pointer: fine)').matches
+    const structuredCount = window.innerWidth < 768 ? 650 : window.innerWidth < 1280 ? 950 : 1300
+    const ambientCount = window.innerWidth < 768 ? 60 : 130
+    const particles = buildParticles(structuredCount, ambientCount)
 
-    let field: Field | null = null
-    let width = 0
-    let height = 0
+    let vw = 0
+    let vh = 0
     let raf = 0
-
-    const pointer = { x: 0, y: 0, tx: 0, ty: 0 }
-
-    /** Where the brain sits: the measured stage element, or a centred
-        fallback box behind the copy on narrow screens. */
-    function stageBox(): Box {
-      const stage = stageRef.current
-      if (stage && stage.offsetParent !== null) {
-        const s = stage.getBoundingClientRect()
-        const c = el.getBoundingClientRect()
-        if (s.width > 40 && s.height > 40) {
-          return { x: s.left - c.left, y: s.top - c.top, w: s.width, h: s.height }
-        }
-      }
-      const w = width * 0.96
-      const h = height * 0.58
-      return { x: (width - w) / 2, y: height * 0.5 - h / 2, w, h }
-    }
+    let isMobile = window.innerWidth < 1024
 
     function resize() {
+      if (!el || !ctx) return
       const dpr = Math.min(window.devicePixelRatio || 1, 2)
-      width = el.offsetWidth || 1200
-      height = el.offsetHeight || 800
-      el.width = Math.round(width * dpr)
-      el.height = Math.round(height * dpr)
+      vw = window.innerWidth
+      vh = window.innerHeight
+      el.width = Math.round(vw * dpr)
+      el.height = Math.round(vh * dpr)
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-      field = buildField(width, height, stageBox(), mask)
+      isMobile = window.innerWidth < 1024
+    }
+
+    function currentShapes(t: number) {
+      for (let i = 0; i < KEYFRAMES.length - 1; i++) {
+        const a = KEYFRAMES[i]
+        const b = KEYFRAMES[i + 1]
+        if (t >= a.t && t <= b.t) {
+          const localT = b.t === a.t ? 0 : (t - a.t) / (b.t - a.t)
+          return { shapeA: a.shape, shapeB: b.shape, localT: clamp01(localT) }
+        }
+      }
+      return { shapeA: 'orb' as Shape, shapeB: 'orb' as Shape, localT: 0 }
     }
 
     function drawTriangle(p: Particle, x: number, y: number, alpha: number) {
+      if (!ctx) return
       ctx.globalAlpha = alpha
       ctx.beginPath()
       for (let k = 0; k < 3; k++) {
@@ -275,22 +363,57 @@ function useNeuralConstellation(
     }
 
     function render(t: number) {
-      if (!field || width < 2 || height < 2) return
-      // No bloom, no wash — the void stays pure black and the particles
-      // are the only light in the section
-      ctx.clearRect(0, 0, width, height)
+      if (!ctx || vw < 2 || vh < 2) return
+      ctx.clearRect(0, 0, vw, vh)
       ctx.lineWidth = 1
 
-      pointer.x += (pointer.tx - pointer.x) * 0.05
-      pointer.y += (pointer.ty - pointer.y) * 0.05
+      const progress = progressRef.current
+      const { shapeA, shapeB, localT } = currentShapes(progress)
+      const eased = smoothstep(localT)
+      const morphing = shapeA !== shapeB
+      const boxes = isMobile ? BOX_MOBILE : BOX_DESKTOP
+      const boxA = boxes[shapeA]
+      const boxB = boxes[shapeB]
+      const cx = vw / 2
+      const cy = vh / 2
 
-      for (const p of field.particles) {
-        const drift = t * p.driftSpeed + p.phase
-        const x = p.x + Math.sin(drift) * p.driftX + pointer.x * p.depth
-        const y = p.y + Math.cos(drift * 0.8) * p.driftY + pointer.y * p.depth
-        const flicker = 0.62 + 0.38 * Math.sin(t * p.twinkle + p.phase)
-        p.rot += p.rotSpeed * 16
-        drawTriangle(p, x, y, p.alpha * flicker)
+      for (const p of particles) {
+        let x: number
+        let y: number
+
+        if (p.ambient) {
+          const home = p.homes.chaos
+          x = home.u * vw
+          y = home.v * vh
+        } else {
+          const ha = p.homes[shapeA]
+          const hb = p.homes[shapeB]
+          const ax = (boxA.x + ha.u * boxA.w) * vw
+          const ay = (boxA.y + ha.v * boxA.h) * vh
+          const bx = (boxB.x + hb.u * boxB.w) * vw
+          const by = (boxB.y + hb.v * boxB.h) * vh
+          x = lerp(ax, bx, eased)
+          y = lerp(ay, by, eased)
+
+          if (morphing) {
+            const dx = x - cx
+            const dy = y - cy
+            const len = Math.hypot(dx, dy) || 1
+            const burst = Math.sin(Math.PI * eased) * 70
+            x += (dx / len) * burst
+            y += (dy / len) * burst
+          }
+        }
+
+        if (!reduceMotion) {
+          const drift = t * 0.00018 + p.phase
+          x += Math.sin(drift) * (p.ambient ? 12 : 5)
+          y += Math.cos(drift * 0.8) * (p.ambient ? 12 : 5)
+        }
+
+        const flicker = reduceMotion ? 1 : 0.6 + 0.4 * Math.sin(t * p.twinkle + p.phase)
+        if (!reduceMotion) p.rot += p.rotSpeed * 16
+        drawTriangle(p, x, y, p.baseAlpha * flicker)
       }
 
       ctx.globalAlpha = 1
@@ -301,163 +424,168 @@ function useNeuralConstellation(
       raf = requestAnimationFrame(frame)
     }
 
-    const ro = new ResizeObserver(() => {
-      resize()
-      if (reduceMotion) render(0)
-    })
-    ro.observe(el)
-    if (stageRef.current) ro.observe(stageRef.current)
     resize()
-
-    function onPointerMove(e: PointerEvent) {
-      const rect = el.getBoundingClientRect()
-      pointer.tx = ((e.clientX - rect.left) / rect.width - 0.5) * 26
-      pointer.ty = ((e.clientY - rect.top) / rect.height - 0.5) * 20
-    }
+    window.addEventListener('resize', resize)
 
     if (reduceMotion) {
+      // Static render, re-drawn on scroll only — no continuous rAF loop.
       render(0)
-    } else {
-      raf = requestAnimationFrame(frame)
-      if (finePointer) window.addEventListener('pointermove', onPointerMove, { passive: true })
+      const onScroll = () => render(0)
+      window.addEventListener('scroll', onScroll, { passive: true })
+      return () => {
+        window.removeEventListener('resize', resize)
+        window.removeEventListener('scroll', onScroll)
+      }
     }
 
+    raf = requestAnimationFrame(frame)
     return () => {
       cancelAnimationFrame(raf)
-      ro.disconnect()
-      window.removeEventListener('pointermove', onPointerMove)
+      window.removeEventListener('resize', resize)
     }
-  }, [ref, stageRef])
+  }, [canvasRef, progressRef])
+}
+
+/** Opacity curve for a copy block that holds fully visible between
+    [holdStart, holdEnd] and fades in/out just outside that window. */
+function holdRange(holdStart: number, holdEnd: number, fade = 0.04) {
+  return [Math.max(0, holdStart - fade), holdStart, holdEnd, Math.min(1, holdEnd + fade)] as [number, number, number, number]
 }
 
 export function HeroSection() {
+  const wrapperRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const stageRef = useRef<HTMLDivElement>(null)
-  useNeuralConstellation(canvasRef, stageRef)
+  const progressRef = useRef(0)
+
+  const { scrollYProgress } = useScroll({ target: wrapperRef, offset: ['start start', 'end end'] })
+  useConstellationStory(canvasRef, progressRef)
+
+  useEffect(() => {
+    const unsub = scrollYProgress.on('change', (v) => {
+      progressRef.current = v
+    })
+    return unsub
+  }, [scrollYProgress])
+
+  const chaosOpacity = useTransform(scrollYProgress, holdRange(0.0, 0.08), [0, 1, 1, 0])
+  const brainOpacity = useTransform(scrollYProgress, holdRange(0.24, 0.42), [0, 1, 1, 0])
+  const bulbOpacity = useTransform(scrollYProgress, holdRange(0.56, 0.74), [0, 1, 1, 0])
+  const orbOpacity = useTransform(scrollYProgress, holdRange(0.88, 1.0, 0.03), [0, 1, 1, 1])
+
+  const leftScrim = useTransform(scrollYProgress, [0.1, 0.22, 0.46, 0.5], [0, 1, 1, 0])
+  const rightScrim = useTransform(scrollYProgress, [0.5, 0.54, 1, 1], [0, 1, 1, 1])
 
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden dark-section-persistent">
+    <section ref={wrapperRef} className="relative h-[420vh]">
+      <div className="sticky top-0 h-screen overflow-hidden dark-section-persistent">
 
-      {/* Neural constellation */}
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 w-full h-full pointer-events-none"
-        aria-hidden="true"
-      />
+        {/* Neural constellation — chaos → brain → lightbulb → orb */}
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          aria-hidden="true"
+        />
 
-      {/* Copy scrim — keeps the left column legible over the particle field */}
-      <div
-        className="absolute inset-0 pointer-events-none hidden lg:block"
-        style={{
-          background:
-            'linear-gradient(90deg, #000000 0%, rgba(0,0,0,0.88) 20%, rgba(0,0,0,0.35) 40%, rgba(0,0,0,0) 54%)',
-        }}
-        aria-hidden="true"
-      />
-      {/* Fade into the section below */}
-      <div
-        className="absolute inset-x-0 bottom-0 h-40 pointer-events-none"
-        style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, #000000 100%)' }}
-        aria-hidden="true"
-      />
+        {/* Legibility scrims, cross-faded to whichever side copy is on */}
+        <motion.div
+          className="absolute inset-0 pointer-events-none hidden lg:block"
+          style={{
+            opacity: leftScrim,
+            background: 'linear-gradient(90deg, #000 0%, rgba(0,0,0,0.85) 22%, rgba(0,0,0,0.3) 42%, rgba(0,0,0,0) 56%)',
+          }}
+          aria-hidden="true"
+        />
+        <motion.div
+          className="absolute inset-0 pointer-events-none hidden lg:block"
+          style={{
+            opacity: rightScrim,
+            background: 'linear-gradient(270deg, #000 0%, rgba(0,0,0,0.85) 22%, rgba(0,0,0,0.3) 42%, rgba(0,0,0,0) 56%)',
+          }}
+          aria-hidden="true"
+        />
 
-      {/* Left accent bar */}
-      <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-DEFAULT z-10" />
+        {/* Stage 1 — chaos: dispersed field, eyebrow only */}
+        <motion.div
+          style={{ opacity: chaosOpacity }}
+          className="absolute inset-0 flex items-center justify-center px-6 text-center pointer-events-none"
+        >
+          <div className="label justify-center">The Architecture of Reality</div>
+        </motion.div>
 
-      {/* Content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-14 py-24 lg:py-16 w-full">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-
-          <div>
-            <motion.div
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7 }}
-              className="label mb-6"
-            >
-              The Architecture of Reality
-            </motion.div>
-
-            <motion.h1
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.1 }}
-              className="font-display text-[clamp(4rem,9vw,8rem)] leading-[0.92] tracking-[0.02em] mb-8"
-            >
-              BUILD<br />
-              YOUR<br />
-              <span className="text-orange-DEFAULT">REALITY.</span>
-            </motion.h1>
-
-            <motion.p
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.2 }}
-              className="font-body text-lg text-grey-DEFAULT max-w-[480px] leading-relaxed mb-10"
-            >
-              Where neuroscience meets Neville Goddard. Rewire the assumptions running underneath your life through structured courses, nightly revision journaling, and a community that gets it — then watch the outer world catch up.
-            </motion.p>
-
-            <motion.div
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.3 }}
-              className="flex flex-wrap gap-4"
-            >
-              <Link href="/auth/signup" className="btn-orange flex items-center gap-2">
-                Start Free <ArrowRight size={14} />
-              </Link>
-              <Link href="/personal" className="btn-outline">
-                Explore Courses
-              </Link>
-            </motion.div>
+        {/* Stage 2 — brain: full hero copy, left column */}
+        <motion.div
+          style={{ opacity: brainOpacity }}
+          className="absolute inset-0 flex items-center px-6 md:px-14"
+        >
+          <div className="max-w-7xl mx-auto w-full">
+            <div className="max-w-xl">
+              <div className="label mb-6">The Architecture of Reality</div>
+              <h1 className="font-display text-[clamp(4rem,9vw,8rem)] leading-[0.92] tracking-[0.02em] mb-8">
+                BUILD<br />
+                YOUR<br />
+                <span className="text-orange-DEFAULT">REALITY.</span>
+              </h1>
+              <p className="font-body text-lg text-grey-DEFAULT max-w-[480px] leading-relaxed mb-10">
+                Where neuroscience meets Neville Goddard. Rewire the assumptions running underneath your life through structured courses, nightly revision journaling, and a community that gets it — then watch the outer world catch up.
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <Link href="/auth/signup" className="btn-orange flex items-center gap-2">
+                  Start Free <ArrowRight size={14} />
+                </Link>
+                <Link href="/personal" className="btn-outline">
+                  Explore Courses
+                </Link>
+              </div>
+            </div>
           </div>
+        </motion.div>
 
-          {/* Constellation stage — deliberately empty. The canvas measures
-              this box and draws the particle brain inside it, so the
-              constellation is the only imagery in the hero. */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1.4, delay: 0.4 }}
-            className="flex flex-col"
-          >
-            <div ref={stageRef} className="w-full h-[clamp(15rem,44vw,26rem)]" aria-hidden="true" />
-            <div className="text-left lg:text-right mt-6">
-              <div className="font-mono text-[0.6rem] tracking-[0.35em] uppercase text-orange-DEFAULT mb-3">
+        {/* Stage 3 — lightbulb: insight copy, right column */}
+        <motion.div
+          style={{ opacity: bulbOpacity }}
+          className="absolute inset-0 flex items-center px-6 md:px-14"
+        >
+          <div className="max-w-7xl mx-auto w-full flex justify-end">
+            <div className="max-w-md text-left lg:text-right">
+              <div className="font-mono text-[0.6rem] tracking-[0.35em] uppercase text-orange-DEFAULT mb-4">
                 Your Mind, Mapped
               </div>
-              <p className="font-body text-sm italic text-grey-DEFAULT/80 max-w-[20rem] lg:ml-auto leading-relaxed">
+              <h2 className="font-display text-[clamp(2.5rem,5vw,4rem)] leading-[0.95] tracking-[0.02em] mb-6">
+                EVERY ASSUMPTION<br />
+                <span className="text-orange-DEFAULT">IS A SPARK.</span>
+              </h2>
+              <p className="font-body text-base italic text-grey-DEFAULT/90 leading-relaxed">
                 Every point is an assumption you are running. Change enough of them and the whole pattern resolves into a different life.
               </p>
             </div>
-          </motion.div>
-
-        </div>
-
-        {/* Stats — borderless, floating on the void so the field shows through */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.45 }}
-          className="grid grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-10 mt-16 lg:mt-12"
-        >
-          {STATS.map((s) => (
-            <div key={s.label} className="border-t border-orange-DEFAULT/30 pt-5">
-              <span className="font-display text-5xl text-orange-DEFAULT block leading-none mb-2">
-                {s.num}
-              </span>
-              <span className="font-mono text-[0.6rem] tracking-[0.2em] uppercase text-grey-light block mb-1">
-                {s.label}
-              </span>
-              <span className="font-body text-xs text-grey-DEFAULT/70">
-                {s.desc}
-              </span>
-            </div>
-          ))}
+          </div>
         </motion.div>
-      </div>
 
+        {/* Stage 4 — orb: stats, right column */}
+        <motion.div
+          style={{ opacity: orbOpacity }}
+          className="absolute inset-0 flex items-center px-6 md:px-14"
+        >
+          <div className="max-w-7xl mx-auto w-full flex justify-end">
+            <div className="grid grid-cols-2 gap-x-10 gap-y-10 max-w-md">
+              {STATS.map((s) => (
+                <div key={s.label} className="border-t border-orange-DEFAULT/30 pt-5">
+                  <span className="font-display text-5xl text-orange-DEFAULT block leading-none mb-2">
+                    {s.num}
+                  </span>
+                  <span className="font-mono text-[0.6rem] tracking-[0.2em] uppercase text-grey-light block mb-1">
+                    {s.label}
+                  </span>
+                  <span className="font-body text-xs text-grey-DEFAULT/70">
+                    {s.desc}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+
+      </div>
     </section>
   )
 }

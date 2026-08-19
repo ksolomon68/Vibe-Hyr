@@ -846,9 +846,14 @@ h4 { font-size: 18px !important; }
    MOBILE RESPONSIVENESS
 ══════════════════════════════════════════════ */
 
-/* Prevent horizontal scroll on all pages */
+/* Prevent horizontal scroll on all pages. `clip` (not `hidden`) — setting
+   overflow-x alone to a non-visible value forces the browser to compute
+   overflow-y as `auto` too, which turns html/body into their own
+   scrolling ancestor and breaks `position: sticky` for every descendant
+   on the page (pinned scroll sections in particular). `clip` avoids that
+   auto-pairing while still cutting off horizontal overflow. */
 html, body {
-  overflow-x: hidden;
+  overflow-x: clip;
   max-width: 100%;
 }
 
