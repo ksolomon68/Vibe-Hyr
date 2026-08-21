@@ -38,6 +38,10 @@ export function HeroSection() {
   const bulbOpacity = useTransform(scrollYProgress, holdRange(0.42, 0.64), [0, 1, 1, 0])
   const orbOpacity = useTransform(scrollYProgress, holdRange(0.82, 1.0, 0.03), [0, 1, 1, 1])
 
+  const brainPointerEvents = useTransform(scrollYProgress, [0, 0.24, 0.28], ["auto" as const, "auto" as const, "none" as const])
+  const bulbPointerEvents = useTransform(scrollYProgress, [0.38, 0.42, 0.64, 0.68], ["none" as const, "auto" as const, "auto" as const, "none" as const])
+  const orbPointerEvents = useTransform(scrollYProgress, [0.79, 0.82, 1.0], ["none" as const, "auto" as const, "auto" as const])
+
   const leftScrim = useTransform(scrollYProgress, [0, 0.3, 0.38, 0.42], [1, 1, 1, 0])
   const rightScrim = useTransform(scrollYProgress, [0.3, 0.38, 1, 1], [0, 1, 1, 1])
 
@@ -72,7 +76,7 @@ export function HeroSection() {
 
         {/* Stage 1 — brain: full hero copy, left column, visible on load */}
         <motion.div
-          style={{ opacity: brainOpacity }}
+          style={{ opacity: brainOpacity, pointerEvents: brainPointerEvents }}
           className="absolute inset-0 flex items-center px-6 md:px-14"
         >
           <div className="max-w-7xl mx-auto w-full">
@@ -100,7 +104,7 @@ export function HeroSection() {
 
         {/* Stage 2 — lightbulb: insight copy, right column */}
         <motion.div
-          style={{ opacity: bulbOpacity }}
+          style={{ opacity: bulbOpacity, pointerEvents: bulbPointerEvents }}
           className="absolute inset-0 flex items-center px-6 md:px-14"
         >
           <div className="max-w-7xl mx-auto w-full flex justify-end">
@@ -121,7 +125,7 @@ export function HeroSection() {
 
         {/* Stage 3 — orb: stats, right column */}
         <motion.div
-          style={{ opacity: orbOpacity }}
+          style={{ opacity: orbOpacity, pointerEvents: orbPointerEvents }}
           className="absolute inset-0 flex items-center px-6 md:px-14"
         >
           <div className="max-w-7xl mx-auto w-full flex justify-end">

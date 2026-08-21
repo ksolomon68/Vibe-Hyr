@@ -57,6 +57,8 @@ export default async function CourseDetailPage({ params }: PageProps) {
   let userTier     = 'free'
   let prevCourseComplete = true
 
+  let isLeadership = false
+
   const prereqId = LEADERSHIP_PREV[params.courseId] ?? null
 
   if (user) {
@@ -68,7 +70,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
         .eq('course_id', params.courseId),
       supabase
         .from('profiles')
-        .select('membership_tier, is_super_admin, is_bypassed')
+        .select('membership_tier, membership_type, vertical, is_super_admin, is_bypassed')
         .eq('id', user.id)
         .single(),
     ])
@@ -77,6 +79,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
     isSuperAdmin     = !!profileRes.data?.is_super_admin
     isBypassed       = !!profileRes.data?.is_bypassed
     userTier         = profileRes.data?.membership_tier ?? 'free'
+    isLeadership     = profileRes.data?.membership_type === 'leadership' || profileRes.data?.vertical === 'leadership'
 
     // Check prerequisite completion (skip for admins/bypassed)
     if (prereqId && !isSuperAdmin && !isBypassed) {
@@ -94,7 +97,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
   // not anyone is logged in, so without this guard a guest was treated
   // identically to a logged-in free-tier member (unlocked Course 1),
   // inconsistent with /educators and /business which require login here.
-  const tierGrant   = !!user && ((TIER_ACCESS[userTier] ?? []).includes(params.courseId) || isSuperAdmin || isBypassed)
+  const tierGrant   = !!user && (isSuperAdmin || isBypassed || (isLeadership && (TIER_ACCESS[userTier] ?? []).includes(params.courseId)))
   const canAccess   = tierGrant && prevCourseComplete
   const prevCourse  = prereqId ? COURSES.find(c => c.id === prereqId) : null
 
@@ -103,7 +106,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
   if (user && !tierGrant) {
     return (
       <CourseLockedScreen
-        reason="tier_required"
+        reason={isLeadership ? 'tier_required' : 'wrong_vertical'}
         courseSlug={course.id}
         sectionLabel="LEADERSHIP"
         backHref="/leadership"
