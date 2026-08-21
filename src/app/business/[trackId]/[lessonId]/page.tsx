@@ -92,7 +92,7 @@ export default async function LessonPage({ params }: PageProps) {
 
     const canAccess = isSuperAdmin || isBypassed || (instType === 'business' && allowed.includes(params.trackId))
 
-    if (!canAccess) {
+    if (!canAccess && !isPreview) {
       return (
         <CourseLockedScreen
           reason="tier_required"

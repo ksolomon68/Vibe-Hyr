@@ -26,12 +26,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
+const PREVIEW_LESSON = { courseId: 'leadership_course_1', lessonId: 'the-responsibility-formula' }
+
 export default async function LessonPage({ params }: PageProps) {
   const supabase = createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) {
+  const isPreview = params.courseId === PREVIEW_LESSON.courseId && params.lessonId === PREVIEW_LESSON.lessonId
+
+  if (!user && !isPreview) {
     redirect(`/auth/login?redirect=/leadership/${params.courseId}/${params.lessonId}`)
   }
 
@@ -42,34 +46,36 @@ export default async function LessonPage({ params }: PageProps) {
   if (!lesson) return notFound()
 
   // ── Tier gate (authenticated users only) ───────────────────────────────────
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('membership_tier, membership_type, vertical, is_super_admin')
-    .eq('id', user.id)
-    .single()
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('membership_tier, membership_type, vertical, is_super_admin')
+      .eq('id', user.id)
+      .single()
 
-  if (!profile?.is_super_admin) {
-    const isLeadership = profile?.membership_type === 'leadership' || profile?.vertical === 'leadership'
-    const tier = profile?.membership_tier ?? 'free'
+    if (!profile?.is_super_admin) {
+      const isLeadership = profile?.membership_type === 'leadership' || profile?.vertical === 'leadership'
+      const tier = profile?.membership_tier ?? 'free'
 
-    const TIER_ACCESS: Record<string, string[]> = {
-      free:      ['leadership_course_1'],
-      architect: ['leadership_course_1', 'leadership_course_2', 'leadership_course_3'],
-      elite:     ['leadership_course_1', 'leadership_course_2', 'leadership_course_3', 'leadership_course_4'],
-    }
+      const TIER_ACCESS: Record<string, string[]> = {
+        free:      ['leadership_course_1'],
+        architect: ['leadership_course_1', 'leadership_course_2', 'leadership_course_3'],
+        elite:     ['leadership_course_1', 'leadership_course_2', 'leadership_course_3', 'leadership_course_4'],
+      }
 
-    const allowed = isLeadership ? (TIER_ACCESS[tier] ?? ['leadership_course_1']) : []
+      const allowed = isLeadership ? (TIER_ACCESS[tier] ?? ['leadership_course_1']) : []
 
-    if (!allowed.includes(params.courseId)) {
-      return (
-        <CourseLockedScreen
-          reason={isLeadership ? 'tier_required' : 'wrong_vertical'}
-          courseSlug={params.courseId}
-          sectionLabel="LEADERSHIP"
-          backHref="/leadership"
-          backLabel="Back to Leadership"
-        />
-      )
+      if (!allowed.includes(params.courseId) && !isPreview) {
+        return (
+          <CourseLockedScreen
+            reason={isLeadership ? 'tier_required' : 'wrong_vertical'}
+            courseSlug={params.courseId}
+            sectionLabel="LEADERSHIP"
+            backHref="/leadership"
+            backLabel="Back to Leadership"
+          />
+        )
+      }
     }
   }
 
@@ -87,7 +93,7 @@ export default async function LessonPage({ params }: PageProps) {
       initialCourseId={params.courseId}
       initialLessonId={params.lessonId}
       initialLessons={dbLessons}
-      isGuest={false}
+      isGuest={!user}
     />
   )
 }
