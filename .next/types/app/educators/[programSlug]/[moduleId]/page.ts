@@ -1,4 +1,4 @@
-// File: /home/user/Vibe-Hyr/src/app/educators/[programSlug]/[moduleId]/page.tsx
+// File: C:\Users\KSOLO\OneDrive\Documents\vibehyr\website\Vibe-Hyr\src\app\educators\[programSlug]\[moduleId]\page.tsx
 import * as entry from '../../../../../../src/app/educators/[programSlug]/[moduleId]/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

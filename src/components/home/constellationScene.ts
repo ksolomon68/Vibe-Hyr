@@ -444,6 +444,8 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
     let isMobile = window.innerWidth < 1024
     let raf = 0
     const pointer = { x: 0, y: 0 }
+    const smoothedPointer = { x: 0, y: 0 }
+    let smoothedProgress = progressRef.current
 
     function worldOffset(fx: number, fy: number, depth: number) {
       const halfH = depth * Math.tan((camera.fov * Math.PI) / 360)
@@ -470,14 +472,16 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
     }
 
     function render(time: number) {
-      const progress = progressRef.current
-      const { shapeA, shapeB, localT } = currentShapes(progress)
+      // Lerp progress and mouse coords for butter-smooth animations
+      smoothedProgress = lerp(smoothedProgress, progressRef.current, 0.08)
+      smoothedPointer.x = lerp(smoothedPointer.x, pointer.x, 0.08)
+      smoothedPointer.y = lerp(smoothedPointer.y, pointer.y, 0.08)
+
+      const { shapeA, shapeB, localT } = currentShapes(smoothedProgress)
       const eased = smoothstep(localT)
       const morphing = shapeA !== shapeB
       const cloudA = clouds[shapeA]
       const cloudB = clouds[shapeB]
-      const colorShape = eased < 0.5 ? shapeA : shapeB
-      const colorCloud = clouds[colorShape]
       const screens = isMobile ? SCREEN_MOBILE : SCREEN_DESKTOP
       const sa = screens[shapeA]
       const sb = screens[shapeB]
@@ -519,9 +523,17 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
         livePos[i3] = x
         livePos[i3 + 1] = y
         livePos[i3 + 2] = z
-        liveCol[i3] = colorCloud.col[i3]
-        liveCol[i3 + 1] = colorCloud.col[i3 + 1]
-        liveCol[i3 + 2] = colorCloud.col[i3 + 2]
+
+        // Smoothly interpolate RGB colors between shape A and B
+        const ar = cloudA.col[i3]
+        const ag = cloudA.col[i3 + 1]
+        const ab = cloudA.col[i3 + 2]
+        const br = cloudB.col[i3]
+        const bg = cloudB.col[i3 + 1]
+        const bb = cloudB.col[i3 + 2]
+        liveCol[i3] = lerp(ar, br, eased)
+        liveCol[i3 + 1] = lerp(ag, bg, eased)
+        liveCol[i3 + 2] = lerp(ab, bb, eased)
       }
       structuredGeom.attributes.position.needsUpdate = true
       structuredGeom.attributes.color.needsUpdate = true
@@ -530,8 +542,8 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
       structuredPoints.scale.setScalar(groupScale)
 
       if (!reduceMotion) {
-        structuredPoints.rotation.y = Math.sin(t * 0.06) * 0.22 + pointer.x * 0.18
-        structuredPoints.rotation.x = pointer.y * 0.1
+        structuredPoints.rotation.y = Math.sin(t * 0.06) * 0.22 + smoothedPointer.x * 0.18
+        structuredPoints.rotation.x = smoothedPointer.y * 0.1
 
         const ambientArr = ambientGeom.attributes.position.array as Float32Array
         for (let i = 0; i < ambientCount; i++) {
