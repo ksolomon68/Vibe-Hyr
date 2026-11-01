@@ -47,41 +47,31 @@ function surfaceColor(x: number, y: number, z: number, relief: number, tip = fal
   return [color.r, color.g, color.b]
 }
 
-/** Two separate cortical hemispheres, a central fissure, and branching sulci. */
-function buildBrain(n: number): Cloud {
+/** Sample an anatomical cortical surface; ridges and sulci come from the mesh. */
+function buildBrain(n: number, surface: Float32Array, indices: Uint32Array): Cloud {
   const pos = new Float32Array(n * 3)
   const col = new Float32Array(n * 3)
+  const count = indices.length / 3
+  const silver = new THREE.Color('#E6E9F0')
+  const champagne = new THREE.Color('#E4BB6C')
   for (let i = 0; i < n; i++) {
-    const side = i % 2 ? 1 : -1
-    const theta = Math.acos(rand(-1, 1))
-    const phi = rand(-Math.PI / 2, Math.PI / 2)
-    const sy = Math.cos(theta)
-    const sz = Math.sin(theta) * Math.sin(phi)
-    const sx = Math.sin(theta) * Math.cos(phi)
-    // Broad winding ridges with narrower, darker grooves between them.
-    const wave = Math.sin(sz * 12 + 2.4 * Math.sin(sy * 5) + sx * 4)
-    const cross = Math.sin(sy * 13 + 1.8 * Math.sin(sz * 6))
-    const groove = Math.pow(1 - Math.abs(wave), 2)
-    const branch = Math.pow(1 - Math.abs(cross), 3) * 0.5
-    const relief = 1 - Math.min(1, groove + branch)
-    const fold = 1 - groove * 0.20 - branch * 0.14
-    let x = side * (0.075 + sx * 0.88 * fold)
-    let y = sy * 0.86 * fold + 0.12 - Math.max(0, sy) * Math.exp(-sx * 25) * 0.15
-    let z = sz * 1.12 * fold
-    // The underside tucks inward; no long stalk competing with the silhouette.
-    if (y < -0.45) { x *= 0.9; z *= 0.9 }
-    if (i > n * 0.97) {
-      const angle = rand(0, PI2)
-      const h = rand(0, 0.32)
-      x = Math.cos(angle) * 0.12
-      y = -0.73 - h
-      z = -0.35 + Math.sin(angle) * 0.12
-    }
-    // Three-quarter view exposes the fissure and the depth of the folds.
-    const turnedX = x * 0.94 + z * 0.34
-    const turnedZ = z * 0.94 - x * 0.34
-    pos.set([turnedX, y, turnedZ], i * 3)
-    col.set(surfaceColor(x, y, turnedZ, relief), i * 3)
+    const face = ((i * 7919) % count) * 3
+    const a = indices[face] * 7, b = indices[face + 1] * 7, c = indices[face + 2] * 7
+    // Low-discrepancy barycentric sampling preserves spacing while following every fold.
+    const u = Math.sqrt(((i + 0.5) * 0.754877666) % 1)
+    const v = ((i + 0.5) * 0.569840291) % 1
+    const wa = 1 - u, wb = u * (1 - v), wc = u * v
+    const sample = (axis: number) => surface[a + axis] * wa + surface[b + axis] * wb + surface[c + axis] * wc
+    const x = sample(0), y = sample(1), z = sample(2)
+    const nx = sample(3), ny = sample(4), nz = sample(5)
+    const ridge = sample(6)
+    pos.set([x, y, z], i * 3)
+    const facing = smoothstep(clamp01(nz * 3 + 0.35))
+    const rim = Math.pow(1 - Math.abs(nz), 3)
+    const light = clamp01(-nx * 0.3 + ny * 0.45 + nz * 0.82)
+    const luminance = (0.7 + light * 2.3 + rim * 0.7) * (0.25 + ridge * 1.4) * (0.05 + facing * 0.95)
+    const color = silver.clone().lerp(champagne, Math.pow(ridge, 2) * 0.45 + rim * 0.35).multiplyScalar(luminance)
+    col.set([color.r, color.g, color.b], i * 3)
   }
   return { pos, col }
 }
@@ -168,14 +158,14 @@ function makeTriangleSprite(): THREE.CanvasTexture {
   ctx.closePath()
 
   // Very subtle fill (near transparent) so the triangle reads in additive blending
-  ctx.fillStyle = 'rgba(255,255,255,0.12)'
+  ctx.fillStyle = 'rgba(255,255,255,0)'
   ctx.fill()
 
   // Sharp white outline
   ctx.strokeStyle = '#ffffff'
-  ctx.lineWidth = 3.5
+  ctx.lineWidth = 4.5
   ctx.shadowColor = '#ffffff'
-  ctx.shadowBlur = 2
+  ctx.shadowBlur = 0
   ctx.stroke()
 
   const tex = new THREE.CanvasTexture(c)
@@ -212,7 +202,7 @@ function currentShapes(t: number) {
    frame from the camera's frustum at the cloud's depth. Desktop
    alternates right/left so the shape never sits under its own copy. */
 const SCREEN_DESKTOP: Record<Shape, { x: number; y: number; scale: number }> = {
-  brain: { x: 0.72, y: 0.53, scale: 1.22 },
+  brain: { x: 0.70, y: 0.53, scale: 1.12 },
   scatter: { x: 0.5, y: 0.5, scale: 1 },
   lightbulb: { x: 0.26, y: 0.52, scale: 1.15 },
   orb: { x: 0.24, y: 0.55, scale: 0.85 },
@@ -230,15 +220,47 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
     if (!canvas) return
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const structuredCount = window.innerWidth < 768 ? 4200 : window.innerWidth < 1280 ? 8000 : 12000
+    const structuredCount = window.innerWidth < 768 ? 10000 : window.innerWidth < 1280 ? 22000 : 32000
     const ambientCount = window.innerWidth < 768 ? 90 : 200
 
-    const brainCloud = buildBrain(structuredCount)
+    let brainReady = false
+    const brainCloud: Cloud = { pos: new Float32Array(structuredCount * 3), col: new Float32Array(structuredCount * 3) }
+    const controller = new AbortController()
+    const brainDepthGeometry = new THREE.BufferGeometry()
+    const brainDepthMaterial = new THREE.MeshBasicMaterial({ colorWrite: false, side: THREE.DoubleSide })
+    const brainDepthMesh = new THREE.Mesh(brainDepthGeometry, brainDepthMaterial)
+    brainDepthMesh.visible = false
+    Promise.all(['/models/brain-cortex.bin', '/models/brain-cortex-index.bin'].map(async url => {
+      const response = await fetch(url, { signal: controller.signal })
+      if (!response.ok) throw new Error(`Brain surface request failed: ${response.status}`)
+      return response.arrayBuffer()
+    }))
+      .then(([buffer, indexBuffer]) => {
+        if (controller.signal.aborted) return
+        if (buffer.byteLength !== 20484 * 7 * 4 || indexBuffer.byteLength !== 40960 * 3 * 4) throw new Error('Invalid brain surface data')
+        const surface = new Float32Array(buffer)
+        const sampled = buildBrain(structuredCount, surface, new Uint32Array(indexBuffer))
+        brainCloud.pos.set(sampled.pos)
+        brainCloud.col.set(sampled.col)
+        // An invisible inset surface hides particles on the far side of each fold.
+        const inset = new Float32Array(20484 * 3)
+        for (let i = 0; i < 20484; i++) {
+          for (let axis = 0; axis < 3; axis++) inset[i * 3 + axis] = surface[i * 7 + axis] - surface[i * 7 + axis + 3] * 0.009
+        }
+        brainDepthGeometry.setAttribute('position', new THREE.BufferAttribute(inset, 3))
+        brainDepthGeometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indexBuffer), 1))
+        brainReady = true
+        if (reduceMotion) render(0)
+      })
+      .catch(error => {
+        if (!controller.signal.aborted) console.warn('Unable to load brain surface', error)
+      })
     const bulbCloud = buildLightbulb(structuredCount)
     const orbCloud = buildOrb(structuredCount)
-    const scatterCloud: Cloud = { pos: new Float32Array(structuredCount * 3), col: brainCloud.col.slice() }
+    const scatterCloud: Cloud = { pos: new Float32Array(structuredCount * 3), col: new Float32Array(structuredCount * 3) }
     for (let i = 0; i < structuredCount; i++) {
       scatterCloud.pos.set([rand(-5.5, 5.5), rand(-3.4, 3.4), rand(-2.5, 2)], i * 3)
+      scatterCloud.col.set(hex01(pick(AMBIENT_COLORS)), i * 3)
     }
     const clouds: Record<Shape, Cloud> = { brain: brainCloud, scatter: scatterCloud, lightbulb: bulbCloud, orb: orbCloud }
 
@@ -258,6 +280,7 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
     renderer.setClearColor(0x000000, 1)
 
     const scene = new THREE.Scene()
+    scene.add(brainDepthMesh)
     const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 50)
     camera.position.set(0, 0, 6)
 
@@ -271,7 +294,7 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
     const seeds = Float32Array.from({ length: structuredCount }, () => Math.random())
     structuredGeom.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 1))
     const structuredMat = new THREE.PointsMaterial({
-      size: 0.042,
+      size: 0.078,
       map: sprite,
       transparent: true,
       opacity: 1,
@@ -283,7 +306,7 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
     })
     structuredMat.onBeforeCompile = (shader) => {
       shader.vertexShader = 'attribute float aSeed; varying float vSeed;\n' + shader.vertexShader
-      shader.vertexShader = shader.vertexShader.replace('gl_PointSize = size;', 'vSeed = aSeed; gl_PointSize = size * (0.65 + aSeed * 0.9);')
+      shader.vertexShader = shader.vertexShader.replace('gl_PointSize = size;', 'vSeed = aSeed; gl_PointSize = size * (0.6 + aSeed * 0.8);')
       shader.fragmentShader = 'varying float vSeed;\n' + shader.fragmentShader
       shader.fragmentShader = shader.fragmentShader.replace('#include <map_particle_fragment>', THREE.ShaderChunk.map_particle_fragment.replace(
         'diffuseColor *= texture2D( map, uv );',
@@ -360,7 +383,7 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
       const cloudA = clouds[shapeA]
       const cloudB = clouds[shapeB]
       const scattered = (shapeA === 'scatter' ? 1 - eased : 0) + (shapeB === 'scatter' ? eased : 0)
-      structuredMat.opacity = 1 - scattered * 0.65
+      structuredMat.opacity = !brainReady && (shapeA === 'brain' || shapeB === 'brain') ? 0 : 1 - scattered * 0.65
       const screens = isMobile ? SCREEN_MOBILE : SCREEN_DESKTOP
       const sa = screens[shapeA]
       const sb = screens[shapeB]
@@ -395,8 +418,8 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
 
         if (!reduceMotion) {
           const phase = i * 12.9898
-          x += Math.sin(t * 0.5 + phase) * (0.012 + scattered * 0.12)
-          y += Math.cos(t * 0.42 + phase) * (0.012 + scattered * 0.12)
+          x += Math.sin(t * 0.5 + phase) * (0.002 + scattered * 0.12)
+          y += Math.cos(t * 0.42 + phase) * (0.002 + scattered * 0.12)
         }
 
         livePos[i3] = x
@@ -410,9 +433,12 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
         const br = cloudB.col[i3]
         const bg = cloudB.col[i3 + 1]
         const bb = cloudB.col[i3 + 2]
-        liveCol[i3] = lerp(ar, br, eased)
-        liveCol[i3 + 1] = lerp(ag, bg, eased)
-        liveCol[i3 + 2] = lerp(ab, bb, eased)
+        const denseA = shapeA === 'brain' || shapeA === 'scatter'
+        const denseB = shapeB === 'brain' || shapeB === 'scatter'
+        const density = i % 3 === 0 ? 1 : lerp(denseA ? 1 : 0, denseB ? 1 : 0, eased)
+        liveCol[i3] = lerp(ar, br, eased) * density
+        liveCol[i3 + 1] = lerp(ag, bg, eased) * density
+        liveCol[i3 + 2] = lerp(ab, bb, eased) * density
       }
       structuredGeom.attributes.position.needsUpdate = true
       structuredGeom.attributes.color.needsUpdate = true
@@ -421,8 +447,8 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
       structuredPoints.scale.setScalar(groupScale)
 
       if (!reduceMotion) {
-        structuredPoints.rotation.y = Math.sin(t * 0.06) * 0.22 + smoothedPointer.x * 0.18
-        structuredPoints.rotation.x = smoothedPointer.y * 0.1
+        structuredPoints.rotation.y = Math.sin(t * 0.06) * 0.06 + smoothedPointer.x * 0.06
+        structuredPoints.rotation.x = smoothedPointer.y * 0.04
 
         const ambientArr = ambientGeom.attributes.position.array as Float32Array
         for (let i = 0; i < ambientCount; i++) {
@@ -434,6 +460,10 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
         ambientGeom.attributes.position.needsUpdate = true
       }
 
+      brainDepthMesh.visible = brainReady && shapeA === 'brain' && shapeB === 'brain'
+      brainDepthMesh.position.copy(structuredPoints.position)
+      brainDepthMesh.scale.copy(structuredPoints.scale)
+      brainDepthMesh.rotation.copy(structuredPoints.rotation)
       composer.render()
     }
 
@@ -452,6 +482,9 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
       return () => {
         window.removeEventListener('resize', resize)
         window.removeEventListener('scroll', onScroll)
+        controller.abort()
+        brainDepthGeometry.dispose()
+        brainDepthMaterial.dispose()
         composer.dispose()
         renderer.dispose()
         structuredGeom.dispose()
@@ -468,6 +501,9 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
     raf = requestAnimationFrame(frame)
 
     return () => {
+      controller.abort()
+      brainDepthGeometry.dispose()
+      brainDepthMaterial.dispose()
       cancelAnimationFrame(raf)
       window.removeEventListener('resize', resize)
       window.removeEventListener('pointermove', onPointerMove)
