@@ -1,4 +1,4 @@
-// File: C:\Users\KSOLO\OneDrive\Documents\vibehyr\website\Vibe-Hyr\src\app\api\email\diet-alert\route.ts
+// File: /workspace/.onboarding/vibehyr/src/app/api/email/diet-alert/route.ts
 import * as entry from '../../../../../../src/app/api/email/diet-alert/route.js'
 import type { NextRequest } from 'next/server.js'
 

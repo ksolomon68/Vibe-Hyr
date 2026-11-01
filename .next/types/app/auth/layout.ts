@@ -1,4 +1,4 @@
-// File: C:\Users\KSOLO\OneDrive\Documents\vibehyr\website\Vibe-Hyr\src\app\auth\layout.tsx
+// File: /workspace/.onboarding/vibehyr/src/app/auth/layout.tsx
 import * as entry from '../../../../src/app/auth/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

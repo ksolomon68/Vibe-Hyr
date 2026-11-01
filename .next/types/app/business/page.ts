@@ -1,4 +1,4 @@
-// File: C:\Users\KSOLO\OneDrive\Documents\vibehyr\website\Vibe-Hyr\src\app\business\page.tsx
+// File: /workspace/.onboarding/vibehyr/src/app/business/page.tsx
 import * as entry from '../../../../src/app/business/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

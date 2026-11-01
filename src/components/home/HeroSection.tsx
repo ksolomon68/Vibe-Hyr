@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useConstellationScene } from './constellationScene'
 
 const STATS = [
@@ -20,6 +20,14 @@ function holdRange(holdStart: number, holdEnd: number, fade = 0.04) {
 }
 
 export function HeroSection() {
+  const [reduceMotion, setReduceMotion] = useState(false)
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const update = () => setReduceMotion(media.matches)
+    update()
+    media.addEventListener('change', update)
+    return () => media.removeEventListener('change', update)
+  }, [])
   const wrapperRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const progressRef = useRef(0)
@@ -34,20 +42,23 @@ export function HeroSection() {
     return unsub
   }, [scrollYProgress])
 
-  const brainOpacity = useTransform(scrollYProgress, holdRange(0, 0.24), [1, 1, 1, 0])
-  const bulbOpacity = useTransform(scrollYProgress, holdRange(0.42, 0.64), [0, 1, 1, 0])
-  const orbOpacity = useTransform(scrollYProgress, holdRange(0.82, 1.0, 0.03), [0, 1, 1, 1])
+  const brainOpacity = useTransform(scrollYProgress, holdRange(0, 0.16), [1, 1, 1, 0])
+  const bulbOpacity = useTransform(scrollYProgress, holdRange(0.60, 0.74), [0, 1, 1, 0])
+  const orbOpacity = useTransform(scrollYProgress, holdRange(0.90, 1.0, 0.03), [0, 1, 1, 1])
 
-  const brainPointerEvents = useTransform(scrollYProgress, [0, 0.24, 0.28], ["auto" as const, "auto" as const, "none" as const])
-  const bulbPointerEvents = useTransform(scrollYProgress, [0.38, 0.42, 0.64, 0.68], ["none" as const, "auto" as const, "auto" as const, "none" as const])
-  const orbPointerEvents = useTransform(scrollYProgress, [0.79, 0.82, 1.0], ["none" as const, "auto" as const, "auto" as const])
+  const brainPointerEvents = useTransform(scrollYProgress, [0, 0.16, 0.20], ["auto" as const, "auto" as const, "none" as const])
+  const bulbPointerEvents = useTransform(scrollYProgress, [0.56, 0.60, 0.74, 0.78], ["none" as const, "auto" as const, "auto" as const, "none" as const])
+  const orbPointerEvents = useTransform(scrollYProgress, [0.87, 0.90, 1.0], ["none" as const, "auto" as const, "auto" as const])
 
-  const leftScrim = useTransform(scrollYProgress, [0, 0.3, 0.38, 0.42], [1, 1, 1, 0])
-  const rightScrim = useTransform(scrollYProgress, [0.3, 0.38, 1, 1], [0, 1, 1, 1])
+  const scatterOpacity = useTransform(scrollYProgress, [0.24, 0.30, 0.44, 0.50], [0, 1, 1, 0])
+  const scatterY = useTransform(scrollYProgress, [0.24, 0.50], [60, -60])
+
+  const leftScrim = useTransform(scrollYProgress, [0, 0.16, 0.20, 0.24], [1, 1, 1, 0])
+  const rightScrim = useTransform(scrollYProgress, [0.50, 0.56, 0.90, 1], [0, 1, 1, 1])
 
   return (
-    <section ref={wrapperRef} className="relative h-[340vh]">
-      <div className="sticky top-0 h-screen overflow-hidden dark-section-persistent">
+    <section ref={wrapperRef} className={`relative ${reduceMotion ? '' : 'h-[480svh]'}`}>
+      <div className={`${reduceMotion ? 'relative' : 'sticky top-0'} h-[100svh] min-h-[720px] overflow-hidden dark-section-persistent`}>
 
         {/* Neural constellation — real WebGL point cloud (brain → lightbulb → orb) */}
         <canvas
@@ -76,8 +87,8 @@ export function HeroSection() {
 
         {/* Stage 1 — brain: full hero copy, left column, visible on load */}
         <motion.div
-          style={{ opacity: brainOpacity, pointerEvents: brainPointerEvents }}
-          className="absolute inset-0 flex items-center px-6 md:px-14"
+          style={{ opacity: reduceMotion ? 1 : brainOpacity, pointerEvents: reduceMotion ? 'auto' : brainPointerEvents }}
+          className="absolute inset-0 flex items-end pb-12 lg:pb-0 lg:items-center px-6 md:px-14"
         >
           <div className="max-w-7xl mx-auto w-full">
             <div className="max-w-xl">
@@ -102,10 +113,24 @@ export function HeroSection() {
           </div>
         </motion.div>
 
+        {/* The shape dissolves before the next idea takes form. */}
+        <motion.div
+          style={{ opacity: reduceMotion ? 0 : scatterOpacity, y: scatterY }}
+          className="absolute inset-0 flex items-center justify-center px-6 pointer-events-none"
+        >
+          <div className="max-w-2xl text-center bg-black/40 p-6 md:p-10">
+            <div className="label mb-6">From Scattered Thoughts to Clarity</div>
+            <p className="font-body text-2xl md:text-4xl leading-snug text-white">
+              Your assumptions shape the world you see.
+              Change the pattern, and a new reality begins to take form.
+            </p>
+          </div>
+        </motion.div>
+
         {/* Stage 2 — lightbulb: insight copy, right column */}
         <motion.div
-          style={{ opacity: bulbOpacity, pointerEvents: bulbPointerEvents }}
-          className="absolute inset-0 flex items-center px-6 md:px-14"
+          style={{ opacity: reduceMotion ? 0 : bulbOpacity, pointerEvents: reduceMotion ? 'none' : bulbPointerEvents }}
+          className="absolute inset-0 flex items-end pb-12 lg:pb-0 lg:items-center px-6 md:px-14"
         >
           <div className="max-w-7xl mx-auto w-full flex justify-end">
             <div className="max-w-md text-left lg:text-right">
@@ -125,8 +150,8 @@ export function HeroSection() {
 
         {/* Stage 3 — orb: stats, right column */}
         <motion.div
-          style={{ opacity: orbOpacity, pointerEvents: orbPointerEvents }}
-          className="absolute inset-0 flex items-center px-6 md:px-14"
+          style={{ opacity: reduceMotion ? 0 : orbOpacity, pointerEvents: reduceMotion ? 'none' : orbPointerEvents }}
+          className="absolute inset-0 flex items-end pb-12 lg:pb-0 lg:items-center px-6 md:px-14"
         >
           <div className="max-w-7xl mx-auto w-full flex justify-end">
             <div className="grid grid-cols-2 gap-x-10 gap-y-10 max-w-md">

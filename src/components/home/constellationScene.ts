@@ -8,22 +8,12 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
 import type { RefObject, MutableRefObject } from 'react'
 import { useEffect } from 'react'
 
-/* ──────────────────────────────────────────────────────────────
-   NEURAL CONSTELLATION — real WebGL point cloud, not a 2D canvas
-   approximation. A 2D canvas can only ever fake the reference's
-   volumetric glow; additive-blended GPU point sprites plus a real
-   bloom pass are what actually produce it. Three organic 3D forms
-   (brain, lightbulb, orb) built from noise-displaced sphere/teardrop
-   point samples, morphed by index-correspondence as the user scrolls,
-   coloured gold at the outer "rim" (high noise displacement) and
-   white/silver at the "core", with a scatter of violet/teal/magenta
-   accents — plus a static ambient field of the same triangle sprites
-   drifting slowly outside the main shape.
-   ────────────────────────────────────────────────────────────── */
+// Volumetric triangle clouds dissolve into a shared field before re-forming.
+// Scroll progress drives geometry and copy together; time only adds idle drift.
 
-export type Shape = 'brain' | 'lightbulb' | 'orb'
+export type Shape = 'brain' | 'scatter' | 'lightbulb' | 'orb'
 
-const RIM_COLORS = ['#E8621A', '#E8621A', '#E8621A', '#E8621A', '#E8621A', '#F0B429', '#F0B429', '#F0B429', '#FFFFFF']
+const RIM_COLORS = ['#E8621A', '#F0B429', '#F0B429', '#FFFFFF', '#8B5CF6', '#FFFFFF', '#F0B429', '#8B5CF6', '#FFFFFF']
 const RIM_LOWER_COLORS = ['#E8621A', '#E8621A', '#F0B429', '#8B5CF6', '#8B5CF6', '#F97316', '#FB923C', '#E8621A', '#FFB86B']
 const CORE_COLORS = ['#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#F0B429', '#8B5CF6', '#F97316']
 const AMBIENT_COLORS = ['#FFFFFF', '#FFFFFF', '#F0B429', '#F0B429', '#E8621A', '#8B5CF6', '#F97316', '#FB923C', '#FFB86B']
@@ -50,7 +40,7 @@ function hex01(hex: string): [number, number, number] {
     blue at the bottom), ramped smoothly by vertical position. */
 function pickColor(rim: boolean, spectrumTip: boolean, vNorm: number): [number, number, number] {
   if (rim) {
-    if (spectrumTip && Math.random() < clamp01((vNorm - 0.45) / 0.4)) return hex01(pick(RIM_LOWER_COLORS))
+    if (spectrumTip && Math.random() < clamp01((0.55 - vNorm) / 0.4)) return hex01(pick(RIM_LOWER_COLORS))
     return hex01(pick(RIM_COLORS))
   }
   return hex01(pick(CORE_COLORS))
@@ -326,13 +316,16 @@ function makeTriangleSprite(): THREE.CanvasTexture {
   return tex
 }
 
+// Keep these holds aligned with the copy windows in HeroSection.
 const KEYFRAMES: { t: number; shape: Shape }[] = [
-  { t: 0.0, shape: 'brain' },
-  { t: 0.24, shape: 'brain' },
-  { t: 0.42, shape: 'lightbulb' },
-  { t: 0.64, shape: 'lightbulb' },
-  { t: 0.82, shape: 'orb' },
-  { t: 1.0, shape: 'orb' },
+  { t: 0, shape: 'brain' },
+  { t: 0.16, shape: 'brain' },
+  { t: 0.30, shape: 'scatter' },
+  { t: 0.44, shape: 'scatter' },
+  { t: 0.60, shape: 'lightbulb' },
+  { t: 0.74, shape: 'lightbulb' },
+  { t: 0.90, shape: 'orb' },
+  { t: 1, shape: 'orb' },
 ]
 
 function currentShapes(t: number) {
@@ -352,13 +345,15 @@ function currentShapes(t: number) {
    frame from the camera's frustum at the cloud's depth. Desktop
    alternates right/left so the shape never sits under its own copy. */
 const SCREEN_DESKTOP: Record<Shape, { x: number; y: number; scale: number }> = {
-  brain: { x: 0.71, y: 0.52, scale: 1 },
-  lightbulb: { x: 0.26, y: 0.5, scale: 0.95 },
+  brain: { x: 0.72, y: 0.53, scale: 1.22 },
+  scatter: { x: 0.5, y: 0.5, scale: 1 },
+  lightbulb: { x: 0.26, y: 0.52, scale: 1.15 },
   orb: { x: 0.24, y: 0.55, scale: 0.85 },
 }
 const SCREEN_MOBILE: Record<Shape, { x: number; y: number; scale: number }> = {
-  brain: { x: 0.5, y: 0.32, scale: 0.62 },
-  lightbulb: { x: 0.5, y: 0.3, scale: 0.6 },
+  brain: { x: 0.5, y: 0.22, scale: 0.46 },
+  scatter: { x: 0.5, y: 0.5, scale: 1 },
+  lightbulb: { x: 0.5, y: 0.26, scale: 0.48 },
   orb: { x: 0.5, y: 0.32, scale: 0.52 },
 }
 
@@ -374,7 +369,11 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
     const brainCloud = buildBrain(structuredCount)
     const bulbCloud = buildLightbulb(structuredCount)
     const orbCloud = buildOrb(structuredCount)
-    const clouds: Record<Shape, Cloud> = { brain: brainCloud, lightbulb: bulbCloud, orb: orbCloud }
+    const scatterCloud: Cloud = { pos: new Float32Array(structuredCount * 3), col: brainCloud.col.slice() }
+    for (let i = 0; i < structuredCount; i++) {
+      scatterCloud.pos.set([rand(-5.5, 5.5), rand(-3.4, 3.4), rand(-2.5, 2)], i * 3)
+    }
+    const clouds: Record<Shape, Cloud> = { brain: brainCloud, scatter: scatterCloud, lightbulb: bulbCloud, orb: orbCloud }
 
     const ambientPos = new Float32Array(ambientCount * 3)
     const ambientCol = new Float32Array(ambientCount * 3)
@@ -403,7 +402,7 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
     structuredGeom.setAttribute('position', new THREE.BufferAttribute(livePos, 3))
     structuredGeom.setAttribute('color', new THREE.BufferAttribute(liveCol, 3))
     const structuredMat = new THREE.PointsMaterial({
-      size: 0.03,
+      size: 0.055,
       map: sprite,
       transparent: true,
       opacity: 1,
@@ -435,7 +434,7 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
 
     const composer = new EffectComposer(renderer)
     composer.addPass(new RenderPass(scene, camera))
-    const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.75, 0.28, 0.32)
+    const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.28, 0.15, 0.65)
     composer.addPass(bloom)
     composer.addPass(new OutputPass())
 
@@ -473,7 +472,7 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
 
     function render(time: number) {
       // Lerp progress and mouse coords for butter-smooth animations
-      smoothedProgress = lerp(smoothedProgress, progressRef.current, 0.08)
+      smoothedProgress = reduceMotion ? 0 : progressRef.current
       smoothedPointer.x = lerp(smoothedPointer.x, pointer.x, 0.08)
       smoothedPointer.y = lerp(smoothedPointer.y, pointer.y, 0.08)
 
@@ -482,6 +481,8 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
       const morphing = shapeA !== shapeB
       const cloudA = clouds[shapeA]
       const cloudB = clouds[shapeB]
+      const scattered = (shapeA === 'scatter' ? 1 - eased : 0) + (shapeB === 'scatter' ? eased : 0)
+      structuredMat.opacity = 1 - scattered * 0.65
       const screens = isMobile ? SCREEN_MOBILE : SCREEN_DESKTOP
       const sa = screens[shapeA]
       const sb = screens[shapeB]
@@ -492,7 +493,7 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
       const groupY = lerp(offA.y, offB.y, eased)
       const groupScale = lerp(sa.scale, sb.scale, eased)
 
-      const burst = morphing ? Math.sin(Math.PI * eased) * 0.85 : 0
+      const burst = !reduceMotion && morphing && shapeA !== 'scatter' && shapeB !== 'scatter' ? Math.sin(Math.PI * eased) * 0.12 : 0
       const t = reduceMotion ? 0 : time * 0.001
 
       for (let i = 0; i < structuredCount; i++) {
@@ -516,8 +517,8 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
 
         if (!reduceMotion) {
           const phase = i * 12.9898
-          x += Math.sin(t * 0.5 + phase) * 0.012
-          y += Math.cos(t * 0.42 + phase) * 0.012
+          x += Math.sin(t * 0.5 + phase) * (0.012 + scattered * 0.12)
+          y += Math.cos(t * 0.42 + phase) * (0.012 + scattered * 0.12)
         }
 
         livePos[i3] = x

@@ -1,4 +1,4 @@
-// File: C:\Users\KSOLO\OneDrive\Documents\vibehyr\website\Vibe-Hyr\src\app\api\checkin\route.ts
+// File: /workspace/.onboarding/vibehyr/src/app/api/checkin/route.ts
 import * as entry from '../../../../../src/app/api/checkin/route.js'
 import type { NextRequest } from 'next/server.js'
 
