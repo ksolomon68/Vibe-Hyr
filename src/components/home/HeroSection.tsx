@@ -13,6 +13,15 @@ const STATS = [
   { num: '∞',  label: 'Reality Potential', desc: 'Rewritten one assumption at a time' },
 ]
 
+const FEATURE_PREVIEW = [
+  { num: '01', title: 'Structured Curriculum', desc: '4 progressive courses, quiz-gated' },
+  { num: '02', title: 'Daily Revision Journal', desc: 'Nightly guided journaling & streaks' },
+  { num: '03', title: 'Quizzes & Diagnostics',  desc: 'Identity Audit, Assumption Lab, more' },
+]
+
+// Each dot marks one hold window's center; keep in sync with KEYFRAMES in constellationScene.ts.
+const SCROLL_STOPS = [0.08, 0.37, 0.67, 0.95]
+
 /** Opacity curve for a copy block that holds fully visible between
     [holdStart, holdEnd] and fades in/out just outside that window. */
 function holdRange(holdStart: number, holdEnd: number, fade = 0.04) {
@@ -56,8 +65,10 @@ export function HeroSection() {
   const leftScrim = useTransform(scrollYProgress, [0, 0.16, 0.20, 0.24], [1, 1, 1, 0])
   const rightScrim = useTransform(scrollYProgress, [0.50, 0.56, 0.90, 1], [0, 1, 1, 1])
 
+  const cueOpacity = useTransform(scrollYProgress, [0, 0.03, 0.96, 1], [1, 1, 1, 0])
+
   return (
-    <section ref={wrapperRef} className={`relative ${reduceMotion ? '' : 'h-[480svh]'}`}>
+    <section ref={wrapperRef} className={`relative ${reduceMotion ? '' : 'h-[260svh]'}`}>
       <div className={`${reduceMotion ? 'relative' : 'sticky top-0'} h-[100svh] min-h-[720px] overflow-hidden dark-section-persistent`}>
 
         {/* Neural constellation — real WebGL point cloud (brain → lightbulb → orb) */}
@@ -96,7 +107,7 @@ export function HeroSection() {
               <h1 className="font-display text-[clamp(4rem,9vw,8rem)] leading-[0.92] tracking-[0.02em] mb-8">
                 BUILD<br />
                 YOUR<br />
-                <span className="text-orange-DEFAULT">REALITY.</span>
+                <span className="text-orange">REALITY.</span>
               </h1>
               <p className="font-body text-lg text-grey-DEFAULT max-w-[480px] leading-relaxed mb-10">
                 Where neuroscience meets Neville Goddard. Rewire the assumptions running underneath your life through structured courses, nightly revision journaling, and a community that gets it — then watch the outer world catch up.
@@ -133,17 +144,25 @@ export function HeroSection() {
           className="absolute inset-0 flex items-end pb-12 lg:pb-0 lg:items-center px-6 md:px-14"
         >
           <div className="max-w-7xl mx-auto w-full flex justify-end">
-            <div className="max-w-md text-left lg:text-right">
-              <div className="font-mono text-[0.6rem] tracking-[0.35em] uppercase text-orange-DEFAULT mb-4">
-                Your Mind, Mapped
+            <div className="max-w-md text-left">
+              <div className="font-mono text-[0.6rem] tracking-[0.35em] uppercase text-orange mb-4">
+                What You Get
               </div>
               <h2 className="font-display text-[clamp(2.5rem,5vw,4rem)] leading-[0.95] tracking-[0.02em] mb-6">
-                EVERY ASSUMPTION<br />
-                <span className="text-orange-DEFAULT">IS A SPARK.</span>
+                A SYSTEM, NOT<br />
+                <span className="text-orange">JUST A NOTION.</span>
               </h2>
-              <p className="font-body text-base italic text-grey-DEFAULT/90 leading-relaxed">
-                Every point is an assumption you are running. Change enough of them and the whole pattern resolves into a different life.
-              </p>
+              <div className="flex flex-col gap-4">
+                {FEATURE_PREVIEW.map((f) => (
+                  <div key={f.num} className="flex items-baseline gap-4 border-t border-orange/20 pt-3">
+                    <span className="font-mono text-xs text-orange/70 shrink-0">{f.num}</span>
+                    <div>
+                      <div className="font-body text-sm text-white mb-0.5">{f.title}</div>
+                      <div className="font-body text-xs text-grey-DEFAULT/70">{f.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </motion.div>
@@ -156,8 +175,8 @@ export function HeroSection() {
           <div className="max-w-7xl mx-auto w-full flex justify-end">
             <div className="grid grid-cols-2 gap-x-10 gap-y-10 max-w-md">
               {STATS.map((s) => (
-                <div key={s.label} className="border-t border-orange-DEFAULT/30 pt-5">
-                  <span className="font-display text-5xl text-orange-DEFAULT block leading-none mb-2">
+                <div key={s.label} className="border-t border-orange/30 pt-5">
+                  <span className="font-display text-5xl text-orange block leading-none mb-2">
                     {s.num}
                   </span>
                   <span className="font-mono text-[0.6rem] tracking-[0.2em] uppercase text-grey-light block mb-1">
@@ -172,7 +191,36 @@ export function HeroSection() {
           </div>
         </motion.div>
 
+        {/* Scroll cue + progress dots — tells visitors this section is scroll-driven and how far they are */}
+        {!reduceMotion && (
+          <motion.div
+            style={{ opacity: cueOpacity }}
+            className="absolute bottom-6 left-0 right-0 flex flex-col items-center gap-3 pointer-events-none"
+            aria-hidden="true"
+          >
+            <div className="flex items-center gap-2">
+              {SCROLL_STOPS.map((center) => (
+                <ScrollDot key={center} scrollYProgress={scrollYProgress} center={center} />
+              ))}
+            </div>
+            <span className="font-mono text-[0.6rem] tracking-[0.3em] uppercase text-grey-DEFAULT/60">
+              Scroll
+            </span>
+          </motion.div>
+        )}
+
       </div>
     </section>
+  )
+}
+
+function ScrollDot({ scrollYProgress, center }: { scrollYProgress: ReturnType<typeof useScroll>['scrollYProgress']; center: number }) {
+  const scale = useTransform(scrollYProgress, [center - 0.1, center - 0.02, center + 0.02, center + 0.1], [1, 1.6, 1.6, 1])
+  const opacity = useTransform(scrollYProgress, [center - 0.1, center - 0.02, center + 0.02, center + 0.1], [0.35, 1, 1, 0.35])
+  return (
+    <motion.span
+      style={{ scale, opacity }}
+      className="block w-1.5 h-1.5 rounded-full bg-orange"
+    />
   )
 }
