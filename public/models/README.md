@@ -17,7 +17,7 @@ normalized area-weighted sum of neighboring face normals; ridge height is
 clamp((0.65 - sulcalDepth) / 1.8, 0.05, 1).
 
 `brain-cortex-index.bin` contains 40,960 triangles as little-endian uint32 vertex
-indices. These drive an invisible depth surface so far-side particles do not
-show through the cortical folds.
+indices. These drive a subtly shaded, inset surface that defines the cortical folds
+and prevents far-side particles from showing through them.
 
 It is a static decorative asset, not patient data or a diagnostic model.

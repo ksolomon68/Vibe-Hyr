@@ -8,7 +8,7 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
 import type { RefObject, MutableRefObject } from 'react'
 import { useEffect } from 'react'
 
-// Volumetric triangle clouds dissolve into a shared field before re-forming.
+// Surface-sampled triangle clouds dissolve into a shared field before re-forming.
 // Scroll progress drives geometry and copy together; time only adds idle drift.
 
 export type Shape = 'brain' | 'scatter' | 'lightbulb' | 'orb'
@@ -34,17 +34,13 @@ function hex01(hex: string): [number, number, number] {
 
 type Cloud = { pos: Float32Array; col: Float32Array }
 
-/** Surface shading keeps the folds legible instead of coloring every point at random. */
-function surfaceColor(x: number, y: number, z: number, relief: number, tip = false): [number, number, number] {
-  const silver = new THREE.Color('#E0E3E8')
-  const gold = new THREE.Color('#D8BD86')
-  // A quiet metallic finish: silver body, warm highlights along raised contours.
-  const warmth = clamp01((relief - 0.65) * 0.6 + Math.abs(x) * 0.18)
-  const color = silver.lerp(gold, warmth)
-  if (tip && y < -0.45) color.multiplyScalar(0.85)
-  const light = (0.45 + 0.55 * clamp01((z + 1.2) / 2.4)) * (0.12 + 0.88 * relief)
-  color.multiplyScalar(light)
-  return [color.r, color.g, color.b]
+/** Lighting follows the actual cortical normals and sulcal depth. */
+function brainColor(nx: number, ny: number, nz: number, ridge: number) {
+  const key = Math.max(0, -nx * 0.45 + ny * 0.65 + nz * 0.6)
+  const rim = Math.pow(1 - Math.abs(nz), 3)
+  return new THREE.Color('#DCE2EA')
+    .lerp(new THREE.Color('#D8BD86'), ridge * 0.18 + rim * 0.12)
+    .multiplyScalar((0.18 + key * 0.75 + rim * 0.14) * (0.22 + ridge * 0.78))
 }
 
 /** Sample an anatomical cortical surface; ridges and sulci come from the mesh. */
@@ -52,8 +48,6 @@ function buildBrain(n: number, surface: Float32Array, indices: Uint32Array): Clo
   const pos = new Float32Array(n * 3)
   const col = new Float32Array(n * 3)
   const count = indices.length / 3
-  const silver = new THREE.Color('#E6E9F0')
-  const champagne = new THREE.Color('#E4BB6C')
   for (let i = 0; i < n; i++) {
     const face = ((i * 7919) % count) * 3
     const a = indices[face] * 7, b = indices[face + 1] * 7, c = indices[face + 2] * 7
@@ -66,70 +60,106 @@ function buildBrain(n: number, surface: Float32Array, indices: Uint32Array): Clo
     const nx = sample(3), ny = sample(4), nz = sample(5)
     const ridge = sample(6)
     pos.set([x, y, z], i * 3)
-    const facing = smoothstep(clamp01(nz * 3 + 0.35))
-    const rim = Math.pow(1 - Math.abs(nz), 3)
-    const light = clamp01(-nx * 0.3 + ny * 0.45 + nz * 0.82)
-    const luminance = (0.7 + light * 2.3 + rim * 0.7) * (0.25 + ridge * 1.4) * (0.05 + facing * 0.95)
-    const color = silver.clone().lerp(champagne, Math.pow(ridge, 2) * 0.45 + rim * 0.35).multiplyScalar(luminance)
+    const color = brainColor(nx, ny, nz, ridge).multiplyScalar(3.2)
     col.set([color.r, color.g, color.b], i * 3)
   }
   return { pos, col }
 }
 
-/** Continuous glass envelope, narrow neck, and a precisely wound screw base. */
+/** A smooth glass envelope, a warm coiled filament, and a threaded metal base. */
 function buildLightbulb(n: number): Cloud {
   const pos = new Float32Array(n * 3)
   const col = new Float32Array(n * 3)
+  const dome = new THREE.CubicBezierCurve(
+    new THREE.Vector2(0, 1.25), new THREE.Vector2(0.62, 1.25),
+    new THREE.Vector2(0.9, 0.96), new THREE.Vector2(0.9, 0.48),
+  )
+  const neck = new THREE.CubicBezierCurve(
+    new THREE.Vector2(0.9, 0.48), new THREE.Vector2(0.9, -0.08),
+    new THREE.Vector2(0.27, -0.25), new THREE.Vector2(0.27, -0.73),
+  )
   for (let i = 0; i < n; i++) {
-    const phi = rand(0, PI2)
+    const part = i / n
+    const phi = i * Math.PI * (3 - Math.sqrt(5))
+    const t = ((i + 0.5) * 0.754877666) % 1
     let x: number, y: number, z: number
-    let relief = 0.85
-    if (i < n * 0.82) {
-      const t = rand(0, 1)
-      y = 1.27 - t * 2.04
-      // Interpolated radius profile closes the dome and flows smoothly into its neck.
-      const profile = [0, 0.56, 0.79, 0.88, 0.87, 0.77, 0.60, 0.42, 0.28, 0.25]
-      const f = t * (profile.length - 1)
-      const k = Math.min(profile.length - 2, Math.floor(f))
-      const radius = lerp(profile[k], profile[k + 1], (k === 0 ? Math.sqrt(f - k) : smoothstep(f - k)))
+    const color = new THREE.Color('#DCE2EA')
+    if (part < 0.68) {
+      const profile = t < 0.48 ? dome.getPoint(t / 0.48) : neck.getPoint((t - 0.48) / 0.52)
+      // Reserve a few points for the silhouette; let the glass stay transparent inside.
+      const angle = part < 0.06 ? (i % 2) * Math.PI : phi
+      x = Math.cos(angle) * profile.x
+      y = profile.y
+      z = Math.sin(angle) * profile.x
+      const edge = Math.pow(Math.abs(Math.cos(angle)), 10)
+      color.multiplyScalar(0.16 + edge * 1.8 + Math.max(0, Math.sin(angle)) * 0.16)
+    } else if (part < 0.85) {
+      y = -0.73 - t * 0.43
+      const thread = Math.cos(t * PI2 * 5 - phi)
+      const radius = 0.25 - t * 0.025 + thread * 0.025
       x = Math.cos(phi) * radius
       z = Math.sin(phi) * radius
-      relief = 0.55 + 0.45 * Math.abs(Math.cos(phi))
-    } else if (i < n * 0.98) {
-      const t = rand(0, 1)
-      y = -0.77 - t * 0.43
-      const thread = Math.sin(t * PI2 * 6 + phi)
-      const radius = 0.25 - t * 0.04 + thread * 0.035
-      relief = 0.45 + 0.55 * (thread * 0.5 + 0.5)
+      color.lerp(new THREE.Color('#D8BD86'), 0.32)
+        .multiplyScalar((0.60 + 1.40 * Math.pow(thread * 0.5 + 0.5, 3)) * (0.35 + 0.65 * Math.max(0, Math.sin(phi))))
+    } else if (part < 0.88) {
+      y = -1.16 - t * 0.13
+      const radius = 0.18 * Math.sqrt(1 - t)
       x = Math.cos(phi) * radius
       z = Math.sin(phi) * radius
+      color.multiplyScalar(0.5)
     } else {
-      y = rand(-1.29, -1.20)
-      x = Math.cos(phi) * 0.14
-      z = Math.sin(phi) * 0.14
+      const filament = (part - 0.88) / 0.12
+      if (filament < 0.6) {
+        const coil = filament / 0.6
+        x = lerp(-0.27, 0.27, coil)
+        y = 0.22 + Math.sin(coil * PI2 * 11) * 0.035
+        z = Math.cos(coil * PI2 * 11) * 0.035
+        color.set('#FFE2A3').multiplyScalar(2.1)
+      } else {
+        const stem = (filament - 0.6) / 0.4
+        const side = i % 2 ? 1 : -1
+        x = side * lerp(0.08, 0.27, stem)
+        y = lerp(-0.73, 0.22, stem)
+        z = 0
+        color.set('#D8BD86').multiplyScalar(0.65)
+      }
     }
-    // Gentle tilt adds depth without losing the bulb's outline.
-    pos.set([x * 0.985 + y * 0.17, y * 0.985 - x * 0.17, z], i * 3)
-    col.set(surfaceColor(x, y, z, relief, true), i * 3)
+    const tilt = 0.10
+    pos.set([x * Math.cos(tilt) + y * Math.sin(tilt), y * Math.cos(tilt) - x * Math.sin(tilt), z], i * 3)
+    col.set([color.r, color.g, color.b], i * 3)
   }
   return { pos, col }
 }
 
-/** Evenly sampled luminous globe with fine latitude/longitude accents. */
+/** A shaded sphere with actual latitude/longitude particles, not a moiré shell. */
 function buildOrb(n: number): Cloud {
   const pos = new Float32Array(n * 3)
   const col = new Float32Array(n * 3)
   const goldenAngle = Math.PI * (3 - Math.sqrt(5))
   for (let i = 0; i < n; i++) {
-    const y = 1 - 2 * (i + 0.5) / n
-    const radius = Math.sqrt(1 - y * y)
-    const angle = i * goldenAngle
-    const x = Math.cos(angle) * radius
-    const z = Math.sin(angle) * radius
-    const line = Math.pow(Math.abs(Math.cos(Math.asin(y) * 10)), 30)
-    const meridian = Math.pow(Math.abs(Math.cos(angle * 6)), 40)
-    pos.set([x * 1.15, y * 1.15, z * 1.15], i * 3)
-    col.set(surfaceColor(x, y, z, 0.6 + Math.max(line, meridian) * 0.4), i * 3)
+    const t = ((i + 0.5) * 0.754877666) % 1
+    let latitude: number, longitude: number
+    const grid = i >= n * 0.78
+    if (!grid) {
+      latitude = Math.asin(1 - 2 * (i + 0.5) / (n * 0.78))
+      longitude = i * goldenAngle
+    } else if (i < n * 0.89) {
+      latitude = ((i % 7) - 3) * Math.PI / 9
+      longitude = t * PI2
+    } else {
+      latitude = (t - 0.5) * Math.PI
+      longitude = (i % 12) * PI2 / 12
+    }
+    const x = Math.cos(longitude) * Math.cos(latitude)
+    const y = Math.sin(latitude)
+    const z = Math.sin(longitude) * Math.cos(latitude)
+    // Rotate the globe's grid so its curvature reads in three dimensions.
+    pos.set([(x * 0.966 - y * 0.259) * 1.15, (x * 0.259 + y * 0.966) * 1.15, z * 1.15], i * 3)
+    const front = smoothstep(clamp01(z * 4))
+    const key = Math.max(0, -x * 0.4 + y * 0.55 + z * 0.7)
+    const color = new THREE.Color(grid ? '#D8BD86' : '#DCE2EA')
+      .multiplyScalar((0.08 + front * 0.92) * (0.2 + key * 0.65) * (grid ? 2.4 : 1.6))
+    col.set([color.r, color.g, color.b], i * 3)
   }
   return { pos, col }
 }
@@ -158,7 +188,7 @@ function makeTriangleSprite(): THREE.CanvasTexture {
   ctx.closePath()
 
   // Very subtle fill (near transparent) so the triangle reads in additive blending
-  ctx.fillStyle = 'rgba(255,255,255,0)'
+  ctx.fillStyle = 'rgba(255,255,255,0.12)'
   ctx.fill()
 
   // Sharp white outline
@@ -202,34 +232,41 @@ function currentShapes(t: number) {
    frame from the camera's frustum at the cloud's depth. Desktop
    alternates right/left so the shape never sits under its own copy. */
 const SCREEN_DESKTOP: Record<Shape, { x: number; y: number; scale: number }> = {
-  brain: { x: 0.70, y: 0.53, scale: 1.12 },
+  brain: { x: 0.72, y: 0.52, scale: 1.02 },
   scatter: { x: 0.5, y: 0.5, scale: 1 },
   lightbulb: { x: 0.26, y: 0.52, scale: 1.15 },
   orb: { x: 0.24, y: 0.55, scale: 0.85 },
 }
 const SCREEN_MOBILE: Record<Shape, { x: number; y: number; scale: number }> = {
-  brain: { x: 0.5, y: 0.22, scale: 0.46 },
+  brain: { x: 0.5, y: 0.25, scale: 0.48 },
   scatter: { x: 0.5, y: 0.5, scale: 1 },
-  lightbulb: { x: 0.5, y: 0.26, scale: 0.48 },
-  orb: { x: 0.5, y: 0.32, scale: 0.52 },
+  lightbulb: { x: 0.5, y: 0.32, scale: 0.56 },
+  orb: { x: 0.5, y: 0.245, scale: 0.42 },
 }
+const SCREEN_COMPACT: typeof SCREEN_MOBILE = {
+  ...SCREEN_MOBILE,
+  brain: { x: 0.77, y: 0.32, scale: 0.27 },
+  lightbulb: { x: 0.5, y: 0.28, scale: 0.40 },
+  orb: { x: 0.5, y: 0.205, scale: 0.23 },
+}
+const POINT_SIZES: Record<Shape, number> = { brain: 0.046, scatter: 0.050, lightbulb: 0.040, orb: 0.038 }
 
-export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, progressRef: MutableRefObject<number>) {
+export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, progressRef: MutableRefObject<number>, reduceMotion: boolean) {
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
 
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const structuredCount = window.innerWidth < 768 ? 10000 : window.innerWidth < 1280 ? 22000 : 32000
-    const ambientCount = window.innerWidth < 768 ? 90 : 200
+    const structuredCount = window.innerWidth < 768 ? 14000 : 26000
+    const ambientCount = window.innerWidth < 768 ? 40 : 90
 
     let brainReady = false
     const brainCloud: Cloud = { pos: new Float32Array(structuredCount * 3), col: new Float32Array(structuredCount * 3) }
     const controller = new AbortController()
-    const brainDepthGeometry = new THREE.BufferGeometry()
-    const brainDepthMaterial = new THREE.MeshBasicMaterial({ colorWrite: false, side: THREE.DoubleSide })
-    const brainDepthMesh = new THREE.Mesh(brainDepthGeometry, brainDepthMaterial)
-    brainDepthMesh.visible = false
+    const brainSurfaceGeometry = new THREE.BufferGeometry()
+    const brainSurfaceMaterial = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, side: THREE.DoubleSide })
+    const brainSurfaceMesh = new THREE.Mesh(brainSurfaceGeometry, brainSurfaceMaterial)
+    brainSurfaceMesh.visible = false
+    brainSurfaceMesh.renderOrder = -1
     Promise.all(['/models/brain-cortex.bin', '/models/brain-cortex-index.bin'].map(async url => {
       const response = await fetch(url, { signal: controller.signal })
       if (!response.ok) throw new Error(`Brain surface request failed: ${response.status}`)
@@ -242,13 +279,17 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
         const sampled = buildBrain(structuredCount, surface, new Uint32Array(indexBuffer))
         brainCloud.pos.set(sampled.pos)
         brainCloud.col.set(sampled.col)
-        // An invisible inset surface hides particles on the far side of each fold.
+        // A softly shaded inset surface reveals folds and occludes far-side particles.
         const inset = new Float32Array(20484 * 3)
+        const shading = new Float32Array(20484 * 3)
         for (let i = 0; i < 20484; i++) {
-          for (let axis = 0; axis < 3; axis++) inset[i * 3 + axis] = surface[i * 7 + axis] - surface[i * 7 + axis + 3] * 0.009
+          for (let axis = 0; axis < 3; axis++) inset[i * 3 + axis] = surface[i * 7 + axis] - surface[i * 7 + axis + 3] * 0.004
+          const color = brainColor(surface[i * 7 + 3], surface[i * 7 + 4], surface[i * 7 + 5], surface[i * 7 + 6]).multiplyScalar(0.075)
+          shading.set([color.r, color.g, color.b], i * 3)
         }
-        brainDepthGeometry.setAttribute('position', new THREE.BufferAttribute(inset, 3))
-        brainDepthGeometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indexBuffer), 1))
+        brainSurfaceGeometry.setAttribute('color', new THREE.BufferAttribute(shading, 3))
+        brainSurfaceGeometry.setAttribute('position', new THREE.BufferAttribute(inset, 3))
+        brainSurfaceGeometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indexBuffer), 1))
         brainReady = true
         if (reduceMotion) render(0)
       })
@@ -280,7 +321,7 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
     renderer.setClearColor(0x000000, 1)
 
     const scene = new THREE.Scene()
-    scene.add(brainDepthMesh)
+    scene.add(brainSurfaceMesh)
     const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 50)
     camera.position.set(0, 0, 6)
 
@@ -294,7 +335,7 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
     const seeds = Float32Array.from({ length: structuredCount }, () => Math.random())
     structuredGeom.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 1))
     const structuredMat = new THREE.PointsMaterial({
-      size: 0.078,
+      size: 0.032,
       map: sprite,
       transparent: true,
       opacity: 1,
@@ -335,9 +376,10 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
 
     const composer = new EffectComposer(renderer)
     composer.addPass(new RenderPass(scene, camera))
-    const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.52, 0.22, 0.48)
+    const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.24, 0.18, 0.85)
     composer.addPass(bloom)
-    composer.addPass(new OutputPass())
+    const output = new OutputPass()
+    composer.addPass(output)
 
     let vw = 0
     let vh = 0
@@ -345,7 +387,6 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
     let raf = 0
     const pointer = { x: 0, y: 0 }
     const smoothedPointer = { x: 0, y: 0 }
-    let smoothedProgress = progressRef.current
 
     function worldOffset(fx: number, fy: number, depth: number) {
       const halfH = depth * Math.tan((camera.fov * Math.PI) / 360)
@@ -354,16 +395,18 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
     }
 
     function resize() {
-      vw = window.innerWidth
-      vh = window.innerHeight
+      const bounds = canvas!.getBoundingClientRect()
+      vw = bounds.width
+      vh = bounds.height
       isMobile = vw < 1024
       const dpr = Math.min(window.devicePixelRatio || 1, 2)
       renderer.setPixelRatio(dpr)
       renderer.setSize(vw, vh, false)
+      composer.setPixelRatio(dpr)
       composer.setSize(vw, vh)
-      bloom.setSize(vw, vh)
       camera.aspect = vw / vh
       camera.updateProjectionMatrix()
+      if (reduceMotion) render(0)
     }
 
     function onPointerMove(e: PointerEvent) {
@@ -372,19 +415,19 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
     }
 
     function render(time: number) {
-      // Lerp progress and mouse coords for butter-smooth animations
-      smoothedProgress = reduceMotion ? 0 : progressRef.current
+      // Geometry and copy use the same scroll position; only pointer movement is damped.
+      const progress = reduceMotion ? 0 : progressRef.current
       smoothedPointer.x = lerp(smoothedPointer.x, pointer.x, 0.08)
       smoothedPointer.y = lerp(smoothedPointer.y, pointer.y, 0.08)
 
-      const { shapeA, shapeB, localT } = currentShapes(smoothedProgress)
+      const { shapeA, shapeB, localT } = currentShapes(progress)
       const eased = smoothstep(localT)
       const morphing = shapeA !== shapeB
       const cloudA = clouds[shapeA]
       const cloudB = clouds[shapeB]
       const scattered = (shapeA === 'scatter' ? 1 - eased : 0) + (shapeB === 'scatter' ? eased : 0)
       structuredMat.opacity = !brainReady && (shapeA === 'brain' || shapeB === 'brain') ? 0 : 1 - scattered * 0.65
-      const screens = isMobile ? SCREEN_MOBILE : SCREEN_DESKTOP
+      const screens = vw <= 360 && vh <= 640 ? SCREEN_COMPACT : isMobile ? SCREEN_MOBILE : SCREEN_DESKTOP
       const sa = screens[shapeA]
       const sb = screens[shapeB]
       const depth = camera.position.z
@@ -392,7 +435,13 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
       const offB = worldOffset(sb.x, sb.y, depth)
       const groupX = lerp(offA.x, offB.x, eased)
       const groupY = lerp(offA.y, offB.y, eased)
-      const groupScale = lerp(sa.scale, sb.scale, eased)
+      // Keep the full silhouette inside its half of the frame on narrow desktops.
+      const fit = isMobile ? Math.min(1, (vw / vh) / 0.53) : Math.min(1, (vw / vh) / 1.5)
+      const groupScale = lerp(sa.scale, sb.scale, eased) * fit
+      // Preserve visual density when resizing across the initial particle budget.
+      const densityScale = Math.sqrt((vw < 768 ? 14000 : 26000) / structuredCount)
+      const screenDensity = vw <= 360 && vh <= 640 ? 0.7 : isMobile ? 0.85 : 1
+      structuredMat.size = lerp(POINT_SIZES[shapeA], POINT_SIZES[shapeB], eased) * densityScale * screenDensity
 
       const burst = !reduceMotion && morphing && shapeA !== 'scatter' && shapeB !== 'scatter' ? Math.sin(Math.PI * eased) * 0.12 : 0
       const t = reduceMotion ? 0 : time * 0.001
@@ -433,12 +482,9 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
         const br = cloudB.col[i3]
         const bg = cloudB.col[i3 + 1]
         const bb = cloudB.col[i3 + 2]
-        const denseA = shapeA === 'brain' || shapeA === 'scatter'
-        const denseB = shapeB === 'brain' || shapeB === 'scatter'
-        const density = i % 3 === 0 ? 1 : lerp(denseA ? 1 : 0, denseB ? 1 : 0, eased)
-        liveCol[i3] = lerp(ar, br, eased) * density
-        liveCol[i3 + 1] = lerp(ag, bg, eased) * density
-        liveCol[i3 + 2] = lerp(ab, bb, eased) * density
+        liveCol[i3] = lerp(ar, br, eased)
+        liveCol[i3 + 1] = lerp(ag, bg, eased)
+        liveCol[i3 + 2] = lerp(ab, bb, eased)
       }
       structuredGeom.attributes.position.needsUpdate = true
       structuredGeom.attributes.color.needsUpdate = true
@@ -460,53 +506,54 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
         ambientGeom.attributes.position.needsUpdate = true
       }
 
-      brainDepthMesh.visible = brainReady && shapeA === 'brain' && shapeB === 'brain'
-      brainDepthMesh.position.copy(structuredPoints.position)
-      brainDepthMesh.scale.copy(structuredPoints.scale)
-      brainDepthMesh.rotation.copy(structuredPoints.rotation)
+      const brainWeight = (shapeA === 'brain' ? 1 - eased : 0) + (shapeB === 'brain' ? eased : 0)
+      brainSurfaceMesh.visible = brainReady && brainWeight > 0.01
+      brainSurfaceMaterial.opacity = Math.pow(brainWeight, 4)
+      brainSurfaceMaterial.depthWrite = brainWeight > 0.98
+      brainSurfaceMesh.position.copy(structuredPoints.position)
+      brainSurfaceMesh.scale.copy(structuredPoints.scale)
+      brainSurfaceMesh.rotation.copy(structuredPoints.rotation)
       composer.render()
     }
+
+    let inView = true
 
     function frame(time: number) {
       render(time)
       raf = requestAnimationFrame(frame)
     }
 
-    resize()
-    window.addEventListener('resize', resize)
-
-    if (reduceMotion) {
-      render(0)
-      const onScroll = () => render(0)
-      window.addEventListener('scroll', onScroll, { passive: true })
-      return () => {
-        window.removeEventListener('resize', resize)
-        window.removeEventListener('scroll', onScroll)
-        controller.abort()
-        brainDepthGeometry.dispose()
-        brainDepthMaterial.dispose()
-        composer.dispose()
-        renderer.dispose()
-        structuredGeom.dispose()
-        structuredMat.dispose()
-        ambientGeom.dispose()
-        ambientMat.dispose()
-        sprite.dispose()
-      }
+    function updatePlayback() {
+      cancelAnimationFrame(raf)
+      if (!reduceMotion && inView && !document.hidden) raf = requestAnimationFrame(frame)
     }
 
-    if (window.matchMedia('(pointer: fine)').matches) {
+    resize()
+    const resizeObserver = new ResizeObserver(resize)
+    resizeObserver.observe(canvas)
+    const intersectionObserver = new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting
+      updatePlayback()
+    })
+    intersectionObserver.observe(canvas)
+    document.addEventListener('visibilitychange', updatePlayback)
+
+    if (!reduceMotion && window.matchMedia('(pointer: fine)').matches) {
       window.addEventListener('pointermove', onPointerMove, { passive: true })
     }
-    raf = requestAnimationFrame(frame)
+    updatePlayback()
 
     return () => {
       controller.abort()
-      brainDepthGeometry.dispose()
-      brainDepthMaterial.dispose()
+      brainSurfaceGeometry.dispose()
+      brainSurfaceMaterial.dispose()
       cancelAnimationFrame(raf)
-      window.removeEventListener('resize', resize)
+      resizeObserver.disconnect()
+      intersectionObserver.disconnect()
+      document.removeEventListener('visibilitychange', updatePlayback)
       window.removeEventListener('pointermove', onPointerMove)
+      bloom.dispose()
+      output.dispose()
       composer.dispose()
       renderer.dispose()
       structuredGeom.dispose()
@@ -515,5 +562,5 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
       ambientMat.dispose()
       sprite.dispose()
     }
-  }, [canvasRef, progressRef])
+  }, [canvasRef, progressRef, reduceMotion])
 }

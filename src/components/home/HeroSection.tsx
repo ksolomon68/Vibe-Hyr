@@ -5,6 +5,7 @@ import { motion, useScroll, useTransform } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useConstellationScene } from './constellationScene'
+import styles from './hero.module.css'
 
 const STATS = [
   { num: '4',  label: 'Core Courses',      desc: 'RAS → SATS → Echo Theory' },
@@ -33,9 +34,10 @@ export function HeroSection() {
   const progressRef = useRef(0)
 
   const { scrollYProgress } = useScroll({ target: wrapperRef, offset: ['start start', 'end end'] })
-  useConstellationScene(canvasRef, progressRef)
+  useConstellationScene(canvasRef, progressRef, reduceMotion)
 
   useEffect(() => {
+    progressRef.current = scrollYProgress.get()
     const unsub = scrollYProgress.on('change', (v) => {
       progressRef.current = v
     })
@@ -49,16 +51,20 @@ export function HeroSection() {
   const brainPointerEvents = useTransform(scrollYProgress, [0, 0.16, 0.20], ["auto" as const, "auto" as const, "none" as const])
   const bulbPointerEvents = useTransform(scrollYProgress, [0.56, 0.60, 0.74, 0.78], ["none" as const, "auto" as const, "auto" as const, "none" as const])
   const orbPointerEvents = useTransform(scrollYProgress, [0.87, 0.90, 1.0], ["none" as const, "auto" as const, "auto" as const])
+  const brainVisibility = useTransform(scrollYProgress, v => v < 0.20 ? 'visible' : 'hidden')
+  const bulbVisibility = useTransform(scrollYProgress, v => v > 0.56 && v < 0.78 ? 'visible' : 'hidden')
+  const orbVisibility = useTransform(scrollYProgress, v => v > 0.87 ? 'visible' : 'hidden')
 
   const scatterOpacity = useTransform(scrollYProgress, [0.24, 0.30, 0.44, 0.50], [0, 1, 1, 0])
+  const scatterVisibility = useTransform(scrollYProgress, v => v > 0.24 && v < 0.50 ? 'visible' : 'hidden')
   const scatterY = useTransform(scrollYProgress, [0.24, 0.50], [60, -60])
 
   const leftScrim = useTransform(scrollYProgress, [0, 0.16, 0.20, 0.24], [1, 1, 1, 0])
   const rightScrim = useTransform(scrollYProgress, [0.50, 0.56, 0.90, 1], [0, 1, 1, 1])
 
   return (
-    <section ref={wrapperRef} className={`relative ${reduceMotion ? '' : 'h-[480svh]'}`}>
-      <div className={`${reduceMotion ? 'relative' : 'sticky top-0'} h-[100svh] min-h-[720px] overflow-hidden dark-section-persistent`}>
+    <section ref={wrapperRef} className={`${styles.hero} relative ${reduceMotion ? '' : 'h-[480svh]'}`}>
+      <div className={`${styles.frame} ${reduceMotion ? 'relative' : 'sticky top-0'} overflow-hidden`}>
 
         {/* Neural constellation — real WebGL point cloud (brain → lightbulb → orb) */}
         <canvas
@@ -87,21 +93,21 @@ export function HeroSection() {
 
         {/* Stage 1 — brain: full hero copy, left column, visible on load */}
         <motion.div
-          style={{ opacity: reduceMotion ? 1 : brainOpacity, pointerEvents: reduceMotion ? 'auto' : brainPointerEvents }}
-          className="absolute inset-0 flex items-end pb-12 lg:pb-0 lg:items-center px-6 md:px-14"
+          style={{ opacity: reduceMotion ? 1 : brainOpacity, pointerEvents: reduceMotion ? 'auto' : brainPointerEvents, visibility: reduceMotion ? 'visible' : brainVisibility }}
+          className={`${styles.copy} absolute inset-0 flex items-end lg:items-center px-6 md:px-14`}
         >
           <div className="max-w-7xl mx-auto w-full">
-            <div className="max-w-xl">
-              <div className="label mb-6">The Architecture of Reality</div>
-              <h1 className="font-display text-[clamp(4rem,9vw,8rem)] leading-[0.92] tracking-[0.02em] mb-8">
-                BUILD<br />
+            <div className={styles.introCopy}>
+              <div className={`${styles.eyebrow} label`}>The Architecture of Reality</div>
+              <h1 className={`${styles.title} font-display`}>
+                BUILD{' '}<br className={styles.firstBreak} />
                 YOUR<br />
-                <span className="text-orange-DEFAULT">REALITY.</span>
+                <span className="text-orange">REALITY.</span>
               </h1>
-              <p className="font-body text-lg text-grey-DEFAULT max-w-[480px] leading-relaxed mb-10">
+              <p className={`${styles.description} font-body max-w-[480px]`}>
                 Where neuroscience meets Neville Goddard. Rewire the assumptions running underneath your life through structured courses, nightly revision journaling, and a community that gets it — then watch the outer world catch up.
               </p>
-              <div className="flex flex-wrap gap-4">
+              <div className={`${styles.actions} flex gap-3`}>
                 <Link href="/auth/signup" className="btn-orange flex items-center gap-2">
                   Start Free <ArrowRight size={14} />
                 </Link>
@@ -115,12 +121,13 @@ export function HeroSection() {
 
         {/* The shape dissolves before the next idea takes form. */}
         <motion.div
-          style={{ opacity: reduceMotion ? 0 : scatterOpacity, y: scatterY }}
+          style={{ opacity: reduceMotion ? 0 : scatterOpacity, y: scatterY, visibility: reduceMotion ? 'hidden' : scatterVisibility }}
           className="absolute inset-0 flex items-center justify-center px-6 pointer-events-none"
+          aria-hidden={reduceMotion}
         >
           <div className="max-w-2xl text-center bg-black/40 p-6 md:p-10">
-            <div className="label mb-6">From Scattered Thoughts to Clarity</div>
-            <p className="font-body text-2xl md:text-4xl leading-snug text-white">
+            <div className={`${styles.eyebrow} label`}>From Scattered Thoughts to Clarity</div>
+            <p className={`${styles.scatterSentence} font-body text-white`}>
               Your assumptions shape the world you see.
               Change the pattern, and a new reality begins to take form.
             </p>
@@ -129,19 +136,19 @@ export function HeroSection() {
 
         {/* Stage 2 — lightbulb: insight copy, right column */}
         <motion.div
-          style={{ opacity: reduceMotion ? 0 : bulbOpacity, pointerEvents: reduceMotion ? 'none' : bulbPointerEvents }}
-          className="absolute inset-0 flex items-end pb-12 lg:pb-0 lg:items-center px-6 md:px-14"
+          style={{ opacity: reduceMotion ? 0 : bulbOpacity, pointerEvents: reduceMotion ? 'none' : bulbPointerEvents, visibility: reduceMotion ? 'hidden' : bulbVisibility }}
+          className={`${styles.copy} absolute inset-0 flex items-end lg:items-center px-6 md:px-14`}
         >
           <div className="max-w-7xl mx-auto w-full flex justify-end">
             <div className="max-w-md text-left lg:text-right">
-              <div className="font-mono text-[0.6rem] tracking-[0.35em] uppercase text-orange-DEFAULT mb-4">
+              <div className="font-mono text-xs tracking-[0.3em] uppercase text-orange mb-4">
                 Your Mind, Mapped
               </div>
-              <h2 className="font-display text-[clamp(2.5rem,5vw,4rem)] leading-[0.95] tracking-[0.02em] mb-6">
+              <h2 className={`${styles.insightTitle} font-display mb-6`}>
                 EVERY ASSUMPTION<br />
-                <span className="text-orange-DEFAULT">IS A SPARK.</span>
+                <span className="text-orange">IS A SPARK.</span>
               </h2>
-              <p className="font-body text-base italic text-grey-DEFAULT/90 leading-relaxed">
+              <p className="font-body text-base italic text-[#B5BBC4] leading-relaxed">
                 Every point is an assumption you are running. Change enough of them and the whole pattern resolves into a different life.
               </p>
             </div>
@@ -150,20 +157,20 @@ export function HeroSection() {
 
         {/* Stage 3 — orb: stats, right column */}
         <motion.div
-          style={{ opacity: reduceMotion ? 0 : orbOpacity, pointerEvents: reduceMotion ? 'none' : orbPointerEvents }}
-          className="absolute inset-0 flex items-end pb-12 lg:pb-0 lg:items-center px-6 md:px-14"
+          style={{ opacity: reduceMotion ? 0 : orbOpacity, pointerEvents: reduceMotion ? 'none' : orbPointerEvents, visibility: reduceMotion ? 'hidden' : orbVisibility }}
+          className={`${styles.copy} absolute inset-0 flex items-end lg:items-center px-6 md:px-14`}
         >
           <div className="max-w-7xl mx-auto w-full flex justify-end">
-            <div className="grid grid-cols-2 gap-x-10 gap-y-10 max-w-md">
+            <div className={`${styles.stats} grid grid-cols-2 gap-x-8 gap-y-8 max-w-md`}>
               {STATS.map((s) => (
-                <div key={s.label} className="border-t border-orange-DEFAULT/30 pt-5">
-                  <span className="font-display text-5xl text-orange-DEFAULT block leading-none mb-2">
+                <div key={s.label} className="border-t border-orange/30 pt-5">
+                  <span className="font-display text-5xl text-orange block leading-none mb-2">
                     {s.num}
                   </span>
-                  <span className="font-mono text-[0.6rem] tracking-[0.2em] uppercase text-grey-light block mb-1">
+                  <span className={`${styles.statLabel} font-mono tracking-[0.15em] uppercase text-grey-light block mb-1`}>
                     {s.label}
                   </span>
-                  <span className="font-body text-xs text-grey-DEFAULT/70">
+                  <span className={`${styles.statDescription} font-body text-[#B5BBC4]`}>
                     {s.desc}
                   </span>
                 </div>
