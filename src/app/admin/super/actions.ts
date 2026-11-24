@@ -1307,7 +1307,6 @@ export async function syncBusinessCourses(
     if (!courseId) continue
 
     const lessons = track.lessons
-      .filter(lesson => !lesson.isLive) // skip live sessions
       .map((lesson, index) => {
         const exp = LESSON_EXPANSIONS[lesson.id]
 

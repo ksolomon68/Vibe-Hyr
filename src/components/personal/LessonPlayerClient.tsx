@@ -15,6 +15,7 @@ import { LessonQuiz }   from '@/components/personal/LessonQuiz'
 import { AssumptionLab } from '@/components/shared/AssumptionLab'
 import { CourseCompletionBanner } from '@/components/personal/CourseCompletionBanner'
 import { BrowseCoursesButton } from '@/components/navigation/BrowseCoursesButton'
+import { PERSONAL_LESSON_EXPANSIONS } from '@/lib/personal/curriculum-expanded'
 
 import { useCourseProgress } from '@/hooks/useCourseProgress'
 import { useLessonNotes } from '@/hooks/useLessonNotes'
@@ -75,6 +76,8 @@ export function LessonPlayerClient({
   const hasLab         = !!assumptionLab
   const quizRequired   = hasQuiz && !quizPassed && !isLessonDone
   const canAdvance     = !quizRequired || quizPassed || isLessonDone
+  const expansion      = PERSONAL_LESSON_EXPANSIONS[lesson.title] ?? null
+  const alreadyHasExpansionInMd = (lesson.content_md || '').includes('Reflection Prompts')
 
   // Show completion banner when all lessons done (include server seed)
   const mergedCompletedIds = [...new Set([...completedIds, ...initialCompleted])]
@@ -268,6 +271,9 @@ export function LessonPlayerClient({
                   hasAccess={true}
                   loading={progressLoading}
                   isLoggedIn={isLoggedIn}
+                  notesPreview={lessonNotes}
+                  notesSaved={notesSaved}
+                  onOpenNotes={() => setActiveTab('notes')}
                   onMarkComplete={isLoggedIn ? (id) => markComplete(id).then(() =>
                     toast.success('Lesson marked complete ✓', {
                       style: { background: '#0A0804', color: '#F0EAE0', border: '1px solid #22c55e' }
@@ -358,7 +364,7 @@ export function LessonPlayerClient({
                     activeTab === 'interact' ? 'text-[#E8621A]' : 'text-white/30 hover:text-white/60'
                   )}
                 >
-                  02. {hasQuiz ? 'Quiz' : 'Assumption Lab'}
+                  02. {hasQuiz && hasLab ? 'Lab & Quiz' : hasQuiz ? 'Quiz' : 'Assumption Lab'}
                   {activeTab === 'interact' && (
                     <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#E8621A]" />
                   )}
@@ -389,7 +395,115 @@ export function LessonPlayerClient({
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <LessonContent content={lesson.content_md || ''} />
+                  {/* Section Quick-Jump Bar */}
+                  <div className="mb-8 py-2.5 px-4 bg-white/[0.02] border border-white/8 rounded-lg flex items-center gap-2 flex-wrap">
+                    <span className="font-mono text-[0.5rem] tracking-[0.2em] uppercase text-white/35 mr-1">
+                      Jump to:
+                    </span>
+                    {[
+                      { label: 'Core Lesson', href: '#section-core', show: true },
+                      { label: 'Deep Dive', href: '#section-deepdive', show: Boolean(expansion?.deepDive && !alreadyHasExpansionInMd) },
+                      { label: 'Daily Practice', href: '#section-practice', show: Boolean(expansion?.practicalApplication && !alreadyHasExpansionInMd) },
+                      { label: 'Reflection', href: '#section-reflection', show: Boolean(expansion?.reflectionPrompts?.length && !alreadyHasExpansionInMd) },
+                      { label: 'Assumption Lab', href: '#section-lab', show: Boolean(assumptionLab) },
+                    ]
+                      .filter(item => item.show)
+                      .map((item, idx) => (
+                        <a
+                          key={item.href}
+                          href={item.href}
+                          className="font-mono text-[0.52rem] tracking-[0.15em] uppercase px-2.5 py-1 rounded bg-white/[0.03] hover:bg-[#E8621A]/15 text-white/65 hover:text-[#E8621A] border border-white/5 hover:border-[#E8621A]/40 transition-colors"
+                        >
+                          0{idx + 1}. {item.label}
+                        </a>
+                      ))}
+                  </div>
+
+                  {/* Key Insight Callout */}
+                  {expansion?.keyInsight && !alreadyHasExpansionInMd && (
+                    <div className="mb-8 border-l-4 border-[#E8621A] bg-[#E8621A]/[0.06] px-6 py-5">
+                      <p className="font-mono text-[0.52rem] tracking-[0.22em] uppercase text-[#E8621A] mb-2">
+                        Core Principle · Key Insight
+                      </p>
+                      <p className="font-body text-xl md:text-2xl text-white italic leading-relaxed">
+                        {expansion.keyInsight}
+                      </p>
+                    </div>
+                  )}
+
+                  <div id="section-core">
+                    <LessonContent content={lesson.content_md || ''} />
+                  </div>
+
+                  {/* Expanded Deep Dive, Practice, Reflection Prompts, and Weekly Challenge */}
+                  {expansion && !alreadyHasExpansionInMd && (
+                    <div className="mt-10 pt-8 border-t border-white/8 space-y-8">
+                      {expansion.deepDive && (
+                        <div id="section-deepdive" className="scroll-mt-20">
+                          <h2 className="font-display text-3xl md:text-4xl tracking-[0.03em] text-orange-DEFAULT mb-4">
+                            Neuroscience &amp; Deep Dive
+                          </h2>
+                          <LessonContent content={expansion.deepDive} />
+                        </div>
+                      )}
+
+                      {expansion.practicalApplication && (
+                        <div id="section-practice" className="scroll-mt-20 p-6 bg-[#E8621A]/[0.04] border border-[#E8621A]/25 rounded-xl">
+                          <p className="font-mono text-[0.55rem] tracking-[0.22em] uppercase text-[#E8621A] mb-3">
+                            Daily Reprogramming Practice
+                          </p>
+                          <p className="font-body text-base md:text-lg text-white/90 leading-relaxed whitespace-pre-line">
+                            {expansion.practicalApplication}
+                          </p>
+                        </div>
+                      )}
+
+                      {expansion.reflectionPrompts && expansion.reflectionPrompts.length > 0 && (
+                        <div id="section-reflection" className="scroll-mt-20 p-6 bg-white/[0.02] border border-white/8 rounded-xl">
+                          <p className="font-mono text-[0.55rem] tracking-[0.22em] uppercase text-[#C9A84C] mb-4">
+                            Self-Inquiry &amp; Reflection Prompts
+                          </p>
+                          <ul className="space-y-3">
+                            {expansion.reflectionPrompts.map((promptText, idx) => (
+                              <li key={idx} className="flex items-start gap-3">
+                                <span className="font-mono text-xs text-[#C9A84C] mt-1 flex-shrink-0">
+                                  0{idx + 1}.
+                                </span>
+                                <span className="font-body text-base text-white/80 leading-relaxed">
+                                  {promptText}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {expansion.weeklyChallenge && (
+                        <div className="p-6 bg-black-2 border-l-4 border-[#C9A84C] border border-white/8">
+                          <p className="font-mono text-[0.55rem] tracking-[0.22em] uppercase text-[#C9A84C] mb-2">
+                            7-Day Behavioral Experiment
+                          </p>
+                          <p className="font-body text-base text-white/85 leading-relaxed">
+                            {expansion.weeklyChallenge}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Inline Assumption Lab at bottom of lesson for immediate engagement */}
+                  {assumptionLab && (
+                    <div className="mt-12">
+                      <AssumptionLab
+                        storageKey={lesson.id}
+                        title={assumptionLab.title}
+                        subtitle={assumptionLab.subtitle}
+                        scenario={assumptionLab.scenario}
+                        prompt={assumptionLab.prompt}
+                        accentColor={assumptionLab.accentColor}
+                      />
+                    </div>
+                  )}
                 </motion.div>
               )}
 
@@ -409,7 +523,8 @@ export function LessonPlayerClient({
                     />
                   )}
                   {assumptionLab && (
-                    <AssumptionLab 
+                    <AssumptionLab
+                      storageKey={lesson.id}
                       title={assumptionLab.title}
                       subtitle={assumptionLab.subtitle}
                       scenario={assumptionLab.scenario}

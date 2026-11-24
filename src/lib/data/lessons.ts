@@ -1465,26 +1465,276 @@ export const LESSON_QUIZZES: Record<string, Quiz> = {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ASSUMPTION LABS (Scenario-based training)
+// ASSUMPTION LABS (Scenario-based training across all 29 Personal lessons)
 // ─────────────────────────────────────────────────────────────────────────────
 export const ASSUMPTION_LABS: Record<string, AssumptionLab> = {
+  // ── COURSE 1: PROGRAMMING THE GATEKEEPER ──────────────────────────────
   'c01-l01': {
     id: 'lab-c01-01',
     lesson_id: 'c01-l01',
     title: "The 11 Million Bit Filter",
     subtitle: "Exposing the Invisible Ceiling",
-    scenario: "Usually, you see 'closed stores' or 'sold out' signs in your neighborhood. Your RAS is programmed to protect you by finding evidence of lack.",
-    prompt: "What one opportunity has your RAS been filtering out because it didn't fit your old story of 'not enough'?",
+    scenario: "Out of 11 million bits of sensory data per second, your conscious mind only receives ~50 bits. Right now, your RAS is filtering out opportunities that don't match your default survival story.",
+    prompt: "What specific opportunity, resource, or reality has your RAS likely been filtering out as 'noise' because it didn't fit your old assumption of what is realistic for you?",
     accentColor: "#E8621A"
+  },
+  'c01-l02': {
+    id: 'lab-c01-02',
+    lesson_id: 'c01-l02',
+    title: "The Car Model Target",
+    subtitle: "Deliberate Attentional Priming",
+    scenario: "When you decide with emotional conviction to buy a specific car, you suddenly spot it on every highway within 48 hours. Neutral wishes never update the filter; emotionally charged decisions do.",
+    prompt: "Name one specific desire you are committing to today. List three unmistakable 'red Tesla' signals or synchronicities you are instructing your RAS to spotlight in your environment over the next 48 hours.",
+    accentColor: "#E8621A"
+  },
+  'c01-l03': {
+    id: 'lab-c01-03',
+    lesson_id: 'c01-l03',
+    title: "Bypassing the Beta Bouncer",
+    subtitle: "Designing Your Theta Entry",
+    scenario: "During the day, your analytical Beta mind acts like a security bouncer—rejecting any new assumption that contradicts your current 3D bank account or circumstances.",
+    prompt: "Describe your current pre-sleep and morning-waking windows (the first and last 10 minutes of your day). What specific Beta distraction will you remove tonight so you can deliver your new assumption directly in the unguarded Alpha-Theta border state?",
+    accentColor: "#E8621A"
+  },
+  'c01-l04': {
+    id: 'lab-c01-04',
+    lesson_id: 'c01-l04',
+    title: "The Three-Part RAS Installation",
+    subtitle: "Specificity · Emotional Charge · Myelination",
+    scenario: "Vague goals ('I want more freedom') fail to program the RAS because they carry no sensory template or emotional signature for the brainstem to match.",
+    prompt: "Write your primary RAS filtering instruction using all three required components: (1) One razor-sharp present-tense sentence, (2) Three sensory details (what you see, hear, and physically feel when it is done), and (3) The settled emotion of already having it.",
+    accentColor: "#E8621A"
+  },
+  'c01-l05': {
+    id: 'lab-c01-05',
+    lesson_id: 'c01-l05',
+    title: "7-Day Gatekeeper Reprogramming",
+    subtitle: "Course 1 Capstone Blueprint",
+    scenario: "You are launching your 7-day RAS installation sprint: 2 minutes upon waking in Alpha, catching and labeling 'old programs' during the day, and 5 minutes in Theta before sleep.",
+    prompt: "Write your exact 'Old Program → New Filter' redirect script: What is the #1 contradictory thought that normally hijacks your afternoon, and what exact present-tense assumption will you replace it with the second you label it 'Old program'?",
+    accentColor: "#E8621A"
+  },
+
+  // ── COURSE 2: MASTERY OF THE LAW OF ASSUMPTION ────────────────────────
+  'c02-l01': {
+    id: 'lab-c02-01',
+    lesson_id: 'c02-l01',
+    title: "From Receiver to Operant Power",
+    subtitle: "Collapsing the Attraction Distance",
+    scenario: "Trying to 'attract' something from the outside reinforces the subconscious assumption that it is separate from you and you are waiting for it to arrive.",
+    prompt: "Take one goal you have been hoping to 'attract.' Rewrite it from the posture of Selection and Operant Power: Who are you right now when that reality is already selected and finished?",
+    accentColor: "#C9A84C"
   },
   'c02-l02': {
     id: 'lab-c02-02',
     lesson_id: 'c02-l02',
-    title: "Thinking From vs. Of",
-    subtitle: "The Tactile Shift",
-    scenario: "You are currently 'thinking of' a beach (distance/wanting). Shift to 'thinking from' the beach (possession), while remembering the old desk as a distant dream.",
-    prompt: "Describe the tactile feeling of the sand under your feet while remembering the old 'office self' as a distant, separate character.",
+    title: "Thinking From vs. Thinking Of",
+    subtitle: "The First-Person Shift",
+    scenario: "You are currently 'thinking of' your desired life from across a glass window (longing/distance). Now step inside the room and look outward through your own eyes.",
+    prompt: "If your desire were already an ordinary, established fact of your life today, what would you be thinking about *instead* of worrying about how to get it? Describe three ordinary Tuesday thoughts from inside the fulfilled state.",
     accentColor: "#C9A84C"
+  },
+  'c02-l03': {
+    id: 'lab-c02-03',
+    lesson_id: 'c02-l03',
+    title: "Living in the Settled End",
+    subtitle: "Beyond the Receiving Moment",
+    scenario: "Most people visualize the lottery-ticket moment of getting the call, which still implies novelty and previous lack. True mastery is inhabiting the quiet Tuesday six months *after* the desire became your normal life.",
+    prompt: "Write 4 sentences beginning with 'Now that this is simply my normal life...' that capture the quiet, unhurried certainty of your life six months after your desire's fulfillment.",
+    accentColor: "#C9A84C"
+  },
+  'c02-l04': {
+    id: 'lab-c02-04',
+    lesson_id: 'c02-l04',
+    title: "Hands Off the Bridge",
+    subtitle: "Releasing Compulsive Micromanagement",
+    scenario: "Once an assumption is planted, the Bridge of Incidents begins rearranging events—sometimes disguised as an unexpected disruption or closed door. Anxious micromanagement of 'how' steps off the bridge.",
+    prompt: "Where are you currently trying to force, figure out, or micromanage the 'how' and 'when' of your desire? Write your commitment to hold the end state while letting the subconscious architect the bridge.",
+    accentColor: "#C9A84C"
+  },
+  'c02-l05': {
+    id: 'lab-c02-05',
+    lesson_id: 'c02-l05',
+    title: "The Feeling Is the Secret",
+    subtitle: "Generating Settled Relief on Demand",
+    scenario: "The subconscious does not obey words; it obeys the emotional signature beneath the words. Repeating 'I am abundant' while feeling anxious impresses anxiety, not abundance.",
+    prompt: "Use the Memory Bridge right now: recall a moment in your life when you felt 100% safe, relieved, and certain that everything was handled. Describe where that exact physical sensation lives in your body and merge it with your current assumption.",
+    accentColor: "#C9A84C"
+  },
+  'c02-l06': {
+    id: 'lab-c02-06',
+    lesson_id: 'c02-l06',
+    title: "Decoding the 3D Echo",
+    subtitle: "Navigating the 60–90 Day Lag",
+    scenario: "You shifted your inner assumption this week, yet your external 3D circumstances today still look identical to the old story—tempting you to ask, 'Why isn't it working?'",
+    prompt: "Look at one frustrating circumstance in your current 3D reality. Reframe it accurately as a delayed 60–90 day echo of an old station you no longer broadcast on, and write what your new station is actively projecting forward.",
+    accentColor: "#C9A84C"
+  },
+  'c02-l07': {
+    id: 'lab-c02-07',
+    lesson_id: 'c02-l07',
+    title: "30-Day Assumption Installation",
+    subtitle: "Course 2 Capstone Identity Statement",
+    scenario: "You are locking in one primary identity assumption for the next 30 days—supported by morning Alpha thinking-from, daytime gap-catching, and nightly SATS.",
+    prompt: "Write your definitive 30-Day Identity Statement ('I am a person who...') and describe the exact morning thought stream, daytime posture, and evening scene that confirm this identity is now live.",
+    accentColor: "#C9A84C"
+  },
+
+  // ── COURSE 3: SUBCONSCIOUS REPROGRAMMING VIA SATS ─────────────────────
+  'c03-l01': {
+    id: 'lab-c03-01',
+    lesson_id: 'c03-l01',
+    title: "Catching the Hypnagogic Window",
+    subtitle: "Engineering Your Theta Threshold",
+    scenario: "The 5–10 minute hypnagogic window between wakefulness and sleep is when your prefrontal critical filter drops to zero—yet scrolling on a phone or falling asleep too fast misses the window.",
+    prompt: "Audit your bedtime routine: What exact environmental cue (phone off 20 min prior, dim light, elevated pillow/back posture, 4-6 breathing) will you install tonight to catch and hold the drowsy Theta threshold?",
+    accentColor: "#A855F7"
+  },
+  'c03-l02': {
+    id: 'lab-c03-02',
+    lesson_id: 'c03-l02',
+    title: "The 5-Second SATS Loop",
+    subtitle: "First-Person · Implied · Short · Looped",
+    scenario: "Long, movie-like visualizations activate analytical Beta thinking and pull you out of Theta. The subconscious imprints a 5–10 second first-person sensory loop that implies the wish is already fulfilled.",
+    prompt: "Script your exact 5–10 second SATS loop in first-person present tense: What are your hands touching? Whose voice do you hear saying what exact words? What single action implies the entire desire is already done?",
+    accentColor: "#A855F7"
+  },
+  'c03-l03': {
+    id: 'lab-c03-03',
+    lesson_id: 'c03-l03',
+    title: "The 7-Night Integration Ritual",
+    subtitle: "Full-Spectrum Subconscious Foundation",
+    scenario: "Across 7 nights, you impress seven foundational emotional states into the subconscious: Security, Receiving, Achievement, Prosperity, Love, Radiance, and Destiny.",
+    prompt: "Look at the 7-Night spectrum (Security, Receiving, Achievement, Prosperity, Love, Radiance, Destiny). Which two nights carry the deepest emotional charge or resistance for you right now—and how will you customize their 5-second scenes this week?",
+    accentColor: "#A855F7"
+  },
+  'c03-l04': {
+    id: 'lab-c03-04',
+    lesson_id: 'c03-l04',
+    title: "The 21-Day Myelination Protocol",
+    subtitle: "From Effortful Thought to 120m/s Highway",
+    scenario: "Unmyelinated neural pathways fire at ~1 m/s and feel effortful. Wrapped in myelin after 21 nights of consistent Theta repetition, they fire at up to 120 m/s and become your automatic background belief.",
+    prompt: "Identify the #1 threat to your unbroken 21-night streak (late nights, travel, fatigue, impatience around Day 8) and write your 'if-then' implementation safeguard so you never miss a night.",
+    accentColor: "#A855F7"
+  },
+  'c03-l05': {
+    id: 'lab-c03-05',
+    lesson_id: 'c03-l05',
+    title: "SATS Diagnostic & Error Fix",
+    subtitle: "Eliminating Observer Drift & Complexity",
+    scenario: "When SATS stalls, it is almost always due to one of four fixable errors: third-person observer drift, scene complexity, forcing visual perfection over feeling, or desperate monitoring.",
+    prompt: "Run a quick diagnostic on your imagination practice: Which of the 7 SATS mistakes do you slip into most often, and what specific kinesthetic or auditory anchor will snap you right back into first-person felt experience tonight?",
+    accentColor: "#A855F7"
+  },
+  'c03-l06': {
+    id: 'lab-c03-06',
+    lesson_id: 'c03-l06',
+    title: "Domain-Specific Scene Calibration",
+    subtitle: "Relationships · Finances · Health · Creative Work",
+    scenario: "Each life domain responds best to a specific sensory channel: financial scenes require the exhale of casual ease; relationship scenes require mutual intimacy; health scenes require kinesthetic vitality.",
+    prompt: "Choose your primary domain (Relationships, Finances/Career, Health, or Creative Work) and refine your 5-second SATS loop so it focuses 100% on the lived lifestyle after fulfillment rather than the transaction of getting it.",
+    accentColor: "#A855F7"
+  },
+  'c03-l07': {
+    id: 'lab-c03-07',
+    lesson_id: 'c03-l07',
+    title: "The Chemical Cement Protocol",
+    subtitle: "Dopamine · Serotonin · Cortisol Removal",
+    scenario: "Desperate visualization releases cortisol, which biologically blocks hippocampal neuroplasticity. Settled gratitude and certainty release dopamine and serotonin, cementing the scene as a real memory.",
+    prompt: "Describe how you will transition your body tonight from Phase 1 (Dopamine—warm celebratory appreciation) into Phase 2 (Serotonin—deep, quiet 'it is already done' sufficiency) before looping your SATS scene.",
+    accentColor: "#A855F7"
+  },
+  'c03-l08': {
+    id: 'lab-c03-08',
+    lesson_id: 'c03-l08',
+    title: "Your 21-Night SATS Contract",
+    subtitle: "Course 3 Capstone Commitment",
+    scenario: "You have all specifications for a professional-grade SATS practice. Tonight begins Day 1 of your 21 consecutive nights of subconscious myelination.",
+    prompt: "Sign your 21-Night Commitment: State your exact bedtime start window, write your finalized 5-second first-person scene, and describe how your inner default conversation will feel on Day 22.",
+    accentColor: "#A855F7"
+  },
+
+  // ── COURSE 4: NAVIGATING THE ECHO THEORY DELAY ────────────────────────
+  'c04-l01': {
+    id: 'lab-c04-01',
+    lesson_id: 'c04-l01',
+    title: "The 16-Hour Mental Diet Audit",
+    subtitle: "Shifting the Repetition Score",
+    scenario: "SATS runs for 10 minutes at night, while your waking inner conversation runs for 16 hours a day. If your daytime monologue rehearses complaint and scarcity, it unravels your nightly SATS.",
+    prompt: "Identify the three most frequent 'old program' sentences in your daytime inner monologue. For each one, write the immediate 3-step Mental Diet redirect (1: Label 'Old program', 2: Refuse emotional engagement, 3: Pivot to the new assumption's natural thought).",
+    accentColor: "#0F7A6B"
+  },
+  'c04-l02': {
+    id: 'lab-c04-02',
+    lesson_id: 'c04-l02',
+    title: "The 30-Second Decision Matrix",
+    subtitle: "Identify · Opposite Decision · Find Evidence",
+    scenario: "A sudden wave of doubt or scarcity hits you in the middle of the afternoon. Instead of fighting it or spiraling into it, you deploy the 3-step Decision Matrix in 30 seconds.",
+    prompt: "Run a live Decision Matrix right now on a limiting belief that surfaced recently: (1) Name the exact program running, (2) Write your committed Opposite Decision, and (3) List 3 undeniable pieces of current evidence that support your new decision.",
+    accentColor: "#0F7A6B"
+  },
+  'c04-l03': {
+    id: 'lab-c04-03',
+    lesson_id: 'c04-l03',
+    title: "The Dual Reality Contradiction Test",
+    subtitle: "Observation Without Emotional Participation",
+    scenario: "Three weeks into your practice, an external 3D circumstance directly contradicts your assumption—like receiving an overdue notice for a bill you already paid.",
+    prompt: "Apply the Dual Reality Protocol to your biggest current 3D contradiction: Acknowledge the outer fact calmly without denial, then write your exact internal response that refuses to grant the old echo authority to revise your inner state.",
+    accentColor: "#0F7A6B"
+  },
+  'c04-l04': {
+    id: 'lab-c04-04',
+    lesson_id: 'c04-l04',
+    title: "Advanced Timeline Revision",
+    subtitle: "Rewriting Origin Memories via Reconsolidation",
+    scenario: "Unrevised memories of past rejection, loss, or humiliation continue to broadcast active filtering instructions to your RAS today because the subconscious experiences unhealed emotional charge as present-tense.",
+    prompt: "Select one formative past event whose memory still carries a sting of limitation. Write the Revised Scene of how that event unfolded from the vantage point of your highest identity—and feel the relief of the updated memory trace.",
+    accentColor: "#0F7A6B"
+  },
+  'c04-l05': {
+    id: 'lab-c04-05',
+    lesson_id: 'c04-l05',
+    title: "Inner Speech Transcription Lab",
+    subtitle: "Recalibrating the Unspoken Narrator",
+    scenario: "Your inner speech is an ongoing, involuntary SATS session. Until you transcribe the background narrator with observer awareness, old scarcity phrasing hides in plain sight.",
+    prompt: "Pause and transcribe the raw, unedited tone of your inner speech over the last two hours. Highlight any conditional ('if/when') or scarcity phrasing, and rewrite it in the quiet, natural inner voice of someone for whom your desire is already home base.",
+    accentColor: "#0F7A6B"
+  },
+  'c04-l06': {
+    id: 'lab-c04-06',
+    lesson_id: 'c04-l06',
+    title: "The Seed & Persistence Protocol",
+    subtitle: "Stopping the Root-Checking Habit",
+    scenario: "A seed planted in fertile soil builds its entire root architecture underground before a single green shoot breaks the surface. Digging up the seed every morning to check for roots kills the growth.",
+    prompt: "Where in your daily behavior have you been 'digging up the seed' to check if your assumption is working yet? Write your Persistence Declaration for how you will water the inner state daily while leaving the 3D soil alone.",
+    accentColor: "#0F7A6B"
+  },
+  'c04-l07': {
+    id: 'lab-c04-07',
+    lesson_id: 'c04-l07',
+    title: "The 24-Hour Integrated Cycle",
+    subtitle: "RAS · Assumption · SATS · Mental Diet",
+    scenario: "When all four Vibe Hyr systems run together—Morning hypnopompic filter setting, Daytime Mental Diet + Decision Matrix, and Evening Revision + SATS—they form a self-reinforcing flywheel.",
+    prompt: "Map your personal 24-Hour Integrated Practice: Write your exact 10-minute Morning protocol, your Daytime Decision Matrix trigger cue, and your 15-minute Evening Revision + SATS sequence.",
+    accentColor: "#0F7A6B"
+  },
+  'c04-l08': {
+    id: 'lab-c04-08',
+    lesson_id: 'c04-l08',
+    title: "Life Mastery Score Diagnostic",
+    subtitle: "6-Domain Internal State Calibration",
+    scenario: "The Life Mastery Score measures the baseline quality of your inner conversation across six domains (Relationships, Finances, Health, Mindset, Purpose, Self-Worth)—independent of the 3D echo.",
+    prompt: "Score your average inner state (0–100) across all six domains over the past 30 days. Identify your lowest-scoring domain and design the specific SATS scene, Revision target, and Mental Diet redirect that will raise it by 10+ points this month.",
+    accentColor: "#0F7A6B"
+  },
+  'c04-l09': {
+    id: 'lab-c04-09',
+    lesson_id: 'c04-l09',
+    title: "Your Reality Architecture Manifesto",
+    subtitle: "Course 4 & Full Curriculum Capstone",
+    scenario: "You have completed the full Vibe Hyr Personal Reality Architecture curriculum: Programming the Gatekeeper, Mastery of the Law of Assumption, SATS Reprogramming, and Navigating the Echo Theory Delay.",
+    prompt: "Write a one-paragraph journal entry from your life 90 days from today—written in present tense from inside your fulfilled reality—describing how natural, ordinary, and established your new state has become.",
+    accentColor: "#0F7A6B"
   },
   ...BUSINESS_LABS
 }

@@ -803,8 +803,10 @@ export const COURSES: Course[] = [
 // ─── Tier access map ──────────────────────────────────────────────────────────
 export const TIER_ACCESS: Record<string, string[]> = {
   free:           ["leadership_course_1"],
+  seeker:         ["leadership_course_1"],
   architect:      ["leadership_course_1", "leadership_course_2", "leadership_course_3"],
   elite:          ["leadership_course_1", "leadership_course_2", "leadership_course_3", "leadership_course_4"],
+  reality_master: ["leadership_course_1", "leadership_course_2", "leadership_course_3", "leadership_course_4"],
 };
 
 // ─── Lesson counts per course (for completion tracking) ───────────────────────

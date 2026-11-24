@@ -323,8 +323,121 @@ export const LESSON_EXPANSIONS: Record<string, LessonExpansion> = {
       'What are the earliest drift signals your team has shown in the past — the first indicators that collective frequency was declining before visible performance impact appeared?',
       'What organizational pressures most reliably push your team toward drift — and what structural responses would most effectively counter those pressures?',
       `What is currently missing from your team\'s maintenance architecture — daily rhythms, monthly reviews, or quarterly renewal — and what has been the cost of that absence?`,
-      `What is one renewal practice — a specific type of team interaction, acknowledgment ritual, or shared experience — that reliably restores your team\'s collective frequency when drift has occurred?`,
+      `What is one renewal practice — a specific type of team interaction, acknowledgment ritual, or shared experience — that reliably restores your team's collective frequency when drift has occurred?`,
     ],
-    weeklyChallenge: `This week, implement one new team maintenance practice from the Frequency Maintenance Calendar at the daily, weekly, or monthly timescale — whichever is most absent from your current team rhythm. Introduce it explicitly to the team: "I want to try one new practice for the next four weeks and see how it affects our collective performance. Here\'s what I\'m proposing, and here\'s why." Run the practice consistently for four weeks before evaluating. The act of naming the intention, inviting collective buy-in, and committing to a defined trial period is itself a high-frequency team interaction that begins shifting the maintenance culture.`,
+    weeklyChallenge: `This week, implement one new team maintenance practice from the Frequency Maintenance Calendar at the daily, weekly, or monthly timescale — whichever is most absent from your current team rhythm. Introduce it explicitly to the team: "I want to try one new practice for the next four weeks and see how it affects our collective performance. Here's what I'm proposing, and here's why." Run the practice consistently for four weeks before evaluating. The act of naming the intention, inviting collective buy-in, and committing to a defined trial period is itself a high-frequency team interaction that begins shifting the maintenance culture.`,
+  },
+
+  // ══════════════════════════════════════════════════════════════════════
+  // LIVE INTEGRATION & WORKSHOP MODULES (TRACKS 1–4)
+  // ══════════════════════════════════════════════════════════════════════
+
+  'live-integration-session': {
+    keyInsight: 'Insight without live rehearsal remains theoretical under pressure. The integration session bridges individual awareness and real-time social execution — turning concepts into conditioned professional reflexes.',
+    deepDive: `<p>Individual study builds cognitive understanding, but workplace friction happens in relationship — in real time, with competing nervous systems, ambiguous subtext, and time pressure. This live facilitated integration session is designed to move the five foundational skills of Track 01 (Awareness Gap, Emotional Signals, Communication Architecture, Trigger Mapping, and Vibe Hygiene) out of the conceptual prefrontal cortex and into embodied social practice.</p>
+<p>During live case-study simulations, your mirror neuron network and autonomic nervous system are actively engaged. Practising the Clarity Frame (Observation — Impact — Request) aloud with a facilitator and peers reveals the micro-signals — vocal tension, defensive posture, rushed cadence — that remain invisible during solo reading. Real-time coaching allows you to calibrate your broadcast on the spot and experience what genuine ventral-vagal co-regulation feels like in a professional group.</p>
+<p>Whether you are preparing to attend the live session or completing the self-guided integration protocol below, treat this module as your Track 01 capstone. You will synthesize your Awareness Inventory, Emotion Signal Map, Clarity Frame scripts, Trigger Map, and Vibe Hygiene Stack into a single one-page Track 01 Integration Commitment that governs how you show up at work for the next 30 days.</p>`,
+    practicalApplication: 'Before your live session (or as your self-guided capstone exercise today), complete your Track 01 Integration Brief: (1) Write down the #1 Awareness Gap pattern you discovered in Module 01. (2) Document your primary workplace trigger and its earliest physical signal from Module 04. (3) Draft one real Clarity Frame script (Observation — Impact — Request) for a conversation you currently need to have at work. (4) List your 3-part daily Vibe Hygiene Stack (Morning, Pre-Meeting, Evening Revision). Bring this brief to the session or execute your Clarity Frame conversation within 48 hours.',
+    reflectionPrompts: [
+      'Across the five modules of Common Sense in the Workplace, which concept exposed the largest blind spot in how you currently show up at work?',
+      'What is the single most costly Awareness Gap (intent vs. impact) you have been running with your colleagues or direct reports?',
+      'Which element of your Vibe Hygiene Stack is most likely to slip when work gets busy — and what structural safeguard will protect it?',
+      'What specific conversation have you been postponing that is now ready for the Clarity Frame (Observation — Impact — Request)?',
+    ],
+    weeklyChallenge: 'Execute your Track 01 Integration Commitment for 7 consecutive workdays: run your morning Vibe Hygiene anchor before checking email, deploy at least one Clarity Frame communication in a real workplace interaction, and complete a 2-minute Evening Revision each night. Log the tangible shift in how colleagues respond to your presence by Friday.',
+  },
+
+  'live-de-escalation-workshop': {
+    keyInsight: 'De-escalation cannot be improvised when cortisol is flooding your system. Rehearsing your Stage 1 scripts, Pattern Interrupts, and PAUSE protocol under simulated pressure wires the neural circuit before the real conflict arrives.',
+    deepDive: `<p>Under acute conflict stress, the brain defaults to its most myelinated pathways — not its most recently read concepts. The Live De-Escalation Workshop is an intensive rehearsal laboratory where you put the Reactivity Spectrum, the Five-Stage Escalation Ladder, Stage 1 Interventions, Pattern Interrupts, and the PAUSE/REFRAME/EXIT protocols into live roleplay under realistic workplace provocation.</p>
+<p>In structured triad simulations, you will rotate through three roles: the Initiator (presenting a high-friction workplace scenario), the Responder (deploying the PAUSE protocol and Stage 1–3 interventions), and the Observer (tracking somatic cues, vocal prosody, and escalation stage shifts). Watching conflict from the Observer seat trains your neuroception to spot Stage 1 and Stage 2 signals with clinical clarity before narratives harden into Stage 3 positional entrenchment.</p>
+<p>By the end of this capstone module, you will have finalized your Personal De-Escalation Protocol Card — a custom, pocket-ready blueprint specifying your earliest somatic warning sign, your chosen Pattern Interrupt, your go-to Stage 1 script, and your verbatim EXIT phrase for Stage 4 situations.</p>`,
+    practicalApplication: 'Assemble your Personal De-Escalation Protocol Card right now with four verbatim entries: (1) My Earliest Somatic Warning Signal (e.g., heat in neck, shallow breath, urge to interrupt). (2) My 10-Second Pattern Interrupt (e.g., double-inhale physiological sigh + dropping shoulders + uncapping pen to take notes). (3) My Go-To Stage 1 & REFRAME Script ("I want to make sure we solve the right problem — help me understand what you see as the biggest risk here."). (4) My Dignity-Preserving EXIT Script for Stage 3/4 ("This is too important to rush while we are both activated. Let us take 20 minutes and reconvene at 2:00 PM with a clear head."). Rehearse all four scripts aloud three times.',
+    reflectionPrompts: [
+      'When you rehearse de-escalation scripts aloud, where does your voice or posture still leak defensiveness or urgency?',
+      'Looking at your current workplace relationships, which recurring friction point is waiting for you to apply a Stage 1 intervention this week?',
+      'What is the hardest part of the PAUSE protocol for you to execute in real time — Physiological regulation, Acknowledging internal state, or Understanding the other person first?',
+      'How would your professional reputation and stress baseline transform over the next 6 months if you became the most unshakeable de-escalator in your organization?',
+    ],
+    weeklyChallenge: 'Put your Personal De-Escalation Protocol Card on your desk (or pinned in your notes) for the next 7 days. Deploy your Pattern Interrupt and PAUSE sequence in at least three real moments of workplace friction — even minor email or meeting tension. Record the stage of intervention and the resulting resolution speed.',
+  },
+
+  'live-self-mastery-session': {
+    keyInsight: 'Your career never outgrows your assumed identity for long. Synthesizing your Identity Architecture, Archetype audit, and 90-Day Shift Plan in a live coaching container locks in your Sovereign professional standard.',
+    deepDive: `<p>Track 03 (Know Yourself, Lead Yourself) moves beneath workplace tactics to the architectural root of professional performance: your assumed identity. In this capstone integration session, you bring together your three-layer Identity Architecture Map, your Four Archetypes recognition log (Performer, Protector, Prover, Sovereign), your Professional Assumption Audit, your 90-Day Shift Plan, and your Evening Revision practice.</p>
+<p>In a live coaching and peer-mirroring environment, limiting assumptions that feel like "objective facts" inside your own head are quickly exposed as optional filters. When you articulate your Sovereign identity assumption aloud — and receive feedback on where your language still hedges, apologizes, or over-proves — you accelerate the shift from old reactive archetypes into grounded Sovereign authority.</p>
+<p>Whether you complete this module in a live facilitated cohort or as a deep self-coaching intensive today, your objective is to lock in your Personal 90-Day Shift Commitment: a signed contract with your future professional self backed by daily RAS evidence tracking and nightly memory reconsolidation via Evening Revision.</p>`,
+    practicalApplication: 'Complete your Personal 90-Day Shift Commitment document in four parts: (1) Old Identity Assumption being retired (e.g., "I have to over-deliver and avoid ruffling feathers to be valued"). (2) Sovereign Identity Assumption being installed (e.g., "I am a trusted strategic voice whose calm clarity elevates every decision"). (3) Three non-negotiable daily/weekly habits for Phase 1 (Days 1–30): Morning Sovereign state induction (2 min), Daily Identity Evidence Log (3 bullets), and Nightly Evening Revision (5 min). (4) Your first high-visibility Sovereign action scheduled on your calendar within the next 72 hours.',
+    reflectionPrompts: [
+      'Which of the three defensive archetypes (Performer, Protector, Prover) has cost you the most energy in your career so far — and what specific gift does it leave behind when you step into the Sovereign?',
+      'When you read your new 90-Day Sovereign Identity Assumption aloud, what part of you still resists it, and what old memory is that resistance trying to protect you from?',
+      'What concrete evidence from the past 30 days proves that your Sovereign identity is already active and available to you?',
+      'If you held your 90-Day Shift Commitment with 100% fidelity for the next twelve weeks, what would your role, influence, and daily experience at work look like on Day 91?',
+    ],
+    weeklyChallenge: 'Launch Week 1 of your 90-Day Shift Plan today. Complete your Morning Sovereign State induction every workday before opening email, log three pieces of confirming Sovereign evidence each afternoon, and revise one misaligned moment each night before sleep.',
+  },
+
+  'live-team-excellence-workshop': {
+    keyInsight: 'High-frequency teams are built by design, not by luck. When a team collectively maps its frequency, audits its shared assumptions, and co-authors its Accountability and Clarity protocols, culture shifts permanently.',
+    deepDive: `<p>The final module of the Vibe Hyr Business series brings the entire four-track curriculum into a shared organizational operating system. Individual regulation (Track 01), de-escalation mastery (Track 02), and Sovereign self-leadership (Track 03) culminate here in Track 04: architecting a High-Frequency Team that operates from ventral-vagal safety, empowering collective assumptions, intrinsic accountability, and a low friction-to-resolution ratio.</p>
+<p>In this live team workshop (or leadership capstone exercise), you synthesize the five pillars of Track 04 into a deployable Team Frequency Action Plan. Together, the team establishes its shared nervous-system vocabulary, retires its top limiting collective assumption, signs its Intrinsic Accountability Agreement, adopts the 5-step Communication Clarity Protocol, and installs the Daily/Weekly/Monthly/Quarterly Frequency Maintenance Calendar so excellence never drifts into entropy.</p>
+<p>Leadership at the highest level is cultural architecture. By installing these shared rhythms and agreements, you ensure that high performance is no longer dependent on heroic individual effort or constant managerial policing — it becomes the natural, self-sustaining output of who the team assumes itself to be.</p>`,
+    practicalApplication: 'Draft your complete Team Frequency Action Plan for immediate deployment with your team: (1) Current Team Frequency Baseline (Ventral Vagal / Sympathetic / Dorsal Vagal) & top early drift signal to watch for. (2) Collective Assumption Upgrade: The old shared belief we are retiring vs. the new collective identity assumption we are installing. (3) Three Core Intrinsic Accountability Agreements every team member commits to owning. (4) Our #1 Communication Clarity Protocol rule for resolving friction within 24 hours. (5) The exact dates and times for our Daily 5-minute state check-in, Weekly 20-minute pulse, and Monthly 60-minute Frequency Review.',
+    reflectionPrompts: [
+      'Looking back across all four Business tracks — Foundation, De-Escalation, Self-Mastery, and Team Excellence — how has your definition of effective professional leadership evolved?',
+      'What is the single highest-leverage structural change you can make to your team\'s weekly rhythm that will immediately raise psychological safety and execution speed?',
+      'How will you personally model the Clarity Protocol and Intrinsic Accountability when the team faces its next high-pressure deadline or setback?',
+      'Six months from today, when your team is operating at sustained high frequency, what will clients, stakeholders, and team members say feels different about working with you?',
+    ],
+    weeklyChallenge: 'Convene a 45-minute Team Frequency Alignment session this week to present and co-finalize your Team Frequency Action Plan. Introduce the 5-step Clarity Protocol, agree on one collective assumption upgrade, and schedule your first four weekly pulse check-ins on the shared calendar.',
   },
 }
+
+// Map curriculum lesson IDs (b01-l01 .. b04-l06) to their slug keys in LESSON_EXPANSIONS
+export const BUSINESS_ID_TO_EXPANSION_KEY: Record<string, string> = {
+  'b01-l01': 'the-awareness-gap',
+  'b01-l02': 'emotional-signals-at-work',
+  'b01-l03': 'communication-architecture',
+  'b01-l04': 'trigger-mapping',
+  'b01-l05': 'vibe-hygiene',
+  'b01-l06': 'live-integration-session',
+  'b02-l01': 'the-reactivity-spectrum',
+  'b02-l02': 'the-escalation-ladder',
+  'b02-l03': 'stage-1-intervention',
+  'b02-l04': 'pattern-interrupts',
+  'b02-l05': 'response-protocols',
+  'b02-l06': 'live-de-escalation-workshop',
+  'b03-l01': 'identity-architecture',
+  'b03-l02': 'the-four-archetypes',
+  'b03-l03': 'the-assumption-audit',
+  'b03-l04': 'the-90-day-shift-plan',
+  'b03-l05': 'revision-and-the-law-of-assumption',
+  'b03-l06': 'live-self-mastery-session',
+  'b04-l01': 'team-frequency-mapping',
+  'b04-l02': 'collective-assumptions',
+  'b04-l03': 'the-accountability-architecture',
+  'b04-l04': 'communication-at-high-frequency',
+  'b04-l05': 'sustaining-team-excellence',
+  'b04-l06': 'live-team-excellence-workshop',
+}
+
+// Register ID aliases directly on LESSON_EXPANSIONS so LESSON_EXPANSIONS[lesson.id] works everywhere
+for (const [lessonId, slugKey] of Object.entries(BUSINESS_ID_TO_EXPANSION_KEY)) {
+  if (LESSON_EXPANSIONS[slugKey]) {
+    LESSON_EXPANSIONS[lessonId] = LESSON_EXPANSIONS[slugKey]
+  }
+}
+
+export function getBusinessLessonExpansion(idOrTitle: string): LessonExpansion | null {
+  if (!idOrTitle) return null
+  if (LESSON_EXPANSIONS[idOrTitle]) return LESSON_EXPANSIONS[idOrTitle]
+  const mappedKey = BUSINESS_ID_TO_EXPANSION_KEY[idOrTitle]
+  if (mappedKey && LESSON_EXPANSIONS[mappedKey]) return LESSON_EXPANSIONS[mappedKey]
+  const slug = idOrTitle
+    .toLowerCase()
+    .replace(/['']/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+  return LESSON_EXPANSIONS[slug] ?? null
+}
+

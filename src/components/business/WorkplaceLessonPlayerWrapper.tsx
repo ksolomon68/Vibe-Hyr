@@ -26,14 +26,16 @@ interface WrapperProps {
 //   architect → Tracks 01–03
 //   reality_master → all 4 tracks
 const TIER_ACCESS: Record<string, string[]> = {
+  free:           ["common-sense-in-the-workplace"],
   seeker:         ["common-sense-in-the-workplace"],
   architect:      ["common-sense-in-the-workplace", "from-reaction-to-response", "know-yourself-lead-yourself"],
+  elite:          ["common-sense-in-the-workplace", "from-reaction-to-response", "know-yourself-lead-yourself", "the-high-frequency-team"],
   reality_master: ["common-sense-in-the-workplace", "from-reaction-to-response", "know-yourself-lead-yourself", "the-high-frequency-team"],
 };
 
 export function WorkplaceLessonPlayerWrapper({
   initialTrackId = "common-sense-in-the-workplace",
-  initialLessonId = "the-awareness-gap",
+  initialLessonId = "b01-l01",
   dbLessonContent,
   isGuest = false,
 }: WrapperProps) {

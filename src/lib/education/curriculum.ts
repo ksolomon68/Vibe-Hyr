@@ -551,7 +551,11 @@ export const PROGRAMS: EducationProgram[] = [
           <div class="key-concept">
             <div class="key-concept-label">THE ARCHITECTURAL AUDIT</div>
             <p>Before implementing any new wellness initiative, audit your existing culture against these five elements. In many schools, new wellness programs are placed on top of systems that are actively creating dysregulation — and the result is cynicism rather than uptake. Fix the architecture first.</p>
+          </div>
 
+          <div class="practice-box">
+            <div class="practice-label">THE 5-ELEMENT BUILDING WALKTHROUGH</div>
+            <p>This week, walk your building and review your master calendar through the lens of the Five Architectural Elements (Physical Environment, Temporal Structure, 5:1 Feedback Ratio, Psychological Safety, Recovery Infrastructure). Score each element from 1–5 based on what a teacher's nervous system actually experiences on a Tuesday afternoon. Choose your lowest-scoring element and make one structural repair within the next 14 days — before announcing any new initiative.</p>
           </div>
         `,
         quiz: [
@@ -608,6 +612,11 @@ export const PROGRAMS: EducationProgram[] = [
             <li><strong>Watch for the breath change:</strong> When a dysregulated person begins to regulate, their breath pattern shifts. This is the signal that the prefrontal cortex is coming back online.</li>
             <li><strong>Only then — collaborative problem-solving:</strong> "What do you need from me right now?" "What would be most helpful?" Let them lead.</li>
           </ul>
+
+          <div class="key-concept">
+            <div class="key-concept-label">THE SOMATIC GREEN LIGHT</div>
+            <p>Never transition from witnessing to problem-solving based on the clock; transition based on the staff member's physiology. When you observe the spontaneous deep sigh, the dropping of the shoulders, or the softening of vocal pitch, the ventral vagal circuit has re-engaged. That breath shift is the biological green light that their prefrontal cortex is ready to co-create a plan.</p>
+          </div>
 
           <div class="practice-box">
             <div class="practice-label">YOUR HOLDING LANGUAGE</div>
@@ -735,6 +744,11 @@ export const PROGRAMS: EducationProgram[] = [
             <div class="key-concept-label">THE REPORTING PRINCIPLE</div>
             <p>The goal of wellness data is not surveillance. It is advocacy. When you can show a board that weeks with high staff wellness engagement correlate with lower behavioral incident rates, you have created an evidence base for sustainable investment. The data protects the program during budget pressure — because it makes the cost of cutting it visible.</p>
           </div>
+
+          <div class="practice-box">
+            <div class="practice-label">THE 3-METRIC CORRELATION SNAPSHOT</div>
+            <p>Pull your building's monthly data across three existing streams for the past semester: (1) Staff absence frequency by week, (2) Student office discipline referrals by week, and (3) Aggregate wellness engagement or pulse scores. Map them on a single timeline. Identify the two peak stress weeks where all three curves intersect — this visual overlay is your foundational slide for your next district leadership update.</p>
+          </div>
         `,
         quiz: [
           {
@@ -788,6 +802,11 @@ export const PROGRAMS: EducationProgram[] = [
             <li><strong>February — Renewal:</strong> Post-winter-break recalibration. Fresh commitment, mid-year regulation assessment, optional advanced modules for engaged staff.</li>
             <li><strong>May — Harvest:</strong> End-of-year data review, recognition of staff who engaged, and planning the next year's architecture. What worked? What will you do differently? This meeting plants the seed for August.</li>
           </ul>
+
+          <div class="key-concept">
+            <div class="key-concept-label">THE COMPOUNDING CADENCE</div>
+            <p>A school's nervous system follows predictable seasonal allostatic load curves. When leadership pre-positions regulatory support ahead of the November and February troughs — rather than reacting after staff hit dorsal shutdown — trust compounds across the building. Consistency of cadence outperforms intensity of events every time.</p>
+          </div>
 
           <div class="practice-box">
             <div class="practice-label">YOUR WELLNESS CALENDAR</div>
@@ -856,6 +875,16 @@ export const PROGRAMS: EducationProgram[] = [
             <li><strong>Relational threat:</strong> Perceived rejection, disconnection from an attachment figure, loss of adult approval</li>
             <li><strong>Sensory threat:</strong> Noise, lighting, crowding, hunger — physiological inputs that push the nervous system toward activation</li>
           </ul>
+
+          <div class="key-concept">
+            <div class="key-concept-label">DIAGNOSIS PRECEDES INTERVENTION</div>
+            <p>Accountability still matters — but accountability requires an online prefrontal cortex to be learned and integrated. By treating acute dysregulation as a nervous system event first, you restore the exact cognitive hardware required for the student to take ownership of their behavior ten minutes later.</p>
+          </div>
+
+          <div class="practice-box">
+            <div class="practice-label">THE THREAT TAXONOMY AUDIT</div>
+            <p>Select two students who frequently escalate in your classroom. For the next three days, observe the 60 seconds immediately preceding their activation and categorize the trigger using the Threat Taxonomy: Social, Novelty, Relational, or Sensory. Once you identify their primary threat category, design one preventive adjustment (e.g., private pre-warning before transitions for Novelty threat, or whispered side-by-side feedback for Social threat) and test it for one week.</p>
+          </div>
         `,
         quiz: [
           {
@@ -990,6 +1019,11 @@ export const PROGRAMS: EducationProgram[] = [
             <li>Your own body — jaw tightening, slight urgency arising. Your nervous system is reading the room before your conscious mind is.</li>
           </ul>
 
+          <div class="key-concept">
+            <div class="key-concept-label">THE ZONE 2 LEVERAGE LAW</div>
+            <p>A regulation intervention in Zone 2 (a 60-second bilateral brain break, a shift in teacher vocal prosody, or silent proximity) costs less than 90 seconds of instructional time. Waiting until Zone 3 costs 15 to 20 minutes of instruction and leaves residual cortisol in the room for the rest of the period. Somatic room-reading is the highest-ROI time-saver in teaching.</p>
+          </div>
+
           <div class="practice-box">
             <div class="practice-label">THE ZONE CHECK</div>
             <p>Set a silent timer for every 20 minutes during one class period. When it fires, do a 10-second Zone check: scan the room's energy, name the Zone (1-4), and make one intentional choice based on it. Over time, this check becomes automatic — a background process running continuously.</p>
@@ -1059,6 +1093,11 @@ export const PROGRAMS: EducationProgram[] = [
           <div class="callout">
             "The most powerful words in any de-escalation are not the cleverest ones. They are the simplest ones, spoken slowly, from a body that means them."
           </div>
+
+          <div class="practice-box">
+            <div class="practice-label">THE PROSODY & SCRIPT REPLACEMENT DRILL</div>
+            <p>Write down the three phrases you most automatically say when a classroom moment gets loud or defiant (e.g., "Stop right now," "Why are you out of your seat?"). Next to each, write its Affect-Labeling or Safety-Broadcasting replacement ("I notice things are getting heated — let's take a breath," "I'm here, we have time to figure this out"). Practice speaking the replacements aloud at 75% of your normal speed and one notch lower in vocal pitch until the cadence feels completely natural.</p>
+          </div>
         `,
         quiz: [
           {
@@ -1116,6 +1155,11 @@ export const PROGRAMS: EducationProgram[] = [
           <div class="key-concept">
             <div class="key-concept-label">DESIGN PRINCIPLE</div>
             <p>Every structural element of your classroom is communicating something to your students' nervous systems, continuously, before a single word is spoken. The question is not whether your environment is regulating or dysregulating — it always is one or the other. The question is whether that communication is intentional.</p>
+          </div>
+
+          <div class="practice-box">
+            <div class="practice-label">THE 4-PILLAR CLASSROOM ENVIRONMENT AUDIT</div>
+            <p>Stand at your classroom door tomorrow morning before students arrive and audit your space across the four structural pillars: (1) Predictability — is today's agenda and transition timeline clearly visible from every seat? (2) Sensory load — can one harsh lighting or visual-clutter source be softened today? (3) Calm Corner — is there a stigma-free regulation station students can self-select before escalating? (4) Movement rhythm — where in today's lesson plan is a 60-second bilateral movement reset scheduled?</p>
           </div>
         `,
         quiz: [
@@ -1184,6 +1228,11 @@ export const PROGRAMS: EducationProgram[] = [
             <li>Identify your next practice frontier — the area where regulation is still effortful rather than automatic</li>
           </ul>
 
+          <div class="key-concept">
+            <div class="key-concept-label">THE MYELINATION OF PRESENCE</div>
+            <p>During Month 1, pausing to drop your shoulders and slow your exhale before approaching a student requires conscious prefrontal effort. By Day 66+, myelination converts that sequence into your default autonomic reflex — meaning your body responds to classroom chaos with grounded safety before you even have to think about it.</p>
+          </div>
+
           <div class="practice-box">
             <div class="practice-label">YOUR 90-DAY COMMITMENT</div>
             <p>Write your three Month 1 commitments now. Date them. Tell one colleague. The accountability of declaration — even informal — measurably increases follow-through. You have everything you need. The only remaining ingredient is repetition.</p>
@@ -1251,6 +1300,11 @@ export const PROGRAMS: EducationProgram[] = [
             <div class="key-concept-label">THE RETENTION INSIGHT</div>
             <p>The three root causes above share one feature: they are all relational and psychological, not structural or compensatory. This is why pay raises alone do not solve the turnover crisis. Money addresses none of the three top reasons teachers leave. Wellness-centered culture addresses all three.</p>
           </div>
+
+          <div class="practice-box">
+            <div class="practice-label">THE STAY-INTERVIEW PROTOCOL</div>
+            <p>Don't wait for exit surveys to learn why teachers leave. This month, conduct three 15-minute "Stay Interviews" with high-value educators in your building or district. Ask three questions: (1) "When during the week do you feel most connected to why you became an educator?" (2) "What is the biggest recurring drain on your nervous system that we as leadership haven't fixed yet?" (3) "What would make staying here for the next three years feel sustainable and rewarding?" Listen without defending, and act visibly on one theme within 14 days.</p>
+          </div>
         `,
         quiz: [
           {
@@ -1306,6 +1360,11 @@ export const PROGRAMS: EducationProgram[] = [
             <li><strong>"Would you recommend this school as a place to work to a teacher you care about?"</strong> — The NPS proxy for staff culture quality</li>
             <li><strong>"Do you plan to be in this role in 18 months?"</strong> — The direct retention signal</li>
           </ul>
+
+          <div class="key-concept">
+            <div class="key-concept-label">LEADING VS. LAGGING RETENTION SIGNALS</div>
+            <p>Resignation letters in May are a lagging indicator of a cultural rupture that occurred in October or November. Quarterly anonymous pulse tracking on these five questions gives district and building leadership a 6-to-9-month leading indicator window — turning teacher retention from an annual surprise into a manageable, preventive system.</p>
+          </div>
 
           <div class="practice-box">
             <div class="practice-label">DEPLOY THE DIAGNOSTIC</div>
@@ -1370,6 +1429,11 @@ export const PROGRAMS: EducationProgram[] = [
             <div class="key-concept-label">THE SEQUENCE PRINCIPLE</div>
             <p>Do not launch wellness programs on top of broken structures. First, audit your five structural levers. Fix the worst one before adding any new initiative. A staff that sees structural change — rather than just program provision — begins to believe the institution means it. That belief is the foundation everything else is built on.</p>
           </div>
+
+          <div class="practice-box">
+            <div class="practice-label">THE ZERO-BUDGET STRUCTURAL FIX</div>
+            <p>Audit the Five Structural Levers across your building or district today: Meeting Hygiene, After-Hours Communication Norms, Protected Planning Time, Destigmatized EAP Access, and Peer Support Structures. Select ONE zero-budget policy lever you can enact this month (for example: eliminating one recurring informational staff meeting per month in favor of a concise briefing, or instituting a 5:00 PM–7:00 AM quiet-hours email norm). Announce it explicitly as an investment in staff nervous system recovery.</p>
+          </div>
         `,
         quiz: [
           {
@@ -1423,6 +1487,16 @@ export const PROGRAMS: EducationProgram[] = [
             <li><strong>Days 31–60 — Honest safety:</strong> A formal check-in that explicitly asks: "What's harder than you expected? What would help?" — and genuinely responds to the answers. Most new teachers are struggling with something they are afraid to disclose. This check-in gives them a safe channel.</li>
             <li><strong>Days 61–90 — Identity reinforcement:</strong> Reconnecting the new hire to why they chose teaching — not through a motivational exercise but through genuine conversation about their specific vision for the work. Keeping identity-work connection alive is the most powerful long-term retention tool available.</li>
           </ul>
+
+          <div class="key-concept">
+            <div class="key-concept-label">THE FIRST-90-DAY IMPRINT</div>
+            <p>A new educator's nervous system is in heightened neuroceptive scanning during their first 90 days — asking "Am I safe here? Am I competent here? Do I belong here?" Information-heavy orientation binders do not answer neuroceptive questions; protected mentor relationships, early competence validation, and psychologically safe check-ins do.</p>
+          </div>
+
+          <div class="practice-box">
+            <div class="practice-label">REDESIGN YOUR 90-DAY ONBOARDING TOUCHPOINTS</div>
+            <p>Map your current new-hire onboarding calendar against the 4-stage Nervous System Architecture (Days 1–10 Belonging, Days 11–30 Competence Scaffolding, Days 31–60 Honest Safety Check-In, Days 61–90 Identity Reinforcement). Put three non-evaluative calendar invites on the schedule for every new hire right now: a Day 15 positive observation debrief, a Day 45 "What's harder than expected?" coffee check-in, and a Day 75 purpose-and-vision conversation.</p>
+          </div>
         `,
         quiz: [
           {
@@ -1477,6 +1551,11 @@ export const PROGRAMS: EducationProgram[] = [
             <li><strong>New hire 90-day retention:</strong> The percentage of new hires who are still in role at 90 days is the first filter on onboarding quality.</li>
             <li><strong>Wellness program engagement:</strong> Active monthly users in Vibe Hyr or equivalent platform. Lagging indicator of culture uptake; leading indicator of the population who will retain.</li>
           </ul>
+
+          <div class="key-concept">
+            <div class="key-concept-label">SPEAKING THE BOARD'S LANGUAGE</div>
+            <p>When you present all five Culture ROI metrics together — Retention Rate, Chronic Absence Rate, Behavioral Incidents per 100 Student-Days, 90-Day New-Hire Retention, and Wellness Platform Engagement — you transform staff wellness from an isolated HR line item into the primary operational driver of district fiscal and academic health.</p>
+          </div>
 
           <div class="practice-box">
             <div class="practice-label">BUILD YOUR BASELINE</div>

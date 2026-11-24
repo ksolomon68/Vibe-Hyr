@@ -218,6 +218,9 @@ export default function EducationPageClient({
                   program={program}
                   currentModule={module}
                   completedIds={completedIds}
+                  notesPreview={lessonNotes}
+                  notesSaved={notesSaved}
+                  onOpenNotes={() => setActiveTab('notes')}
                 />
               </div>
             </motion.div>
@@ -269,7 +272,7 @@ export default function EducationPageClient({
             <div className="flex items-center gap-8 border-b border-white/5 mb-8">
               <EduTab id="lesson" active={activeTab} setActive={setActiveTab} label="01. Lesson" />
               {hasQuiz && (
-                <EduTab id="reflection" active={activeTab} setActive={setActiveTab} label="02. Knowledge Check" />
+                <EduTab id="reflection" active={activeTab} setActive={setActiveTab} label="02. Lab & Knowledge Check" />
               )}
               <EduTab
                 id="notes"
@@ -289,8 +292,36 @@ export default function EducationPageClient({
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
                 >
+                  {/* Section Quick-Jump Bar */}
+                  <div className="mb-8 py-2.5 px-4 bg-white/[0.02] border border-white/8 rounded-lg flex items-center gap-2 flex-wrap">
+                    <span className="font-mono text-[0.5rem] tracking-[0.2em] uppercase text-white/35 mr-1">
+                      Jump to:
+                    </span>
+                    <a
+                      href="#section-core"
+                      className="font-mono text-[0.52rem] tracking-[0.15em] uppercase px-2.5 py-1 rounded bg-white/[0.03] hover:bg-[#E8621A]/15 text-white/65 hover:text-[#E8621A] border border-white/5 hover:border-[#E8621A]/40 transition-colors"
+                    >
+                      01. Core Module
+                    </a>
+                    <a
+                      href="#section-lab"
+                      className="font-mono text-[0.52rem] tracking-[0.15em] uppercase px-2.5 py-1 rounded bg-white/[0.03] hover:bg-[#E8621A]/15 text-white/65 hover:text-[#E8621A] border border-white/5 hover:border-[#E8621A]/40 transition-colors"
+                    >
+                      02. Assumption Lab
+                    </a>
+                    {hasQuiz && (
+                      <button
+                        onClick={() => setActiveTab('reflection')}
+                        className="font-mono text-[0.52rem] tracking-[0.15em] uppercase px-2.5 py-1 rounded bg-white/[0.03] hover:bg-[#E8621A]/15 text-white/65 hover:text-[#E8621A] border border-white/5 hover:border-[#E8621A]/40 transition-colors"
+                      >
+                        03. Knowledge Check ({module.quiz.length} Qs)
+                      </button>
+                    )}
+                  </div>
+
                   <div
-                    className="content-area mb-12"
+                    id="section-core"
+                    className="content-area mb-12 scroll-mt-20"
                     style={{ fontSize: 17, color: 'rgba(255,255,255,0.75)', lineHeight: 1.8 }}
                     dangerouslySetInnerHTML={{ __html: module.content }}
                   />
@@ -300,8 +331,9 @@ export default function EducationPageClient({
                     const lab = EDUCATION_LABS[module.id]
                     if (!lab) return null
                     return (
-                      <div className="my-16">
+                      <div className="my-12">
                         <AssumptionLab
+                          storageKey={module.id}
                           title={lab.title}
                           subtitle={lab.subtitle}
                           scenario={lab.scenario}
@@ -311,6 +343,27 @@ export default function EducationPageClient({
                       </div>
                     )
                   })()}
+
+                  {/* Knowledge Check prompt card at bottom of Lesson tab */}
+                  {hasQuiz && !isModuleDone && (
+                    <div className="mt-10 flex items-center gap-5 p-5 bg-black-2 border border-orange-DEFAULT/40">
+                      <CheckCircle size={18} className="text-orange-DEFAULT flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="font-mono text-[0.6rem] tracking-[0.15em] uppercase text-orange-DEFAULT mb-1">
+                          Module Knowledge Check ({module.quiz.length} Questions)
+                        </p>
+                        <p className="font-body text-sm text-grey-DEFAULT italic">
+                          Test your understanding of the neurobiological concepts in this module.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setActiveTab('reflection')}
+                        className="btn-orange text-[0.62rem] px-5 py-2.5 flex-shrink-0 flex items-center gap-2"
+                      >
+                        Take Check →
+                      </button>
+                    </div>
+                  )}
                 </motion.div>
               )}
 
@@ -322,10 +375,30 @@ export default function EducationPageClient({
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
                 >
+                  {(() => {
+                    const lab = EDUCATION_LABS[module.id]
+                    if (!lab) return null
+                    return (
+                      <div className="mb-10">
+                        <AssumptionLab
+                          storageKey={module.id}
+                          title={lab.title}
+                          subtitle={lab.subtitle}
+                          scenario={lab.scenario}
+                          prompt={lab.prompt}
+                          accentColor={lab.accentColor ?? '#E8621A'}
+                        />
+                      </div>
+                    )
+                  })()}
                   <EducationReflection
                     quiz={module.quiz}
                     moduleId={module.id}
-                    onComplete={() => saveProgress(module.id)}
+                    alreadyCompleted={isModuleDone}
+                    onComplete={() => {
+                      saveProgress(module.id)
+                      setActiveTab('lesson')
+                    }}
                   />
                 </motion.div>
               )}
@@ -501,12 +574,17 @@ function EduSidebar({
   program,
   currentModule,
   completedIds,
+  notesPreview = '',
+  notesSaved = false,
+  onOpenNotes,
 }: {
   program:       EducationProgram
   currentModule: EducationModule
   completedIds:  string[]
+  notesPreview?: string
+  notesSaved?:   boolean
+  onOpenNotes?:  () => void
 }) {
-  const { content, handleChange, saving, saved, loaded } = useLessonNotes(currentModule.id)
   const pct = program.modules.length
     ? Math.round((completedIds.length / program.modules.length) * 100)
     : 0
@@ -589,33 +667,31 @@ function EduSidebar({
           </ul>
         </div>
 
-        {/* Notes */}
-        <div className="flex-1 flex flex-col border-t border-white/8 min-h-[200px]">
-          <div className="px-5 py-3 flex items-center justify-between border-b border-white/8 flex-shrink-0">
+        {/* Notes Preview (Unified with 03. My Notes tab) */}
+        <div className="flex-shrink-0 border-t border-white/8 p-5 bg-black/20">
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <FileText size={12} className="text-orange-DEFAULT" />
               <span className="font-mono text-[0.55rem] tracking-[0.25em] uppercase text-grey-dark">
                 My Notes
               </span>
             </div>
-            <div className="flex items-center gap-1.5 h-4">
-              {saving && <Loader2 size={10} className="text-grey-dark animate-spin" />}
-              {saved  && <span className="font-mono text-[0.5rem] tracking-widest text-orange-DEFAULT">Saved ✓</span>}
-            </div>
+            {notesSaved && (
+              <span className="font-mono text-[0.5rem] tracking-widest text-orange-DEFAULT">Saved ✓</span>
+            )}
           </div>
-          {loaded ? (
-            <textarea
-              className="flex-1 bg-transparent text-white text-xs font-body leading-relaxed
-                         p-4 resize-none outline-none placeholder:text-white/15
-                         focus:bg-black-3 transition-colors"
-              placeholder={`Notes for "${currentModule.title}"…`}
-              value={content}
-              onChange={e => handleChange(e.target.value)}
-            />
-          ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <Loader2 size={16} className="text-grey-dark animate-spin" />
-            </div>
+          <p className="font-body text-xs text-white/50 italic line-clamp-3 mb-3 leading-relaxed">
+            {notesPreview?.trim()
+              ? notesPreview
+              : `No notes saved yet for "${currentModule.title}".`}
+          </p>
+          {onOpenNotes && (
+            <button
+              onClick={onOpenNotes}
+              className="w-full py-2 px-3 border border-orange-DEFAULT/40 text-orange-DEFAULT hover:bg-orange-DEFAULT/10 font-mono text-[0.52rem] tracking-[0.18em] uppercase transition-colors flex items-center justify-center gap-1.5"
+            >
+              Open Notes Workspace <ChevronRight size={11} />
+            </button>
           )}
         </div>
       </div>

@@ -14,6 +14,7 @@ import { useLessonNotes } from '@/hooks/useLessonNotes'
 import { cn } from '@/lib/utils'
 import { COURSES } from '@/lib/leadership/curriculum'
 import type { QuizQuestion } from '@/lib/leadership/curriculum'
+import { LESSON_EXPANSIONS, LEADERSHIP_LESSON_LABS } from '@/lib/leadership/curriculum-expanded'
 import type { Lesson as DbLesson } from '@/types'
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -63,12 +64,22 @@ export default function LeadershipLessonPlayer({
   const prevLesson = lessonIdx > 0 ? lessons[lessonIdx - 1] : null
   const nextLesson = lessonIdx < lessons.length - 1 ? lessons[lessonIdx + 1] : null
 
+  // Always resolve the rich static curriculum lesson + expansion + tailored lab
+  const curriculumLesson =
+    course.lessons.find(l => l.id === lesson.id || l.title === lesson.title) ??
+    course.lessons[lessonIdx] ??
+    course.lessons[0]
+  const expansion = LESSON_EXPANSIONS[curriculumLesson.id] ?? null
+  const lessonLab = LEADERSHIP_LESSON_LABS[curriculumLesson.id] ?? null
+  const hasFullDbContent = Boolean(lesson.content_md && lesson.content_md.includes('Reflection Prompts'))
+
   const isLessonDone = completedMap[course.id]?.includes(lesson.id) ?? false
   const isQuizPassed = quizPassed[lesson.id] ?? false
 
-  // Quiz belongs to the course, shown on the last lesson
+  // Quiz belongs to the course, shown on the last lesson; Lab is available on every lesson
   const isLastLesson = lessonIdx === lessons.length - 1
   const hasQuiz      = isLastLesson && course.quiz.questions.length > 0
+  const hasInteract  = true
 
   const trackCompleted = completedMap[course.id]?.length ?? 0
   const percentDone    = lessons.length
@@ -202,6 +213,9 @@ export default function LeadershipLessonPlayer({
                   allowedCourses={allowedCourses}
                   lessons={lessons}
                   onNavigate={onNavigate}
+                  notesPreview={lessonNotes}
+                  notesSaved={notesSaved}
+                  onOpenNotes={() => setActiveTab('notes')}
                 />
               </div>
             </motion.div>
@@ -248,21 +262,26 @@ export default function LeadershipLessonPlayer({
                 </div>
               </div>
               <p className="font-body text-base italic text-white/50 leading-relaxed max-w-2xl">
-                {lesson.description}
+                {lesson.description || curriculumLesson.description}
               </p>
             </div>
 
             {/* Tabs */}
             <div className="flex items-center gap-8 border-b border-white/5 mb-8">
               <LeaderTab id="lesson" active={activeTab} setActive={setActiveTab} label="01. Lesson" />
-              {hasQuiz && (
-                <LeaderTab id="interact" active={activeTab} setActive={setActiveTab} label="02. Quiz" />
+              {hasInteract && (
+                <LeaderTab
+                  id="interact"
+                  active={activeTab}
+                  setActive={setActiveTab}
+                  label={hasQuiz ? '02. Lab & Quiz' : '02. Assumption Lab'}
+                />
               )}
               <LeaderTab
                 id="notes"
                 active={activeTab}
                 setActive={setActiveTab}
-                label={hasQuiz ? '03. My Notes' : '02. My Notes'}
+                label="03. My Notes"
               />
             </div>
 
@@ -276,43 +295,159 @@ export default function LeadershipLessonPlayer({
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  {/* Main lesson content (HTML preferred) */}
-                  <div className="mb-12">
-                    <LessonContent content={lesson.content_md || ''} />
+                  {/* Section Quick-Jump Bar */}
+                  <div className="mb-8 py-2.5 px-4 bg-white/[0.02] border border-white/8 rounded-lg flex items-center gap-2 flex-wrap">
+                    <span className="font-mono text-[0.5rem] tracking-[0.2em] uppercase text-white/35 mr-1">
+                      Jump to:
+                    </span>
+                    {[
+                      { label: 'Key Concepts', href: '#section-core', show: true },
+                      { label: 'Deep Dive', href: '#section-deepdive', show: Boolean(expansion?.deepDive) },
+                      { label: 'Anchors', href: '#section-anchors', show: true },
+                      { label: 'Protocol', href: '#section-practice', show: Boolean(expansion?.practicalApplication) },
+                      { label: 'Assumption Lab', href: '#section-lab', show: true },
+                    ]
+                      .filter(item => item.show)
+                      .map((item, idx) => (
+                        <a
+                          key={item.href}
+                          href={item.href}
+                          className="font-mono text-[0.52rem] tracking-[0.15em] uppercase px-2.5 py-1 rounded bg-white/[0.03] hover:bg-[#E8621A]/15 text-white/65 hover:text-[#E8621A] border border-white/5 hover:border-[#E8621A]/40 transition-colors"
+                        >
+                          0{idx + 1}. {item.label}
+                        </a>
+                      ))}
                   </div>
 
-                  {/* Legacy Neuroscience/Law anchors only if using static data fallback */}
-                  {(!initialLessons || initialLessons.length === 0) && (
-                    <div className="mb-8 space-y-6">
-                      {(lesson as any).neuroscienceAnchor && (
-                        <div className="border-l-4 border-[#E8621A] pl-6 py-2 bg-[#E8621A]/5">
-                          <p className="font-mono text-[0.5rem] tracking-[0.25em] uppercase text-[#E8621A] mb-2">
-                            Neuroscience Anchor
+                  {hasFullDbContent ? (
+                    <div id="section-core" className="mb-12 scroll-mt-20">
+                      <LessonContent content={lesson.content_md || ''} />
+                    </div>
+                  ) : (
+                    <div id="section-core" className="mb-12 space-y-8 scroll-mt-20">
+                      {/* Key Insight Callout */}
+                      {expansion?.keyInsight && (
+                        <div className="border-l-4 border-[#E8621A] bg-[#E8621A]/[0.06] px-6 py-5">
+                          <p className="font-mono text-[0.52rem] tracking-[0.22em] uppercase text-[#E8621A] mb-2">
+                            Core Principle · Key Insight
                           </p>
-                          <p className="font-body text-lg text-white italic leading-[1.8]">
-                            {(lesson as any).neuroscienceAnchor}
+                          <p className="font-body text-xl md:text-2xl text-white italic leading-relaxed">
+                            {expansion.keyInsight}
                           </p>
                         </div>
                       )}
-                      {(lesson as any).lawAnchor && (
-                        <div className="border-l-4 border-[#C9A84C] pl-6 py-2 bg-[#C9A84C]/5">
-                          <p className="font-mono text-[0.5rem] tracking-[0.25em] uppercase text-[#C9A84C] mb-2">
-                            Law of Assumption
+
+                      {/* Key Concepts */}
+                      {curriculumLesson.keyConcepts && curriculumLesson.keyConcepts.length > 0 && (
+                        <div className="p-6 bg-white/[0.03] border border-white/8">
+                          <p className="font-mono text-[0.55rem] tracking-[0.2em] uppercase text-[#E8621A] mb-3">
+                            Key Architectural Concepts
                           </p>
-                          <p className="font-body text-lg text-white italic leading-[1.8]">
-                            {(lesson as any).lawAnchor}
+                          <ul className="space-y-2.5">
+                            {curriculumLesson.keyConcepts.map((concept, idx) => (
+                              <li key={idx} className="flex items-start gap-3">
+                                <span className="text-[#E8621A] text-xs mt-1 flex-shrink-0">◈</span>
+                                <span className="font-body text-base text-white/85 leading-relaxed">{concept}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* Deep Dive Content */}
+                      {expansion?.deepDive ? (
+                        <div id="section-deepdive" className="scroll-mt-20">
+                          <h2 className="font-display text-3xl tracking-[0.04em] text-[#E8621A] uppercase mb-4">
+                            Leadership Architecture Deep Dive
+                          </h2>
+                          <LessonContent content={expansion.deepDive} />
+                        </div>
+                      ) : lesson.content_md ? (
+                        <LessonContent content={lesson.content_md} />
+                      ) : null}
+
+                      {/* Neuroscience & Law of Assumption Anchors */}
+                      <div id="section-anchors" className="space-y-6 pt-2 scroll-mt-20">
+                        {curriculumLesson.neuroscienceAnchor && (
+                          <div className="border-l-4 border-[#E8621A] pl-6 py-4 pr-5 bg-[#E8621A]/5">
+                            <p className="font-mono text-[0.52rem] tracking-[0.25em] uppercase text-[#E8621A] mb-2">
+                              Neuroscience Anchor
+                            </p>
+                            <p className="font-body text-lg text-white/90 italic leading-[1.8]">
+                              {curriculumLesson.neuroscienceAnchor}
+                            </p>
+                          </div>
+                        )}
+                        {curriculumLesson.lawAnchor && (
+                          <div className="border-l-4 border-[#C9A84C] pl-6 py-4 pr-5 bg-[#C9A84C]/5">
+                            <p className="font-mono text-[0.52rem] tracking-[0.25em] uppercase text-[#C9A84C] mb-2">
+                              The Law in Action
+                            </p>
+                            <p className="font-body text-lg text-white/90 italic leading-[1.8]">
+                              {curriculumLesson.lawAnchor}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Practical Application */}
+                      {expansion?.practicalApplication && (
+                        <div id="section-practice" className="scroll-mt-20 p-6 bg-[#E8621A]/[0.04] border border-[#E8621A]/25 rounded-xl">
+                          <p className="font-mono text-[0.55rem] tracking-[0.22em] uppercase text-[#E8621A] mb-3">
+                            Practical Leadership Protocol
+                          </p>
+                          <p className="font-body text-base md:text-lg text-white/90 leading-relaxed">
+                            {expansion.practicalApplication}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Reflection Prompts */}
+                      {expansion?.reflectionPrompts && expansion.reflectionPrompts.length > 0 && (
+                        <div id="section-reflection" className="scroll-mt-20 p-6 bg-white/[0.02] border border-white/8 rounded-xl">
+                          <p className="font-mono text-[0.55rem] tracking-[0.22em] uppercase text-[#C9A84C] mb-4">
+                            Architect Reflection Prompts
+                          </p>
+                          <ul className="space-y-3">
+                            {expansion.reflectionPrompts.map((promptText, idx) => (
+                              <li key={idx} className="flex items-start gap-3">
+                                <span className="font-mono text-xs text-[#C9A84C] mt-1 flex-shrink-0">
+                                  0{idx + 1}.
+                                </span>
+                                <span className="font-body text-base text-white/80 leading-relaxed">
+                                  {promptText}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* Weekly Challenge */}
+                      {expansion?.weeklyChallenge && (
+                        <div className="p-6 bg-black-2 border-l-4 border-[#C9A84C] border border-white/8">
+                          <p className="font-mono text-[0.55rem] tracking-[0.22em] uppercase text-[#C9A84C] mb-2">
+                            7-Day Leadership Challenge
+                          </p>
+                          <p className="font-body text-base text-white/85 leading-relaxed">
+                            {expansion.weeklyChallenge}
                           </p>
                         </div>
                       )}
                     </div>
                   )}
 
-                  {/* Assumption Lab — per lesson */}
+                  {/* Tailored Assumption Lab — per lesson */}
                   <div className="my-10">
                     <AssumptionLab
-                      title={`${lesson.title} — Reflection`}
-                      subtitle="Internal Authority Practice"
-                      prompt={`In the context of "${lesson.title}", examine your current assumption: "${(lesson as any).keyConcepts?.[0] || 'your core leadership identity'}". How would your leadership behavior shift if you assumed this were already true about you?`}
+                      storageKey={curriculumLesson.id}
+                      title={lessonLab?.title ?? `${lesson.title} — Reflection`}
+                      subtitle={lessonLab?.subtitle ?? 'Internal Authority Practice'}
+                      scenario={lessonLab?.scenario}
+                      prompt={
+                        lessonLab?.prompt ??
+                        `In the context of "${lesson.title}", examine your current assumption: "${curriculumLesson.keyConcepts?.[0] || 'your core leadership identity'}". How would your leadership behavior shift if you assumed this were already true about you?`
+                      }
                       accentColor={course.color}
                     />
                   </div>
@@ -321,7 +456,7 @@ export default function LeadershipLessonPlayer({
                   {isLastLesson && course.assumptionLab && (
                     <div className="mb-8 p-5 bg-white/[0.03] border border-[#C9A84C]/30">
                       <p className="font-mono text-[0.55rem] tracking-[0.2em] uppercase text-[#C9A84C] mb-2">
-                        Course Lab — {course.assumptionLab.title}
+                        Course Capstone Lab — {course.assumptionLab.title}
                       </p>
                       <p className="font-body text-sm text-white/60 leading-relaxed mb-3">
                         {course.assumptionLab.prompt}
@@ -339,7 +474,7 @@ export default function LeadershipLessonPlayer({
                 </motion.div>
               )}
 
-              {activeTab === 'interact' && hasQuiz && (
+              {activeTab === 'interact' && (
                 <motion.div
                   key="interact"
                   initial={{ opacity: 0, y: 8 }}
@@ -347,15 +482,31 @@ export default function LeadershipLessonPlayer({
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  {/* Course Assumption Lab — full interactive version */}
-                  {course.assumptionLab && (
+                  {/* Lesson-specific Assumption Lab */}
+                  <div className="mb-12">
+                    <AssumptionLab
+                      storageKey={curriculumLesson.id}
+                      title={lessonLab?.title ?? `${lesson.title} — Reflection`}
+                      subtitle={lessonLab?.subtitle ?? 'Internal Authority Practice'}
+                      scenario={lessonLab?.scenario}
+                      prompt={
+                        lessonLab?.prompt ??
+                        `In the context of "${lesson.title}", examine your current assumption: "${curriculumLesson.keyConcepts?.[0] || 'your core leadership identity'}". How would your leadership behavior shift if you assumed this were already true about you?`
+                      }
+                      accentColor={course.color}
+                    />
+                  </div>
+
+                  {/* Course Assumption Lab & Quiz on last lesson */}
+                  {hasQuiz && course.assumptionLab && (
                     <div className="mb-12">
                       <div className="mb-2">
                         <p className="font-mono text-[0.55rem] tracking-[0.2em] uppercase text-[#C9A84C]">
-                          Course Lab · {course.assumptionLab.title}
+                          Course Capstone Lab · {course.assumptionLab.title}
                         </p>
                       </div>
                       <AssumptionLab
+                        storageKey={course.assumptionLab.labId}
                         title={course.assumptionLab.title}
                         subtitle={course.assumptionLab.processDescription}
                         prompt={course.assumptionLab.prompt}
@@ -380,22 +531,26 @@ export default function LeadershipLessonPlayer({
                     </div>
                   )}
 
-                  {/* Divider */}
-                  <div className="flex items-center gap-4 mb-10">
-                    <div className="flex-1 h-px bg-white/5" />
-                    <span className="font-mono text-[0.5rem] tracking-[0.2em] uppercase text-white/20">
-                      Course Quiz Gate
-                    </span>
-                    <div className="flex-1 h-px bg-white/5" />
-                  </div>
+                  {hasQuiz && (
+                    <>
+                      {/* Divider */}
+                      <div className="flex items-center gap-4 mb-10">
+                        <div className="flex-1 h-px bg-white/5" />
+                        <span className="font-mono text-[0.5rem] tracking-[0.2em] uppercase text-white/20">
+                          Course Quiz Gate
+                        </span>
+                        <div className="flex-1 h-px bg-white/5" />
+                      </div>
 
-                  <LeaderQuiz
-                    title={course.quiz.title}
-                    questions={course.quiz.questions}
-                    passingScore={course.quiz.passingScore}
-                    onPass={handleQuizPass}
-                    alreadyPassed={isLessonDone || isQuizPassed}
-                  />
+                      <LeaderQuiz
+                        title={course.quiz.title}
+                        questions={course.quiz.questions}
+                        passingScore={course.quiz.passingScore}
+                        onPass={handleQuizPass}
+                        alreadyPassed={isLessonDone || isQuizPassed}
+                      />
+                    </>
+                  )}
                 </motion.div>
               )}
 
@@ -600,6 +755,9 @@ function LeaderSidebar({
   allowedCourses,
   lessons,
   onNavigate,
+  notesPreview = '',
+  notesSaved = false,
+  onOpenNotes,
 }: {
   course:          typeof COURSES[0]
   currentLessonId: string
@@ -607,6 +765,9 @@ function LeaderSidebar({
   allowedCourses:  string[]
   lessons:         DbLesson[]
   onNavigate?:     (courseId: string, lessonId: string) => void
+  notesPreview?:   string
+  notesSaved?:     boolean
+  onOpenNotes?:    () => void
 }) {
   const pct = lessons.length
     ? Math.round((completedIds.length / lessons.length) * 100)
@@ -730,6 +891,34 @@ function LeaderSidebar({
             )
           })}
         </ul>
+      </div>
+
+      {/* Notes Preview (Unified with 03. My Notes tab) */}
+      <div className="flex-shrink-0 border-t border-white/8 p-5 bg-black/20">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <FileText size={12} className="text-[#E8621A]" />
+            <span className="font-mono text-[0.55rem] tracking-[0.25em] uppercase text-white/40">
+              My Notes
+            </span>
+          </div>
+          {notesSaved && (
+            <span className="font-mono text-[0.5rem] tracking-widest text-[#E8621A]">Saved ✓</span>
+          )}
+        </div>
+        <p className="font-body text-xs text-white/50 italic line-clamp-3 mb-3 leading-relaxed">
+          {notesPreview?.trim()
+            ? notesPreview
+            : 'No notes captured yet for this lesson.'}
+        </p>
+        {onOpenNotes && (
+          <button
+            onClick={onOpenNotes}
+            className="w-full py-2 px-3 border border-[#E8621A]/40 text-[#E8621A] hover:bg-[#E8621A]/10 font-mono text-[0.52rem] tracking-[0.18em] uppercase transition-colors flex items-center justify-center gap-1.5"
+          >
+            Open Notes Workspace <ChevronRight size={11} />
+          </button>
+        )}
       </div>
     </aside>
   )

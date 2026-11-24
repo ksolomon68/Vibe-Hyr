@@ -17,6 +17,9 @@ interface LessonSidebarProps {
   isLoggedIn?:       boolean
   onMarkComplete?:   (lessonId: string) => void
   onMarkIncomplete?: (lessonId: string) => void
+  notesPreview?:     string
+  notesSaved?:       boolean
+  onOpenNotes?:      () => void
 }
 
 // ── Green checkmark circle ─────────────────────────────────────────────────────
@@ -59,9 +62,10 @@ export function LessonSidebar({
   isLoggedIn = true,
   onMarkComplete,
   onMarkIncomplete,
+  notesPreview = '',
+  notesSaved = false,
+  onOpenNotes,
 }: LessonSidebarProps) {
-  const { content, handleChange, saving, saved, loaded } = useLessonNotes(currentLesson.id)
-
   // Count non-header lessons for progress percentage (all lessons for now since no type field)
   const trackedLessons = lessons.length
   const completedCount = completedIds.length
@@ -232,34 +236,31 @@ export function LessonSidebar({
           </ul>}
         </div>
 
-        {/* ── NOTES ── */}
-        <div className="flex-1 flex flex-col border-t border-white/8 min-h-[200px]">
-          <div className="px-5 py-3 flex items-center justify-between border-b border-white/8 flex-shrink-0">
+        {/* ── NOTES PREVIEW (Unified single source of truth with 03. My Notes tab) ── */}
+        <div className="flex-shrink-0 border-t border-white/8 p-5 bg-black/20">
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <FileText size={12} className="text-orange-DEFAULT" />
               <span className="font-mono text-[0.55rem] tracking-[0.25em] uppercase text-grey-dark">
                 My Notes
               </span>
             </div>
-            <div className="flex items-center gap-1.5 h-4">
-              {saving && <Loader2 size={10} className="text-grey-dark animate-spin" />}
-              {saved  && <span className="font-mono text-[0.5rem] tracking-widest text-orange-DEFAULT">Saved ✓</span>}
-            </div>
+            {notesSaved && (
+              <span className="font-mono text-[0.5rem] tracking-widest text-orange-DEFAULT">Saved ✓</span>
+            )}
           </div>
-
-          {loaded ? (
-            <textarea
-              className="flex-1 bg-transparent text-white text-xs font-body leading-relaxed
-                         p-4 resize-none outline-none placeholder:text-white/15
-                         focus:bg-black-3 transition-colors"
-              placeholder={`Notes for "${currentLesson.title}"…\n\nWhat resonated? What will you implement tonight?`}
-              value={content}
-              onChange={e => handleChange(e.target.value)}
-            />
-          ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <Loader2 size={16} className="text-grey-dark animate-spin" />
-            </div>
+          <p className="font-body text-xs text-white/50 italic line-clamp-3 mb-3 leading-relaxed">
+            {notesPreview?.trim()
+              ? notesPreview
+              : `No notes saved yet for "${currentLesson.title}".`}
+          </p>
+          {onOpenNotes && (
+            <button
+              onClick={onOpenNotes}
+              className="w-full py-2 px-3 border border-orange-DEFAULT/40 text-orange-DEFAULT hover:bg-orange-DEFAULT/10 font-mono text-[0.52rem] tracking-[0.18em] uppercase transition-colors flex items-center justify-center gap-1.5"
+            >
+              Open Notes Workspace <ChevronRight size={11} />
+            </button>
           )}
         </div>
 

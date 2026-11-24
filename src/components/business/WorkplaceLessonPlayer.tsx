@@ -14,6 +14,7 @@ import { useLessonNotes } from '@/hooks/useLessonNotes'
 import { cn } from '@/lib/utils'
 import { TRACKS } from '@/lib/business/curriculum'
 import type { QuizQuestion } from '@/lib/business/curriculum'
+import { getBusinessLessonExpansion } from '@/lib/business/curriculum-expanded'
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -34,7 +35,7 @@ type Tab = 'lesson' | 'interact' | 'notes'
 
 export default function WorkplaceLessonPlayer({
   initialTrackId  = 'common-sense-in-the-workplace',
-  initialLessonId = 'the-awareness-gap',
+  initialLessonId = 'b01-l01',
   externalProgress = {},
   allowedTracks   = ['common-sense-in-the-workplace'],
   onLessonComplete,
@@ -52,6 +53,7 @@ export default function WorkplaceLessonPlayer({
 
   const track  = TRACKS.find(t => t.id === initialTrackId) ?? TRACKS[0]
   const lesson = track.lessons.find(l => l.id === initialLessonId) ?? track.lessons[0]
+  const expansion = getBusinessLessonExpansion(lesson.id) ?? getBusinessLessonExpansion(lesson.title)
 
   const lessonIdx  = track.lessons.findIndex(l => l.id === lesson.id)
   const prevLesson = lessonIdx > 0 ? track.lessons[lessonIdx - 1] : null
@@ -60,6 +62,7 @@ export default function WorkplaceLessonPlayer({
   const isLessonDone = completedMap[track.id]?.includes(lesson.id) ?? false
   const isQuizPassed = quizPassed[lesson.id] ?? false
   const hasQuiz      = lesson.quiz.length > 0
+  const hasLab       = !!lesson.lab
 
   const trackCompleted = completedMap[track.id]?.length ?? 0
   const percentDone    = track.lessons.length
@@ -184,6 +187,9 @@ export default function WorkplaceLessonPlayer({
                   currentLessonId={lesson.id}
                   completedIds={completedMap[track.id] ?? []}
                   allowedTracks={allowedTracks}
+                  notesPreview={lessonNotes}
+                  notesSaved={notesSaved}
+                  onOpenNotes={() => setActiveTab('notes')}
                 />
               </div>
             </motion.div>
@@ -241,12 +247,12 @@ export default function WorkplaceLessonPlayer({
               <BizTab id="lesson" active={activeTab} setActive={setActiveTab} label="01. Lesson" />
               
               {/* Tab 02: Dynamic Quiz or Lab */}
-              {(hasQuiz || lesson.id === 'the-awareness-gap' || lesson.id === 'the-reactivity-spectrum') && (
+              {(hasQuiz || hasLab) && (
                 <BizTab 
                   id="interact" 
                   active={activeTab} 
                   setActive={setActiveTab} 
-                  label={hasQuiz ? "02. Quiz" : "02. Lab"} 
+                  label={hasQuiz && hasLab ? "02. Lab & Quiz" : hasQuiz ? "02. Quiz" : "02. Lab"} 
                 />
               )}
 
@@ -254,7 +260,7 @@ export default function WorkplaceLessonPlayer({
                 id="notes"
                 active={activeTab}
                 setActive={setActiveTab}
-                label={(hasQuiz || lesson.id === 'the-awareness-gap' || lesson.id === 'the-reactivity-spectrum') ? '03. My Notes' : '02. My Notes'}
+                label={(hasQuiz || hasLab) ? '03. My Notes' : '02. My Notes'}
               />
             </div>
 
@@ -268,6 +274,30 @@ export default function WorkplaceLessonPlayer({
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
                 >
+                  {/* Section Quick-Jump Bar */}
+                  <div className="mb-8 py-2.5 px-4 bg-white/[0.02] border border-white/8 rounded-lg flex items-center gap-2 flex-wrap">
+                    <span className="font-mono text-[0.5rem] tracking-[0.2em] uppercase text-white/35 mr-1">
+                      Jump to:
+                    </span>
+                    {[
+                      { label: 'Core Framework', href: '#section-core', show: true },
+                      { label: 'Deep Dive', href: '#section-deepdive', show: Boolean(expansion?.deepDive) },
+                      { label: 'Workplace Protocol', href: '#section-practice', show: Boolean(expansion?.practicalApplication) },
+                      { label: 'Reflection', href: '#section-reflection', show: Boolean(expansion?.reflectionPrompts?.length) },
+                      { label: 'Assumption Lab', href: '#section-lab', show: Boolean(lesson.lab) },
+                    ]
+                      .filter(item => item.show)
+                      .map((item, idx) => (
+                        <a
+                          key={item.href}
+                          href={item.href}
+                          className="font-mono text-[0.52rem] tracking-[0.15em] uppercase px-2.5 py-1 rounded bg-white/[0.03] hover:bg-[#E8621A]/15 text-white/65 hover:text-[#E8621A] border border-white/5 hover:border-[#E8621A]/40 transition-colors"
+                        >
+                          0{idx + 1}. {item.label}
+                        </a>
+                      ))}
+                  </div>
+
                   {/* Learning objectives */}
                   {lesson.objectives.length > 0 && (
                     <div className="mb-8 p-5 bg-white/[0.03] border border-white/8">
@@ -285,26 +315,91 @@ export default function WorkplaceLessonPlayer({
                     </div>
                   )}
 
-                  {/* Content blocks — rich HTML from DB when available */}
-                  <div className="mb-10 pb-8 border-b border-white/5">
-                    {dbLessonContent ? (
+                  {/* Key Insight Callout */}
+                  {expansion?.keyInsight && (!dbLessonContent || !dbLessonContent.includes('Key Insight:')) && (
+                    <div className="mb-8 border-l-4 border-[#E8621A] bg-[#E8621A]/[0.06] px-6 py-5">
+                      <p className="font-mono text-[0.52rem] tracking-[0.22em] uppercase text-[#E8621A] mb-2">
+                        Core Principle · Key Insight
+                      </p>
+                      <p className="font-body text-xl md:text-2xl text-white italic leading-relaxed">
+                        {expansion.keyInsight}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Content blocks — rich HTML from DB when it already has the full deep dive, otherwise full curriculum + expansion */}
+                  <div id="section-core" className="mb-10 pb-8 border-b border-white/5 scroll-mt-20">
+                    {dbLessonContent && dbLessonContent.length > 1200 ? (
                       <LessonContent content={dbLessonContent} />
                     ) : (
-                    <div className="space-y-7">
-                    {lesson.content.map((block, i) => (
-                      <p
-                        key={i}
-                        className={cn(
-                          'font-body leading-[1.8] tracking-[0.015em]',
-                          i === 0
-                            ? 'text-xl md:text-2xl text-white italic border-l-4 border-[#E8621A] pl-6 py-2 bg-[#E8621A]/5'
-                            : 'text-lg text-white/80'
+                      <div className="space-y-8">
+                        <div className="space-y-6">
+                          {lesson.content.map((block, i) => (
+                            <p
+                              key={i}
+                              className={cn(
+                                'font-body leading-[1.8] tracking-[0.015em]',
+                                i === 0 && !expansion?.keyInsight
+                                  ? 'text-xl md:text-2xl text-white italic border-l-4 border-[#E8621A] pl-6 py-2 bg-[#E8621A]/5'
+                                  : 'text-lg text-white/80'
+                              )}
+                            >
+                              {block}
+                            </p>
+                          ))}
+                        </div>
+
+                        {expansion?.deepDive && (
+                          <div id="section-deepdive" className="pt-6 border-t border-white/8 scroll-mt-20">
+                            <h2 className="font-display text-3xl tracking-[0.04em] text-[#E8621A] uppercase mb-4">
+                              Neuroscience &amp; Applied Deep Dive
+                            </h2>
+                            <LessonContent content={expansion.deepDive} />
+                          </div>
                         )}
-                      >
-                        {block}
-                      </p>
-                    ))}
-                    </div>
+
+                        {expansion?.practicalApplication && (
+                          <div id="section-practice" className="scroll-mt-20 p-6 bg-[#E8621A]/[0.04] border border-[#E8621A]/25 rounded-xl">
+                            <p className="font-mono text-[0.55rem] tracking-[0.22em] uppercase text-[#E8621A] mb-3">
+                              Practical Workplace Protocol
+                            </p>
+                            <p className="font-body text-base md:text-lg text-white/90 leading-relaxed">
+                              {expansion.practicalApplication}
+                            </p>
+                          </div>
+                        )}
+
+                        {expansion?.reflectionPrompts && expansion.reflectionPrompts.length > 0 && (
+                          <div id="section-reflection" className="scroll-mt-20 p-6 bg-white/[0.02] border border-white/8 rounded-xl">
+                            <p className="font-mono text-[0.55rem] tracking-[0.22em] uppercase text-[#C9A84C] mb-4">
+                              Executive Reflection Prompts
+                            </p>
+                            <ul className="space-y-3">
+                              {expansion.reflectionPrompts.map((promptText, idx) => (
+                                <li key={idx} className="flex items-start gap-3">
+                                  <span className="font-mono text-xs text-[#C9A84C] mt-1 flex-shrink-0">
+                                    0{idx + 1}.
+                                  </span>
+                                  <span className="font-body text-base text-white/80 leading-relaxed">
+                                    {promptText}
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {expansion?.weeklyChallenge && (
+                          <div className="p-6 bg-black-2 border-l-4 border-[#C9A84C] border border-white/8">
+                            <p className="font-mono text-[0.55rem] tracking-[0.22em] uppercase text-[#C9A84C] mb-2">
+                              7-Day Behavioral Experiment
+                            </p>
+                            <p className="font-body text-base text-white/85 leading-relaxed">
+                              {expansion.weeklyChallenge}
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
 
@@ -316,43 +411,21 @@ export default function WorkplaceLessonPlayer({
                       </p>
                       <p className="font-body text-sm text-white font-semibold">{lesson.tool}</p>
                       <p className="font-body text-xs italic text-grey-dark mt-1">
-                        Download or access in your workbook.
+                        Apply this framework directly in the Assumption Lab below or record your blueprint in My Notes.
                       </p>
                     </div>
                   )}
 
-                  {/* Assumption Labs — lesson-specific */}
-                  {lesson.id === 'the-awareness-gap' && (
+                  {/* Assumption Lab — tailored for every lesson */}
+                  {lesson.lab && (
                     <div className="my-12">
                       <AssumptionLab
-                        title="Awareness Gap Audit"
-                        subtitle="Impact vs. Intent"
-                        scenario="You gave 'direct feedback' to a subordinate, intending to be helpful. The subordinate seems crushed and has withdrawn for the rest of the day."
-                        prompt="What 'threat signal' were you potentially broadcasting (tone, pace, posture) that you weren't aware of in the moment?"
-                        accentColor="#E8621A"
-                      />
-                    </div>
-                  )}
-
-                  {lesson.id === 'the-reactivity-spectrum' && (
-                    <div className="my-12">
-                      <AssumptionLab
-                        title="Reactivity Spectrum"
-                        subtitle="The Sovereign Interrupt"
-                        scenario="A disrespectful or accusatory email from a client or peer just arrived in your inbox. You feel your face heat up and your jaw tighten."
-                        prompt="What is your pre-programmed (reactive) response sequence, and what is the 'Sovereign' interrupt you will apply right now?"
-                        accentColor="#C9A84C"
-                      />
-                    </div>
-                  )}
-
-                  {track.id === 'know-yourself-lead-yourself' && lesson.tool && lesson.id !== 'the-awareness-gap' && lesson.id !== 'the-reactivity-spectrum' && (
-                    <div className="my-12">
-                      <AssumptionLab
-                        title="Assumption Audit"
-                        subtitle={lesson.tool}
-                        prompt={`In the context of ${lesson.title}, examine your current assumption: "${lesson.objectives[0]}". How would your behavior shift if you assumed the opposite were true?`}
-                        accentColor="#A855F7"
+                        storageKey={lesson.id}
+                        title={lesson.lab.title}
+                        subtitle={lesson.lab.subtitle}
+                        scenario={lesson.lab.scenario}
+                        prompt={lesson.lab.prompt}
+                        accentColor={lesson.lab.accentColor ?? track.color}
                       />
                     </div>
                   )}
@@ -361,17 +434,25 @@ export default function WorkplaceLessonPlayer({
                   {lesson.isLive && (
                     <div className="mb-8 p-6 bg-orange-DEFAULT/10 border border-orange-DEFAULT/40">
                       <p className="font-mono text-[0.6rem] tracking-[0.15em] uppercase text-orange-DEFAULT mb-2">
-                        ⚡ Live Session Required
+                        ⚡ Facilitated Cohort Integration
                       </p>
                       <p className="font-body text-sm text-grey-DEFAULT leading-relaxed mb-4">
-                        This module is a live facilitated session. Book your spot to complete this track.
+                        Complete the Capstone Commitment Lab and Knowledge Check on this page to earn your track completion credit immediately, or schedule your next live cohort session with a Vibe Hyr facilitator.
                       </p>
-                      <button
-                        onClick={() => window.open('#book-live-session', '_blank')}
-                        className="btn-orange text-[0.62rem] px-5 py-2.5 flex items-center gap-2"
-                      >
-                        Book Session <ArrowRight size={12} />
-                      </button>
+                      <div className="flex flex-wrap gap-3">
+                        <button
+                          onClick={() => setActiveTab('interact')}
+                          className="btn-orange text-[0.62rem] px-5 py-2.5 flex items-center gap-2"
+                        >
+                          Complete Capstone Check <ArrowRight size={12} />
+                        </button>
+                        <Link
+                          href="/contact"
+                          className="btn-outline text-[0.62rem] px-5 py-2.5 flex items-center gap-2"
+                        >
+                          Schedule Live Cohort <ArrowRight size={12} />
+                        </Link>
+                      </div>
                     </div>
                   )}
                 </motion.div>
@@ -385,37 +466,25 @@ export default function WorkplaceLessonPlayer({
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
                 >
+                  {lesson.lab && (
+                    <div className={cn(hasQuiz && 'mb-12')}>
+                      <AssumptionLab
+                        storageKey={lesson.id}
+                        title={lesson.lab.title}
+                        subtitle={lesson.lab.subtitle}
+                        scenario={lesson.lab.scenario}
+                        prompt={lesson.lab.prompt}
+                        accentColor={lesson.lab.accentColor ?? track.color}
+                      />
+                    </div>
+                  )}
+
                   {hasQuiz && (
                     <BizQuiz
                       questions={lesson.quiz}
                       onPass={handleQuizPass}
                       alreadyPassed={isLessonDone || isQuizPassed}
                     />
-                  )}
-
-                  {/* Labs are shown below quiz or as main content of interact tab */}
-                  {lesson.id === 'the-awareness-gap' && (
-                    <div className={cn(hasQuiz && "mt-12")}>
-                      <AssumptionLab
-                        title="Awareness Gap Audit"
-                        subtitle="Impact vs. Intent"
-                        scenario="You gave 'direct feedback' to a subordinate, intending to be helpful. The subordinate seems crushed and has withdrawn for the rest of the day."
-                        prompt="What 'threat signal' were you potentially broadcasting (tone, pace, posture) that you weren't aware of in the moment?"
-                        accentColor="#E8621A"
-                      />
-                    </div>
-                  )}
-
-                  {lesson.id === 'the-reactivity-spectrum' && (
-                    <div className={cn(hasQuiz && "mt-12")}>
-                      <AssumptionLab
-                        title="Reactivity Spectrum"
-                        subtitle="The Sovereign Interrupt"
-                        scenario="A disrespectful or accusatory email from a client or peer just arrived in your inbox. You feel your face heat up and your jaw tighten."
-                        prompt="What is your pre-programmed (reactive) response sequence, and what is the 'Sovereign' interrupt you will apply right now?"
-                        accentColor="#C9A84C"
-                      />
-                    </div>
                   )}
                 </motion.div>
               )}
@@ -590,13 +659,18 @@ function BizSidebar({
   currentLessonId,
   completedIds,
   allowedTracks,
+  notesPreview = '',
+  notesSaved = false,
+  onOpenNotes,
 }: {
   track:          typeof TRACKS[0]
   currentLessonId: string
   completedIds:    string[]
   allowedTracks:   string[]
+  notesPreview?:   string
+  notesSaved?:     boolean
+  onOpenNotes?:    () => void
 }) {
-  const { content, handleChange, saving, saved, loaded } = useLessonNotes(currentLessonId)
   const pct = track.lessons.length
     ? Math.round((completedIds.length / track.lessons.length) * 100)
     : 0
@@ -714,33 +788,31 @@ function BizSidebar({
           </div>
         </div>
 
-        {/* Notes */}
-        <div className="flex-1 flex flex-col border-t border-white/8 min-h-[200px]">
-          <div className="px-5 py-3 flex items-center justify-between border-b border-white/8 flex-shrink-0">
+        {/* Notes Preview (Unified with 03. My Notes tab) */}
+        <div className="flex-shrink-0 border-t border-white/8 p-5 bg-black/20">
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <FileText size={12} className="text-orange-DEFAULT" />
               <span className="font-mono text-[0.55rem] tracking-[0.25em] uppercase text-grey-dark">
                 My Notes
               </span>
             </div>
-            <div className="flex items-center gap-1.5 h-4">
-              {saving && <Loader2 size={10} className="text-grey-dark animate-spin" />}
-              {saved  && <span className="font-mono text-[0.5rem] tracking-widest text-orange-DEFAULT">Saved ✓</span>}
-            </div>
+            {notesSaved && (
+              <span className="font-mono text-[0.5rem] tracking-widest text-orange-DEFAULT">Saved ✓</span>
+            )}
           </div>
-          {loaded ? (
-            <textarea
-              className="flex-1 bg-transparent text-white text-xs font-body leading-relaxed
-                         p-4 resize-none outline-none placeholder:text-white/15
-                         focus:bg-black-3 transition-colors"
-              placeholder={`Notes for "${currentLessonId}"…`}
-              value={content}
-              onChange={e => handleChange(e.target.value)}
-            />
-          ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <Loader2 size={16} className="text-grey-dark animate-spin" />
-            </div>
+          <p className="font-body text-xs text-white/50 italic line-clamp-3 mb-3 leading-relaxed">
+            {notesPreview?.trim()
+              ? notesPreview
+              : 'No notes captured yet for this module.'}
+          </p>
+          {onOpenNotes && (
+            <button
+              onClick={onOpenNotes}
+              className="w-full py-2 px-3 border border-orange-DEFAULT/40 text-orange-DEFAULT hover:bg-orange-DEFAULT/10 font-mono text-[0.52rem] tracking-[0.18em] uppercase transition-colors flex items-center justify-center gap-1.5"
+            >
+              Open Notes Workspace <ChevronRight size={11} />
+            </button>
           )}
         </div>
       </div>
@@ -821,6 +893,19 @@ function BizQuiz({
               )
             })}
           </div>
+          {submitted && q.explanation && (
+            <div className={cn(
+              'mt-3 p-4 border-l-4 text-sm font-body italic leading-relaxed',
+              answers[qi] === q.correct
+                ? 'border-green-500 bg-green-500/5 text-white/80'
+                : 'border-orange-DEFAULT bg-orange-DEFAULT/5 text-white/80'
+            )}>
+              <span className="font-mono text-[0.55rem] tracking-widest uppercase not-italic block mb-1 text-orange-DEFAULT">
+                {answers[qi] === q.correct ? '✓ Why this is correct' : '◈ Core Distinction'}
+              </span>
+              {q.explanation}
+            </div>
+          )}
         </div>
       ))}
 

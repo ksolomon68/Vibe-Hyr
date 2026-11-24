@@ -2,112 +2,167 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { CheckCircle, XCircle, RotateCcw, ArrowRight } from 'lucide-react';
 import { ReflectionQuestion } from '@/lib/education/curriculum';
+import { cn } from '@/lib/utils';
 
 interface EducationReflectionProps {
   quiz: ReflectionQuestion[];
   moduleId: string;
   onComplete: () => void;
+  alreadyCompleted?: boolean;
 }
 
 export default function EducationReflection({
   quiz,
-  moduleId,
-  onComplete
+  onComplete,
+  alreadyCompleted = false,
 }: EducationReflectionProps) {
-  // Map of question index to selected option index
   const [answers, setAnswers] = useState<Record<number, number>>({});
-  
+  const [completed, setCompleted] = useState(alreadyCompleted);
+
   if (!quiz || quiz.length === 0) return null;
 
   const handleSelectOption = (qIdx: number, oIdx: number) => {
-    if (answers[qIdx] !== undefined) return; // already answered
+    if (answers[qIdx] !== undefined) return;
     setAnswers(prev => ({ ...prev, [qIdx]: oIdx }));
   };
 
-  const isModuleComplete = Object.keys(answers).length === quiz.length;
+  const allAnswered = Object.keys(answers).length === quiz.length;
+  const correctCount = quiz.filter((q, idx) => answers[idx] === q.correct).length;
+
+  const handleReset = () => {
+    setAnswers({});
+    setCompleted(false);
+  };
+
+  const handleFinish = () => {
+    setCompleted(true);
+    onComplete();
+  };
 
   return (
-    <div className="mt-12 mb-16 border border-[#1E2E2E] rounded bg-[#0A0F0F] relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-1 h-full bg-[#E5B573]" />
-      
-      <div className="p-8 md:p-12 pb-6 border-b border-[#1E2E2E]">
-        <div className="text-[#E5B573] text-sm font-bold tracking-[0.15em] mb-2 uppercase">
-          MODULE REFLECTION
+    <div className="my-10 border-2 border-[#E8621A] bg-[#141008] relative overflow-hidden">
+      <div className="px-7 py-5 border-b border-white/8 flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <div className="font-mono text-[0.58rem] tracking-[0.25em] uppercase text-[#E8621A] mb-1">
+            Module Knowledge &amp; Reflection Check
+          </div>
+          <h3 className="font-display text-2xl tracking-wider text-white">
+            {quiz.length} Questions · Applied Neuroscience &amp; Practice
+          </h3>
         </div>
-        <div className="text-[#A3B8B8] text-base leading-relaxed">
-          {quiz.length} questions · Reflect on what you've learned
-        </div>
+        <span className="font-mono text-[0.6rem] tracking-widest text-white/50 uppercase">
+          {Object.keys(answers).length} / {quiz.length} Answered
+        </span>
       </div>
 
-      <div className="p-8 md:p-12 pt-6">
+      <div className="p-7 md:p-10 space-y-10">
         {quiz.map((q, qi) => {
           const answered = answers[qi] !== undefined;
           const selected = answers[qi];
+          const isRight = answered && selected === q.correct;
+
           return (
-             <div key={qi} className="mb-12 last:mb-0 border-b border-white/5 pb-12 last:border-0 last:pb-0">
-               <div className="text-xl md:text-2xl font-cormorant text-white leading-snug mb-6">
-                 {qi + 1}. {q.q}
-               </div>
-               
-               <div className="space-y-3 mt-6">
-                 {q.options.map((opt, oi) => {
-                   let stateClass = 'border-[#2ABFBF]/20 bg-[#060A0A] text-[#A3B8B8] hover:bg-[#121A1A] hover:border-[#2ABFBF]/50';
-                   let letterClass = 'bg-[#121A1A] text-[#2ABFBF]';
-                   
-                   if (answered) {
-                     if (oi === q.correct) {
-                       stateClass = 'border-[#4CAF50] bg-[#4CAF50]/10 text-white';
-                       letterClass = 'bg-[#4CAF50] text-[#060A0A]';
-                     } else if (oi === selected && !isModuleComplete) {
-                       stateClass = 'border-[#FF9800] bg-[#FF9800]/10 text-white';
-                       letterClass = 'bg-[#FF9800] text-[#060A0A]';
-                     } else {
-                       stateClass = 'border-[#1E2E2E] bg-[#060A0A] text-[#6B8585] opacity-50';
-                       letterClass = 'bg-[#1E2E2E] text-[#6B8585]';
-                     }
-                   }
+            <div key={qi} className="pb-10 border-b border-white/8 last:border-0 last:pb-0">
+              <p className="font-body text-lg md:text-xl font-semibold text-white leading-snug mb-5">
+                <span className="font-mono text-xs text-[#E8621A] mr-2">Q{qi + 1}.</span>
+                {q.q}
+              </p>
 
-                   return (
-                     <button
-                       key={oi}
-                       onClick={() => handleSelectOption(qi, oi)}
-                       disabled={answered}
-                       className={`w-full text-left p-5 rounded border transition-all duration-300 flex items-start gap-4 cursor-pointer text-base leading-relaxed ${stateClass}`}
-                     >
-                       <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold transition-colors ${letterClass}`}>
-                         {['A', 'B', 'C', 'D', 'E'][oi]}
-                       </div>
-                       <div className="pt-0.5">{opt}</div>
-                     </button>
-                   );
-                 })}
-               </div>
+              <div className="space-y-2.5">
+                {q.options.map((opt, oi) => {
+                  const isCorrectOpt = oi === q.correct;
+                  const isSelectedOpt = oi === selected;
 
-               <AnimatePresence>
-                 {answered && (
-                   <motion.div
-                     initial={{ opacity: 0, height: 0 }}
-                     animate={{ opacity: 1, height: 'auto' }}
-                     className="mt-6 p-6 rounded bg-[#121A1A] border-l-[3px] border-[#4CAF50] text-[#A3B8B8] text-[15px] leading-[1.7] overflow-hidden"
-                   >
-                     <strong className="text-white block mb-2">{q.options[q.correct]}</strong>
-                     {q.explanation}
-                   </motion.div>
-                 )}
-               </AnimatePresence>
-             </div>
+                  return (
+                    <button
+                      key={oi}
+                      onClick={() => handleSelectOption(qi, oi)}
+                      disabled={answered}
+                      className={cn(
+                        'w-full text-left p-4 border transition-all duration-200 flex items-start gap-4 font-body text-sm md:text-base leading-relaxed',
+                        !answered && 'border-white/10 bg-black/40 text-white/80 hover:border-[#E8621A]/60 hover:bg-[#E8621A]/5 hover:text-white cursor-pointer',
+                        answered && isCorrectOpt && 'border-green-500 bg-green-500/10 text-white',
+                        answered && isSelectedOpt && !isCorrectOpt && 'border-red-500 bg-red-500/10 text-white',
+                        answered && !isSelectedOpt && !isCorrectOpt && 'border-white/5 bg-black/20 text-white/35 opacity-50'
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          'w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 font-mono text-[0.65rem] font-bold mt-0.5 border',
+                          !answered && 'border-[#E8621A]/50 text-[#E8621A]',
+                          answered && isCorrectOpt && 'border-green-400 bg-green-500 text-black',
+                          answered && isSelectedOpt && !isCorrectOpt && 'border-red-400 bg-red-500 text-black',
+                          answered && !isSelectedOpt && !isCorrectOpt && 'border-white/15 text-white/30'
+                        )}
+                      >
+                        {['A', 'B', 'C', 'D', 'E'][oi]}
+                      </span>
+                      <span className="flex-1">{opt}</span>
+                      {answered && isCorrectOpt && <CheckCircle size={16} className="text-green-400 mt-1 flex-shrink-0" />}
+                      {answered && isSelectedOpt && !isCorrectOpt && <XCircle size={16} className="text-red-400 mt-1 flex-shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <AnimatePresence>
+                {answered && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={cn(
+                      'mt-4 p-5 border-l-4 text-sm md:text-base font-body leading-relaxed',
+                      isRight
+                        ? 'border-green-500 bg-green-500/5 text-white/85'
+                        : 'border-[#E8621A] bg-[#E8621A]/8 text-white/85'
+                    )}
+                  >
+                    <p className="font-mono text-[0.55rem] tracking-[0.2em] uppercase mb-1.5 text-[#E8621A]">
+                      {isRight ? '✓ Correct — Neurobiological Rationale' : '◈ Key Distinction & Rationale'}
+                    </p>
+                    <p className="italic text-white/80">{q.explanation}</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           );
         })}
 
-        <div className="mt-12 pt-8 border-t border-[#1E2E2E] flex justify-end">
-          <button
-            onClick={onComplete}
-            disabled={!isModuleComplete}
-            className={`px-8 py-4 bg-[#2ABFBF] text-[#060A0A] text-sm font-bold tracking-[0.1em] uppercase transition-all duration-300 ${!isModuleComplete ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white hover:shadow-[0_0_20px_rgba(42,191,191,0.4)]'}`}
-          >
-            Complete Module →
-          </button>
+        <div className="pt-6 border-t border-white/10 flex items-center justify-between flex-wrap gap-4">
+          {allAnswered ? (
+            <div className="font-mono text-[0.6rem] tracking-widest uppercase text-[#C9A84C]">
+              Score: {correctCount} / {quiz.length} ({Math.round((correctCount / quiz.length) * 100)}%)
+            </div>
+          ) : (
+            <div className="font-mono text-[0.58rem] tracking-widest uppercase text-white/40">
+              Select an answer for each question to complete
+            </div>
+          )}
+
+          <div className="flex items-center gap-3">
+            {allAnswered && (
+              <button
+                onClick={handleReset}
+                className="btn-outline text-[0.6rem] px-4 py-2.5 flex items-center gap-2"
+              >
+                <RotateCcw size={12} /> Retry Questions
+              </button>
+            )}
+            <button
+              onClick={handleFinish}
+              disabled={!allAnswered}
+              className={cn(
+                'btn-orange text-[0.62rem] px-6 py-3 flex items-center gap-2',
+                !allAnswered && 'opacity-40 cursor-not-allowed'
+              )}
+            >
+              <CheckCircle size={14} />
+              {completed ? 'Module Completed ✓' : 'Complete Module'}
+              <ArrowRight size={12} />
+            </button>
+          </div>
         </div>
       </div>
     </div>

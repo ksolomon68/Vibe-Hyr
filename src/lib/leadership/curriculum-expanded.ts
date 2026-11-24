@@ -488,3 +488,165 @@ export const LESSON_EXPANSIONS: Record<string, LessonExpansion> = {
   },
 
 }
+
+export interface LeadershipLessonLab {
+  title: string
+  subtitle: string
+  scenario: string
+  prompt: string
+}
+
+export const LEADERSHIP_LESSON_LABS: Record<string, LeadershipLessonLab> = {
+  // ── COURSE 1: THE INTERNAL AUTHORITY ──────────────────────────────────
+  'the-responsibility-formula': {
+    title: 'The Architect Ownership Conversion',
+    subtitle: 'From External Blame to Internal Leverage',
+    scenario: 'A key community initiative is underperforming. The obvious external reasons are low budget, low volunteer turnout, and inconsistent follow-through from partners.',
+    prompt: 'Strip away every external blame variable ("they didn\'t," "we lack funding"). Write the situation in 100% Architect ownership language: What internal assumption in your leadership filter allowed this standard, and what three moves can only you initiate this week?',
+  },
+  'setting-the-tone': {
+    title: 'The Atmospheric Thermostat Audit',
+    subtitle: 'Mirror Neurons & Nervous System Co-Regulation',
+    scenario: 'You are five minutes away from leading a high-stakes community or team meeting after a chaotic morning full of frustrating messages. Your shoulders are tight and your internal pace is rushed.',
+    prompt: 'Knowing that your nervous system sets the physiological ceiling for the room before you speak a word, script your exact 90-second pre-entry regulation protocol and describe the specific vocal prosody and physical presence you will broadcast in the first 60 seconds.',
+  },
+  'thinking-in-outcomes': {
+    title: 'RAS Search Parameter Reassignment',
+    subtitle: 'From Threat Detection to Outcome Architecture',
+    scenario: 'Whenever your leadership team meets, 80% of the conversation gravitates toward analyzing what is broken, who dropped the ball, and why resources are scarce.',
+    prompt: 'Take the #1 problem your group keeps analyzing and rewrite it as a completed, present-tense Outcome Installation. What new question will you ask at the start of your next meeting to force the collective RAS to scan for solutions instead of confirming the obstacle?',
+  },
+  'the-art-of-becoming-valuable': {
+    title: 'The Neurochemical Loyalty Loop',
+    subtitle: 'Value Delivery Before Positional Demand',
+    scenario: 'You need deeper commitment and voluntary initiative from your core team or community members, but asking them to "step up and do more" has produced only surface compliance.',
+    prompt: 'Instead of demanding more output, identify one high-leverage insight, tool, protection, or resource you can pour into your people this week with zero strings attached—activating the dopamine/oxytocin loyalty loop through undeniable value.',
+  },
+  'private-excellence': {
+    title: 'The Character Bank Deposit',
+    subtitle: '66-Day Unseen Discipline Protocol',
+    scenario: 'In public leadership moments you say the right things, yet in private your morning routine, mental diet, and nightly SATS practice have been sporadic whenever your schedule gets busy.',
+    prompt: 'Identify the single biggest withdrawal you have been making from your private Character Bank. Design your non-negotiable 20-minute private morning standard that—held for 66 consecutive days—will make your public authority effortless.',
+  },
+  'the-standard-audit': {
+    title: 'Overriding the Allostatic Floor',
+    subtitle: 'Eliminating Normalized Mediocrity',
+    scenario: 'Over the past six months, a below-average norm in your organization or community (late starts, half-prepared updates, low-energy engagement) has quietly become "normal" because nobody challenged it.',
+    prompt: 'Name the exact mediocre standard you have been tolerating. Write the new non-negotiable standard you are installing today, and script the calm, clear way you will embody and communicate that standard in your very next interaction.',
+  },
+
+  // ── COURSE 2: VISIONARY ARCHITECTURE ──────────────────────────────────
+  'the-neuroscience-of-sats': {
+    title: 'The Hypnagogic Leadership Window',
+    subtitle: 'Theta (4–8 Hz) Subconscious Installation',
+    scenario: 'Most leaders spend the final 10 minutes before sleep mentally rehearsing tomorrow\'s stressors or scrolling through problems—accidentally planting anxiety straight into an unguarded subconscious.',
+    prompt: 'Redesign your final 10 minutes before sleep tonight: What problem-rehearsal habit are you retiring at the bedroom door, and what single completed community reality will you hand to your Default Mode Network as you enter the Theta threshold?',
+  },
+  'defining-the-end-scene': {
+    title: 'The 5-Second Leadership End Scene',
+    subtitle: 'Living From Inside the Accomplished Fact',
+    scenario: 'You have a major 6-to-12 month vision for your community or organization, but up to now it has existed only as a slide deck, a spreadsheet, or a distant future hope.',
+    prompt: 'Compress your entire vision into a single 5-second first-person memory that could only occur *after* the vision is an established triumph. Where are you standing, who is in front of you, and what does the settled relief in your chest feel like?',
+  },
+  'sensory-vividness': {
+    title: 'The 5-Channel Signal Amplifier',
+    subtitle: 'Multi-Sensory Neural Consolidation',
+    scenario: 'Your current vision feels inspiring in the abstract, but it lacks the 4–6x multi-sensory encoding (sound, touch, smell, sight, somatic weight) that forces the brain to file it as a real lived memory.',
+    prompt: 'Saturate your 5-second Leadership End Scene across all five channels right now: (1) The exact words and voice timbre you hear, (2) The texture under your hands, (3) The smell of the space, (4) One unmistakable visual detail, and (5) The physical exhale in your torso.',
+  },
+  'frequency-theory-for-groups': {
+    title: 'Broadcasting the Ventral Vagal Ceiling',
+    subtitle: 'Upgrading the Collective Nervous System',
+    scenario: 'Your team or community is showing signs of sympathetic fatigue—anxious urgency, siloed thinking, and hesitation to take creative risks.',
+    prompt: ' distinguish between "forced positivity" (which feels fake and exhausting) and genuine "high-frequency regulation" (ventral-vagal safety and certainty). How will you shift your personal baseline today so your group\'s nervous systems can borrow your stability?',
+  },
+  'persistence-over-reality': {
+    title: 'Holding the Vision Against the 3D Report',
+    subtitle: 'Refusing Downward Vision Revision',
+    scenario: 'Two weeks after committing to an ambitious new vision, a key metric dips or a stakeholder drops out. The untrained reflex is to scale back the vision to match "realistic current facts."',
+    prompt: 'Look at the most discouraging "fact" currently facing your program. Write your Persistence Override declaration: acknowledge the fact as a 60–90 day echo of old assumptions, and state why you refuse to revise your end scene downward.',
+  },
+  'the-seed-principle': {
+    title: 'The Post-Installation Release Protocol',
+    subtitle: 'Inspired Action vs. Anxious Root-Checking',
+    scenario: 'You have planted the vision, yet throughout the workday you catch yourself anxiously checking messages, forcing premature meetings, and worrying whether momentum is happening fast enough.',
+    prompt: 'Distinguish between one compulsive/anxious management habit you are releasing today and one calm, inspired action that naturally flows from the certainty that the seed is already growing.',
+  },
+
+  // ── COURSE 3: THE BRIDGE OF INCIDENTS ─────────────────────────────────
+  'walking-the-bridge': {
+    title: 'The Synchronicity & Bridge Tracker',
+    subtitle: 'Moving Without Requiring the Full Map',
+    scenario: 'An unexpected introduction, an unplanned conversation, or a sudden shift in schedule appears in your week—something that doesn\'t look like your linear project plan.',
+    prompt: 'Identify three recent "coincidences," unexpected conversations, or disruptions from the past 30 days. Trace how your recalibrated RAS is using them to construct a non-linear Bridge of Incidents toward your end scene—and name the very next step directly in front of your feet.',
+  },
+  'the-law-of-exchange': {
+    title: 'Reversing the Withholding Loop',
+    subtitle: 'Activating the Oxytocin Service Sequence',
+    scenario: 'It is easy for a leader to fall into the subtle trap of waiting: "Once the community/team shows more commitment, I will bring my best energy and deepest teaching."',
+    prompt: 'Where have you been subconsciously waiting for your community or team to "show up first"? Design an immediate, unconditional high-value exchange you will pour into the group this week to reverse the mirror.',
+  },
+  'refusing-the-easy-life': {
+    title: 'Breaking the "Tolerable" Drift',
+    subtitle: 'Re-Igniting Dopaminergic Pursuit',
+    scenario: 'Your program or organization has reached a plateau that is "good enough"—things are stable and comfortable, yet far below the transformative end scene you originally set out to build.',
+    prompt: 'Where has "tolerable comfort" put your leadership edge to sleep? Name the exact gap between your current comfortable echo and your true vision, and identify the uncomfortable, high-leverage move you will make in the next 48 hours to wake up the bridge.',
+  },
+  'managing-momentum': {
+    title: 'Structural Momentum Infrastructure',
+    subtitle: 'Replacing Borrowed Motivation with Compounding Rhythm',
+    scenario: 'Whenever you are energized and pushing hard, the community moves forward—but the moment you take three days off or focus elsewhere, activity stalls.',
+    prompt: 'Diagnose where your community is running on your personal emotional motivation rather than structural momentum. Design one non-negotiable weekly Cue → Routine → Reward rhythm that will carry the group\'s forward motion even when you are not in the room.',
+  },
+  'handling-the-bill': {
+    title: 'Paying the Price of the Vision Willingly',
+    subtitle: 'Prefrontal Delay-Discounting Mastery',
+    scenario: 'Operating above your community\'s current echo comes with a bill: misunderstood decisions, delayed gratification, and holding standards when others want shortcuts. Resenting the bill stalls the bridge.',
+    prompt: 'Name the specific "leadership bill" you are currently being asked to pay (extra discipline, a hard boundary, patience through a delay). Shift your internal posture from resentment to willing investment: why is this bill proof that you are operating at the level of your vision?',
+  },
+  'strategy-over-panic': {
+    title: 'The 4-Step After-Action Protocol',
+    subtitle: 'Converting Setbacks into Calibration Intelligence',
+    scenario: 'An event, launch, or partnership hits an unexpected wall. The amygdala wants to panic, assign blame, or declare the strategy dead.',
+    prompt: 'Run the 4-step After-Action Protocol on a recent setback right now: (1) State the raw Fact with zero emotional story, (2) Decode the Signal about where internal/structural alignment was off, (3) Define one Strategic Adjustment, and (4) Reinstall your End Scene.',
+  },
+
+  // ── COURSE 4: ECHO THEORY MASTERY ─────────────────────────────────────
+  'echo-theory-defined': {
+    title: 'The 60–90 Day Echo Diagnostic',
+    subtitle: 'Reading Today\'s Community as Yesterday\'s Assumption',
+    scenario: 'Look at the most frustrating recurring symptom in your community or organization today—the pattern you keep trying to fix with surface tactics.',
+    prompt: 'Stop fighting the echo directly. Read today\'s symptom as a 60–90 day delayed report card: What dominant internal assumption were you broadcasting two to three months ago that generated this echo, and what new broadcast are you installing today for 90 days from now?',
+  },
+  'dissolving-the-worker-identity': {
+    title: 'Dissolving the Worker Origin Story',
+    subtitle: 'Memory Reconsolidation for Natural Authority',
+    scenario: 'Beneath your leadership title, an old "Worker" reflex still fires in certain rooms—waiting for permission, seeking external validation from authority figures, or hesitating to claim the decisive seat.',
+    prompt: 'Trace that hesitation back to an early formative memory where asserting yourself felt unsafe. Rewrite and reconsolidate that memory from the Natural Architect identity—and state the boldest permission-free decision you are making this week.',
+  },
+  'leadership-as-a-lifestyle': {
+    title: 'Crossing the Identity Threshold',
+    subtitle: 'From Effortful Doing to Default Mode Being',
+    scenario: 'Behavioral leadership is exhausting because you have to "turn it on" every morning and can burn out by Friday. Identity-level leadership is encoded in the Default Mode Network—it is simply who you are 24/7.',
+    prompt: 'Where in your life are you still "performing" leadership as an effortful role rather than inhabiting it as a seamless lifestyle? Write your 3-sentence Identity Consolidation Declaration that bridges your private life and public authority into one unified standard.',
+  },
+  'the-multiplier-effect': {
+    title: 'The Stabilized Frequency Field',
+    subtitle: 'Elevating the Collective Without Coercion',
+    scenario: 'You have been expending too much energy trying to push, persuade, or motivate individual team members who seem stuck in low initiative.',
+    prompt: 'For the next 7 days, replace coercive pushing with the Multiplier Effect: How will you elevate and stabilize your own ventral-vagal certainty so deeply that entering your field automatically entrains your team toward higher trust and autonomous initiative?',
+  },
+  'neural-scripting-for-legacy': {
+    title: 'The 10-Year Legacy Neural Script',
+    subtitle: 'Multi-Channel Narrative Installation',
+    scenario: 'Short-term leaders manage this week\'s tasks; elite architects install a 10-year collective assumption that outlives their direct involvement.',
+    prompt: 'Write a 150-word Legacy Neural Script in first-person past tense from 10 years in the future, looking back on what your community became, the lives transformed, and the self-sustaining culture that took root because of the assumption you held today.',
+  },
+  'the-infinity-method': {
+    title: 'The 75% Vision Renewal Protocol',
+    subtitle: 'Vision → Assumption → Execution → Echo → New Vision',
+    scenario: 'Most leaders plateau or experience a dopamine collapse right after achieving a major milestone because they wait until after arrival to imagine what comes next.',
+    prompt: 'Audit your current leadership horizon: What part of your previous vision is already 70–80% manifested or in motion, and what is the next-level End Scene you are installing right now to keep the Infinity Cycle compounding without plateau?',
+  },
+}
+
