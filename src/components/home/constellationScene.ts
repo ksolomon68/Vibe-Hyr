@@ -8,25 +8,12 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
 import type { RefObject, MutableRefObject } from 'react'
 import { useEffect } from 'react'
 
-/* ──────────────────────────────────────────────────────────────
-   NEURAL CONSTELLATION — real WebGL point cloud, not a 2D canvas
-   approximation. A 2D canvas can only ever fake the reference's
-   volumetric glow; additive-blended GPU point sprites plus a real
-   bloom pass are what actually produce it. Three organic 3D forms
-   (brain, lightbulb, orb) built from noise-displaced sphere/teardrop
-   point samples, morphed by index-correspondence as the user scrolls,
-   coloured gold at the outer "rim" (high noise displacement) and
-   white/silver at the "core", with a scatter of violet/teal/magenta
-   accents — plus a static ambient field of the same triangle sprites
-   drifting slowly outside the main shape.
-   ────────────────────────────────────────────────────────────── */
+// Surface-sampled triangle clouds dissolve into a shared field before re-forming.
+// Scroll progress drives geometry and copy together; time only adds idle drift.
 
-export type Shape = 'brain' | 'lightbulb' | 'orb'
+export type Shape = 'brain' | 'scatter' | 'lightbulb' | 'orb'
 
-const RIM_COLORS = ['#E8621A', '#E8621A', '#E8621A', '#E8621A', '#E8621A', '#F0B429', '#F0B429', '#F0B429', '#FFFFFF']
-const RIM_LOWER_COLORS = ['#E8621A', '#E8621A', '#F0B429', '#8B5CF6', '#8B5CF6', '#F97316', '#FB923C', '#E8621A', '#FFB86B']
-const CORE_COLORS = ['#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#F0B429', '#8B5CF6', '#F97316']
-const AMBIENT_COLORS = ['#FFFFFF', '#FFFFFF', '#F0B429', '#F0B429', '#E8621A', '#8B5CF6', '#F97316', '#FB923C', '#FFB86B']
+const AMBIENT_COLORS = ['#DDE1E5', '#DDE1E5', '#B5BBC4', '#D8BD86']
 
 const PI2 = Math.PI * 2
 const pick = (pool: string[]) => pool[(Math.random() * pool.length) | 0]
@@ -45,249 +32,139 @@ function hex01(hex: string): [number, number, number] {
   return rgb
 }
 
-/** Rim glows gold/orange, core stays white/silver. Only the lightbulb
-    carries Dala's tip gradient (gold shoulders fading into violet/teal/
-    blue at the bottom), ramped smoothly by vertical position. */
-function pickColor(rim: boolean, spectrumTip: boolean, vNorm: number): [number, number, number] {
-  if (rim) {
-    if (spectrumTip && Math.random() < clamp01((vNorm - 0.45) / 0.4)) return hex01(pick(RIM_LOWER_COLORS))
-    return hex01(pick(RIM_COLORS))
-  }
-  return hex01(pick(CORE_COLORS))
-}
-
 type Cloud = { pos: Float32Array; col: Float32Array }
 
-/* ── 3D Mathematical Shape Generators ──────────────────────────
-   Instead of sampling flat 2D canvas silhouettes, we generate
-   fully volumetric 3D structures with mathematical equations.
-   This gives the shapes real depth, structure, and fidelity
-   matching the reference screenshots. */
+/** Lighting follows the actual cortical normals and sulcal depth. */
+function brainColor(nx: number, ny: number, nz: number, ridge: number) {
+  const key = Math.max(0, -nx * 0.45 + ny * 0.65 + nz * 0.6)
+  const rim = Math.pow(1 - Math.abs(nz), 3)
+  return new THREE.Color('#DCE2EA')
+    .lerp(new THREE.Color('#D8BD86'), ridge * 0.18 + rim * 0.12)
+    .multiplyScalar((0.18 + key * 0.75 + rim * 0.14) * (0.22 + ridge * 0.78))
+}
 
-/** Brain: 3D bilateral hemispheres with wavy gyri folds and a stem */
-function buildBrain(n: number): Cloud {
+/** Sample an anatomical cortical surface; ridges and sulci come from the mesh. */
+function buildBrain(n: number, surface: Float32Array, indices: Uint32Array): Cloud {
   const pos = new Float32Array(n * 3)
   const col = new Float32Array(n * 3)
-  const r = 1.15
-
+  const count = indices.length / 3
   for (let i = 0; i < n; i++) {
-    let x = 0, y = 0, z = 0
-    let isRim = false
-
-    // 12% of points form the brain stem at the bottom
-    if (i < n * 0.12) {
-      const h = rand(0, 0.7)
-      const stemR = 0.15 * (1.0 - h * 0.3)
-      const theta = Math.random() * PI2
-      x = Math.cos(theta) * stemR
-      y = -0.5 - h
-      z = Math.sin(theta) * stemR
-    } else {
-      // 88% form the hemispheres
-      const hemisphere = Math.random() > 0.5 ? 1 : -1
-      const theta = Math.random() * Math.PI
-      const phi = Math.random() * PI2
-
-      // Base ellipsoid shape (elongated front-to-back, wider at back)
-      const baseR = r * (0.85 + 0.15 * Math.sin(theta))
-      const ex = baseR * Math.sin(theta) * Math.cos(phi) * 0.76 + hemisphere * 0.08
-      const ey = baseR * Math.cos(theta) * 0.8
-      const ez = baseR * Math.sin(theta) * Math.sin(phi) * 1.1
-
-      // Surface folding frequency and amplitude
-      const gX = Math.sin(ex * 12) * Math.cos(ey * 12) * Math.sin(ez * 12)
-      const gY = Math.cos(ex * 8) * Math.sin(ey * 10) * Math.cos(ez * 8)
-      const fold = (gX + gY) * 0.075
-
-      // Push points toward the surface to define the shell (rim)
-      const pct = Math.pow(Math.random(), 0.35)
-      x = ex + ex * fold * pct
-      y = ey + ey * fold * pct
-      z = ez + ez * fold * pct
-
-      if (pct > 0.72) isRim = true
-    }
-
-    pos[i * 3] = x
-    pos[i * 3 + 1] = y + 0.15 // Center offset
-    pos[i * 3 + 2] = z
-
-    // Core is white/silver, outer rim glows gold/orange
-    const rgb = pickColor(isRim, false, 0)
-    col[i * 3] = rgb[0]
-    col[i * 3 + 1] = rgb[1]
-    col[i * 3 + 2] = rgb[2]
+    const face = ((i * 7919) % count) * 3
+    const a = indices[face] * 7, b = indices[face + 1] * 7, c = indices[face + 2] * 7
+    // Low-discrepancy barycentric sampling preserves spacing while following every fold.
+    const u = Math.sqrt(((i + 0.5) * 0.754877666) % 1)
+    const v = ((i + 0.5) * 0.569840291) % 1
+    const wa = 1 - u, wb = u * (1 - v), wc = u * v
+    const sample = (axis: number) => surface[a + axis] * wa + surface[b + axis] * wb + surface[c + axis] * wc
+    const x = sample(0), y = sample(1), z = sample(2)
+    const nx = sample(3), ny = sample(4), nz = sample(5)
+    const ridge = sample(6)
+    pos.set([x, y, z], i * 3)
+    const color = brainColor(nx, ny, nz, ridge).multiplyScalar(3.2)
+    col.set([color.r, color.g, color.b], i * 3)
   }
-
   return { pos, col }
 }
 
-/** Lightbulb: 3D glass bulb, filament loop, support wires, and screw base */
+/** A smooth glass envelope, a warm coiled filament, and a threaded metal base. */
 function buildLightbulb(n: number): Cloud {
   const pos = new Float32Array(n * 3)
   const col = new Float32Array(n * 3)
-  const r = 1.1
-
+  const dome = new THREE.CubicBezierCurve(
+    new THREE.Vector2(0, 1.25), new THREE.Vector2(0.62, 1.25),
+    new THREE.Vector2(0.9, 0.96), new THREE.Vector2(0.9, 0.48),
+  )
+  const neck = new THREE.CubicBezierCurve(
+    new THREE.Vector2(0.9, 0.48), new THREE.Vector2(0.9, -0.08),
+    new THREE.Vector2(0.27, -0.25), new THREE.Vector2(0.27, -0.73),
+  )
   for (let i = 0; i < n; i++) {
-    let x = 0, y = 0, z = 0
-    let isRim = false
-    let vNorm = 0.5
-
-    const randVal = Math.random()
-
-    if (randVal < 0.60) {
-      // 60% Glass envelope (spherical top tapering to neck)
-      const theta = Math.random() * Math.PI
-      const phi = Math.random() * PI2
-      
-      const bulbY = Math.cos(theta) * r
-      const bulbRad = bulbY > 0 
-        ? r * Math.sin(theta) * 0.95
-        : r * Math.sin(theta) * 0.95 * (1.0 + bulbY * 0.45) // taper down
-      
-      const shellPct = Math.pow(Math.random(), 0.25) // push to shell
-      x = Math.cos(phi) * bulbRad * shellPct
-      y = bulbY + 0.25
-      z = Math.sin(phi) * bulbRad * shellPct
-
-      vNorm = (y + 1.0) / 2.2
-      if (shellPct > 0.78) isRim = true
-    } 
-    else if (randVal < 0.82) {
-      // 22% Screw threads base
-      const h = rand(0, 0.55)
-      const baseR = 0.38 - h * 0.08
-      const phi = Math.random() * PI2
-      
-      // Thread helix displacement
-      const thread = 0.026 * Math.sin(phi * 5 + h * 55)
-      x = Math.cos(phi) * (baseR + thread)
-      y = -r * 0.65 - h + 0.25
-      z = Math.sin(phi) * (baseR + thread)
-
-      vNorm = (y + 1.0) / 2.2
-      isRim = true
-    } 
-    else if (randVal < 0.94) {
-      // 12% Glowing filament and support loops inside
-      const filamentType = Math.random()
-      if (filamentType < 0.65) {
-        // Coiled loop at the top
-        const tVal = rand(0, PI2)
-        const loopR = 0.28
-        x = Math.cos(tVal) * loopR
-        y = 0.45 + Math.sin(tVal * 12) * 0.028
-        z = Math.sin(tVal) * loopR
+    const part = i / n
+    const phi = i * Math.PI * (3 - Math.sqrt(5))
+    const t = ((i + 0.5) * 0.754877666) % 1
+    let x: number, y: number, z: number
+    const color = new THREE.Color('#DCE2EA')
+    if (part < 0.68) {
+      const profile = t < 0.48 ? dome.getPoint(t / 0.48) : neck.getPoint((t - 0.48) / 0.52)
+      // Reserve a few points for the silhouette; let the glass stay transparent inside.
+      const angle = part < 0.06 ? (i % 2) * Math.PI : phi
+      x = Math.cos(angle) * profile.x
+      y = profile.y
+      z = Math.sin(angle) * profile.x
+      const edge = Math.pow(Math.abs(Math.cos(angle)), 10)
+      color.multiplyScalar(0.16 + edge * 1.8 + Math.max(0, Math.sin(angle)) * 0.16)
+    } else if (part < 0.85) {
+      y = -0.73 - t * 0.43
+      const thread = Math.cos(t * PI2 * 5 - phi)
+      const radius = 0.25 - t * 0.025 + thread * 0.025
+      x = Math.cos(phi) * radius
+      z = Math.sin(phi) * radius
+      color.lerp(new THREE.Color('#D8BD86'), 0.32)
+        .multiplyScalar((0.60 + 1.40 * Math.pow(thread * 0.5 + 0.5, 3)) * (0.35 + 0.65 * Math.max(0, Math.sin(phi))))
+    } else if (part < 0.88) {
+      y = -1.16 - t * 0.13
+      const radius = 0.18 * Math.sqrt(1 - t)
+      x = Math.cos(phi) * radius
+      z = Math.sin(phi) * radius
+      color.multiplyScalar(0.5)
+    } else {
+      const filament = (part - 0.88) / 0.12
+      if (filament < 0.6) {
+        const coil = filament / 0.6
+        x = lerp(-0.27, 0.27, coil)
+        y = 0.22 + Math.sin(coil * PI2 * 11) * 0.035
+        z = Math.cos(coil * PI2 * 11) * 0.035
+        color.set('#FFE2A3').multiplyScalar(2.1)
       } else {
-        // Internal support wires
-        const wireSide = Math.random() > 0.5 ? 1 : -1
-        const h = rand(0, 0.75)
-        x = wireSide * 0.12 * (1.0 - h * 0.2)
-        y = -0.3 + h
+        const stem = (filament - 0.6) / 0.4
+        const side = i % 2 ? 1 : -1
+        x = side * lerp(0.08, 0.27, stem)
+        y = lerp(-0.73, 0.22, stem)
         z = 0
+        color.set('#D8BD86').multiplyScalar(0.65)
       }
-      vNorm = (y + 1.0) / 2.2
-      isRim = Math.random() > 0.2 // filament glows brightly
-    } 
-    else {
-      // 6% Contact contact plate at the very bottom
-      const h = rand(0, 0.12)
-      const capR = 0.22 * (1.0 - h / 0.12)
-      const phi = Math.random() * PI2
-      x = Math.cos(phi) * capR
-      y = -r * 1.2 + 0.25 - h
-      z = Math.sin(phi) * capR
-      vNorm = 0.05
     }
-
-    pos[i * 3] = x
-    pos[i * 3 + 1] = y
-    pos[i * 3 + 2] = z
-
-    const rgb = pickColor(isRim, true, vNorm)
-    col[i * 3] = rgb[0]
-    col[i * 3 + 1] = rgb[1]
-    col[i * 3 + 2] = rgb[2]
+    const tilt = 0.10
+    pos.set([x * Math.cos(tilt) + y * Math.sin(tilt), y * Math.cos(tilt) - x * Math.sin(tilt), z], i * 3)
+    col.set([color.r, color.g, color.b], i * 3)
   }
-
   return { pos, col }
 }
 
-/** Globe/Orb: 3D spherical grid lines (meridians & parallels) with a glowing core */
+/** A shaded sphere with actual latitude/longitude particles, not a moiré shell. */
 function buildOrb(n: number): Cloud {
   const pos = new Float32Array(n * 3)
   const col = new Float32Array(n * 3)
-  const r = 1.05
-
+  const goldenAngle = Math.PI * (3 - Math.sqrt(5))
   for (let i = 0; i < n; i++) {
-    let x = 0, y = 0, z = 0
-    let isRim = false
-    const randVal = Math.random()
-
-    if (randVal < 0.42) {
-      // 42% Longitude lines (meridians wrapping the sphere)
-      const numMeridians = 8
-      const meridianIdx = Math.floor(Math.random() * numMeridians)
-      const phi = (meridianIdx * Math.PI) / (numMeridians / 2)
-      
-      const theta = Math.random() * Math.PI
-      x = r * Math.sin(theta) * Math.cos(phi)
-      y = r * Math.cos(theta)
-      z = r * Math.sin(theta) * Math.sin(phi)
-      
-      isRim = true
-    } 
-    else if (randVal < 0.74) {
-      // 32% Latitude lines (parallels at constant heights)
-      const numParallels = 6
-      const parallelIdx = Math.floor(Math.random() * numParallels)
-      const latVal = -0.7 + (parallelIdx * 1.4) / (numParallels - 1)
-      const latY = latVal * r
-      
-      const parallelR = Math.sqrt(r * r - latY * latY)
-      const phi = Math.random() * PI2
-      
-      x = parallelR * Math.cos(phi)
-      y = latY
-      z = parallelR * Math.sin(phi)
-      
-      isRim = true
-    } 
-    else if (randVal < 0.88) {
-      // 14% Random points on the outer shell
-      const theta = Math.random() * Math.PI
-      const phi = Math.random() * PI2
-      x = r * Math.sin(theta) * Math.cos(phi)
-      y = r * Math.cos(theta)
-      z = r * Math.sin(theta) * Math.sin(phi)
-      
-      isRim = Math.random() > 0.4
-    } 
-    else {
-      // 12% Glowing center core (dense mini orb)
-      const theta = Math.random() * Math.PI
-      const phi = Math.random() * PI2
-      const coreR = Math.random() * 0.22
-      x = coreR * Math.sin(theta) * Math.cos(phi)
-      y = coreR * Math.cos(theta)
-      z = coreR * Math.sin(theta) * Math.sin(phi)
+    const t = ((i + 0.5) * 0.754877666) % 1
+    let latitude: number, longitude: number
+    const grid = i >= n * 0.78
+    if (!grid) {
+      latitude = Math.asin(1 - 2 * (i + 0.5) / (n * 0.78))
+      longitude = i * goldenAngle
+    } else if (i < n * 0.89) {
+      latitude = ((i % 7) - 3) * Math.PI / 9
+      longitude = t * PI2
+    } else {
+      latitude = (t - 0.5) * Math.PI
+      longitude = (i % 12) * PI2 / 12
     }
-
-    pos[i * 3] = x
-    pos[i * 3 + 1] = y
-    pos[i * 3 + 2] = z
-
-    const rgb = pickColor(isRim, false, 0)
-    col[i * 3] = rgb[0]
-    col[i * 3 + 1] = rgb[1]
-    col[i * 3 + 2] = rgb[2]
+    const x = Math.cos(longitude) * Math.cos(latitude)
+    const y = Math.sin(latitude)
+    const z = Math.sin(longitude) * Math.cos(latitude)
+    // Rotate the globe's grid so its curvature reads in three dimensions.
+    pos.set([(x * 0.966 - y * 0.259) * 1.15, (x * 0.259 + y * 0.966) * 1.15, z * 1.15], i * 3)
+    const front = smoothstep(clamp01(z * 4))
+    const key = Math.max(0, -x * 0.4 + y * 0.55 + z * 0.7)
+    const color = new THREE.Color(grid ? '#D8BD86' : '#DCE2EA')
+      .multiplyScalar((0.08 + front * 0.92) * (0.2 + key * 0.65) * (grid ? 2.4 : 1.6))
+    col.set([color.r, color.g, color.b], i * 3)
   }
-
   return { pos, col }
 }
 
-/** Small soft-edged outlined (hollow) triangle — the exact style from
-    the reference site: visible stroked edge, transparent fill. */
+/** Crisp outlined triangles stay individually visible within the luminous surface. */
 function makeTriangleSprite(): THREE.CanvasTexture {
   const size = 96
   const c = document.createElement('canvas')
@@ -311,14 +188,14 @@ function makeTriangleSprite(): THREE.CanvasTexture {
   ctx.closePath()
 
   // Very subtle fill (near transparent) so the triangle reads in additive blending
-  ctx.fillStyle = 'rgba(255,255,255,0.08)'
+  ctx.fillStyle = 'rgba(255,255,255,0.12)'
   ctx.fill()
 
   // Sharp white outline
   ctx.strokeStyle = '#ffffff'
-  ctx.lineWidth = 3.5
+  ctx.lineWidth = 4.5
   ctx.shadowColor = '#ffffff'
-  ctx.shadowBlur = 2
+  ctx.shadowBlur = 0
   ctx.stroke()
 
   const tex = new THREE.CanvasTexture(c)
@@ -326,13 +203,16 @@ function makeTriangleSprite(): THREE.CanvasTexture {
   return tex
 }
 
+// Keep these holds aligned with the copy windows in HeroSection.
 const KEYFRAMES: { t: number; shape: Shape }[] = [
-  { t: 0.0, shape: 'brain' },
-  { t: 0.24, shape: 'brain' },
-  { t: 0.42, shape: 'lightbulb' },
-  { t: 0.64, shape: 'lightbulb' },
-  { t: 0.82, shape: 'orb' },
-  { t: 1.0, shape: 'orb' },
+  { t: 0, shape: 'brain' },
+  { t: 0.16, shape: 'brain' },
+  { t: 0.30, shape: 'scatter' },
+  { t: 0.44, shape: 'scatter' },
+  { t: 0.60, shape: 'lightbulb' },
+  { t: 0.74, shape: 'lightbulb' },
+  { t: 0.90, shape: 'orb' },
+  { t: 1, shape: 'orb' },
 ]
 
 function currentShapes(t: number) {
@@ -352,29 +232,78 @@ function currentShapes(t: number) {
    frame from the camera's frustum at the cloud's depth. Desktop
    alternates right/left so the shape never sits under its own copy. */
 const SCREEN_DESKTOP: Record<Shape, { x: number; y: number; scale: number }> = {
-  brain: { x: 0.71, y: 0.52, scale: 1 },
-  lightbulb: { x: 0.26, y: 0.5, scale: 0.95 },
+  brain: { x: 0.72, y: 0.52, scale: 1.02 },
+  scatter: { x: 0.5, y: 0.5, scale: 1 },
+  lightbulb: { x: 0.26, y: 0.52, scale: 1.15 },
   orb: { x: 0.24, y: 0.55, scale: 0.85 },
 }
 const SCREEN_MOBILE: Record<Shape, { x: number; y: number; scale: number }> = {
-  brain: { x: 0.5, y: 0.32, scale: 0.62 },
-  lightbulb: { x: 0.5, y: 0.3, scale: 0.6 },
-  orb: { x: 0.5, y: 0.32, scale: 0.52 },
+  brain: { x: 0.5, y: 0.25, scale: 0.48 },
+  scatter: { x: 0.5, y: 0.5, scale: 1 },
+  lightbulb: { x: 0.5, y: 0.32, scale: 0.56 },
+  orb: { x: 0.5, y: 0.245, scale: 0.42 },
 }
+const SCREEN_COMPACT: typeof SCREEN_MOBILE = {
+  ...SCREEN_MOBILE,
+  brain: { x: 0.77, y: 0.32, scale: 0.27 },
+  lightbulb: { x: 0.5, y: 0.28, scale: 0.40 },
+  orb: { x: 0.5, y: 0.205, scale: 0.23 },
+}
+const POINT_SIZES: Record<Shape, number> = { brain: 0.046, scatter: 0.050, lightbulb: 0.040, orb: 0.038 }
 
-export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, progressRef: MutableRefObject<number>) {
+export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, progressRef: MutableRefObject<number>, reduceMotion: boolean) {
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
 
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const structuredCount = window.innerWidth < 768 ? 2000 : window.innerWidth < 1280 ? 3600 : 5000
-    const ambientCount = window.innerWidth < 768 ? 90 : 200
+    const structuredCount = window.innerWidth < 768 ? 14000 : 26000
+    const ambientCount = window.innerWidth < 768 ? 40 : 90
 
-    const brainCloud = buildBrain(structuredCount)
+    let brainReady = false
+    const brainCloud: Cloud = { pos: new Float32Array(structuredCount * 3), col: new Float32Array(structuredCount * 3) }
+    const controller = new AbortController()
+    const brainSurfaceGeometry = new THREE.BufferGeometry()
+    const brainSurfaceMaterial = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, side: THREE.DoubleSide })
+    const brainSurfaceMesh = new THREE.Mesh(brainSurfaceGeometry, brainSurfaceMaterial)
+    brainSurfaceMesh.visible = false
+    brainSurfaceMesh.renderOrder = -1
+    Promise.all(['/models/brain-cortex.bin', '/models/brain-cortex-index.bin'].map(async url => {
+      const response = await fetch(url, { signal: controller.signal })
+      if (!response.ok) throw new Error(`Brain surface request failed: ${response.status}`)
+      return response.arrayBuffer()
+    }))
+      .then(([buffer, indexBuffer]) => {
+        if (controller.signal.aborted) return
+        if (buffer.byteLength !== 20484 * 7 * 4 || indexBuffer.byteLength !== 40960 * 3 * 4) throw new Error('Invalid brain surface data')
+        const surface = new Float32Array(buffer)
+        const sampled = buildBrain(structuredCount, surface, new Uint32Array(indexBuffer))
+        brainCloud.pos.set(sampled.pos)
+        brainCloud.col.set(sampled.col)
+        // A softly shaded inset surface reveals folds and occludes far-side particles.
+        const inset = new Float32Array(20484 * 3)
+        const shading = new Float32Array(20484 * 3)
+        for (let i = 0; i < 20484; i++) {
+          for (let axis = 0; axis < 3; axis++) inset[i * 3 + axis] = surface[i * 7 + axis] - surface[i * 7 + axis + 3] * 0.004
+          const color = brainColor(surface[i * 7 + 3], surface[i * 7 + 4], surface[i * 7 + 5], surface[i * 7 + 6]).multiplyScalar(0.075)
+          shading.set([color.r, color.g, color.b], i * 3)
+        }
+        brainSurfaceGeometry.setAttribute('color', new THREE.BufferAttribute(shading, 3))
+        brainSurfaceGeometry.setAttribute('position', new THREE.BufferAttribute(inset, 3))
+        brainSurfaceGeometry.setIndex(new THREE.BufferAttribute(new Uint32Array(indexBuffer), 1))
+        brainReady = true
+        if (reduceMotion) render(0)
+      })
+      .catch(error => {
+        if (!controller.signal.aborted) console.warn('Unable to load brain surface', error)
+      })
     const bulbCloud = buildLightbulb(structuredCount)
     const orbCloud = buildOrb(structuredCount)
-    const clouds: Record<Shape, Cloud> = { brain: brainCloud, lightbulb: bulbCloud, orb: orbCloud }
+    const scatterCloud: Cloud = { pos: new Float32Array(structuredCount * 3), col: new Float32Array(structuredCount * 3) }
+    for (let i = 0; i < structuredCount; i++) {
+      scatterCloud.pos.set([rand(-5.5, 5.5), rand(-3.4, 3.4), rand(-2.5, 2)], i * 3)
+      scatterCloud.col.set(hex01(pick(AMBIENT_COLORS)), i * 3)
+    }
+    const clouds: Record<Shape, Cloud> = { brain: brainCloud, scatter: scatterCloud, lightbulb: bulbCloud, orb: orbCloud }
 
     const ambientPos = new Float32Array(ambientCount * 3)
     const ambientCol = new Float32Array(ambientCount * 3)
@@ -392,6 +321,7 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
     renderer.setClearColor(0x000000, 1)
 
     const scene = new THREE.Scene()
+    scene.add(brainSurfaceMesh)
     const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 50)
     camera.position.set(0, 0, 6)
 
@@ -402,8 +332,10 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
     const liveCol = new Float32Array(structuredCount * 3)
     structuredGeom.setAttribute('position', new THREE.BufferAttribute(livePos, 3))
     structuredGeom.setAttribute('color', new THREE.BufferAttribute(liveCol, 3))
+    const seeds = Float32Array.from({ length: structuredCount }, () => Math.random())
+    structuredGeom.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 1))
     const structuredMat = new THREE.PointsMaterial({
-      size: 0.03,
+      size: 0.032,
       map: sprite,
       transparent: true,
       opacity: 1,
@@ -413,6 +345,15 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
       vertexColors: true,
       sizeAttenuation: true,
     })
+    structuredMat.onBeforeCompile = (shader) => {
+      shader.vertexShader = 'attribute float aSeed; varying float vSeed;\n' + shader.vertexShader
+      shader.vertexShader = shader.vertexShader.replace('gl_PointSize = size;', 'vSeed = aSeed; gl_PointSize = size * (0.6 + aSeed * 0.8);')
+      shader.fragmentShader = 'varying float vSeed;\n' + shader.fragmentShader
+      shader.fragmentShader = shader.fragmentShader.replace('#include <map_particle_fragment>', THREE.ShaderChunk.map_particle_fragment.replace(
+        'diffuseColor *= texture2D( map, uv );',
+        'float a = vSeed * 6.283185; vec2 p = uv - 0.5; uv = mat2(cos(a), -sin(a), sin(a), cos(a)) * p + 0.5; diffuseColor *= texture2D(map, uv);'
+      ))
+    }
     const structuredPoints = new THREE.Points(structuredGeom, structuredMat)
     scene.add(structuredPoints)
 
@@ -435,9 +376,10 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
 
     const composer = new EffectComposer(renderer)
     composer.addPass(new RenderPass(scene, camera))
-    const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.75, 0.28, 0.32)
+    const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.24, 0.18, 0.85)
     composer.addPass(bloom)
-    composer.addPass(new OutputPass())
+    const output = new OutputPass()
+    composer.addPass(output)
 
     let vw = 0
     let vh = 0
@@ -445,7 +387,6 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
     let raf = 0
     const pointer = { x: 0, y: 0 }
     const smoothedPointer = { x: 0, y: 0 }
-    let smoothedProgress = progressRef.current
 
     function worldOffset(fx: number, fy: number, depth: number) {
       const halfH = depth * Math.tan((camera.fov * Math.PI) / 360)
@@ -454,16 +395,18 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
     }
 
     function resize() {
-      vw = window.innerWidth
-      vh = window.innerHeight
+      const bounds = canvas!.getBoundingClientRect()
+      vw = bounds.width
+      vh = bounds.height
       isMobile = vw < 1024
       const dpr = Math.min(window.devicePixelRatio || 1, 2)
       renderer.setPixelRatio(dpr)
       renderer.setSize(vw, vh, false)
+      composer.setPixelRatio(dpr)
       composer.setSize(vw, vh)
-      bloom.setSize(vw, vh)
       camera.aspect = vw / vh
       camera.updateProjectionMatrix()
+      if (reduceMotion) render(0)
     }
 
     function onPointerMove(e: PointerEvent) {
@@ -472,17 +415,19 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
     }
 
     function render(time: number) {
-      // Lerp progress and mouse coords for butter-smooth animations
-      smoothedProgress = lerp(smoothedProgress, progressRef.current, 0.08)
+      // Geometry and copy use the same scroll position; only pointer movement is damped.
+      const progress = reduceMotion ? 0 : progressRef.current
       smoothedPointer.x = lerp(smoothedPointer.x, pointer.x, 0.08)
       smoothedPointer.y = lerp(smoothedPointer.y, pointer.y, 0.08)
 
-      const { shapeA, shapeB, localT } = currentShapes(smoothedProgress)
+      const { shapeA, shapeB, localT } = currentShapes(progress)
       const eased = smoothstep(localT)
       const morphing = shapeA !== shapeB
       const cloudA = clouds[shapeA]
       const cloudB = clouds[shapeB]
-      const screens = isMobile ? SCREEN_MOBILE : SCREEN_DESKTOP
+      const scattered = (shapeA === 'scatter' ? 1 - eased : 0) + (shapeB === 'scatter' ? eased : 0)
+      structuredMat.opacity = !brainReady && (shapeA === 'brain' || shapeB === 'brain') ? 0 : 1 - scattered * 0.65
+      const screens = vw <= 360 && vh <= 640 ? SCREEN_COMPACT : isMobile ? SCREEN_MOBILE : SCREEN_DESKTOP
       const sa = screens[shapeA]
       const sb = screens[shapeB]
       const depth = camera.position.z
@@ -490,9 +435,15 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
       const offB = worldOffset(sb.x, sb.y, depth)
       const groupX = lerp(offA.x, offB.x, eased)
       const groupY = lerp(offA.y, offB.y, eased)
-      const groupScale = lerp(sa.scale, sb.scale, eased)
+      // Keep the full silhouette inside its half of the frame on narrow desktops.
+      const fit = isMobile ? Math.min(1, (vw / vh) / 0.53) : Math.min(1, (vw / vh) / 1.5)
+      const groupScale = lerp(sa.scale, sb.scale, eased) * fit
+      // Preserve visual density when resizing across the initial particle budget.
+      const densityScale = Math.sqrt((vw < 768 ? 14000 : 26000) / structuredCount)
+      const screenDensity = vw <= 360 && vh <= 640 ? 0.7 : isMobile ? 0.85 : 1
+      structuredMat.size = lerp(POINT_SIZES[shapeA], POINT_SIZES[shapeB], eased) * densityScale * screenDensity
 
-      const burst = morphing ? Math.sin(Math.PI * eased) * 0.85 : 0
+      const burst = !reduceMotion && morphing && shapeA !== 'scatter' && shapeB !== 'scatter' ? Math.sin(Math.PI * eased) * 0.12 : 0
       const t = reduceMotion ? 0 : time * 0.001
 
       for (let i = 0; i < structuredCount; i++) {
@@ -516,8 +467,8 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
 
         if (!reduceMotion) {
           const phase = i * 12.9898
-          x += Math.sin(t * 0.5 + phase) * 0.012
-          y += Math.cos(t * 0.42 + phase) * 0.012
+          x += Math.sin(t * 0.5 + phase) * (0.002 + scattered * 0.12)
+          y += Math.cos(t * 0.42 + phase) * (0.002 + scattered * 0.12)
         }
 
         livePos[i3] = x
@@ -542,8 +493,8 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
       structuredPoints.scale.setScalar(groupScale)
 
       if (!reduceMotion) {
-        structuredPoints.rotation.y = Math.sin(t * 0.06) * 0.22 + smoothedPointer.x * 0.18
-        structuredPoints.rotation.x = smoothedPointer.y * 0.1
+        structuredPoints.rotation.y = Math.sin(t * 0.06) * 0.06 + smoothedPointer.x * 0.06
+        structuredPoints.rotation.x = smoothedPointer.y * 0.04
 
         const ambientArr = ambientGeom.attributes.position.array as Float32Array
         for (let i = 0; i < ambientCount; i++) {
@@ -555,43 +506,54 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
         ambientGeom.attributes.position.needsUpdate = true
       }
 
+      const brainWeight = (shapeA === 'brain' ? 1 - eased : 0) + (shapeB === 'brain' ? eased : 0)
+      brainSurfaceMesh.visible = brainReady && brainWeight > 0.01
+      brainSurfaceMaterial.opacity = Math.pow(brainWeight, 4)
+      brainSurfaceMaterial.depthWrite = brainWeight > 0.98
+      brainSurfaceMesh.position.copy(structuredPoints.position)
+      brainSurfaceMesh.scale.copy(structuredPoints.scale)
+      brainSurfaceMesh.rotation.copy(structuredPoints.rotation)
       composer.render()
     }
+
+    let inView = true
 
     function frame(time: number) {
       render(time)
       raf = requestAnimationFrame(frame)
     }
 
-    resize()
-    window.addEventListener('resize', resize)
-
-    if (reduceMotion) {
-      render(0)
-      const onScroll = () => render(0)
-      window.addEventListener('scroll', onScroll, { passive: true })
-      return () => {
-        window.removeEventListener('resize', resize)
-        window.removeEventListener('scroll', onScroll)
-        composer.dispose()
-        renderer.dispose()
-        structuredGeom.dispose()
-        structuredMat.dispose()
-        ambientGeom.dispose()
-        ambientMat.dispose()
-        sprite.dispose()
-      }
+    function updatePlayback() {
+      cancelAnimationFrame(raf)
+      if (!reduceMotion && inView && !document.hidden) raf = requestAnimationFrame(frame)
     }
 
-    if (window.matchMedia('(pointer: fine)').matches) {
+    resize()
+    const resizeObserver = new ResizeObserver(resize)
+    resizeObserver.observe(canvas)
+    const intersectionObserver = new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting
+      updatePlayback()
+    })
+    intersectionObserver.observe(canvas)
+    document.addEventListener('visibilitychange', updatePlayback)
+
+    if (!reduceMotion && window.matchMedia('(pointer: fine)').matches) {
       window.addEventListener('pointermove', onPointerMove, { passive: true })
     }
-    raf = requestAnimationFrame(frame)
+    updatePlayback()
 
     return () => {
+      controller.abort()
+      brainSurfaceGeometry.dispose()
+      brainSurfaceMaterial.dispose()
       cancelAnimationFrame(raf)
-      window.removeEventListener('resize', resize)
+      resizeObserver.disconnect()
+      intersectionObserver.disconnect()
+      document.removeEventListener('visibilitychange', updatePlayback)
       window.removeEventListener('pointermove', onPointerMove)
+      bloom.dispose()
+      output.dispose()
       composer.dispose()
       renderer.dispose()
       structuredGeom.dispose()
@@ -600,5 +562,5 @@ export function useConstellationScene(canvasRef: RefObject<HTMLCanvasElement>, p
       ambientMat.dispose()
       sprite.dispose()
     }
-  }, [canvasRef, progressRef])
+  }, [canvasRef, progressRef, reduceMotion])
 }
