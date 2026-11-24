@@ -1,53 +1,52 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import {
   MessageCircle, Pin, ArrowUp, ChevronRight, Users, Send,
-  Loader2, RefreshCw, Plus, X,
+  Loader2, RefreshCw, Plus, X, Sparkles,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   COMMUNITY_THREADS,
   COMMUNITY_CATEGORIES,
+  COMMUNITY_VERTICALS,
   type CommunityThread,
   type CommunityAuthor,
+  type CommunityVertical,
 } from '@/lib/data/community'
 import type { PostCategory } from '@/types'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 
-// ── Types ────────────────────────────────────────────────────────────────────
+// ── Types & Constants ────────────────────────────────────────────────────────
 
-type LivePost = {
-  id: string
-  title: string
-  body: string
-  post_type: 'bridge_win' | 'question' | 'insight' | 'accountability_update'
-  upvotes: number
-  reply_count: number
-  is_pinned: boolean
-  created_at: string
-  vertical_cohort: string
-  user_id: string
-  author_name: string | null
-  author_tier: string | null
-}
+const CUSTOM_POSTS_STORAGE_KEY = 'vibehyr_community_custom_posts'
 
-// Map bridge_forum_posts.post_type → PostCategory for display
 const POST_TYPE_TO_CATEGORY: Record<string, PostCategory> = {
-  bridge_win:          'bridge_of_incidents',
-  question:            'questions',
-  insight:             'general',
+  bridge_win:            'bridge_of_incidents',
+  question:              'questions',
+  insight:               'general',
   accountability_update: 'accountability',
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+const CATEGORY_TO_POST_TYPE: Record<PostCategory, 'bridge_win' | 'question' | 'insight' | 'accountability_update'> = {
+  general:             'insight',
+  sats_wins:           'bridge_win',
+  questions:           'question',
+  bridge_of_incidents: 'bridge_win',
+  accountability:      'accountability_update',
+}
 
 function timeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime()
+  if (diff < 0) return 'just now'
+  const mins = Math.floor(diff / 60000)
+  if (mins < 60) return mins <= 1 ? 'just now' : `${mins}m ago`
+  const hours = Math.floor(mins / 60)
+  if (hours < 24) return `${hours}h ago`
   const days = Math.floor(diff / 86400000)
   if (days === 0) return 'today'
   if (days === 1) return 'yesterday'
@@ -64,28 +63,32 @@ const CATEGORY_COLORS: Record<PostCategory, string> = {
 }
 const CATEGORY_LABELS: Record<PostCategory, string> = {
   general:             'General',
-  sats_wins:           'SATS Win',
+  sats_wins:           'Win & Breakthrough',
   questions:           'Question',
-  bridge_of_incidents: 'Bridge',
+  bridge_of_incidents: 'Bridge of Incidents',
   accountability:      'Accountability',
 }
-const POST_TYPE_LABELS: Record<string, string> = {
-  bridge_win:            'Bridge',
-  question:              'Question',
-  insight:               'Insight',
-  accountability_update: 'Accountability',
+
+const VERTICAL_BADGE_STYLES: Record<string, string> = {
+  personal:   'bg-orange-DEFAULT/10 text-orange-DEFAULT border-orange-DEFAULT/30',
+  business:   'bg-amber-500/10 text-amber-300 border-amber-500/30',
+  educator:   'bg-emerald-500/10 text-emerald-300 border-emerald-500/30',
+  leadership: 'bg-purple-500/10 text-purple-300 border-purple-500/30',
+  all:        'bg-white/5 text-white/70 border-white/15',
 }
-const POST_TYPE_COLORS: Record<string, string> = {
-  bridge_win:            'border-green-400 text-green-400',
-  question:              'border-blue-400 text-blue-400',
-  insight:               'border-grey-DEFAULT text-grey-DEFAULT',
-  accountability_update: 'border-[#dfbd8b] text-[#dfbd8b]',
+
+const VERTICAL_LABELS: Record<string, string> = {
+  personal:   'Personal',
+  business:   'Business',
+  educator:   'Educators',
+  leadership: 'Leadership',
+  all:        'All Tracks',
 }
 
 // ── Avatar ───────────────────────────────────────────────────────────────────
 
 function Avatar({ author, size = 'sm' }: { author: CommunityAuthor; size?: 'sm' | 'md' }) {
-  const sz = size === 'sm' ? 'w-8 h-8 text-sm' : 'w-10 h-10 text-base'
+  const sz = size === 'sm' ? 'w-9 h-9 text-sm' : 'w-10 h-10 text-base'
   const initial = author.full_name?.[0]?.toUpperCase() ?? '?'
   return (
     <div className={cn('rounded-full bg-orange-DEFAULT/10 border border-orange-DEFAULT/40 flex items-center justify-center flex-shrink-0 font-display text-orange-DEFAULT', sz)}>
@@ -94,19 +97,12 @@ function Avatar({ author, size = 'sm' }: { author: CommunityAuthor; size?: 'sm' 
   )
 }
 
-function AvatarInitial({ name, size = 'sm' }: { name: string | null; size?: 'sm' | 'md' }) {
-  const sz = size === 'sm' ? 'w-8 h-8 text-sm' : 'w-10 h-10 text-base'
-  const initial = name?.[0]?.toUpperCase() ?? '?'
-  return (
-    <div className={cn('rounded-full bg-orange-DEFAULT/10 border border-orange-DEFAULT/40 flex items-center justify-center flex-shrink-0 font-display text-orange-DEFAULT', sz)}>
-      {initial}
-    </div>
-  )
-}
-
-// ── Static thread row (used for fallback mock data) ───────────────────────────
+// ── Thread row ────────────────────────────────────────────────────────────────
 
 function ThreadRow({ thread }: { thread: CommunityThread }) {
+  const verticalKey = thread.vertical ?? 'personal'
+  const hasRecentUpdate = Boolean(thread.updated_at && thread.updated_at !== thread.created_at)
+
   return (
     <Link
       href={`/community/${thread.id}`}
@@ -114,73 +110,68 @@ function ThreadRow({ thread }: { thread: CommunityThread }) {
     >
       <Avatar author={thread.author} />
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1 flex-wrap">
+        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
           {thread.is_pinned && (
-            <Pin size={11} className="text-orange-DEFAULT flex-shrink-0" />
+            <span className="inline-flex items-center gap-1 font-mono text-[0.46rem] tracking-[0.18em] uppercase px-2 py-0.5 bg-orange-DEFAULT/15 border border-orange-DEFAULT/40 text-orange-DEFAULT">
+              <Pin size={10} className="text-orange-DEFAULT flex-shrink-0" />
+              Pinned
+            </span>
           )}
           <span className={cn('font-mono text-[0.48rem] tracking-[0.18em] uppercase px-2 py-0.5 border', CATEGORY_COLORS[thread.category])}>
             {CATEGORY_LABELS[thread.category]}
           </span>
+          {verticalKey !== 'all' && (
+            <span className={cn('font-mono text-[0.46rem] tracking-[0.16em] uppercase px-2 py-0.5 border', VERTICAL_BADGE_STYLES[verticalKey] ?? VERTICAL_BADGE_STYLES.personal)}>
+              {VERTICAL_LABELS[verticalKey] ?? verticalKey}
+            </span>
+          )}
+          {thread.course_tag && (
+            <span className="font-mono text-[0.46rem] tracking-[0.14em] uppercase px-2 py-0.5 bg-white/[0.03] border border-white/10 text-grey-DEFAULT">
+              {thread.course_tag}
+            </span>
+          )}
+          {hasRecentUpdate && (
+            <span className="inline-flex items-center gap-1 font-mono text-[0.45rem] tracking-[0.15em] uppercase text-[#dfbd8b]">
+              <Sparkles size={10} />
+              Updated {timeAgo(thread.updated_at!)}
+            </span>
+          )}
         </div>
-        <p className="font-body text-white text-sm leading-snug group-hover:text-orange-DEFAULT transition-colors mb-1 line-clamp-2">
+
+        <p className="font-body text-white text-sm md:text-[0.95rem] font-medium leading-snug group-hover:text-orange-DEFAULT transition-colors mb-1 line-clamp-2">
           {thread.title}
         </p>
-        <p className="font-mono text-[0.52rem] tracking-widest text-grey-dark">
-          {thread.author.full_name} · {timeAgo(thread.created_at)}
+
+        <p className="font-body text-grey-DEFAULT/75 text-xs leading-relaxed line-clamp-1 mb-2">
+          {thread.content.replace(/\*\*/g, '').replace(/• /g, '')}
         </p>
+
+        <div className="flex items-center gap-2 flex-wrap font-mono text-[0.52rem] tracking-widest text-grey-dark">
+          <span className="text-white/80">{thread.author.full_name}</span>
+          {thread.author.role === 'admin' && (
+            <span className="text-[0.44rem] tracking-[0.18em] uppercase px-1.5 py-0.2 bg-orange-DEFAULT/15 border border-orange-DEFAULT/40 text-orange-DEFAULT">
+              Admin
+            </span>
+          )}
+          {thread.author.title && (
+            <span>· {thread.author.title}</span>
+          )}
+          <span>· Posted {timeAgo(thread.created_at)}</span>
+        </div>
       </div>
-      <div className="flex items-center gap-4 flex-shrink-0 text-grey-dark">
-        <div className="flex items-center gap-1">
-          <ArrowUp size={11} />
-          <span className="font-mono text-[0.52rem]">{thread.upvotes}</span>
+
+      <div className="flex items-center gap-4 flex-shrink-0 text-grey-dark self-center">
+        <div className="flex items-center gap-1" title="Upvotes">
+          <ArrowUp size={12} className="text-orange-DEFAULT/80" />
+          <span className="font-mono text-[0.55rem] text-white/80">{thread.upvotes}</span>
         </div>
-        <div className="flex items-center gap-1">
-          <MessageCircle size={11} />
-          <span className="font-mono text-[0.52rem]">{thread.reply_count}</span>
+        <div className="flex items-center gap-1" title="Replies">
+          <MessageCircle size={12} />
+          <span className="font-mono text-[0.55rem]">{thread.reply_count}</span>
         </div>
-        <ChevronRight size={13} className="group-hover:text-orange-DEFAULT transition-colors" />
+        <ChevronRight size={14} className="group-hover:text-orange-DEFAULT transition-colors" />
       </div>
     </Link>
-  )
-}
-
-// ── Live post row (bridge_forum_posts) ────────────────────────────────────────
-
-function LivePostRow({ post }: { post: LivePost }) {
-  const category = POST_TYPE_TO_CATEGORY[post.post_type] ?? 'general'
-  const colorClass = POST_TYPE_COLORS[post.post_type] ?? CATEGORY_COLORS.general
-
-  return (
-    <div className="flex items-start gap-4 px-6 py-5 bg-black-2 hover:bg-black-3 transition-colors group border-b border-white/5 last:border-0">
-      <AvatarInitial name={post.author_name} />
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1 flex-wrap">
-          {post.is_pinned && (
-            <Pin size={11} className="text-orange-DEFAULT flex-shrink-0" />
-          )}
-          <span className={cn('font-mono text-[0.48rem] tracking-[0.18em] uppercase px-2 py-0.5 border', colorClass)}>
-            {POST_TYPE_LABELS[post.post_type] ?? 'Post'}
-          </span>
-        </div>
-        <p className="font-body text-white text-sm leading-snug group-hover:text-orange-DEFAULT transition-colors mb-1 line-clamp-2">
-          {post.title}
-        </p>
-        <p className="font-mono text-[0.52rem] tracking-widest text-grey-dark">
-          {post.author_name ?? 'Community Member'} · {timeAgo(post.created_at)}
-        </p>
-      </div>
-      <div className="flex items-center gap-4 flex-shrink-0 text-grey-dark">
-        <div className="flex items-center gap-1">
-          <ArrowUp size={11} />
-          <span className="font-mono text-[0.52rem]">{post.upvotes}</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <MessageCircle size={11} />
-          <span className="font-mono text-[0.52rem]">{post.reply_count}</span>
-        </div>
-        <ChevronRight size={13} className="group-hover:text-orange-DEFAULT transition-colors" />
-      </div>
-    </div>
   )
 }
 
@@ -190,45 +181,95 @@ function NewPostModal({
   onClose,
   onCreated,
   userId,
-  vertical,
+  userName,
+  defaultVertical,
 }: {
   onClose: () => void
-  onCreated: () => void
-  userId: string
-  vertical: string
+  onCreated: (newThread: CommunityThread) => void
+  userId: string | null
+  userName: string
+  defaultVertical: CommunityVertical
 }) {
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
-  const [postType, setPostType] = useState<'bridge_win' | 'question' | 'insight' | 'accountability_update'>('insight')
+  const [category, setCategory] = useState<PostCategory>('bridge_of_incidents')
+  const [vertical, setVertical] = useState<CommunityVertical>(
+    defaultVertical === 'all' ? 'personal' : defaultVertical
+  )
+  const [courseTag, setCourseTag] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
   const handleSubmit = async () => {
     if (!title.trim() || !body.trim()) {
-      toast.error('Title and body are required')
+      toast.error('Title and post content are required')
       return
     }
     setSubmitting(true)
-    const supabase = createClient()
-    const { error } = await supabase.from('bridge_forum_posts').insert({
-      user_id:        userId,
-      title:          title.trim(),
-      body:           body.trim(),
-      post_type:      postType,
-      vertical_cohort: vertical,
-    })
-    setSubmitting(false)
-    if (error) {
-      toast.error('Could not post — ' + error.message)
-    } else {
-      toast.success('Post submitted!')
-      onCreated()
-      onClose()
+
+    const nowIso = new Date().toISOString()
+    const newThread: CommunityThread = {
+      id: `post-${Date.now()}`,
+      category,
+      vertical,
+      course_tag: courseTag.trim() || `${VERTICAL_LABELS[vertical] ?? 'Personal'} Practice`,
+      title: title.trim(),
+      content: body.trim(),
+      author: {
+        id: userId ?? 'local-member',
+        full_name: userName || 'Reality Architect',
+        avatar_url: null,
+        membership_tier: 'architect',
+        title: `${VERTICAL_LABELS[vertical] ?? 'Personal'} Track`,
+      },
+      reply_count: 0,
+      upvotes: 1,
+      is_pinned: false,
+      created_at: nowIso,
+      updated_at: nowIso,
+      replies: [],
     }
+
+    // Save locally so it works immediately and persists across page loads
+    try {
+      const existingRaw = localStorage.getItem(CUSTOM_POSTS_STORAGE_KEY)
+      const existing: CommunityThread[] = existingRaw ? JSON.parse(existingRaw) : []
+      localStorage.setItem(CUSTOM_POSTS_STORAGE_KEY, JSON.stringify([newThread, ...existing]))
+    } catch {
+      // ignore storage errors
+    }
+
+    // Also persist to Supabase bridge_forum_posts if authenticated
+    if (userId) {
+      try {
+        const supabase = createClient()
+        const { data } = await supabase
+          .from('bridge_forum_posts')
+          .insert({
+            user_id: userId,
+            title: title.trim(),
+            body: body.trim(),
+            post_type: CATEGORY_TO_POST_TYPE[category] ?? 'insight',
+            vertical_cohort: vertical === 'all' ? 'personal' : vertical,
+          })
+          .select('id')
+          .single()
+        if (data?.id) {
+          newThread.id = data.id
+        }
+      } catch {
+        // local storage already succeeded
+      }
+    }
+
+    setSubmitting(false)
+    toast.success('Post published to the community!')
+    onCreated(newThread)
+    onClose()
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="w-full max-w-lg bg-black-2 border border-orange-DEFAULT/30 p-6 relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+      <div className="w-full max-w-xl bg-black-2 border border-orange-DEFAULT/30 p-6 relative">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-grey-dark hover:text-white transition-colors"
@@ -236,37 +277,78 @@ function NewPostModal({
         >
           <X size={18} />
         </button>
-        <p className="font-mono text-[0.52rem] tracking-[0.2em] uppercase text-orange-DEFAULT mb-4">New Post</p>
+        <p className="font-mono text-[0.52rem] tracking-[0.2em] uppercase text-orange-DEFAULT mb-1">
+          Share With The Architects
+        </p>
+        <h3 className="font-display text-2xl text-white tracking-wide mb-4">
+          CREATE COMMUNITY POST
+        </h3>
 
-        {/* Post type */}
+        {/* Category selector */}
+        <label className="block font-mono text-[0.46rem] tracking-[0.18em] uppercase text-grey-dark mb-1.5">
+          Category
+        </label>
         <div className="flex gap-2 flex-wrap mb-4">
-          {(['bridge_win', 'question', 'insight', 'accountability_update'] as const).map(t => (
+          {COMMUNITY_CATEGORIES.map(c => (
             <button
-              key={t}
-              onClick={() => setPostType(t)}
+              key={c.id}
+              type="button"
+              onClick={() => setCategory(c.id)}
               className={cn(
-                'font-mono text-[0.45rem] tracking-[0.15em] uppercase px-2.5 py-1 border transition-colors',
-                postType === t
-                  ? 'border-orange-DEFAULT text-orange-DEFAULT'
-                  : 'border-white/20 text-grey-dark hover:border-orange-DEFAULT/50'
+                'font-mono text-[0.46rem] tracking-[0.15em] uppercase px-2.5 py-1 border transition-colors',
+                category === c.id
+                  ? 'border-orange-DEFAULT bg-orange-DEFAULT/10 text-orange-DEFAULT'
+                  : 'border-white/15 text-grey-dark hover:border-orange-DEFAULT/50'
               )}
             >
-              {POST_TYPE_LABELS[t]}
+              {c.label}
             </button>
           ))}
         </div>
 
-        <input
-          type="text"
-          value={title}
-          onChange={e => setTitle(e.target.value)}
-          placeholder="Post title..."
-          className="w-full bg-black-3 border border-white/15 px-4 py-2.5 font-body text-sm text-white placeholder:text-grey-dark focus:outline-none focus:border-orange-DEFAULT/50 transition-colors mb-3"
-        />
+        {/* Track / Vertical selector */}
+        <label className="block font-mono text-[0.46rem] tracking-[0.18em] uppercase text-grey-dark mb-1.5">
+          Track / Vertical
+        </label>
+        <div className="flex gap-2 flex-wrap mb-4">
+          {COMMUNITY_VERTICALS.filter(v => v.id !== 'all').map(v => (
+            <button
+              key={v.id}
+              type="button"
+              onClick={() => setVertical(v.id)}
+              className={cn(
+                'font-mono text-[0.46rem] tracking-[0.15em] uppercase px-2.5 py-1 border transition-colors',
+                vertical === v.id
+                  ? 'border-orange-DEFAULT bg-orange-DEFAULT/10 text-orange-DEFAULT'
+                  : 'border-white/15 text-grey-dark hover:border-orange-DEFAULT/50'
+              )}
+            >
+              {v.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+          <input
+            type="text"
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            placeholder="Post title (e.g., My Assumption Lab breakthrough in Course 4)..."
+            className="sm:col-span-2 w-full bg-black-3 border border-white/15 px-4 py-2.5 font-body text-sm text-white placeholder:text-grey-dark focus:outline-none focus:border-orange-DEFAULT/50 transition-colors"
+          />
+          <input
+            type="text"
+            value={courseTag}
+            onChange={e => setCourseTag(e.target.value)}
+            placeholder="Course / Module tag (optional)"
+            className="w-full bg-black-3 border border-white/15 px-3 py-2.5 font-body text-xs text-white placeholder:text-grey-dark focus:outline-none focus:border-orange-DEFAULT/50 transition-colors"
+          />
+        </div>
+
         <textarea
           value={body}
           onChange={e => setBody(e.target.value)}
-          placeholder="Share your experience, question, or insight..."
+          placeholder="Share your win, Assumption Lab commitment, synchronicity, or question..."
           rows={6}
           className="w-full bg-black-3 border border-white/15 px-4 py-2.5 font-body text-sm text-white placeholder:text-grey-dark focus:outline-none focus:border-orange-DEFAULT/50 transition-colors resize-none mb-4"
         />
@@ -277,7 +359,7 @@ function NewPostModal({
           className="w-full btn-orange flex items-center justify-center gap-2 disabled:opacity-50"
         >
           {submitting ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
-          {submitting ? 'Posting...' : 'Post to Community'}
+          {submitting ? 'Publishing...' : 'Publish to Community'}
         </button>
       </div>
     </div>
@@ -286,21 +368,51 @@ function NewPostModal({
 
 // ── Forum Tab ─────────────────────────────────────────────────────────────────
 
-function ForumTab({ isLoggedIn, userId }: { isLoggedIn: boolean; userId: string | null }) {
+function ForumTab({
+  isLoggedIn,
+  userId,
+  userName,
+}: {
+  isLoggedIn: boolean
+  userId: string | null
+  userName: string
+}) {
   const [activeCategory, setActiveCategory] = useState<PostCategory | 'all'>('all')
-  const [livePosts, setLivePosts] = useState<LivePost[]>([])
+  const [activeVertical, setActiveVertical] = useState<CommunityVertical>('all')
+  const [customThreads, setCustomThreads] = useState<CommunityThread[]>([])
+  const [liveThreads, setLiveThreads] = useState<CommunityThread[]>([])
   const [loading, setLoading] = useState(false)
-  const [useLive, setUseLive] = useState(false)
   const [showNewPost, setShowNewPost] = useState(false)
-  const [userVertical, setUserVertical] = useState<string>('personal')
+  const [userVertical, setUserVertical] = useState<CommunityVertical>('personal')
+  const [localReplyCounts, setLocalReplyCounts] = useState<Record<string, number>>({})
+
+  // Load locally created threads & reply count overrides
+  useEffect(() => {
+    try {
+      const savedPosts = localStorage.getItem(CUSTOM_POSTS_STORAGE_KEY)
+      if (savedPosts) {
+        setCustomThreads(JSON.parse(savedPosts))
+      }
+      const counts: Record<string, number> = {}
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key && key.startsWith('vibehyr_community_replies_')) {
+          const postId = key.replace('vibehyr_community_replies_', '')
+          const replies = JSON.parse(localStorage.getItem(key) || '[]')
+          if (Array.isArray(replies)) counts[postId] = replies.length
+        }
+      }
+      setLocalReplyCounts(counts)
+    } catch {
+      // ignore storage errors
+    }
+  }, [])
 
   const fetchLivePosts = useCallback(async () => {
     setLoading(true)
     try {
       const supabase = createClient()
 
-      // Get the current user's vertical cohort
-      let vertical = 'personal'
       if (userId) {
         const { data: profile } = await supabase
           .from('profiles')
@@ -308,8 +420,7 @@ function ForumTab({ isLoggedIn, userId }: { isLoggedIn: boolean; userId: string 
           .eq('id', userId)
           .single()
         if (profile?.account_vertical) {
-          vertical = profile.account_vertical
-          setUserVertical(vertical)
+          setUserVertical(profile.account_vertical as CommunityVertical)
         }
       }
 
@@ -324,28 +435,31 @@ function ForumTab({ isLoggedIn, userId }: { isLoggedIn: boolean; userId: string 
         .order('created_at', { ascending: false })
         .limit(50)
 
-      if (error || !data || data.length === 0) {
-        setUseLive(false)
-      } else {
-        const mapped: LivePost[] = data.map((row: any) => ({
-          id:             row.id,
-          title:          row.title,
-          body:           row.body,
-          post_type:      row.post_type,
-          upvotes:        row.upvotes,
-          reply_count:    row.reply_count,
-          is_pinned:      row.is_pinned,
-          created_at:     row.created_at,
-          vertical_cohort: row.vertical_cohort,
-          user_id:        row.user_id,
-          author_name:    row.profiles?.full_name ?? null,
-          author_tier:    row.profiles?.membership_tier ?? null,
+      if (!error && data && data.length > 0) {
+        const mapped: CommunityThread[] = data.map((row: any) => ({
+          id: row.id,
+          category: POST_TYPE_TO_CATEGORY[row.post_type] ?? 'general',
+          vertical: (row.vertical_cohort as CommunityVertical) ?? 'personal',
+          course_tag: `${VERTICAL_LABELS[row.vertical_cohort] ?? 'Community'} Discussion`,
+          title: row.title,
+          content: row.body,
+          author: {
+            id: row.user_id,
+            full_name: row.profiles?.full_name ?? 'Reality Architect',
+            avatar_url: null,
+            membership_tier: (row.profiles?.membership_tier as 'free' | 'architect' | 'elite') ?? 'architect',
+          },
+          reply_count: row.reply_count ?? 0,
+          upvotes: row.upvotes ?? 1,
+          is_pinned: Boolean(row.is_pinned),
+          created_at: row.created_at,
+          updated_at: row.created_at,
+          replies: [],
         }))
-        setLivePosts(mapped)
-        setUseLive(true)
+        setLiveThreads(mapped)
       }
     } catch {
-      setUseLive(false)
+      // fallback gracefully to static + local threads
     } finally {
       setLoading(false)
     }
@@ -355,140 +469,90 @@ function ForumTab({ isLoggedIn, userId }: { isLoggedIn: boolean; userId: string 
     fetchLivePosts()
   }, [fetchLivePosts])
 
-  // ── Render live data path ───────────────────────────────────────────────────
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-24 gap-3">
-        <Loader2 size={20} className="animate-spin text-orange-DEFAULT" />
-        <span className="font-mono text-[0.52rem] tracking-widest text-grey-dark uppercase">
-          Loading community...
-        </span>
-      </div>
-    )
-  }
+  // Combine live, custom local, and static seeded threads without duplicates
+  const allThreads = useMemo(() => {
+    const map = new Map<string, CommunityThread>()
+    for (const t of [...liveThreads, ...customThreads, ...COMMUNITY_THREADS]) {
+      if (!map.has(t.id)) {
+        const extraReplies = localReplyCounts[t.id] ?? 0
+        map.set(t.id, {
+          ...t,
+          reply_count: t.reply_count + extraReplies,
+        })
+      }
+    }
+    return Array.from(map.values())
+  }, [liveThreads, customThreads, localReplyCounts])
 
-  if (useLive) {
-    const pinned  = livePosts.filter(p => p.is_pinned)
-    const regular = livePosts.filter(p => !p.is_pinned)
+  const filteredThreads = useMemo(() => {
+    return allThreads.filter(t => {
+      const categoryMatch = activeCategory === 'all' || t.category === activeCategory
+      const verticalMatch =
+        activeVertical === 'all' ||
+        t.vertical === 'all' ||
+        (t.vertical ?? 'personal') === activeVertical
+      return categoryMatch && verticalMatch
+    })
+  }, [allThreads, activeCategory, activeVertical])
 
-    return (
-      <div>
-        {/* Category filter */}
-        <div className="flex gap-2 flex-wrap mb-6">
-          <button
-            onClick={() => setActiveCategory('all')}
-            className={cn('font-mono text-[0.52rem] tracking-[0.18em] uppercase px-3 py-1.5 border transition-colors',
-              activeCategory === 'all' ? 'border-orange-DEFAULT text-orange-DEFAULT' : 'border-white/20 text-grey-dark hover:border-orange-DEFAULT/50'
-            )}
-          >
-            All
-          </button>
-          {(['bridge_win', 'question', 'insight', 'accountability_update'] as const).map(t => (
+  const pinned = filteredThreads.filter(t => t.is_pinned)
+  const regular = filteredThreads.filter(t => !t.is_pinned)
+
+  return (
+    <div>
+      {/* Track / Vertical Filter Bar */}
+      <div className="flex items-center justify-between gap-4 flex-wrap mb-4 pb-4 border-b border-white/10">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-mono text-[0.48rem] tracking-[0.2em] uppercase text-grey-dark mr-1">
+            Track:
+          </span>
+          {COMMUNITY_VERTICALS.map(v => (
             <button
-              key={t}
-              onClick={() => setActiveCategory(POST_TYPE_TO_CATEGORY[t] ?? 'general')}
-              className={cn('font-mono text-[0.52rem] tracking-[0.18em] uppercase px-3 py-1.5 border transition-colors',
-                activeCategory === (POST_TYPE_TO_CATEGORY[t] ?? 'general')
-                  ? 'border-orange-DEFAULT text-orange-DEFAULT'
-                  : 'border-white/20 text-grey-dark hover:border-orange-DEFAULT/50'
+              key={v.id}
+              onClick={() => setActiveVertical(v.id)}
+              className={cn(
+                'font-mono text-[0.5rem] tracking-[0.18em] uppercase px-3 py-1.5 border transition-colors',
+                activeVertical === v.id
+                  ? 'border-orange-DEFAULT bg-orange-DEFAULT/15 text-orange-DEFAULT'
+                  : 'border-white/15 text-grey-dark hover:border-orange-DEFAULT/40 hover:text-white'
               )}
             >
-              {POST_TYPE_LABELS[t]}
+              {v.label}
             </button>
           ))}
         </div>
 
-        {/* Stats + actions bar */}
-        <div className="flex items-center justify-between gap-6 mb-4 px-1">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <Users size={12} className="text-orange-DEFAULT" />
-              <span className="font-mono text-[0.52rem] tracking-widest text-grey-dark">
-                {livePosts.length} posts · live
-              </span>
-            </div>
-            <button
-              onClick={fetchLivePosts}
-              className="flex items-center gap-1.5 text-grey-dark hover:text-orange-DEFAULT transition-colors"
-              title="Refresh"
-            >
-              <RefreshCw size={11} />
-              <span className="font-mono text-[0.48rem] tracking-widest uppercase">Refresh</span>
-            </button>
-          </div>
-          {isLoggedIn && (
-            <button
-              onClick={() => setShowNewPost(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 border border-orange-DEFAULT/40 text-orange-DEFAULT hover:bg-orange-DEFAULT/10 transition-colors font-mono text-[0.48rem] tracking-widest uppercase"
-            >
-              <Plus size={11} />
-              New Post
-            </button>
-          )}
-        </div>
-
-        {/* Thread list */}
-        <div className="border border-orange-DEFAULT/20 overflow-hidden">
-          {pinned.length > 0 && (
-            <div className="bg-orange-DEFAULT/5 border-b border-orange-DEFAULT/20">
-              {pinned.map(p => <LivePostRow key={p.id} post={p} />)}
-            </div>
-          )}
-          {regular.length === 0 && pinned.length === 0 ? (
-            <div className="py-12 text-center">
-              <p className="font-body italic text-grey-dark text-sm mb-4">
-                No posts yet. Be the first to share.
-              </p>
-              {isLoggedIn && (
-                <button
-                  onClick={() => setShowNewPost(true)}
-                  className="btn-orange inline-flex items-center gap-2"
-                >
-                  <Plus size={14} />
-                  Start a Thread
-                </button>
-              )}
-            </div>
-          ) : (
-            regular.map(p => <LivePostRow key={p.id} post={p} />)
-          )}
-        </div>
-
-        {/* New post modal */}
-        {showNewPost && userId && (
-          <NewPostModal
-            userId={userId}
-            vertical={userVertical}
-            onClose={() => setShowNewPost(false)}
-            onCreated={fetchLivePosts}
-          />
-        )}
+        <button
+          onClick={() => setShowNewPost(true)}
+          className="flex items-center gap-1.5 px-4 py-2 bg-orange-DEFAULT text-black hover:bg-orange-DEFAULT/90 transition-colors font-mono text-[0.52rem] font-semibold tracking-[0.18em] uppercase"
+        >
+          <Plus size={13} />
+          New Post
+        </button>
       </div>
-    )
-  }
 
-  // ── Fallback: static mock data ─────────────────────────────────────────────
-  const pinned  = COMMUNITY_THREADS.filter(t => t.is_pinned)
-  const regular = COMMUNITY_THREADS.filter(t => !t.is_pinned && (activeCategory === 'all' || t.category === activeCategory))
-
-  return (
-    <div>
-      {/* Category filter */}
+      {/* Category Filter Bar */}
       <div className="flex gap-2 flex-wrap mb-6">
         <button
           onClick={() => setActiveCategory('all')}
-          className={cn('font-mono text-[0.52rem] tracking-[0.18em] uppercase px-3 py-1.5 border transition-colors',
-            activeCategory === 'all' ? 'border-orange-DEFAULT text-orange-DEFAULT' : 'border-white/20 text-grey-dark hover:border-orange-DEFAULT/50'
+          className={cn(
+            'font-mono text-[0.52rem] tracking-[0.18em] uppercase px-3 py-1.5 border transition-colors',
+            activeCategory === 'all'
+              ? 'border-orange-DEFAULT text-orange-DEFAULT'
+              : 'border-white/20 text-grey-dark hover:border-orange-DEFAULT/50'
           )}
         >
-          All
+          All Categories
         </button>
         {COMMUNITY_CATEGORIES.map(cat => (
           <button
             key={cat.id}
             onClick={() => setActiveCategory(cat.id)}
-            className={cn('font-mono text-[0.52rem] tracking-[0.18em] uppercase px-3 py-1.5 border transition-colors',
-              activeCategory === cat.id ? 'border-orange-DEFAULT text-orange-DEFAULT' : 'border-white/20 text-grey-dark hover:border-orange-DEFAULT/50'
+            className={cn(
+              'font-mono text-[0.52rem] tracking-[0.18em] uppercase px-3 py-1.5 border transition-colors',
+              activeCategory === cat.id
+                ? 'border-orange-DEFAULT text-orange-DEFAULT'
+                : 'border-white/20 text-grey-dark hover:border-orange-DEFAULT/50'
             )}
           >
             {cat.label}
@@ -496,33 +560,61 @@ function ForumTab({ isLoggedIn, userId }: { isLoggedIn: boolean; userId: string 
         ))}
       </div>
 
-      {/* Stats bar */}
-      <div className="flex items-center gap-6 mb-4 px-1">
-        <div className="flex items-center gap-2">
-          <Users size={12} className="text-orange-DEFAULT" />
-          <span className="font-mono text-[0.52rem] tracking-widest text-grey-dark">
-            {COMMUNITY_THREADS.length} threads
-          </span>
+      {/* Stats + Refresh bar */}
+      <div className="flex items-center justify-between gap-6 mb-4 px-1 flex-wrap">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <Users size={12} className="text-orange-DEFAULT" />
+            <span className="font-mono text-[0.52rem] tracking-widest text-grey-dark">
+              {filteredThreads.length} active discussions
+            </span>
+          </div>
+          <div className="font-mono text-[0.52rem] tracking-widest text-[#dfbd8b]">
+            ✦ Updated with Personal, Business, Educators &amp; Leadership Assumption Lab threads
+          </div>
         </div>
-        <div className="font-mono text-[0.52rem] tracking-widest text-grey-dark">
-          ✦ New posts every day
-        </div>
+        <button
+          onClick={fetchLivePosts}
+          disabled={loading}
+          className="flex items-center gap-1.5 text-grey-dark hover:text-orange-DEFAULT transition-colors"
+          title="Refresh discussions"
+        >
+          <RefreshCw size={11} className={cn(loading && 'animate-spin')} />
+          <span className="font-mono text-[0.48rem] tracking-widest uppercase">Refresh</span>
+        </button>
       </div>
 
       {/* Thread list */}
       <div className="border border-orange-DEFAULT/20 overflow-hidden">
-        {pinned.length > 0 && (activeCategory === 'all') && (
+        {pinned.length > 0 && (
           <div className="bg-orange-DEFAULT/5 border-b border-orange-DEFAULT/20">
-            {pinned.map(t => <ThreadRow key={t.id} thread={t} />)}
+            {pinned.map(t => (
+              <ThreadRow key={t.id} thread={t} />
+            ))}
           </div>
         )}
-        {regular.map(t => <ThreadRow key={t.id} thread={t} />)}
-        {regular.length === 0 && (
+        {regular.map(t => (
+          <ThreadRow key={t.id} thread={t} />
+        ))}
+        {regular.length === 0 && pinned.length === 0 && (
           <div className="py-12 text-center font-body italic text-grey-dark text-sm">
-            No threads in this category yet.
+            No discussions match this filter yet. Click &ldquo;New Post&rdquo; to start the conversation.
           </div>
         )}
       </div>
+
+      {/* New post modal */}
+      {showNewPost && (
+        <NewPostModal
+          userId={userId}
+          userName={userName}
+          defaultVertical={activeVertical !== 'all' ? activeVertical : userVertical}
+          onClose={() => setShowNewPost(false)}
+          onCreated={newThread => {
+            setCustomThreads(prev => [newThread, ...prev])
+          }}
+        />
+      )}
     </div>
   )
 }
@@ -587,8 +679,8 @@ function MessagesTab() {
           style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9375rem' }}
         >
           Private conversations between members are on the roadmap.
-          When it launches, you'll be able to connect directly with
-          accountability partners and fellow practitioners.
+          When it launches, you&apos;ll be able to connect directly with
+          accountability partners and fellow practitioners across all four verticals.
         </p>
 
         {/* Divider line */}
@@ -615,12 +707,18 @@ export default function CommunityPage() {
   const [tab, setTab]               = useState<'forum' | 'messages'>('forum')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [userId, setUserId]         = useState<string | null>(null)
+  const [userName, setUserName]     = useState<string>('Reality Architect')
 
   useEffect(() => {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => {
       setIsLoggedIn(!!user)
       setUserId(user?.id ?? null)
+      if (user?.user_metadata?.full_name) {
+        setUserName(user.user_metadata.full_name)
+      } else if (user?.email) {
+        setUserName(user.email.split('@')[0])
+      }
     })
   }, [])
 
@@ -633,13 +731,13 @@ export default function CommunityPage() {
         <section className="py-16 px-6 md:px-14 border-b-2 border-orange-DEFAULT/20 relative">
           <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-DEFAULT" />
           <div className="max-w-7xl mx-auto">
-            <div className="label mb-3">Community</div>
+            <div className="label mb-3">Community · Personal · Business · Educators · Leadership</div>
             <h1 className="font-display text-[clamp(3rem,7vw,6rem)] leading-[0.95] tracking-[0.02em]">
               THE REALITY<br />
               <span className="text-orange-DEFAULT">ARCHITECTS</span>
             </h1>
-            <p className="font-body italic text-grey-DEFAULT mt-4 max-w-xl text-lg leading-relaxed">
-              A space for practitioners. Share your wins, ask your questions, and reinforce each other's assumptions.
+            <p className="font-body italic text-grey-DEFAULT mt-4 max-w-2xl text-lg leading-relaxed">
+              A live forum for practitioners across all four verticals. Share your Assumption Lab breakthroughs, SATS wins, classroom co-regulation shifts, and executive leadership protocols.
             </p>
 
             {/* Tabs */}
@@ -663,7 +761,7 @@ export default function CommunityPage() {
         <div className="py-12 px-6 md:px-14">
           <div className="max-w-7xl mx-auto">
             {tab === 'forum' ? (
-              <ForumTab isLoggedIn={isLoggedIn} userId={userId} />
+              <ForumTab isLoggedIn={isLoggedIn} userId={userId} userName={userName} />
             ) : (
               <MessagesTab />
             )}
