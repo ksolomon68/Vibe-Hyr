@@ -49,7 +49,7 @@ export function CertificateDashboard({ certificates, vertical = 'personal', sign
   const [downloading, setDownloading] = useState<string | null>(null)
   const [copied,      setCopied]      = useState<string | null>(null)
 
-  const browseLink = vertical === 'education' ? '/education' :
+  const browseLink = vertical === 'education' ? '/educators' :
                      vertical === 'business'  ? '/business' :
                      vertical === 'leadership'? '/leadership' :
                      '/personal'

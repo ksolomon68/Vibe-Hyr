@@ -54,21 +54,23 @@ export default async function LessonPage({ params }: PageProps) {
       .single()
 
     if (!profile?.is_super_admin) {
-      const isLeadership = profile?.membership_type === 'leadership' || profile?.vertical === 'leadership'
       const tier = profile?.membership_tier ?? 'free'
 
       const TIER_ACCESS: Record<string, string[]> = {
-        free:      ['leadership_course_1'],
-        architect: ['leadership_course_1', 'leadership_course_2', 'leadership_course_3'],
-        elite:     ['leadership_course_1', 'leadership_course_2', 'leadership_course_3', 'leadership_course_4'],
+        free:             ['leadership_course_1'],
+        seeker:           ['leadership_course_1'],
+        architect:        ['leadership_course_1', 'leadership_course_2', 'leadership_course_3'],
+        elite:            ['leadership_course_1', 'leadership_course_2', 'leadership_course_3', 'leadership_course_4'],
+        reality_master:   ['leadership_course_1', 'leadership_course_2', 'leadership_course_3', 'leadership_course_4'],
+        'reality-master': ['leadership_course_1', 'leadership_course_2', 'leadership_course_3', 'leadership_course_4'],
       }
 
-      const allowed = isLeadership ? (TIER_ACCESS[tier] ?? ['leadership_course_1']) : []
+      const allowed = TIER_ACCESS[tier] ?? ['leadership_course_1']
 
       if (!allowed.includes(params.courseId) && !isPreview) {
         return (
           <CourseLockedScreen
-            reason={isLeadership ? 'tier_required' : 'wrong_vertical'}
+            reason="tier_required"
             courseSlug={params.courseId}
             sectionLabel="LEADERSHIP"
             backHref="/leadership"

@@ -48,7 +48,6 @@ const TIER_LABELS: Record<string, string> = {
 }
 
 export default function LeadershipPage() {
-  const router = useRouter()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [userTier, setUserTier] = useState('free')
   const [hasFullAccess, setHasFullAccess] = useState(false)
@@ -60,21 +59,16 @@ export default function LeadershipPage() {
       setIsLoggedIn(true)
       supabase
         .from('profiles')
-        .select('membership_type, membership_tier, is_super_admin, is_bypassed')
+        .select('membership_tier, is_super_admin, is_bypassed')
         .eq('id', user.id)
         .single()
         .then(({ data: profile }) => {
           if (!profile) return
           if (profile.membership_tier) setUserTier(profile.membership_tier)
           setHasFullAccess(!!profile.is_super_admin || !!profile.is_bypassed)
-          if (!profile.membership_type) return
-          const correctRoute = getCourseRoute(profile.membership_type, null)
-          if (correctRoute !== '/leadership') {
-            router.replace(correctRoute)
-          }
         })
     })
-  }, [router])
+  }, [])
 
   return (
     <>

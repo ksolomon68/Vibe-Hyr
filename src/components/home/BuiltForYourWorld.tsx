@@ -15,7 +15,7 @@ const CARDS = [
       'Build Peak Performance',
     ],
     cta:  'Explore Workplace Programs',
-    href: '/workplace',
+    href: '/business',
   },
   {
     icon:    GraduationCap,

@@ -109,10 +109,10 @@ export default async function CoursePage({ params }: { params: { slug: string } 
           <div className="max-w-7xl mx-auto px-6 md:px-14 py-16 relative z-10">
             <div className="flex items-center gap-3 mb-6">
               <Link
-                href={courseRoute}
+                href="/personal"
                 className="font-mono text-[0.58rem] tracking-[0.2em] uppercase text-grey-dark hover:text-orange-DEFAULT transition-colors"
               >
-                ← Courses
+                ← Personal Courses
               </Link>
               <span className="text-grey-dark">/</span>
               <span className={cn('font-mono text-[0.55rem] tracking-[0.2em] uppercase px-2.5 py-1 border',
@@ -356,7 +356,7 @@ export default async function CoursePage({ params }: { params: { slug: string } 
                     <p className="font-body text-lg text-white">{next.title}</p>
                   </div>
                   <Link
-                    href={`${courseRoute}/${next.slug}`}
+                    href={`/personal/${next.slug}`}
                     className="btn-outline-orange flex items-center gap-2 text-[0.62rem]"
                   >
                     Preview <ArrowRight size={12} />

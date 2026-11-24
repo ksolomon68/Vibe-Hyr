@@ -33,9 +33,12 @@ const LEADERSHIP_PREV: Record<string, string | null> = {
 }
 
 const TIER_ACCESS: Record<string, string[]> = {
-  free:      ['leadership_course_1'],
-  architect: ['leadership_course_1', 'leadership_course_2', 'leadership_course_3'],
-  elite:     ['leadership_course_1', 'leadership_course_2', 'leadership_course_3', 'leadership_course_4'],
+  free:             ['leadership_course_1'],
+  seeker:           ['leadership_course_1'],
+  architect:        ['leadership_course_1', 'leadership_course_2', 'leadership_course_3'],
+  elite:            ['leadership_course_1', 'leadership_course_2', 'leadership_course_3', 'leadership_course_4'],
+  reality_master:   ['leadership_course_1', 'leadership_course_2', 'leadership_course_3', 'leadership_course_4'],
+  'reality-master': ['leadership_course_1', 'leadership_course_2', 'leadership_course_3', 'leadership_course_4'],
 }
 
 const TIER_LABELS: Record<string, string> = {
@@ -93,27 +96,9 @@ export default async function CourseDetailPage({ params }: PageProps) {
     }
   }
 
-  // Must require `user` explicitly — userTier defaults to 'free' whether or
-  // not anyone is logged in, so without this guard a guest was treated
-  // identically to a logged-in free-tier member (unlocked Course 1),
-  // inconsistent with /educators and /business which require login here.
-  const tierGrant   = !!user && (isSuperAdmin || isBypassed || (isLeadership && (TIER_ACCESS[userTier] ?? []).includes(params.courseId)))
+  const tierGrant   = isSuperAdmin || isBypassed || (TIER_ACCESS[userTier] ?? TIER_ACCESS.free).includes(params.courseId)
   const canAccess   = tierGrant && prevCourseComplete
   const prevCourse  = prereqId ? COURSES.find(c => c.id === prereqId) : null
-
-  // Mirrors /educators/[programSlug]: a logged-in user without tier access gets
-  // the shared full-page locked screen instead of an inline message.
-  if (user && !tierGrant) {
-    return (
-      <CourseLockedScreen
-        reason={isLeadership ? 'tier_required' : 'wrong_vertical'}
-        courseSlug={course.id}
-        sectionLabel="LEADERSHIP"
-        backHref="/leadership"
-        backLabel="Back to Leadership"
-      />
-    )
-  }
 
   const pct = course.lessons.length > 0
     ? Math.round((completedLessons.length / course.lessons.length) * 100)

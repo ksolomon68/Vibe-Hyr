@@ -14,9 +14,12 @@ import { CourseLockedScreen } from '@/components/CourseLockedScreen'
 // paid tier unlocks. Institutional Seeker is paid (unlike individual Seeker,
 // which is free); there is no free tier for the educator vertical.
 const EDUCATOR_TIER_ACCESS: Record<string, string[]> = {
-  free:      ['the-educator-reset'],
-  architect: ['the-educator-reset', 'vibrational-leadership', 'co-regulation-mastery'],
-  elite:     ['the-educator-reset', 'vibrational-leadership', 'co-regulation-mastery', 'the-retained-educator'],
+  free:             ['the-educator-reset'],
+  seeker:           ['the-educator-reset'],
+  architect:        ['the-educator-reset', 'vibrational-leadership', 'co-regulation-mastery'],
+  elite:            ['the-educator-reset', 'vibrational-leadership', 'co-regulation-mastery', 'the-retained-educator'],
+  reality_master:   ['the-educator-reset', 'vibrational-leadership', 'co-regulation-mastery', 'the-retained-educator'],
+  'reality-master': ['the-educator-reset', 'vibrational-leadership', 'co-regulation-mastery', 'the-retained-educator'],
 }
 
 export async function generateMetadata({ params }: { params: { programSlug: string } }) {
@@ -32,8 +35,8 @@ export default async function EducatorProgramPage({ params }: { params: { progra
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  let canAccess = false;
-  let accessReason: string | undefined;
+  // Program 1 (The Educator Reset) is open to preview/start; higher programs unlock by tier
+  let canAccess = program.slug === 'the-educator-reset'
   let completedModules: string[] = []
 
   if (user) {
@@ -55,11 +58,9 @@ export default async function EducatorProgramPage({ params }: { params: { progra
     const isBypassed     = profile?.is_bypassed ?? false
     const hasDirectGrant = !!directGrant
     const tier           = profile?.membership_tier ?? 'free'
-    const isEducator     = profile?.vertical === 'education'
-    const tierUnlocked   = isEducator && (EDUCATOR_TIER_ACCESS[tier] ?? EDUCATOR_TIER_ACCESS['free']).includes(program.slug)
+    const tierUnlocked   = (EDUCATOR_TIER_ACCESS[tier] ?? EDUCATOR_TIER_ACCESS['free']).includes(program.slug)
 
     canAccess = isSuperAdmin || isBypassed || hasDirectGrant || tierUnlocked
-    if (!canAccess) accessReason = isEducator ? 'tier_required' : 'wrong_vertical'
 
     if (canAccess) {
       const { data: prog } = await supabase
@@ -70,19 +71,6 @@ export default async function EducatorProgramPage({ params }: { params: { progra
 
       completedModules = prog?.map(p => p.module_id) ?? []
     }
-  }
-
-  // If locked, show locked screen unless user is not logged in
-  if (user && !canAccess) {
-    return (
-      <CourseLockedScreen
-        reason={accessReason as any || 'tier_required'}
-        courseSlug={program.slug}
-        sectionLabel="EDUCATOR"
-        backHref="/educators"
-        backLabel="Back to Programs"
-      />
-    )
   }
 
   const pct = program.modules.length > 0
@@ -166,7 +154,7 @@ export default async function EducatorProgramPage({ params }: { params: { progra
                   ))}
                 </div>
 
-                {user && canAccess ? (
+                {canAccess ? (
                   <Link
                     href={`/educators/${program.slug}/${nextModule?.id}`}
                     className="btn-orange w-full text-center flex items-center justify-center gap-2"
@@ -174,7 +162,15 @@ export default async function EducatorProgramPage({ params }: { params: { progra
                     <Play size={13} />
                     {pct === 0 ? 'Start Program' : pct === 100 ? 'Review Modules' : 'Continue Program'}
                   </Link>
-                ) : user ? null : (
+                ) : user ? (
+                  <Link
+                    href="/pricing"
+                    className="btn-outline-orange w-full text-center flex items-center justify-center gap-2"
+                  >
+                    <Lock size={13} />
+                    Upgrade to Unlock
+                  </Link>
+                ) : (
                   <Link href={`/auth/login?redirect=/educators/${program.slug}`} className="btn-outline w-full text-center block mb-3">
                     Log In to Access
                   </Link>

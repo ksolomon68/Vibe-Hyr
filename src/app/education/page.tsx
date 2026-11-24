@@ -26,19 +26,19 @@ export default function EducationCoursesPage() {
       if (!user) return
       supabase
         .from('profiles')
-        .select('membership_tier, membership_type')
+        .select('membership_tier, is_super_admin, is_bypassed')
         .eq('id', user.id)
         .single()
         .then(({ data: profile }) => {
           if (!profile) return
-          if (profile.membership_tier) setUserTier(profile.membership_tier as MembershipTier)
-          const correctRoute = getCourseRoute(profile.membership_type, null)
-          if (correctRoute !== '/education') {
-            router.replace(correctRoute)
+          if (profile.is_super_admin || profile.is_bypassed) {
+            setUserTier('elite')
+          } else if (profile.membership_tier) {
+            setUserTier(profile.membership_tier as MembershipTier)
           }
         })
     })
-  }, [router])
+  }, [])
 
   return (
     <>

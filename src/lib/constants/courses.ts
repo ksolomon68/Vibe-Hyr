@@ -58,6 +58,7 @@ export const SLUG_TO_COURSE_ID: Record<string, string> = {
   'the-educator-reset':       'education_course_1',
   'vibrational-leadership':   'education_course_2',
   'co-regulation-mastery':    'education_course_3',
+  'the-retained-educator':    'education_course_4',
   'echo-theory-for-educators':'education_course_4',
   'ed01': 'education_course_1',
   'ed02': 'education_course_2',
@@ -102,7 +103,12 @@ const VERTICAL_SEQUENCE: Record<string, { slugs: string[]; base: string }> = {
     base: '/business',
   },
   education: {
-    slugs: ['ed01', 'ed02', 'ed03', 'ed04'],
+    slugs: [
+      'the-educator-reset',
+      'vibrational-leadership',
+      'co-regulation-mastery',
+      'the-retained-educator',
+    ],
     base: '/educators',
   },
   leadership: {
@@ -150,11 +156,15 @@ const FIRST_LESSON_PATH: Record<string, string> = {
   'know-yourself-lead-yourself':   '/business/know-yourself-lead-yourself/b03-l01',
   'the-high-frequency-team':       '/business/the-high-frequency-team/b04-l01',
 
-  // Education — /educators/[programId]/[moduleId]
-  'ed01': '/educators/ed01/ed01-m01',
-  'ed02': '/educators/ed02/ed02-m01',
-  'ed03': '/educators/ed03/ed03-m01',
-  'ed04': '/educators/ed04/ed04-m01',
+  // Education — /educators/[programSlug]/[moduleId]
+  'the-educator-reset':     '/educators/the-educator-reset/ed01-m01',
+  'vibrational-leadership': '/educators/vibrational-leadership/ed02-m01',
+  'co-regulation-mastery':  '/educators/co-regulation-mastery/ed03-m01',
+  'the-retained-educator':  '/educators/the-retained-educator/ed04-m01',
+  'ed01': '/educators/the-educator-reset/ed01-m01',
+  'ed02': '/educators/vibrational-leadership/ed02-m01',
+  'ed03': '/educators/co-regulation-mastery/ed03-m01',
+  'ed04': '/educators/the-retained-educator/ed04-m01',
 
   // Leadership — /leadership/[courseId]/[lessonId]
   'leadership_course_1': '/leadership/leadership_course_1/the-responsibility-formula',

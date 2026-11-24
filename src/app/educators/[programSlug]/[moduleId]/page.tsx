@@ -24,9 +24,12 @@ const PREVIEW_LESSON = { programSlug: 'the-educator-reset', moduleId: 'ed01-m01'
 // paid tier unlocks. Institutional Seeker is paid (unlike individual Seeker,
 // which is free); there is no free tier for the educator vertical.
 const EDUCATOR_TIER_ACCESS: Record<string, string[]> = {
-  free:      ['the-educator-reset'],
-  architect: ['the-educator-reset', 'vibrational-leadership', 'co-regulation-mastery'],
-  elite:     ['the-educator-reset', 'vibrational-leadership', 'co-regulation-mastery', 'the-retained-educator'],
+  free:             ['the-educator-reset'],
+  seeker:           ['the-educator-reset'],
+  architect:        ['the-educator-reset', 'vibrational-leadership', 'co-regulation-mastery'],
+  elite:            ['the-educator-reset', 'vibrational-leadership', 'co-regulation-mastery', 'the-retained-educator'],
+  reality_master:   ['the-educator-reset', 'vibrational-leadership', 'co-regulation-mastery', 'the-retained-educator'],
+  'reality-master': ['the-educator-reset', 'vibrational-leadership', 'co-regulation-mastery', 'the-retained-educator'],
 }
 
 export default async function EducationModulePage({
@@ -91,14 +94,13 @@ export default async function EducationModulePage({
     const isBypassed     = profile?.is_bypassed ?? false
     const hasDirectGrant = !!directGrant
     const tier           = profile?.membership_tier ?? 'free'
-    const isEducator     = profile?.vertical === 'education'
-    const tierUnlocked   = isEducator && (EDUCATOR_TIER_ACCESS[tier] ?? EDUCATOR_TIER_ACCESS['free']).includes(program.slug)
-    const canAccess       = isSuperAdmin || isBypassed || hasDirectGrant || tierUnlocked
+    const tierUnlocked   = (EDUCATOR_TIER_ACCESS[tier] ?? EDUCATOR_TIER_ACCESS['free']).includes(program.slug)
+    const canAccess      = isSuperAdmin || isBypassed || hasDirectGrant || tierUnlocked
 
     if (!canAccess && !isPreview) {
       return (
         <CourseLockedScreen
-          reason={isEducator ? 'tier_required' : 'wrong_vertical'}
+          reason="tier_required"
           courseSlug={params.programSlug}
           sectionLabel="EDUCATOR"
           backHref="/educators"

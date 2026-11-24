@@ -16,7 +16,6 @@ export default function CoursesPage() {
   const [userTier,  setUserTier]  = useState<MembershipTier>('free')
   const [modalOpen, setModalOpen] = useState(false)
   const [modalTier, setModalTier] = useState<PersonalTier>('architect')
-  const router = useRouter()
 
   useEffect(() => {
     const supabase = createClient()
@@ -24,23 +23,19 @@ export default function CoursesPage() {
       if (user) {
         supabase
           .from('profiles')
-          .select('membership_tier, membership_type')
+          .select('membership_tier, is_super_admin, is_bypassed')
           .eq('id', user.id)
           .single()
           .then(({ data: profile }) => {
-            if (profile?.membership_tier) {
+            if (profile?.is_super_admin || profile?.is_bypassed) {
+              setUserTier('elite')
+            } else if (profile?.membership_tier) {
               setUserTier(profile.membership_tier as MembershipTier)
-            }
-            if (profile?.membership_type) {
-              const correctRoute = getCourseRoute(profile.membership_type, null)
-              if (correctRoute !== '/personal') {
-                router.replace(correctRoute)
-              }
             }
           })
       }
     })
-  }, [router])
+  }, [])
 
   const handleUpgrade = (tier: string) => {
     // Normalize course tier values to PersonalTier

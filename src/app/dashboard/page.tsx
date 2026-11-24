@@ -246,7 +246,7 @@ export default async function DashboardPage() {
     const hasAccess = isSuperAdmin || isBypassed || TIER_RANK[tier] >= TIER_RANK[programTier] || grantedSlugs.has(program.slug)
     // Find first incomplete module
     const nextModule = program.modules.find(m => !completedModules.includes(m.id)) ?? program.modules[0]
-    const href = nextModule ? `/educators/${program.slug}?module=${nextModule.id}` : `/educators/${program.slug}`
+    const href = nextModule ? `/educators/${program.slug}/${nextModule.id}` : `/educators/${program.slug}`
     return { ...program, hasAccess, progress: pct, href }
   })
 

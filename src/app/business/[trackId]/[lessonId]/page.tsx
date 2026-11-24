@@ -71,9 +71,12 @@ export default async function LessonPage({ params }: PageProps) {
   // ── Access gate: profile-based tier + vertical check (authenticated only) ──
   if (user) {
     const BUSINESS_TIER_ACCESS: Record<string, string[]> = {
-      free:      ['common-sense-in-the-workplace'],
-      architect: ['common-sense-in-the-workplace', 'from-reaction-to-response', 'know-yourself-lead-yourself'],
-      elite:     ['common-sense-in-the-workplace', 'from-reaction-to-response', 'know-yourself-lead-yourself', 'the-high-frequency-team'],
+      free:             ['common-sense-in-the-workplace'],
+      seeker:           ['common-sense-in-the-workplace'],
+      architect:        ['common-sense-in-the-workplace', 'from-reaction-to-response', 'know-yourself-lead-yourself'],
+      elite:            ['common-sense-in-the-workplace', 'from-reaction-to-response', 'know-yourself-lead-yourself', 'the-high-frequency-team'],
+      reality_master:   ['common-sense-in-the-workplace', 'from-reaction-to-response', 'know-yourself-lead-yourself', 'the-high-frequency-team'],
+      'reality-master': ['common-sense-in-the-workplace', 'from-reaction-to-response', 'know-yourself-lead-yourself', 'the-high-frequency-team'],
     }
 
     const { data: profile } = await supabase
@@ -85,12 +88,11 @@ export default async function LessonPage({ params }: PageProps) {
     const tier         = profile?.membership_tier ?? 'free'
     const isSuperAdmin = !!profile?.is_super_admin
     const isBypassed   = !!profile?.is_bypassed
-    const instType     = profile?.vertical ?? 'personal'
     const allowed      = (isSuperAdmin || isBypassed)
-      ? Object.values(BUSINESS_TIER_ACCESS).at(-1)!
+      ? BUSINESS_TIER_ACCESS.elite
       : (BUSINESS_TIER_ACCESS[tier] ?? BUSINESS_TIER_ACCESS['free'])
 
-    const canAccess = isSuperAdmin || isBypassed || (instType === 'business' && allowed.includes(params.trackId))
+    const canAccess = isSuperAdmin || isBypassed || allowed.includes(params.trackId)
 
     if (!canAccess && !isPreview) {
       return (

@@ -45,9 +45,10 @@ const NAV_CATEGORIES = [
 ]
 
 const STATIC_LINKS = [
-  { href: '/',        label: 'Home' },
-  { href: '/pricing', label: 'Membership' },
-  { href: '/blog',    label: 'Blog' },
+  { href: '/',          label: 'Home' },
+  { href: '/pricing',   label: 'Membership' },
+  { href: '/community', label: 'Community' },
+  { href: '/blog',      label: 'Blog' },
 ]
 
 // ── Role helper ──────────────────────────────────────────────────────────────

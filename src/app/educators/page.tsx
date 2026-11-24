@@ -54,10 +54,10 @@ const PROBLEMS = [
 ]
 
 const PROGRAMS = [
-  { number: '01', tag: 'Flagship Training', audience: 'All Staff', name: 'The Educator Reset', desc: 'Vibe Hyr\'s core staff program. Focuses on teacher wellness, nervous system literacy, and the energy of leadership.', pills: ['Nervous System Health', 'Emotional Resilience', 'Self-Mastery'], dark: true },
-  { number: '02', tag: 'Leadership Track', audience: 'Admin & Principals', name: 'Vibrational Leadership', desc: 'How school leaders set the frequency for an entire building. Frameworks for supporting staff wellness from the top down.', pills: ['Culture Architecture', 'Wellness Advocacy', 'Conscious Leadership'], dark: false },
-  { number: '03', tag: 'Co-Regulation', audience: 'Classroom Teachers', name: 'Co-Regulation Mastery', desc: 'The science of meeting a student\'s storm with your calm. Practical tools for de-escalating through presence.', pills: ['De-Escalation', 'Classroom Climate', 'Biology of Calm'], dark: false },
-  { number: '04', tag: 'Sustainable Culture', audience: 'Districts & HR', name: 'The Retained Educator', desc: 'Systems-level approaches to reducing teacher turnover through culture-building and self-awareness integration.', pills: ['Staff Retention', 'Systemic Wellness', 'Culture ROI'], dark: false }
+  { number: '01', slug: 'the-educator-reset', tag: 'Flagship Training', audience: 'All Staff', name: 'The Educator Reset', desc: 'Vibe Hyr\'s core staff program. Focuses on teacher wellness, nervous system literacy, and the energy of leadership.', pills: ['Nervous System Health', 'Emotional Resilience', 'Self-Mastery'], dark: true },
+  { number: '02', slug: 'vibrational-leadership', tag: 'Leadership Track', audience: 'Admin & Principals', name: 'Vibrational Leadership', desc: 'How school leaders set the frequency for an entire building. Frameworks for supporting staff wellness from the top down.', pills: ['Culture Architecture', 'Wellness Advocacy', 'Conscious Leadership'], dark: false },
+  { number: '03', slug: 'co-regulation-mastery', tag: 'Co-Regulation', audience: 'Classroom Teachers', name: 'Co-Regulation Mastery', desc: 'The science of meeting a student\'s storm with your calm. Practical tools for de-escalating through presence.', pills: ['De-Escalation', 'Classroom Climate', 'Biology of Calm'], dark: false },
+  { number: '04', slug: 'the-retained-educator', tag: 'Sustainable Culture', audience: 'Districts & HR', name: 'The Retained Educator', desc: 'Systems-level approaches to reducing teacher turnover through culture-building and self-awareness integration.', pills: ['Staff Retention', 'Systemic Wellness', 'Culture ROI'], dark: false }
 ]
 
 const MODULES = [
@@ -230,14 +230,11 @@ export default function EducationPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {PROGRAMS.map((prog, idx) => (
-              <motion.div 
+              <Link
                 key={idx}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: idx * 0.1 }}
-                className={`relative p-10 md:p-14 rounded-sm border transition-all hover:-translate-y-1 cursor-pointer ${
-                  prog.dark ? 'bg-zinc-900 border-orange-DEFAULT/20 text-white' : 'bg-zinc-900/50 border-white/5 text-white'
+                href={`/educators/${prog.slug}`}
+                className={`group relative block p-10 md:p-14 rounded-sm border transition-all hover:-translate-y-1 cursor-pointer ${
+                  prog.dark ? 'bg-zinc-900 border-orange-DEFAULT/20 text-white hover:border-orange-DEFAULT/50' : 'bg-zinc-900/50 border-white/5 text-white hover:border-orange-DEFAULT/30'
                 }`}
               >
                 <span className={`absolute top-8 right-10 font-display text-8xl opacity-10 ${prog.dark ? 'text-orange-DEFAULT' : 'text-white'}`}>
@@ -251,16 +248,19 @@ export default function EducationPage() {
                     {prog.audience}
                   </span>
                 </div>
-                <h3 className={`font-serif text-3xl mb-4 ${prog.dark ? 'text-white' : 'text-white'}`}>{prog.name}</h3>
+                <h3 className="font-serif text-3xl mb-4 text-white group-hover:text-orange-DEFAULT transition-colors">{prog.name}</h3>
                 <p className={`text-sm leading-relaxed mb-8 max-w-md ${prog.dark ? 'text-white/60' : 'text-white/50'}`}>{prog.desc}</p>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 mb-6">
                   {prog.pills.map(pill => (
                     <span key={pill} className={`text-[0.65rem] px-3 py-1 rounded-sm border ${
                       prog.dark ? 'bg-orange-DEFAULT/10 border-orange-DEFAULT/20 text-orange-bright' : 'bg-white/5 border-white/10 text-white/40'
                     }`}>{pill}</span>
                   ))}
                 </div>
-              </motion.div>
+                <span className="font-mono text-[0.6rem] tracking-[0.2em] uppercase text-orange-DEFAULT inline-flex items-center gap-1.5">
+                  Explore Program <ChevronRight size={13} className="group-hover:translate-x-1 transition-transform" />
+                </span>
+              </Link>
             ))}
           </div>
         </div>

@@ -58,10 +58,10 @@ const PROBLEMS = [
 ]
 
 const COURSES = [
-  { num: '01', tag: 'Foundation', name: 'Common Sense In The Workplace', desc: 'The baseline every team needs. Practical training on reading a room, boundaries, and emotional intelligence.', pills: ['Self-Regulation', 'Social Awareness', 'Boundaries'] },
-  { num: '02', tag: 'De-Escalation', name: 'From Reaction to Response', desc: 'Neuroscience-backed tools for interrupting fight-or-flight loops. Learn to pause and choose your next move.', pills: ['Nervous System', 'Triggers', 'Recovery'] },
-  { num: '03', tag: 'Self Mastery', name: 'Know Yourself, Lead Yourself', desc: 'Deep-dive into personal identity and subconscious patterns that show up in professional behavior.', pills: ['Identity Work', 'Subconscious', 'Mindset'] },
-  { num: '04', tag: 'Team Cohesion', name: 'Vibing as a Unit', desc: 'Move from a group of individuals to a team operating at a higher frequency together. Shared language.', pills: ['Safety', 'Shared Values', 'Accountability'] }
+  { num: '01', slug: 'common-sense-in-the-workplace', tag: 'Foundation', name: 'Common Sense In The Workplace', desc: 'The baseline every team needs. Practical training on reading a room, boundaries, and emotional intelligence.', pills: ['Self-Regulation', 'Social Awareness', 'Boundaries'] },
+  { num: '02', slug: 'from-reaction-to-response', tag: 'De-Escalation', name: 'From Reaction to Response', desc: 'Neuroscience-backed tools for interrupting fight-or-flight loops. Learn to pause and choose your next move.', pills: ['Nervous System', 'Triggers', 'Recovery'] },
+  { num: '03', slug: 'know-yourself-lead-yourself', tag: 'Self Mastery', name: 'Know Yourself, Lead Yourself', desc: 'Deep-dive into personal identity and subconscious patterns that show up in professional behavior.', pills: ['Identity Work', 'Subconscious', 'Mindset'] },
+  { num: '04', slug: 'the-high-frequency-team', tag: 'Team Cohesion', name: 'The High-Frequency Team', desc: 'Move from a group of individuals to a team operating at a higher frequency together. Shared language.', pills: ['Safety', 'Shared Values', 'Accountability'] }
 ]
 
 const FLAGSHIP_MODULES = [
@@ -107,21 +107,19 @@ export default function WorkplaceTrainingPage() {
       if (user) {
         supabase
           .from('profiles')
-          .select('membership_tier, membership_type')
+          .select('membership_tier, is_super_admin, is_bypassed')
           .eq('id', user.id)
           .single()
           .then(({ data: profile }) => {
-            if (profile?.membership_tier) setUserTier(profile.membership_tier as MembershipTier)
-            if (profile?.membership_type) {
-              const correctRoute = getCourseRoute(profile.membership_type, null)
-              if (correctRoute !== '/business') {
-                router.replace(correctRoute)
-              }
+            if (profile?.is_super_admin || profile?.is_bypassed) {
+              setUserTier('elite')
+            } else if (profile?.membership_tier) {
+              setUserTier(profile.membership_tier as MembershipTier)
             }
           })
       }
     })
-  }, [router])
+  }, [])
 
   return (
     <main className="bg-black min-h-screen text-white pt-20">
@@ -236,12 +234,10 @@ export default function WorkplaceTrainingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {COURSES.map((course, idx) => (
-              <motion.div 
+              <Link
                 key={idx}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="group relative bg-zinc-900 border border-white/5 p-12 md:p-16 rounded-sm hover:border-orange-DEFAULT/30 transition-all hover:-translate-y-1 cursor-pointer overflow-hidden"
+                href={`/business/${course.slug}`}
+                className="group relative block bg-zinc-900 border border-white/5 p-12 md:p-16 rounded-sm hover:border-orange-DEFAULT/30 transition-all hover:-translate-y-1 cursor-pointer overflow-hidden"
               >
                 <div className="absolute top-0 left-0 w-0 h-[2px] bg-gradient-to-r from-orange-DEFAULT to-transparent group-hover:w-full transition-all duration-500" />
                 <span className="absolute top-10 right-14 font-display text-8xl opacity-[0.03] text-orange-DEFAULT group-hover:opacity-10 transition-opacity">
@@ -252,14 +248,17 @@ export default function WorkplaceTrainingPage() {
                 <h3 className="font-serif text-3xl text-white mb-6 leading-tight group-hover:text-orange-bright transition-colors">{course.name}</h3>
                 <p className="text-white/50 text-base leading-relaxed mb-10 max-w-md">{course.desc}</p>
                 
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 mb-6">
                   {course.pills.map(pill => (
                     <span key={pill} className="text-[0.6rem] uppercase tracking-widest font-bold px-4 py-2 bg-orange-DEFAULT/5 border border-orange-DEFAULT/20 text-orange-DEFAULT/80 rounded-full">
                       {pill}
                     </span>
                   ))}
                 </div>
-              </motion.div>
+                <span className="font-mono text-[0.6rem] tracking-[0.2em] uppercase text-orange-DEFAULT inline-flex items-center gap-2">
+                  Explore Track <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
+                </span>
+              </Link>
             ))}
           </div>
         </div>
@@ -299,7 +298,7 @@ export default function WorkplaceTrainingPage() {
             </div>
             {user ? (
                <Link 
-                 href="/business/common-sense-in-the-workplace/the-awareness-gap"
+                 href="/business/common-sense-in-the-workplace/b01-l01"
                  className="btn-open-app"
                >
                  Continue Training

@@ -11,9 +11,12 @@ import {
 import { CourseLockedScreen } from '@/components/CourseLockedScreen'
 
 const BUSINESS_TIER_ACCESS: Record<string, string[]> = {
-  free:      ['common-sense-in-the-workplace'],
-  architect: ['common-sense-in-the-workplace', 'from-reaction-to-response', 'know-yourself-lead-yourself'],
-  elite:     ['common-sense-in-the-workplace', 'from-reaction-to-response', 'know-yourself-lead-yourself', 'the-high-frequency-team'],
+  free:             ['common-sense-in-the-workplace'],
+  seeker:           ['common-sense-in-the-workplace'],
+  architect:        ['common-sense-in-the-workplace', 'from-reaction-to-response', 'know-yourself-lead-yourself'],
+  elite:            ['common-sense-in-the-workplace', 'from-reaction-to-response', 'know-yourself-lead-yourself', 'the-high-frequency-team'],
+  reality_master:   ['common-sense-in-the-workplace', 'from-reaction-to-response', 'know-yourself-lead-yourself', 'the-high-frequency-team'],
+  'reality-master': ['common-sense-in-the-workplace', 'from-reaction-to-response', 'know-yourself-lead-yourself', 'the-high-frequency-team'],
 }
 
 export async function generateMetadata({ params }: { params: { trackId: string } }) {
@@ -29,8 +32,8 @@ export default async function BusinessTrackPage({ params }: { params: { trackId:
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  let canAccess = false;
-  let accessReason: string | undefined;
+  // Track 1 (Common Sense in the Workplace) is open to preview/start; higher tracks unlock by tier
+  let canAccess = track.id === 'common-sense-in-the-workplace'
   let completedLessons: string[] = []
 
   if (user) {
@@ -44,16 +47,12 @@ export default async function BusinessTrackPage({ params }: { params: { trackId:
       const tier          = profile.membership_tier ?? 'free'
       const isSuperAdmin  = !!profile.is_super_admin
       const isBypassed    = !!profile.is_bypassed
-      const instType      = profile.vertical ?? 'personal'
 
       if (isSuperAdmin || isBypassed) {
         canAccess = true
-      } else if (instType === 'business') {
+      } else {
         const allowed = BUSINESS_TIER_ACCESS[tier] ?? BUSINESS_TIER_ACCESS['free']
         canAccess = allowed.includes(track.id)
-        if (!canAccess) accessReason = 'tier_required'
-      } else {
-        accessReason = 'wrong_vertical'
       }
 
       if (canAccess) {
@@ -65,19 +64,6 @@ export default async function BusinessTrackPage({ params }: { params: { trackId:
         completedLessons = prog?.map(p => p.lesson_id) ?? []
       }
     }
-  }
-
-  // If locked, show locked screen unless user is not logged in
-  if (user && !canAccess) {
-    return (
-      <CourseLockedScreen
-        reason={accessReason as any || 'tier_required'}
-        courseSlug={track.id}
-        sectionLabel="BUSINESS"
-        backHref="/business"
-        backLabel="Back to Training"
-      />
-    )
   }
 
   const pct = track.lessons.length > 0
@@ -161,7 +147,7 @@ export default async function BusinessTrackPage({ params }: { params: { trackId:
                   ))}
                 </div>
 
-                {user && canAccess ? (
+                {canAccess ? (
                   <Link
                     href={`/business/${track.id}/${nextLesson?.id}`}
                     className="btn-orange w-full text-center flex items-center justify-center gap-2"
@@ -169,7 +155,15 @@ export default async function BusinessTrackPage({ params }: { params: { trackId:
                     <Play size={13} />
                     {pct === 0 ? 'Start Training' : pct === 100 ? 'Review Modules' : 'Continue Track'}
                   </Link>
-                ) : user ? null : (
+                ) : user ? (
+                  <Link
+                    href="/pricing"
+                    className="btn-outline-orange w-full text-center flex items-center justify-center gap-2"
+                  >
+                    <Lock size={13} />
+                    Upgrade to Unlock
+                  </Link>
+                ) : (
                   <Link href={`/auth/login?redirect=/business/${track.id}`} className="btn-outline w-full text-center block mb-3">
                     Log In to Access
                   </Link>
