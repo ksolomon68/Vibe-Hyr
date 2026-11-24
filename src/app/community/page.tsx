@@ -1,21 +1,25 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import Link from 'next/link'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import {
   MessageCircle, Pin, ArrowUp, ChevronRight, Users, Send,
-  Loader2, RefreshCw, Plus, X, Sparkles,
+  Loader2, RefreshCw, Plus, X, Sparkles, Search, CheckCheck, UserPlus,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   COMMUNITY_THREADS,
   COMMUNITY_CATEGORIES,
   COMMUNITY_VERTICALS,
+  SAMPLE_DM_CONVERSATIONS,
+  COMMUNITY_DIRECTORY,
   type CommunityThread,
   type CommunityAuthor,
   type CommunityVertical,
+  type DirectMessageConversation,
+  type DirectMessageItem,
 } from '@/lib/data/community'
 import type { PostCategory } from '@/types'
 import { createClient } from '@/lib/supabase/client'
@@ -24,6 +28,7 @@ import toast from 'react-hot-toast'
 // ── Types & Constants ────────────────────────────────────────────────────────
 
 const CUSTOM_POSTS_STORAGE_KEY = 'vibehyr_community_custom_posts'
+const DM_STORAGE_KEY           = 'vibehyr_dm_conversations_v1'
 
 const POST_TYPE_TO_CATEGORY: Record<string, PostCategory> = {
   bridge_win:            'bridge_of_incidents',
@@ -52,6 +57,15 @@ function timeAgo(iso: string) {
   if (days === 1) return 'yesterday'
   if (days < 30) return `${days}d ago`
   return `${Math.floor(days / 30)}mo ago`
+}
+
+function formatMessageTime(iso: string) {
+  const date = new Date(iso)
+  const diffDays = Math.floor((Date.now() - date.getTime()) / 86400000)
+  const timeStr = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+  if (diffDays <= 0) return `Today · ${timeStr}`
+  if (diffDays === 1) return `Yesterday · ${timeStr}`
+  return `${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · ${timeStr}`
 }
 
 const CATEGORY_COLORS: Record<PostCategory, string> = {
@@ -85,13 +99,51 @@ const VERTICAL_LABELS: Record<string, string> = {
   all:        'All Tracks',
 }
 
+// ── Contextual auto-reply generator for seeded mentors & accountability leads ─
+
+function getAutoReplyForPartner(partner: CommunityAuthor, userText: string): string {
+  const lower = userText.toLowerCase()
+  if (partner.role === 'admin') {
+    if (lower.includes('sats') || lower.includes('scene')) {
+      return 'Remember: keep your SATS scene to a single 8-to-15-second first-person moment *after* the wish is already fulfilled. Add one physical texture (like a desk or ring) and let the feeling of normality do the heavy lifting.'
+    }
+    if (lower.includes('echo') || lower.includes('3d') || lower.includes('delay')) {
+      return 'Hold your standard steady! What you see in the 3D today is just expiring fossil light from 60 days ago. Run the 30-Second Decision Matrix and refuse to sign a new lease on the old state.'
+    }
+    return 'Received and locked in, Architect. Keep logging your daily Assumption Lab commitments and nightly Revision — I am holding the end state with you.'
+  }
+  if (partner.id === 'm-7') {
+    return 'Locked in for the 30-Day Challenge! ☑ Make sure you do your 5-minute morning RAS directive before checking notifications tomorrow, and message me after your evening Revision Journal!'
+  }
+  if (partner.id === 'm-9') {
+    return 'Love that focus. Try dropping your vocal cadence to 80% speed and leading with the Clarity Frame in your next meeting — let me know how the room responds!'
+  }
+  if (partner.id === 'm-10') {
+    return 'Co-regulation first! Do your 30-second Zone 2 threshold breath at the classroom door tomorrow and keep banking those 2×10 relational deposits. Keep me posted!'
+  }
+  if (partner.id === 'm-12') {
+    return 'Strong commitment. Remember Course 01: we don\'t get the culture we ask for, we get the culture we embody and tolerate. Let\'s review your progress at the end of the week!'
+  }
+  return `Appreciate you reaching out! Let's hold the assumption steady this week and check in on our Bridge of Incidents progress in a few days.`
+}
+
 // ── Avatar ───────────────────────────────────────────────────────────────────
 
-function Avatar({ author, size = 'sm' }: { author: CommunityAuthor; size?: 'sm' | 'md' }) {
-  const sz = size === 'sm' ? 'w-9 h-9 text-sm' : 'w-10 h-10 text-base'
+function Avatar({ author, size = 'sm' }: { author: CommunityAuthor; size?: 'sm' | 'md' | 'lg' }) {
+  const sz =
+    size === 'sm'
+      ? 'w-9 h-9 text-sm'
+      : size === 'lg'
+        ? 'w-11 h-11 text-lg'
+        : 'w-10 h-10 text-base'
   const initial = author.full_name?.[0]?.toUpperCase() ?? '?'
   return (
-    <div className={cn('rounded-full bg-orange-DEFAULT/10 border border-orange-DEFAULT/40 flex items-center justify-center flex-shrink-0 font-display text-orange-DEFAULT', sz)}>
+    <div
+      className={cn(
+        'rounded-full bg-[#E8621A]/15 border border-[#E8621A]/50 flex items-center justify-center flex-shrink-0 font-display text-[#E8621A]',
+        sz
+      )}
+    >
       {initial}
     </div>
   )
@@ -229,7 +281,6 @@ function NewPostModal({
       replies: [],
     }
 
-    // Save locally so it works immediately and persists across page loads
     try {
       const existingRaw = localStorage.getItem(CUSTOM_POSTS_STORAGE_KEY)
       const existing: CommunityThread[] = existingRaw ? JSON.parse(existingRaw) : []
@@ -238,7 +289,6 @@ function NewPostModal({
       // ignore storage errors
     }
 
-    // Also persist to Supabase bridge_forum_posts if authenticated
     if (userId) {
       try {
         const supabase = createClient()
@@ -284,7 +334,6 @@ function NewPostModal({
           CREATE COMMUNITY POST
         </h3>
 
-        {/* Category selector */}
         <label className="block font-mono text-[0.46rem] tracking-[0.18em] uppercase text-grey-dark mb-1.5">
           Category
         </label>
@@ -297,7 +346,7 @@ function NewPostModal({
               className={cn(
                 'font-mono text-[0.46rem] tracking-[0.15em] uppercase px-2.5 py-1 border transition-colors',
                 category === c.id
-                  ? 'border-orange-DEFAULT bg-orange-DEFAULT/10 text-orange-DEFAULT'
+                  ? 'border-orange-DEFAULT bg-orange-DEFAULT/15 text-orange-DEFAULT'
                   : 'border-white/15 text-grey-dark hover:border-orange-DEFAULT/50'
               )}
             >
@@ -306,7 +355,6 @@ function NewPostModal({
           ))}
         </div>
 
-        {/* Track / Vertical selector */}
         <label className="block font-mono text-[0.46rem] tracking-[0.18em] uppercase text-grey-dark mb-1.5">
           Track / Vertical
         </label>
@@ -319,7 +367,7 @@ function NewPostModal({
               className={cn(
                 'font-mono text-[0.46rem] tracking-[0.15em] uppercase px-2.5 py-1 border transition-colors',
                 vertical === v.id
-                  ? 'border-orange-DEFAULT bg-orange-DEFAULT/10 text-orange-DEFAULT'
+                  ? 'border-orange-DEFAULT bg-orange-DEFAULT/15 text-orange-DEFAULT'
                   : 'border-white/15 text-grey-dark hover:border-orange-DEFAULT/50'
               )}
             >
@@ -369,11 +417,9 @@ function NewPostModal({
 // ── Forum Tab ─────────────────────────────────────────────────────────────────
 
 function ForumTab({
-  isLoggedIn,
   userId,
   userName,
 }: {
-  isLoggedIn: boolean
   userId: string | null
   userName: string
 }) {
@@ -386,7 +432,6 @@ function ForumTab({
   const [userVertical, setUserVertical] = useState<CommunityVertical>('personal')
   const [localReplyCounts, setLocalReplyCounts] = useState<Record<string, number>>({})
 
-  // Load locally created threads & reply count overrides
   useEffect(() => {
     try {
       const savedPosts = localStorage.getItem(CUSTOM_POSTS_STORAGE_KEY)
@@ -469,7 +514,6 @@ function ForumTab({
     fetchLivePosts()
   }, [fetchLivePosts])
 
-  // Combine live, custom local, and static seeded threads without duplicates
   const allThreads = useMemo(() => {
     const map = new Map<string, CommunityThread>()
     for (const t of [...liveThreads, ...customThreads, ...COMMUNITY_THREADS]) {
@@ -524,7 +568,8 @@ function ForumTab({
 
         <button
           onClick={() => setShowNewPost(true)}
-          className="flex items-center gap-1.5 px-4 py-2 bg-orange-DEFAULT text-black hover:bg-orange-DEFAULT/90 transition-colors font-mono text-[0.52rem] font-semibold tracking-[0.18em] uppercase"
+          style={{ backgroundColor: '#E8621A', color: '#000000' }}
+          className="flex items-center gap-1.5 px-4 py-2 hover:opacity-90 transition-opacity font-mono text-[0.52rem] font-bold tracking-[0.18em] uppercase"
         >
           <Plus size={13} />
           New Post
@@ -538,7 +583,7 @@ function ForumTab({
           className={cn(
             'font-mono text-[0.52rem] tracking-[0.18em] uppercase px-3 py-1.5 border transition-colors',
             activeCategory === 'all'
-              ? 'border-orange-DEFAULT text-orange-DEFAULT'
+              ? 'border-orange-DEFAULT text-orange-DEFAULT bg-orange-DEFAULT/10'
               : 'border-white/20 text-grey-dark hover:border-orange-DEFAULT/50'
           )}
         >
@@ -551,7 +596,7 @@ function ForumTab({
             className={cn(
               'font-mono text-[0.52rem] tracking-[0.18em] uppercase px-3 py-1.5 border transition-colors',
               activeCategory === cat.id
-                ? 'border-orange-DEFAULT text-orange-DEFAULT'
+                ? 'border-orange-DEFAULT text-orange-DEFAULT bg-orange-DEFAULT/10'
                 : 'border-white/20 text-grey-dark hover:border-orange-DEFAULT/50'
             )}
           >
@@ -619,84 +664,535 @@ function ForumTab({
   )
 }
 
-// ── Messages Tab — Coming Soon ────────────────────────────────────────────────
+// ── New Direct Message Modal (Member Directory) ───────────────────────────────
 
-function MessagesTab() {
+function NewMessageModal({
+  onClose,
+  onSelectMember,
+  existingMembers,
+}: {
+  onClose: () => void
+  onSelectMember: (member: CommunityAuthor) => void
+  existingMembers: CommunityAuthor[]
+}) {
+  const [search, setSearch] = useState('')
+  const [liveProfiles, setLiveProfiles] = useState<CommunityAuthor[]>([])
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase
+      .from('profiles')
+      .select('id, full_name, avatar_url, membership_tier, role')
+      .limit(30)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          const mapped: CommunityAuthor[] = data
+            .filter((p: any) => p.full_name)
+            .map((p: any) => ({
+              id: p.id,
+              full_name: p.full_name,
+              avatar_url: p.avatar_url ?? null,
+              membership_tier: (p.membership_tier as 'free' | 'architect' | 'elite') ?? 'architect',
+              role: p.role === 'super_admin' || p.role === 'admin' ? 'admin' : undefined,
+              title: 'Community Member',
+            }))
+          setLiveProfiles(mapped)
+        }
+      })
+  }, [])
+
+  const directory = useMemo(() => {
+    const map = new Map<string, CommunityAuthor>()
+    for (const m of [...COMMUNITY_DIRECTORY, ...existingMembers, ...liveProfiles]) {
+      if (!map.has(m.id)) map.set(m.id, m)
+    }
+    const q = search.trim().toLowerCase()
+    return Array.from(map.values()).filter(
+      m =>
+        !q ||
+        m.full_name.toLowerCase().includes(q) ||
+        (m.title && m.title.toLowerCase().includes(q))
+    )
+  }, [existingMembers, liveProfiles, search])
+
   return (
-    <div
-      className="relative overflow-hidden border border-[#E8621A]/20"
-      style={{ background: '#0a0a0a', minHeight: '480px' }}
-    >
-      {/* Subtle grid texture */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{
-          backgroundImage:
-            'linear-gradient(rgba(232,98,26,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(232,98,26,0.04) 1px, transparent 1px)',
-          backgroundSize: '48px 48px',
-        }}
-      />
-
-      {/* Accent glow — top-left corner */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-24 -left-24 w-80 h-80 rounded-full"
-        style={{
-          background: 'radial-gradient(circle, rgba(232,98,26,0.12) 0%, transparent 70%)',
-        }}
-      />
-
-      {/* Content */}
-      <div className="relative z-10 flex flex-col items-center justify-center text-center px-6 py-24 gap-6">
-        {/* Icon ring */}
-        <div
-          className="w-20 h-20 rounded-full flex items-center justify-center mb-2"
-          style={{ border: '1px solid rgba(232,98,26,0.35)', background: 'rgba(232,98,26,0.06)' }}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+      <div className="w-full max-w-lg bg-black-2 border border-[#E8621A]/40 p-6 relative">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-grey-dark hover:text-white transition-colors"
+          aria-label="Close"
         >
-          <MessageCircle size={32} style={{ color: '#E8621A' }} strokeWidth={1.5} />
+          <X size={18} />
+        </button>
+
+        <p className="font-mono text-[0.52rem] tracking-[0.2em] uppercase text-[#E8621A] mb-1">
+          Direct Messaging
+        </p>
+        <h3 className="font-display text-2xl text-white tracking-wide mb-4">
+          START A CONVERSATION
+        </h3>
+
+        <div className="relative mb-4">
+          <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-grey-dark" />
+          <input
+            type="search"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search practitioners by name or track..."
+            className="w-full bg-black-3 border border-white/15 pl-9 pr-4 py-2.5 font-body text-sm text-white placeholder:text-grey-dark focus:outline-none focus:border-[#E8621A]/60"
+          />
         </div>
 
-        {/* Eyebrow */}
-        <p
-          className="font-mono tracking-[0.3em] uppercase text-[0.5rem]"
-          style={{ color: '#E8621A' }}
-        >
-          Coming Soon
-        </p>
-
-        {/* Heading — Bebas Neue via font-display */}
-        <h2
-          className="font-display leading-none tracking-[0.05em] text-white"
-          style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)' }}
-        >
-          DIRECT MESSAGING
-        </h2>
-
-        {/* Body — DM Sans via font-body */}
-        <p
-          className="font-body leading-relaxed max-w-md"
-          style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9375rem' }}
-        >
-          Private conversations between members are on the roadmap.
-          When it launches, you&apos;ll be able to connect directly with
-          accountability partners and fellow practitioners across all four verticals.
-        </p>
-
-        {/* Divider line */}
-        <div
-          className="w-16 mt-2"
-          style={{ height: '1px', background: 'rgba(232,98,26,0.4)' }}
-        />
-
-        {/* Footnote */}
-        <p
-          className="font-mono tracking-[0.2em] uppercase text-[0.45rem]"
-          style={{ color: 'rgba(255,255,255,0.25)' }}
-        >
-          Architect &amp; Elite members get early access
-        </p>
+        <div className="max-h-80 overflow-y-auto divide-y divide-white/5 border border-white/10">
+          {directory.map(member => (
+            <button
+              key={member.id}
+              type="button"
+              onClick={() => {
+                onSelectMember(member)
+                onClose()
+              }}
+              className="w-full flex items-center gap-3.5 px-4 py-3.5 bg-black-2 hover:bg-black-3 transition-colors text-left group"
+            >
+              <Avatar author={member} size="sm" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="font-body text-sm font-medium text-white group-hover:text-[#E8621A] transition-colors truncate">
+                    {member.full_name}
+                  </span>
+                  {member.role === 'admin' && (
+                    <span className="font-mono text-[0.42rem] tracking-[0.18em] uppercase px-1.5 py-0.5 bg-[#E8621A]/15 border border-[#E8621A]/40 text-[#E8621A]">
+                      Admin
+                    </span>
+                  )}
+                  <span className="font-mono text-[0.42rem] tracking-[0.16em] uppercase px-1.5 py-0.5 border border-white/15 text-grey-DEFAULT">
+                    {member.membership_tier}
+                  </span>
+                </div>
+                {member.title && (
+                  <p className="font-mono text-[0.48rem] tracking-widest text-grey-dark truncate mt-0.5">
+                    {member.title}
+                  </p>
+                )}
+              </div>
+              <ChevronRight size={14} className="text-grey-dark group-hover:text-[#E8621A]" />
+            </button>
+          ))}
+        </div>
       </div>
+    </div>
+  )
+}
+
+// ── Direct Messages Tab ───────────────────────────────────────────────────────
+
+const QUICK_PROMPTS = [
+  '🔥 Daily SATS & Mental Diet check-in complete!',
+  '✦ Just finished today\'s Assumption Lab — locking in my new identity anchor.',
+  '🤝 Looking to pair up for the 30-Day Revision & SATS Challenge!',
+]
+
+function MessagesTab({
+  userId,
+  userName,
+  conversations,
+  setConversations,
+}: {
+  userId: string | null
+  userName: string
+  conversations: DirectMessageConversation[]
+  setConversations: React.Dispatch<React.SetStateAction<DirectMessageConversation[]>>
+}) {
+  const [selectedId, setSelectedId]         = useState<string>(conversations[0]?.id ?? 'dm-admin-welcome')
+  const [searchQuery, setSearchQuery]       = useState('')
+  const [messageInput, setMessageInput]     = useState('')
+  const [sending, setSending]               = useState(false)
+  const [showNewMessage, setShowNewMessage] = useState(false)
+  const messagesEndRef                      = useRef<HTMLDivElement | null>(null)
+
+  const activeConversation = useMemo(
+    () => conversations.find(c => c.id === selectedId) ?? conversations[0],
+    [conversations, selectedId]
+  )
+
+  // Mark selected conversation as read when opened
+  useEffect(() => {
+    if (!activeConversation || !activeConversation.unread) return
+    setConversations(prev => {
+      const updated = prev.map(c =>
+        c.id === activeConversation.id ? { ...c, unread: false } : c
+      )
+      try {
+        localStorage.setItem(DM_STORAGE_KEY, JSON.stringify(updated))
+      } catch {
+        // ignore
+      }
+      return updated
+    })
+  }, [activeConversation, setConversations])
+
+  // Scroll to bottom of chat when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }, [activeConversation?.messages.length, activeConversation?.id])
+
+  const filteredConversations = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return conversations
+    return conversations.filter(
+      c =>
+        c.with.full_name.toLowerCase().includes(q) ||
+        c.status_text.toLowerCase().includes(q) ||
+        c.last_message.toLowerCase().includes(q)
+    )
+  }, [conversations, searchQuery])
+
+  const persistAndSet = useCallback(
+    (updater: (prev: DirectMessageConversation[]) => DirectMessageConversation[]) => {
+      setConversations(prev => {
+        const next = updater(prev)
+        try {
+          localStorage.setItem(DM_STORAGE_KEY, JSON.stringify(next))
+        } catch {
+          // ignore
+        }
+        return next
+      })
+    },
+    [setConversations]
+  )
+
+  const handleSendMessage = async (customText?: string) => {
+    const text = (customText ?? messageInput).trim()
+    if (!text || !activeConversation) return
+    setSending(true)
+    if (!customText) setMessageInput('')
+
+    const nowIso = new Date().toISOString()
+    const currentSenderId = userId ?? 'current-user'
+
+    const outgoingMsg: DirectMessageItem = {
+      id: `dm-msg-${Date.now()}`,
+      sender_id: currentSenderId,
+      content: text,
+      created_at: nowIso,
+    }
+
+    const targetConvoId = activeConversation.id
+    const partner = activeConversation.with
+
+    persistAndSet(prev =>
+      prev.map(c =>
+        c.id === targetConvoId
+          ? {
+              ...c,
+              last_message: text,
+              last_message_at: nowIso,
+              unread: false,
+              messages: [...c.messages, outgoingMsg],
+            }
+          : c
+      )
+    )
+
+    // Attempt Supabase sync if authenticated
+    if (userId) {
+      try {
+        const supabase = createClient()
+        await supabase.from('direct_messages').insert({
+          sender_id: userId,
+          recipient_id: partner.id,
+          recipient_name: partner.full_name,
+          content: text,
+        })
+      } catch {
+        // already persisted locally
+      }
+    }
+
+    setSending(false)
+
+    // Provide a natural mentor/accountability partner response after a brief moment
+    setTimeout(() => {
+      const replyText = getAutoReplyForPartner(partner, text)
+      const replyIso = new Date().toISOString()
+      const replyMsg: DirectMessageItem = {
+        id: `dm-reply-${Date.now()}`,
+        sender_id: partner.id,
+        content: replyText,
+        created_at: replyIso,
+      }
+      persistAndSet(prev =>
+        prev.map(c =>
+          c.id === targetConvoId
+            ? {
+                ...c,
+                last_message: replyText,
+                last_message_at: replyIso,
+                messages: [...c.messages, replyMsg],
+              }
+            : c
+        )
+      )
+    }, 900)
+  }
+
+  const handleStartConversationWithMember = (member: CommunityAuthor) => {
+    const existing = conversations.find(c => c.with.id === member.id)
+    if (existing) {
+      setSelectedId(existing.id)
+      return
+    }
+    const nowIso = new Date().toISOString()
+    const newConvo: DirectMessageConversation = {
+      id: `dm-${member.id}-${Date.now()}`,
+      with: member,
+      vertical: 'personal',
+      status_text: member.title ?? 'Reality Architect',
+      last_message: `Connected with ${member.full_name}`,
+      last_message_at: nowIso,
+      unread: false,
+      messages: [
+        {
+          id: `msg-init-${Date.now()}`,
+          sender_id: member.id,
+          content: `Hey ${userName}! Glad to connect here on Vibe Hyr. Let me know what course or assumption you are focusing on this week!`,
+          created_at: nowIso,
+        },
+      ],
+    }
+    persistAndSet(prev => [newConvo, ...prev])
+    setSelectedId(newConvo.id)
+    toast.success(`Opened conversation with ${member.full_name}`)
+  }
+
+  return (
+    <div className="border border-[#E8621A]/30 bg-black-2 grid grid-cols-1 lg:grid-cols-12 min-h-[620px] overflow-hidden">
+      {/* ── Left Column: Conversations Inbox ────────────────────────────────── */}
+      <div className="lg:col-span-4 border-b lg:border-b-0 lg:border-r border-white/10 flex flex-col">
+        {/* Inbox Header */}
+        <div className="p-4 border-b border-white/10 flex items-center justify-between gap-2 bg-black-3">
+          <div>
+            <p className="font-mono text-[0.48rem] tracking-[0.22em] uppercase text-[#E8621A]">
+              Direct Channels
+            </p>
+            <h2 className="font-display text-xl tracking-wider text-white">
+              MESSAGES ({conversations.length})
+            </h2>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowNewMessage(true)}
+            style={{ backgroundColor: '#E8621A', color: '#000000' }}
+            className="flex items-center gap-1.5 px-3 py-2 font-mono text-[0.48rem] font-bold tracking-[0.16em] uppercase hover:opacity-90 transition-opacity"
+          >
+            <UserPlus size={12} />
+            New Chat
+          </button>
+        </div>
+
+        {/* Search Conversations */}
+        <div className="p-3 border-b border-white/10 bg-black-2">
+          <div className="relative">
+            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-grey-dark" />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Filter conversations..."
+              className="w-full bg-black-3 border border-white/15 pl-8 pr-3 py-2 font-body text-xs text-white placeholder:text-grey-dark focus:outline-none focus:border-[#E8621A]/50"
+            />
+          </div>
+        </div>
+
+        {/* Conversation List */}
+        <div className="flex-1 overflow-y-auto divide-y divide-white/5 max-h-[340px] lg:max-h-[520px]">
+          {filteredConversations.map(convo => {
+            const isSelected = convo.id === activeConversation?.id
+            return (
+              <button
+                key={convo.id}
+                type="button"
+                onClick={() => setSelectedId(convo.id)}
+                className={cn(
+                  'w-full flex items-start gap-3.5 p-4 text-left transition-colors relative',
+                  isSelected
+                    ? 'bg-[#E8621A]/15 border-l-2 border-l-[#E8621A]'
+                    : 'bg-black-2 hover:bg-black-3'
+                )}
+              >
+                <div className="relative">
+                  <Avatar author={convo.with} size="sm" />
+                  <span
+                    className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-black"
+                    title="Active Practitioner"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2 mb-0.5">
+                    <span className="font-body text-sm font-semibold text-white truncate">
+                      {convo.with.full_name}
+                    </span>
+                    <span className="font-mono text-[0.45rem] tracking-wider text-grey-dark flex-shrink-0">
+                      {timeAgo(convo.last_message_at)}
+                    </span>
+                  </div>
+                  <p className="font-mono text-[0.45rem] tracking-widest uppercase text-[#E8621A] truncate mb-1">
+                    {convo.status_text}
+                  </p>
+                  <p
+                    className={cn(
+                      'font-body text-xs line-clamp-1',
+                      convo.unread ? 'text-white font-medium' : 'text-grey-DEFAULT/75'
+                    )}
+                  >
+                    {convo.last_message}
+                  </p>
+                </div>
+                {convo.unread && (
+                  <span
+                    className="w-2.5 h-2.5 rounded-full bg-[#E8621A] flex-shrink-0 self-center"
+                    title="Unread message"
+                  />
+                )}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* ── Right Column: Active Conversation Pane ──────────────────────────── */}
+      {activeConversation ? (
+        <div className="lg:col-span-8 flex flex-col bg-[#0A0A0A]">
+          {/* Active Recipient Header */}
+          <div className="px-6 py-4 bg-black-3 border-b border-white/10 flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-3.5">
+              <Avatar author={activeConversation.with} size="md" />
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="font-body text-base font-semibold text-white">
+                    {activeConversation.with.full_name}
+                  </h3>
+                  {activeConversation.with.role === 'admin' && (
+                    <span className="font-mono text-[0.44rem] tracking-[0.18em] uppercase px-2 py-0.5 bg-[#E8621A]/15 border border-[#E8621A]/40 text-[#E8621A]">
+                      Admin
+                    </span>
+                  )}
+                  <span className="font-mono text-[0.44rem] tracking-[0.16em] uppercase px-2 py-0.5 border border-white/15 text-grey-DEFAULT">
+                    {activeConversation.with.membership_tier}
+                  </span>
+                </div>
+                <p className="font-mono text-[0.48rem] tracking-widest text-grey-dark mt-0.5 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+                  {activeConversation.status_text}
+                </p>
+              </div>
+            </div>
+
+            <span className={cn('font-mono text-[0.46rem] tracking-[0.16em] uppercase px-2.5 py-1 border', VERTICAL_BADGE_STYLES[activeConversation.vertical] ?? VERTICAL_BADGE_STYLES.all)}>
+              {VERTICAL_LABELS[activeConversation.vertical] ?? 'All Tracks'}
+            </span>
+          </div>
+
+          {/* Messages Stream */}
+          <div className="flex-1 p-6 overflow-y-auto space-y-4 max-h-[380px] lg:max-h-[420px]">
+            {activeConversation.messages.map(msg => {
+              const isMe =
+                msg.sender_id === 'current-user' ||
+                (userId !== null && msg.sender_id === userId)
+
+              return (
+                <div
+                  key={msg.id}
+                  className={cn('flex flex-col', isMe ? 'items-end' : 'items-start')}
+                >
+                  <div className="flex items-end gap-2.5 max-w-[85%] md:max-w-[75%]">
+                    {!isMe && <Avatar author={activeConversation.with} size="sm" />}
+                    <div
+                      style={
+                        isMe
+                          ? { backgroundColor: '#E8621A', color: '#000000' }
+                          : { backgroundColor: '#1A1A1A', color: '#F0EAE0' }
+                      }
+                      className={cn(
+                        'px-4 py-3 text-sm font-body leading-relaxed',
+                        isMe
+                          ? 'font-medium border border-[#E8621A]'
+                          : 'border border-white/10'
+                      )}
+                    >
+                      {msg.content}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-1 px-1">
+                    <span className="font-mono text-[0.44rem] tracking-widest text-grey-dark">
+                      {formatMessageTime(msg.created_at)}
+                    </span>
+                    {isMe && <CheckCheck size={11} className="text-[#E8621A]" />}
+                  </div>
+                </div>
+              )
+            })}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Quick Accountability Check-In Chips */}
+          <div className="px-6 py-2.5 bg-black-2 border-t border-white/5 flex items-center gap-2 overflow-x-auto">
+            <span className="font-mono text-[0.44rem] tracking-[0.18em] uppercase text-grey-dark flex-shrink-0">
+              Quick Check-In:
+            </span>
+            {QUICK_PROMPTS.map((prompt, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => handleSendMessage(prompt)}
+                className="font-mono text-[0.46rem] tracking-wider text-grey-DEFAULT hover:text-[#E8621A] bg-black-3 border border-white/10 hover:border-[#E8621A]/40 px-2.5 py-1 transition-colors flex-shrink-0"
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
+
+          {/* Message Composer */}
+          <div className="p-4 bg-black-3 border-t border-white/10">
+            <div className="flex items-end gap-3">
+              <textarea
+                value={messageInput}
+                onChange={e => setMessageInput(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    handleSendMessage()
+                  }
+                }}
+                placeholder={`Message ${activeConversation.with.full_name}... (Enter to send)`}
+                rows={2}
+                className="flex-1 bg-black-2 border border-white/15 px-4 py-2.5 font-body text-sm text-white placeholder:text-grey-dark focus:outline-none focus:border-[#E8621A]/60 resize-none"
+              />
+              <button
+                type="button"
+                onClick={() => handleSendMessage()}
+                disabled={sending || !messageInput.trim()}
+                style={{ backgroundColor: '#E8621A', color: '#000000' }}
+                className="px-5 py-3 font-mono text-[0.52rem] font-bold tracking-[0.18em] uppercase flex items-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Send size={13} />
+                Send
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Member Directory Modal */}
+      {showNewMessage && (
+        <NewMessageModal
+          onClose={() => setShowNewMessage(false)}
+          onSelectMember={handleStartConversationWithMember}
+          existingMembers={conversations.map(c => c.with)}
+        />
+      )}
     </div>
   )
 }
@@ -704,15 +1200,27 @@ function MessagesTab() {
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function CommunityPage() {
-  const [tab, setTab]               = useState<'forum' | 'messages'>('forum')
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [userId, setUserId]         = useState<string | null>(null)
-  const [userName, setUserName]     = useState<string>('Reality Architect')
+  const [tab, setTab]                     = useState<'forum' | 'messages'>('forum')
+  const [userId, setUserId]               = useState<string | null>(null)
+  const [userName, setUserName]           = useState<string>('Reality Architect')
+  const [conversations, setConversations] = useState<DirectMessageConversation[]>(SAMPLE_DM_CONVERSATIONS)
 
   useEffect(() => {
+    // Load persisted DM conversations
+    try {
+      const savedDms = localStorage.getItem(DM_STORAGE_KEY)
+      if (savedDms) {
+        const parsed = JSON.parse(savedDms)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setConversations(parsed)
+        }
+      }
+    } catch {
+      // ignore storage errors
+    }
+
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => {
-      setIsLoggedIn(!!user)
       setUserId(user?.id ?? null)
       if (user?.user_metadata?.full_name) {
         setUserName(user.user_metadata.full_name)
@@ -722,38 +1230,70 @@ export default function CommunityPage() {
     })
   }, [])
 
+  const unreadCount = useMemo(
+    () => conversations.filter(c => c.unread).length,
+    [conversations]
+  )
+
   return (
     <>
       <Navbar />
       <main className="pt-[68px] min-h-screen">
 
         {/* Header */}
-        <section className="py-16 px-6 md:px-14 border-b-2 border-orange-DEFAULT/20 relative">
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-DEFAULT" />
+        <section className="py-16 px-6 md:px-14 border-b-2 border-[#E8621A]/20 relative">
+          <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#E8621A]" />
           <div className="max-w-7xl mx-auto">
             <div className="label mb-3">Community · Personal · Business · Educators · Leadership</div>
             <h1 className="font-display text-[clamp(3rem,7vw,6rem)] leading-[0.95] tracking-[0.02em]">
               THE REALITY<br />
-              <span className="text-orange-DEFAULT">ARCHITECTS</span>
+              <span className="text-[#E8621A]">ARCHITECTS</span>
             </h1>
             <p className="font-body italic text-grey-DEFAULT mt-4 max-w-2xl text-lg leading-relaxed">
-              A live forum for practitioners across all four verticals. Share your Assumption Lab breakthroughs, SATS wins, classroom co-regulation shifts, and executive leadership protocols.
+              A live forum and direct messaging hub for practitioners across all four verticals. Share your Assumption Lab breakthroughs, SATS wins, classroom co-regulation shifts, and executive leadership protocols.
             </p>
 
-            {/* Tabs */}
-            <div className="flex gap-0 mt-8 border border-orange-DEFAULT/30 w-fit">
-              {(['forum', 'messages'] as const).map(t => (
-                <button
-                  key={t}
-                  onClick={() => setTab(t)}
-                  className={cn(
-                    'px-8 py-3 font-mono text-[0.58rem] tracking-[0.2em] uppercase transition-colors',
-                    tab === t ? 'bg-orange-DEFAULT text-black' : 'text-grey-DEFAULT hover:text-white'
-                  )}
-                >
-                  {t === 'forum' ? 'Forum' : 'Messages'}
-                </button>
-              ))}
+            {/* Forum / Messages Toggle Buttons — explicit contrast styles so both active & inactive tabs are always crystal-clear */}
+            <div
+              role="tablist"
+              aria-label="Community Views"
+              className="inline-flex mt-8 border-2 border-[#E8621A] bg-[#111111] overflow-hidden"
+            >
+              {(['forum', 'messages'] as const).map(t => {
+                const isActive = tab === t
+                return (
+                  <button
+                    key={t}
+                    role="tab"
+                    aria-selected={isActive}
+                    type="button"
+                    onClick={() => setTab(t)}
+                    style={{
+                      backgroundColor: isActive ? '#E8621A' : '#111111',
+                      color: isActive ? '#000000' : '#F0EAE0',
+                    }}
+                    className={cn(
+                      'px-8 py-3 font-mono text-[0.62rem] tracking-[0.22em] uppercase transition-all flex items-center gap-2.5',
+                      isActive
+                        ? 'font-bold shadow-[inset_0_0_0_1px_#E8621A]'
+                        : 'font-medium hover:bg-white/5 hover:text-white'
+                    )}
+                  >
+                    <span>{t === 'forum' ? 'Forum' : 'Messages'}</span>
+                    {t === 'messages' && unreadCount > 0 && (
+                      <span
+                        style={{
+                          backgroundColor: isActive ? '#000000' : '#E8621A',
+                          color: isActive ? '#E8621A' : '#000000',
+                        }}
+                        className="px-1.5 py-0.5 text-[0.5rem] font-bold rounded-full leading-none"
+                      >
+                        {unreadCount}
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
             </div>
           </div>
         </section>
@@ -761,9 +1301,14 @@ export default function CommunityPage() {
         <div className="py-12 px-6 md:px-14">
           <div className="max-w-7xl mx-auto">
             {tab === 'forum' ? (
-              <ForumTab isLoggedIn={isLoggedIn} userId={userId} userName={userName} />
+              <ForumTab userId={userId} userName={userName} />
             ) : (
-              <MessagesTab />
+              <MessagesTab
+                userId={userId}
+                userName={userName}
+                conversations={conversations}
+                setConversations={setConversations}
+              />
             )}
           </div>
         </div>

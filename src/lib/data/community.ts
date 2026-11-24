@@ -737,12 +737,143 @@ export function getThreadsByCategory(category: PostCategory): CommunityThread[] 
   return COMMUNITY_THREADS.filter(t => t.category === category && !t.is_pinned)
 }
 
-export const SAMPLE_DM_CONVERSATIONS = [
+export interface DirectMessageItem {
+  id: string
+  sender_id: string
+  content: string
+  created_at: string
+}
+
+export interface DirectMessageConversation {
+  id: string
+  with: CommunityAuthor
+  vertical: CommunityVertical
+  status_text: string
+  last_message: string
+  last_message_at: string
+  unread: boolean
+  messages: DirectMessageItem[]
+}
+
+export const COMMUNITY_DIRECTORY: CommunityAuthor[] = [
+  ADMIN,
+  M7,
+  M9,
+  M10,
+  M12,
+  M1,
+  M2,
+  M4,
+  M5,
+  M6,
+  M8,
+  M11,
+  M13,
+  M14,
+]
+
+export const SAMPLE_DM_CONVERSATIONS: DirectMessageConversation[] = [
   {
     id: 'dm-admin-welcome',
     with: ADMIN,
-    last_message: 'Welcome to Vibe Hyr — if you have questions about the practice or the new Assumption Labs, drop them in the community forum. We read everything.',
-    last_message_at: '2026-11-20T10:05:00Z',
+    vertical: 'all',
+    status_text: 'Founder · Master Architect',
+    last_message: 'Welcome to Vibe Hyr Direct Messaging! Send me your current #1 assumption or let me know which track you are focusing on this month.',
+    last_message_at: '2026-11-24T09:05:00Z',
+    unread: true,
+    messages: [
+      {
+        id: 'msg-admin-1',
+        sender_id: ADMIN.id,
+        content: 'Welcome to Vibe Hyr, Reality Architect. This private channel is open for accountability check-ins, Assumption Lab breakthroughs, and practice questions.',
+        created_at: '2026-11-23T14:00:00Z',
+      },
+      {
+        id: 'msg-admin-2',
+        sender_id: ADMIN.id,
+        content: 'Welcome to Vibe Hyr Direct Messaging! Send me your current #1 assumption or let me know which track you are focusing on this month.',
+        created_at: '2026-11-24T09:05:00Z',
+      },
+    ],
+  },
+  {
+    id: 'dm-priya-30day',
+    with: M7,
+    vertical: 'personal',
+    status_text: '30-Day Challenge Host · Personal Track',
+    last_message: 'Cohort 4 of the 30-Day Revision & SATS Challenge is live! Drop your Day 1 morning identity statement here whenever you are ready to pair up.',
+    last_message_at: '2026-11-24T07:45:00Z',
+    unread: true,
+    messages: [
+      {
+        id: 'msg-priya-1',
+        sender_id: M7.id,
+        content: 'Hey Architect! Saw you in the forum. We are pairing up accountability partners for the 30-Day Revision & Assumption Lab Challenge.',
+        created_at: '2026-11-23T18:20:00Z',
+      },
+      {
+        id: 'msg-priya-2',
+        sender_id: M7.id,
+        content: 'Cohort 4 of the 30-Day Revision & SATS Challenge is live! Drop your Day 1 morning identity statement here whenever you are ready to pair up.',
+        created_at: '2026-11-24T07:45:00Z',
+      },
+    ],
+  },
+  {
+    id: 'dm-elena-business',
+    with: M9,
+    vertical: 'business',
+    status_text: 'VP of Product · Business Track',
+    last_message: 'Let me know if you want to compare notes on the Track 02 PAUSE Protocol or the Team Collective Assumption Audit before your next standup!',
+    last_message_at: '2026-11-23T19:15:00Z',
     unread: false,
+    messages: [
+      {
+        id: 'msg-elena-1',
+        sender_id: M9.id,
+        content: 'Always glad to connect with fellow leaders working through the Business & Workplace tracks. Practicing the 80% vocal pace rule and Clarity Frame with a peer makes a huge difference.',
+        created_at: '2026-11-22T16:10:00Z',
+      },
+      {
+        id: 'msg-elena-2',
+        sender_id: M9.id,
+        content: 'Let me know if you want to compare notes on the Track 02 PAUSE Protocol or the Team Collective Assumption Audit before your next standup!',
+        created_at: '2026-11-23T19:15:00Z',
+      },
+    ],
+  },
+  {
+    id: 'dm-darius-educators',
+    with: M10,
+    vertical: 'educator',
+    status_text: '8th Grade Lead Educator · Educators Track',
+    last_message: 'If you are running the 2×10 Strategy or Zone 2 Threshold Reset this week, message me your classroom wins!',
+    last_message_at: '2026-11-22T15:30:00Z',
+    unread: false,
+    messages: [
+      {
+        id: 'msg-darius-1',
+        sender_id: M10.id,
+        content: 'If you are running the 2×10 Strategy or Zone 2 Threshold Reset this week, message me your classroom wins!',
+        created_at: '2026-11-22T15:30:00Z',
+      },
+    ],
+  },
+  {
+    id: 'dm-caleb-leadership',
+    with: M12,
+    vertical: 'leadership',
+    status_text: 'Executive Director · Leadership Track',
+    last_message: 'Working through the Course 01 Standard Audit and Course 04 Apprenticeship Loop this month — reach out anytime to workshop a leadership challenge.',
+    last_message_at: '2026-11-21T11:20:00Z',
+    unread: false,
+    messages: [
+      {
+        id: 'msg-caleb-1',
+        sender_id: M12.id,
+        content: 'Working through the Course 01 Standard Audit and Course 04 Apprenticeship Loop this month — reach out anytime to workshop a leadership challenge.',
+        created_at: '2026-11-21T11:20:00Z',
+      },
+    ],
   },
 ]

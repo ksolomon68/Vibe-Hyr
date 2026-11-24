@@ -17,6 +17,7 @@ const config: Config = {
           lighter: '#F59060',
           dark:    '#C04E10',
         },
+        'orange-DEFAULT': '#E8621A',
         // Blacks
         black: {
           DEFAULT: '#0A0A0A',
@@ -24,12 +25,14 @@ const config: Config = {
           3: '#1A1A1A',
           4: '#222222',
         },
+        'black-DEFAULT': '#0A0A0A',
         // Greys
         grey: {
           DEFAULT: '#888888',
           dark:    '#777777',
           light:   '#BBBBBB',
         },
+        'grey-DEFAULT': '#888888',
       },
       fontFamily: {
         display: ['var(--font-bebas)', 'sans-serif'],
