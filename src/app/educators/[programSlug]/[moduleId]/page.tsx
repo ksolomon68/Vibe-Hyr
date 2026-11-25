@@ -18,7 +18,7 @@ const PROGRAM_COURSE_ID: Record<string, number> = {
   'ed04': 12,
 }
 
-const PREVIEW_LESSON = { programSlug: 'the-educator-reset', moduleId: 'ed01-m01' }
+const PREVIEW_LESSON = { programSlug: '', moduleId: '' } // no free preview — Educators is paid-only
 
 // Mirrors TIER_CONFIG in lib/stripe/config.ts — which educator programs each
 // paid tier unlocks. Institutional Seeker is paid (unlike individual Seeker,

@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-const PREVIEW_LESSON = { trackId: 'common-sense-in-the-workplace', lessonId: 'b01-l01' }
+const PREVIEW_LESSON = { trackId: '', lessonId: '' } // no free preview — Business is paid-only
 
 export default async function LessonPage({ params }: PageProps) {
   const supabase = createClient()
