@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-const PREVIEW_LESSON = { courseId: 'leadership_course_1', lessonId: 'the-responsibility-formula' }
+const PREVIEW_LESSON = { courseId: '', lessonId: '' } // no free preview — Leadership is paid-only
 
 export default async function LessonPage({ params }: PageProps) {
   const supabase = createClient()

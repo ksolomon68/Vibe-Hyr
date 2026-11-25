@@ -101,18 +101,6 @@ export default async function CourseDetailPage({ params }: PageProps) {
   const canAccess   = tierGrant && prevCourseComplete
   const prevCourse  = prereqId ? COURSES.find(c => c.id === prereqId) : null
 
-  if (user && !tierGrant) {
-    return (
-      <CourseLockedScreen
-        reason={isLeadership ? 'tier_required' : 'wrong_vertical'}
-        courseSlug={course.id}
-        sectionLabel="LEADERSHIP"
-        backHref="/leadership"
-        backLabel="Back to Leadership"
-      />
-    )
-  }
-
   const pct = course.lessons.length > 0
     ? Math.round((completedLessons.length / course.lessons.length) * 100)
     : 0
@@ -227,6 +215,10 @@ export default async function CourseDetailPage({ params }: PageProps) {
                       Go to Course {prevCourse.num}
                     </Link>
                   </div>
+                ) : user && !tierGrant ? (
+                  <Link href="/pricing" className="btn-outline-orange w-full text-center flex items-center justify-center gap-2">
+                    <Lock size={13} /> Upgrade to Unlock
+                  </Link>
                 ) : (
                   <Link href={`/auth/login?redirect=/leadership/${course.id}`} className="btn-outline w-full text-center block">
                     Log In to Access

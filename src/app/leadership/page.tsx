@@ -51,6 +51,7 @@ export default function LeadershipPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [userTier, setUserTier] = useState('free')
   const [hasFullAccess, setHasFullAccess] = useState(false)
+  const [isLeadershipMember, setIsLeadershipMember] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
@@ -59,13 +60,16 @@ export default function LeadershipPage() {
       setIsLoggedIn(true)
       supabase
         .from('profiles')
-        .select('membership_tier, is_super_admin, is_bypassed')
+        .select('membership_tier, membership_type, vertical, is_super_admin')
         .eq('id', user.id)
         .single()
         .then(({ data: profile }) => {
           if (!profile) return
           if (profile.membership_tier) setUserTier(profile.membership_tier)
-          setHasFullAccess(!!profile.is_super_admin)
+          const isSuper = !!profile.is_super_admin
+          const inLeadership = profile.membership_type === 'leadership' || profile.vertical === 'leadership'
+          setHasFullAccess(isSuper)
+          setIsLeadershipMember(isSuper || inLeadership)
         })
     })
   }, [])
@@ -90,10 +94,10 @@ export default function LeadershipPage() {
               external environment. Built for organizations that train leaders to govern from identity—not effort.
             </p>
             <Link
-              href={`/leadership/leadership_course_1/the-responsibility-formula`}
+              href={isLeadershipMember ? '/leadership/leadership_course_1' : '/pricing'}
               className="btn-orange inline-flex items-center gap-2"
             >
-              Start Course 1 <ArrowRight size={14} />
+              {isLeadershipMember ? 'Go to Course 1' : 'View Leadership Plans'} <ArrowRight size={14} />
             </Link>
           </motion.div>
         </section>
@@ -138,7 +142,7 @@ export default function LeadershipPage() {
 
             <div className="space-y-4">
               {COURSES.map((course, i) => {
-                const hasAccess = hasFullAccess || (isLoggedIn && (TIER_ACCESS[userTier] ?? TIER_ACCESS.free).includes(course.id))
+                const hasAccess = hasFullAccess || (isLoggedIn && isLeadershipMember && (TIER_ACCESS[userTier] ?? TIER_ACCESS.free).includes(course.id))
 
                 return (
                   <motion.div
@@ -218,8 +222,8 @@ export default function LeadershipPage() {
               <Link href="/pricing" className="btn-orange">
                 View Pricing
               </Link>
-              <Link href={`/leadership/leadership_course_1/the-responsibility-formula`} className="btn-outline-orange">
-                Start Free →
+              <Link href="/pricing" className="btn-outline-orange">
+                Choose a Plan →
               </Link>
             </div>
           </motion.div>
