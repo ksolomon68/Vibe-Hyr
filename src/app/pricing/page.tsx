@@ -34,7 +34,7 @@ const PERSONAL_PLANS = [
     name:     'SEEKER',
     monthly:  0,
     annual:   0,
-    tagline:  'Enough to feel the transformation. Not enough to complete it.',
+    tagline:  'Start your transformation free. Go deeper when you\'re ready.',
     featured: false,
     cta:      'Join Free',
     features: [
@@ -194,7 +194,7 @@ export default function PricingPage() {
                     className={`toggle-opt ${personalBilling === 'annual' ? 'active' : ''}`}
                     onClick={() => setPersonalBilling('annual')}
                   >
-                    ANNUAL <span className="toggle-badge">SAVE 15%</span>
+                    ANNUAL <span className="toggle-badge">SAVE 10%</span>
                   </button>
                   <button
                     className={`toggle-opt ${personalBilling === 'monthly' ? 'active' : ''}`}

@@ -15,7 +15,7 @@ const PLANS = [
     monthly:  0,
     annual:   0,
     period:   'Always free · No card required',
-    tagline:  'Enough to feel the transformation. Not enough to complete it.',
+    tagline:  'Start your transformation free. Go deeper when you\'re ready.',
     featured: false,
     cta:      'Begin Free',
     features: [
