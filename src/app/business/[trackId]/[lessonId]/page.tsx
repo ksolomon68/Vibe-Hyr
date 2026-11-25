@@ -88,16 +88,17 @@ export default async function LessonPage({ params }: PageProps) {
     const tier         = profile?.membership_tier ?? 'free'
     const isSuperAdmin = !!profile?.is_super_admin
     const isBypassed   = !!profile?.is_bypassed
-    const allowed      = (isSuperAdmin || isBypassed)
+    const allowed      = (isSuperAdmin)
       ? BUSINESS_TIER_ACCESS.elite
       : (BUSINESS_TIER_ACCESS[tier] ?? BUSINESS_TIER_ACCESS['free'])
 
-    const canAccess = isSuperAdmin || isBypassed || allowed.includes(params.trackId)
+    const isBusiness = profile?.vertical === 'business'
+    const canAccess = isSuperAdmin || (isBusiness && allowed.includes(params.trackId))
 
     if (!canAccess && !isPreview) {
       return (
         <CourseLockedScreen
-          reason="tier_required"
+          reason={isBusiness ? 'tier_required' : 'wrong_vertical'}
           courseSlug={params.trackId}
           sectionLabel="BUSINESS"
           backHref="/business"

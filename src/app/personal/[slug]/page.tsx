@@ -65,7 +65,7 @@ export default async function CoursePage({ params }: { params: { slug: string } 
     completedLessons = progress?.completed_lessons ?? []
 
     // Check prerequisite course completion (skip for admins/bypassed)
-    if (prevCourseId && !isSuperAdmin && !isBypassed) {
+    if (prevCourseId && !isSuperAdmin) {
       const { data: prevProg } = await supabase
         .from('course_progress')
         .select('completed_at')
@@ -79,7 +79,7 @@ export default async function CoursePage({ params }: { params: { slug: string } 
   const courseRoute = getCourseRoute(membershipType, role)
 
   const lessons   = await getLessonsWithDBFallback(course.id, course.order_index)
-  const tierGrant = hasAccess(userTier, course.tier) || isSuperAdmin || isBypassed
+  const tierGrant = hasAccess(userTier, course.tier) || isSuperAdmin
   const canAccess = tierGrant && prevCourseComplete
   const totalMins  = lessons.reduce((s, l) => s + Math.ceil(l.duration_seconds / 60), 0)
   const pct        = lessons.length

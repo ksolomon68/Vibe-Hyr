@@ -65,7 +65,7 @@ export default function LeadershipPage() {
         .then(({ data: profile }) => {
           if (!profile) return
           if (profile.membership_tier) setUserTier(profile.membership_tier)
-          setHasFullAccess(!!profile.is_super_admin || !!profile.is_bypassed)
+          setHasFullAccess(!!profile.is_super_admin)
         })
     })
   }, [])

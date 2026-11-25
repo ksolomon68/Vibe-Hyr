@@ -32,8 +32,9 @@ export default async function BusinessTrackPage({ params }: { params: { trackId:
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Track 1 (Common Sense in the Workplace) is open to preview/start; higher tracks unlock by tier
-  let canAccess = track.id === 'common-sense-in-the-workplace'
+  // Paid access only: must be a Business-plan member (or admin/bypass) with the right tier
+  let canAccess = false
+  let accessReason: 'tier_required' | 'wrong_vertical' = 'wrong_vertical'
   let completedLessons: string[] = []
 
   if (user) {
@@ -48,11 +49,12 @@ export default async function BusinessTrackPage({ params }: { params: { trackId:
       const isSuperAdmin  = !!profile.is_super_admin
       const isBypassed    = !!profile.is_bypassed
 
-      if (isSuperAdmin || isBypassed) {
+      if (isSuperAdmin) {
         canAccess = true
-      } else {
+      } else if (profile.vertical === 'business') {
         const allowed = BUSINESS_TIER_ACCESS[tier] ?? BUSINESS_TIER_ACCESS['free']
         canAccess = allowed.includes(track.id)
+        if (!canAccess) accessReason = 'tier_required'
       }
 
       if (canAccess) {

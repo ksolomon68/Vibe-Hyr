@@ -85,7 +85,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
     isLeadership     = profileRes.data?.membership_type === 'leadership' || profileRes.data?.vertical === 'leadership'
 
     // Check prerequisite completion (skip for admins/bypassed)
-    if (prereqId && !isSuperAdmin && !isBypassed) {
+    if (prereqId && !isSuperAdmin) {
       const { data: prevProg } = await supabase
         .from('course_progress')
         .select('completed_at')
@@ -96,9 +96,22 @@ export default async function CourseDetailPage({ params }: PageProps) {
     }
   }
 
-  const tierGrant   = isSuperAdmin || isBypassed || (TIER_ACCESS[userTier] ?? TIER_ACCESS.free).includes(params.courseId)
+  // Paid access only: guests never unlock; members need a Leadership plan + matching tier
+  const tierGrant   = !!user && (isSuperAdmin || (isLeadership && (TIER_ACCESS[userTier] ?? []).includes(params.courseId)))
   const canAccess   = tierGrant && prevCourseComplete
   const prevCourse  = prereqId ? COURSES.find(c => c.id === prereqId) : null
+
+  if (user && !tierGrant) {
+    return (
+      <CourseLockedScreen
+        reason={isLeadership ? 'tier_required' : 'wrong_vertical'}
+        courseSlug={course.id}
+        sectionLabel="LEADERSHIP"
+        backHref="/leadership"
+        backLabel="Back to Leadership"
+      />
+    )
+  }
 
   const pct = course.lessons.length > 0
     ? Math.round((completedLessons.length / course.lessons.length) * 100)

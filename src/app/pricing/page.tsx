@@ -94,8 +94,8 @@ export default function PricingPage() {
 
   const getTrackButtonStyle = (active: boolean) => ({
     borderColor: active ? '#E8621A' : 'rgba(255,255,255,0.25)',
-    background: active ? '#E8621A' : '#111111',
-    color: active ? '#000000' : '#F0EAE0',
+    background: active ? '#E8621A' : 'rgba(255,255,255,0.12)',
+    color: active ? '#fff' : '#0f172a',
   })
 
   // ── Individual state ────────────────────────────────────────────────────

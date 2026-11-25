@@ -209,14 +209,14 @@ export default async function DashboardPage() {
 
   // Personal courses
   const personalCourses = COURSES.map(course => {
-    const hasAccess = isSuperAdmin || isBypassed || TIER_RANK[tier] >= TIER_RANK[course.tier] || grantedSlugs.has(course.slug)
+    const hasAccess = isSuperAdmin || TIER_RANK[tier] >= TIER_RANK[course.tier] || grantedSlugs.has(course.slug)
     const progress  = personalProgress.find(p => p.course_id === course.id)?.progress_percent ?? 0
     const courseTier: PersonalTier = course.tier === 'elite' ? 'reality-master' : 'architect'
     return { ...course, hasAccess, progress, courseTier }
   })
 
   // Business tracks
-  const allowedTracks = (isSuperAdmin || isBypassed)
+  const allowedTracks = (isSuperAdmin)
     ? TRACKS.map(t => t.id)
     : BUSINESS_TIER_ACCESS[tier] ?? ['common-sense-in-the-workplace']
 
@@ -243,7 +243,7 @@ export default async function DashboardPage() {
     const done     = completedModules.length
     const pct      = total ? Math.round((done / total) * 100) : 0
     const programTier = PROGRAM_TIERS[program.slug] ?? 'free'
-    const hasAccess = isSuperAdmin || isBypassed || TIER_RANK[tier] >= TIER_RANK[programTier] || grantedSlugs.has(program.slug)
+    const hasAccess = isSuperAdmin || TIER_RANK[tier] >= TIER_RANK[programTier] || grantedSlugs.has(program.slug)
     // Find first incomplete module
     const nextModule = program.modules.find(m => !completedModules.includes(m.id)) ?? program.modules[0]
     const href = nextModule ? `/educators/${program.slug}/${nextModule.id}` : `/educators/${program.slug}`
@@ -258,7 +258,7 @@ export default async function DashboardPage() {
     const total     = course.lessonCount
     const done      = completedLessons.length
     const pct       = total ? Math.round((done / total) * 100) : 0
-    const hasAccess  = isSuperAdmin || isBypassed || TIER_RANK[tier] >= TIER_RANK[course.tierRequired] || grantedSlugs.has(course.id)
+    const hasAccess  = isSuperAdmin || TIER_RANK[tier] >= TIER_RANK[course.tierRequired] || grantedSlugs.has(course.id)
     const href = `/leadership/${course.id}`
     const courseTier: PersonalTier = course.tierRequired === 'elite' ? 'reality-master' : 'architect'
     return { 

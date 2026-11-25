@@ -27,7 +27,7 @@ export default function CoursesPage() {
           .eq('id', user.id)
           .single()
           .then(({ data: profile }) => {
-            if (profile?.is_super_admin || profile?.is_bypassed) {
+            if (profile?.is_super_admin) {
               setUserTier('elite')
             } else if (profile?.membership_tier) {
               setUserTier(profile.membership_tier as MembershipTier)

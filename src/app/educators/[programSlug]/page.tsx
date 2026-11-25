@@ -35,8 +35,9 @@ export default async function EducatorProgramPage({ params }: { params: { progra
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Program 1 (The Educator Reset) is open to preview/start; higher programs unlock by tier
-  let canAccess = program.slug === 'the-educator-reset'
+  // Paid access only: must be an Educators-plan member (or admin/bypass/direct grant) with the right tier
+  let canAccess = false
+  let accessReason: 'tier_required' | 'wrong_vertical' = 'wrong_vertical'
   let completedModules: string[] = []
 
   if (user) {
@@ -58,9 +59,11 @@ export default async function EducatorProgramPage({ params }: { params: { progra
     const isBypassed     = profile?.is_bypassed ?? false
     const hasDirectGrant = !!directGrant
     const tier           = profile?.membership_tier ?? 'free'
-    const tierUnlocked   = (EDUCATOR_TIER_ACCESS[tier] ?? EDUCATOR_TIER_ACCESS['free']).includes(program.slug)
+    const isEducator     = profile?.vertical === 'education'
+    const tierUnlocked   = isEducator && (EDUCATOR_TIER_ACCESS[tier] ?? EDUCATOR_TIER_ACCESS['free']).includes(program.slug)
 
-    canAccess = isSuperAdmin || isBypassed || hasDirectGrant || tierUnlocked
+    canAccess = isSuperAdmin || hasDirectGrant || tierUnlocked
+    if (!canAccess) accessReason = isEducator ? 'tier_required' : 'wrong_vertical'
 
     if (canAccess) {
       const { data: prog } = await supabase

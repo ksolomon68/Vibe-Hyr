@@ -94,13 +94,14 @@ export default async function EducationModulePage({
     const isBypassed     = profile?.is_bypassed ?? false
     const hasDirectGrant = !!directGrant
     const tier           = profile?.membership_tier ?? 'free'
-    const tierUnlocked   = (EDUCATOR_TIER_ACCESS[tier] ?? EDUCATOR_TIER_ACCESS['free']).includes(program.slug)
-    const canAccess      = isSuperAdmin || isBypassed || hasDirectGrant || tierUnlocked
+    const isEducator     = profile?.vertical === 'education'
+    const tierUnlocked   = isEducator && (EDUCATOR_TIER_ACCESS[tier] ?? EDUCATOR_TIER_ACCESS['free']).includes(program.slug)
+    const canAccess      = isSuperAdmin || hasDirectGrant || tierUnlocked
 
     if (!canAccess && !isPreview) {
       return (
         <CourseLockedScreen
-          reason="tier_required"
+          reason={isEducator ? 'tier_required' : 'wrong_vertical'}
           courseSlug={params.programSlug}
           sectionLabel="EDUCATOR"
           backHref="/educators"
